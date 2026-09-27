@@ -15,7 +15,8 @@ layout(std140, binding = 0) uniform buf {
     int myIndex;
     vec4 color;
     int hasInverted;
-    float invertedRadius;
+    float invertedRadiusTop;
+    float invertedRadiusBottom;
     vec4 invertedOuter;
     vec4 invertedInner;
     vec4 rectData[80];
@@ -176,7 +177,7 @@ void main() {
 
     if (hasInverted != 0) {
         float dOuter = sdBox(pixel, invertedOuter.xy, invertedOuter.zw) - 1.0;
-        float dInner = sdRoundedBox(pixel, invertedInner.xy, invertedInner.zw, invertedRadius);
+        float dInner = sdRoundedBox4(pixel, invertedInner.xy, invertedInner.zw, vec4(invertedRadiusTop, invertedRadiusBottom, invertedRadiusBottom, invertedRadiusTop));
 
         // Border sinks: track the opposite rect edge, clamped to border thickness
         float innerTop = invertedInner.y - invertedInner.w;

@@ -107,7 +107,8 @@ QSGNode* BlobInvertedRect::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData
     material->m_myIndex = m_cachedMyIndex;
     material->m_color = m_group->color();
     material->m_hasInverted = m_cachedHasInverted ? 1 : 0;
-    material->m_invertedRadius = m_cachedInvertedRadius;
+    material->m_invertedRadiusTop = m_cachedInvertedRadiusTop;
+    material->m_invertedRadiusBottom = m_cachedInvertedRadiusBottom;
     memcpy(material->m_invertedOuter, m_cachedInvertedOuter, sizeof(m_cachedInvertedOuter));
     memcpy(material->m_invertedInner, m_cachedInvertedInner, sizeof(m_cachedInvertedInner));
 
@@ -158,6 +159,24 @@ void BlobInvertedRect::setBorderBottom(qreal v) {
         return;
     m_borderBottom = v;
     emit borderBottomChanged();
+    if (m_group)
+        m_group->markDirty();
+}
+
+void BlobInvertedRect::setRadiusTop(qreal v) {
+    if (qFuzzyCompare(m_radiusTop, v))
+        return;
+    m_radiusTop = v;
+    emit radiusTopChanged();
+    if (m_group)
+        m_group->markDirty();
+}
+
+void BlobInvertedRect::setRadiusBottom(qreal v) {
+    if (qFuzzyCompare(m_radiusBottom, v))
+        return;
+    m_radiusBottom = v;
+    emit radiusBottomChanged();
     if (m_group)
         m_group->markDirty();
 }
