@@ -48,7 +48,7 @@ CustomMouseArea {
     function withinPanelHeight(panel: Item, x: real, y: real, span = 100): bool {
         const panelY = panels.topMargin + panel.y;
         const panelHeight = panel.content ? panel.content.nonAnimHeight : panel.height;
-        const b = spanBounds(panelY - Config.border.rounding - panels.topMargin, panelY + panelHeight + Config.border.rounding + panels.bottomMargin, span);
+        const b = spanBounds(panelY - Config.border.roundingTop - panels.topMargin, panelY + panelHeight + Config.border.roundingBottom + panels.bottomMargin, span);
         return y >= b.x && y <= b.y;
     }
     function withinPanelWidth(panel: Item, x: real, y: real, span = 100): bool {
@@ -90,7 +90,7 @@ CustomMouseArea {
     }
     function inBottomPanel(panel: Item, x: real, y: real, isCorner = false, edge = Config.border.thickness, span = 100): bool {
         const panelHeight = panel.height * (1 - (panel.offsetScale ?? 0)); // qmllint disable missing-property
-        return y > screen.height - Math.max(Config.border.minThickness, edge + panelHeight) - (isCorner ? Config.border.rounding : 0) && withinPanelWidth(panel, x, y, panelHeight > 0 ? 100 : span);
+        return y > screen.height - Math.max(Config.border.minThickness, edge + panelHeight) - (isCorner ? Config.border.roundingBottom : 0) && withinPanelWidth(panel, x, y, panelHeight > 0 ? 100 : span);
     }
     function inOverviewCorner(x: real, y: real): string {
         const thickness = Config.overview.hoverThickness;

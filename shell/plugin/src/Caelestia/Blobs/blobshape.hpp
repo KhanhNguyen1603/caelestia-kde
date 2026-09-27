@@ -74,7 +74,8 @@ protected:
     float m_pendingDx = 0;
     float m_pendingDy = 0;
     bool m_cachedHasInverted = false;
-    float m_cachedInvertedRadius = 0;
+    float m_cachedInvertedRadiusTop = 0;
+    float m_cachedInvertedRadiusBottom = 0;
     float m_cachedInvertedOuter[4] = {};
     float m_cachedInvertedInner[4] = {};
 };
