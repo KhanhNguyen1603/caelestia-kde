@@ -137,15 +137,25 @@ PYEOF
 }
 
 is_plasmalogin_active() {
-    if systemctl is-active plasmalogin.service &>/dev/null || \
-       systemctl is-enabled plasmalogin.service &>/dev/null || \
-       [[ "$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null)" == *"plasmalogin"* ]]; then
+    if [[ "${DISPLAY_MANAGER:-}" == "sddm" ]] || [[ "${FORCE_SDDM:-}" == "1" ]] || [[ "${FORCE_SDDM:-}" == "true" ]]; then
+        return 1
+    fi
+    if [[ "${DISPLAY_MANAGER:-}" == "plasmalogin" ]]; then
         return 0
     fi
-    if systemctl is-active sddm.service &>/dev/null || \
-       systemctl is-enabled sddm.service &>/dev/null || \
-       [[ "$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null)" == *"sddm"* ]]; then
+    local dm_link
+    dm_link="$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null || true)"
+    if [[ "$dm_link" == *"sddm"* ]] || systemctl is-active --quiet sddm.service 2>/dev/null; then
         return 1
+    fi
+    if [[ "$dm_link" == *"plasmalogin"* ]] || systemctl is-active --quiet plasmalogin.service 2>/dev/null; then
+        return 0
+    fi
+    if [[ "$(systemctl is-enabled sddm.service 2>/dev/null || true)" == "enabled" ]]; then
+        return 1
+    fi
+    if [[ "$(systemctl is-enabled plasmalogin.service 2>/dev/null || true)" == "enabled" ]]; then
+        return 0
     fi
     if [[ -e /etc/plasmalogin.conf ]] && ! command -v sddm >/dev/null 2>&1; then
         return 0
@@ -153,9 +163,10 @@ is_plasmalogin_active() {
     return 1
 }
 
-DISPLAY_MANAGER="sddm"
 if is_plasmalogin_active; then
     DISPLAY_MANAGER="plasmalogin"
+else
+    DISPLAY_MANAGER="sddm"
 fi
 
 if [[ "$DISPLAY_MANAGER" == "plasmalogin" ]]; then
