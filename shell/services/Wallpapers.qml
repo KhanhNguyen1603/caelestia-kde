@@ -5,6 +5,7 @@ import QtCore
 import Quickshell
 import Quickshell.Io
 import Caelestia
+import Caelestia.Images
 import Caelestia.Config
 import Caelestia.Models
 import qs.services
@@ -107,7 +108,50 @@ Searcher {
         }
     }
 
+    function getVariantForMode(path: string, lightMode: bool): string {
+        if (!path)
+            return path;
+
+        // 1. Chuẩn KDE Wallpaper Package: contents/images (sáng) <-> contents/images_dark (tối)
+        if (lightMode && path.includes("/contents/images_dark/")) {
+            const candidate = path.replace("/contents/images_dark/", "/contents/images/");
+            if (IUtils.fileExists(candidate))
+                return candidate;
+        } else if (!lightMode && path.includes("/contents/images/")) {
+            const candidate = path.replace("/contents/images/", "/contents/images_dark/");
+            if (IUtils.fileExists(candidate))
+                return candidate;
+        }
+
+        // 2. Các quy ước đặt tên file ảnh thông dụng
+        const pairs = [
+            ["_dark.", "_light."],
+            ["-dark.", "-light."],
+            [".dark.", ".light."],
+            ["_night.", "_day."],
+            ["-night.", "-day."],
+            [".night.", ".day."]
+        ];
+
+        for (let i = 0; i < pairs.length; i++) {
+            const darkPat = pairs[i][0];
+            const lightPat = pairs[i][1];
+            if (lightMode && path.includes(darkPat)) {
+                const candidate = path.replace(darkPat, lightPat);
+                if (IUtils.fileExists(candidate))
+                    return candidate;
+            } else if (!lightMode && path.includes(lightPat)) {
+                const candidate = path.replace(lightPat, darkPat);
+                if (IUtils.fileExists(candidate))
+                    return candidate;
+            }
+        }
+
+        return path;
+    }
+
     function setWallpaper(path: string): void {
+        path = getVariantForMode(path, Colours.light);
         if (previewing && path !== actualCurrent)
             previewColoursState.hold();
         actualCurrent = path;
@@ -254,6 +298,11 @@ Searcher {
                 wall = root.fallback;
                 Quickshell.execDetached(["caelestia", "wallpaper", "-f", root.fallback, ...Colours.smartArg]);
             }
+            const variant = root.getVariantForMode(wall, Colours.currentLight);
+            if (variant && variant !== wall) {
+                wall = variant;
+                Quickshell.execDetached(["caelestia", "wallpaper", "-f", wall, ...Colours.smartArg]);
+            }
             if (Images.isVideo(root.actualCurrent) && wall === root.getThumbnailPath(root.actualCurrent)) {
                 return;
             }
@@ -279,5 +328,17 @@ Searcher {
 
     PreviewColours {
         id: previewColoursState
+    }
+
+    Connections {
+        target: Colours
+
+        function onCurrentLightChanged(): void {
+            if (!root.actualCurrent)
+                return;
+            const target = root.getVariantForMode(root.actualCurrent, Colours.currentLight);
+            if (target && target !== root.actualCurrent)
+                root.setWallpaper(target);
+        }
     }
 }
