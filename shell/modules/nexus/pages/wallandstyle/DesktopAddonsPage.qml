@@ -98,6 +98,7 @@ PageBase {
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
                 Layout.fillWidth: true
                 text: qsTr("Desktop media shapes")
+                subtext: qsTr("Automatically hidden when desktop lyrics are active")
                 checked: Config.background.desktopShapes.enabled
                 onToggled: {
                     GlobalConfig.background.desktopShapes.enabled = checked;

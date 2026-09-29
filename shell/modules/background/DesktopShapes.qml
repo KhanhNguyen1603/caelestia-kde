@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Caelestia.Config
+import Caelestia.Services
 import qs.components
 import qs.services
 import qs.modules.dashboard.dash as Dash
@@ -22,13 +23,14 @@ Item {
     readonly property bool windowHidesShapes: Kwin.windowHidesDesktopWidgets(root.screen ? root.screen.name : "", Config.background.visualiser.hideOnAllMonitors)
     readonly property bool shouldHide: autoHide && windowHidesShapes
     readonly property bool isPlaying: Players.active?.isPlaying ?? false
+    readonly property bool lyricsActive: Config.background.desktopLyrics.enabled && Lyrics.hasLyrics
 
     implicitWidth: 220 * root.shapesScale
     implicitHeight: 220 * root.shapesScale
     width: implicitWidth
     height: implicitHeight
 
-    opacity: (root.isPlaying && !root.shouldHide) ? 1 : 0
+    opacity: (root.isPlaying && !root.shouldHide && !root.lyricsActive) ? 1 : 0
     visible: opacity > 0
 
     Behavior on opacity {
