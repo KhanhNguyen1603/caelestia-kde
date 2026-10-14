@@ -1547,7 +1547,7 @@ wl-paste --no-newline --type text/uri-list`]
         id: gridItem
 
         readonly property int barZone: Visibilities.bars.get(root.screenData.name)?.visualThickness ?? (Tokens.sizes.bar.innerWidth + Math.max(Tokens.padding.small, Config.border.thickness))
-        readonly property int baseMargin: Tokens.padding.large * 2
+        readonly property int baseMargin: Tokens.padding.small
         readonly property int marginLeft: Config.bar.position === "left" ? baseMargin + barZone : baseMargin
         readonly property int marginRight: Config.bar.position === "right" ? baseMargin + barZone : baseMargin
         readonly property int marginTop: Config.bar.position === "top" ? baseMargin + barZone : baseMargin
