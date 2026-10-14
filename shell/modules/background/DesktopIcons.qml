@@ -1707,7 +1707,7 @@ wl-paste --no-newline --type text/uri-list`]
         readonly property bool barEnabled: !Strings.testRegexList(barConfig.excludedScreens, root.screenData.name)
         readonly property string barPosition: barConfig.position ?? Config.bar.position
         readonly property int barZone: barEnabled ? (Visibilities.bars.get(root.screenData.name)?.visualThickness ?? (Tokens.sizes.bar.innerWidth + Math.max(Tokens.padding.small, Config.border.thickness))) : 0
-        readonly property int baseMargin: Math.round(Tokens.padding.large * 2 * root.effectiveScale)
+        readonly property int baseMargin: Math.round(Tokens.padding.small * root.effectiveScale)
         readonly property int marginLeft: barPosition === "left" ? baseMargin + barZone : baseMargin
         readonly property int marginRight: barPosition === "right" ? baseMargin + barZone : baseMargin
         readonly property int marginTop: barPosition === "top" ? baseMargin + barZone : baseMargin
