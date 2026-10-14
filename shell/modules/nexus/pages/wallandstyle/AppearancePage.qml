@@ -356,7 +356,7 @@ PageBase {
             spacing: 0
 
             StepperRow {
-                reset: ({ node: GlobalConfig.border, setting: "rounding" })
+                reset: ({ node: GlobalConfig.border, setting: "roundingTop" })
                 first: true
                 Layout.fillWidth: true
                 label: qsTr("Top border rounding")
@@ -368,6 +368,7 @@ PageBase {
             }
 
             StepperRow {
+                reset: ({ node: GlobalConfig.border, setting: "roundingBottom" })
                 Layout.fillWidth: true
                 label: qsTr("Bottom border rounding")
                 value: GlobalConfig.border.roundingBottom
