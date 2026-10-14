@@ -12,7 +12,7 @@ Singleton {
     id: root
 
     readonly property string layoutPath: `${Paths.data}/desktop_layout.json`
-    readonly property var iconSizes: [48, 64, 80, 96]
+    readonly property var iconSizes: [32, 48, 64, 80, 96]
 
     property bool loaded: false
     // Item key ("f/<file name>" or "g/<group id>") -> { col, row }.
