@@ -158,6 +158,7 @@ Item {
 
                     Repeater {
                         model: [
+                            { size: 32, label: qsTr("Super Small") },
                             { size: 48, label: qsTr("Small") },
                             { size: 64, label: qsTr("Medium") },
                             { size: 80, label: qsTr("Large") },

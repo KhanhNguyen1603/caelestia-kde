@@ -14,6 +14,10 @@ PageBase {
 
     readonly property list<MenuItem> iconSizeItems: [
         MenuItem {
+            text: qsTr("Super Small")
+            value: 32
+        },
+        MenuItem {
             text: qsTr("Small")
             value: 48
         },
@@ -119,7 +123,7 @@ PageBase {
             label: qsTr("Desktop Icon Size")
             subtext: qsTr("Ctrl+scroll on the desktop also changes it")
             menuItems: root.iconSizeItems
-            active: root.iconSizeItems.find(i => i.value === DesktopLayout.iconSize) ?? root.iconSizeItems[1]
+            active: root.iconSizeItems.find(i => i.value === DesktopLayout.iconSize) ?? root.iconSizeItems[2]
             enabled: Config.background.wallpaperEnabled && Config.background.desktopIconsEnabled
             onSelected: item => DesktopLayout.setIconSize(item.value)
         }
