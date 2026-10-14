@@ -13,6 +13,10 @@ PageBase {
 
     readonly property list<MenuItem> iconSizeItems: [
         MenuItem {
+            text: qsTr("Super Small")
+            value: 32
+        },
+        MenuItem {
             text: qsTr("Small")
             value: 48
         },
