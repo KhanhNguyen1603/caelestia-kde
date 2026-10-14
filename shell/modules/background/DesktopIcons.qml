@@ -71,10 +71,18 @@ Item {
 
     readonly property real effectiveScale: Math.max(0.75, Math.min(2.0, resolutionScale))
     readonly property int iconSize: Math.round(DesktopLayout.iconSize * effectiveScale)
-    readonly property int cellWidth: Math.round(iconSize + 36 * effectiveScale)
-    readonly property int cellHeight: Math.round(iconSize + 56 * effectiveScale)
-    readonly property int cols: Math.max(1, Math.floor(gridItem.areaWidth / cellWidth))
-    readonly property int rows: Math.max(1, Math.floor(gridItem.areaHeight / cellHeight))
+    // Nominal cell size for this icon size and screen density. The grid keeps
+    // this as its minimum, then stretches the cells (below) to fill the area
+    // exactly, so no leftover piles up on the right and bottom edges.
+    readonly property int baseCellWidth: Math.round(iconSize + 36 * effectiveScale)
+    readonly property int baseCellHeight: Math.round(iconSize + 56 * effectiveScale)
+    readonly property int cols: Math.max(1, Math.floor(gridItem.areaWidth / baseCellWidth))
+    readonly property int rows: Math.max(1, Math.floor(gridItem.areaHeight / baseCellHeight))
+    // Whole cells are placed first, then each one grows to absorb the leftover.
+    // Cells never shrink below the nominal size, so the icon always fits even
+    // on screens too small for a full column or row.
+    readonly property real cellWidth: gridItem.areaWidth > 0 ? Math.max(baseCellWidth, gridItem.areaWidth / cols) : baseCellWidth
+    readonly property real cellHeight: gridItem.areaHeight > 0 ? Math.max(baseCellHeight, gridItem.areaHeight / rows) : baseCellHeight
     readonly property bool isPrimaryScreen: Screens.screens.length > 0 && Screens.screens[0].name === screenName
     readonly property bool gridReady: gridItem.areaWidth > 0 && gridItem.areaHeight > 0
     readonly property bool folderReady: folderModel.status === FolderListModel.Ready
@@ -1980,13 +1988,17 @@ wl-paste --no-newline --type text/uri-list`]
         readonly property bool barEnabled: !Strings.testRegexList(barConfig.excludedScreens, root.screenName)
         readonly property string barPosition: barConfig.position ?? Config.bar.position
         readonly property int barZone: barEnabled ? (Visibilities.bars.get(root.screenName)?.visualThickness ?? (Tokens.sizes.bar.innerWidth + Math.max(Tokens.padding.small, Config.border.thickness))) : 0
-        readonly property int baseMargin: Math.round(Tokens.padding.large * 0.5 * root.effectiveScale)
+        // Keep the minimum gap to the screen edge, but never less than the
+        // screen border drawn on top of the wallpaper, or icons would sit
+        // underneath it on setups that leave the border enabled.
+        readonly property int baseMargin: Math.round(Math.max(Tokens.padding.small * root.effectiveScale, Config.border.thickness))
         readonly property int marginLeft: barPosition === "left" ? baseMargin + barZone : baseMargin
         readonly property int marginRight: barPosition === "right" ? baseMargin + barZone : baseMargin
         readonly property int marginTop: barPosition === "top" ? baseMargin + barZone : baseMargin
         readonly property int marginBottom: barPosition === "bottom" ? baseMargin + barZone : baseMargin
-        // Space the cells may use. Only whole cells fit, so the grid is centred in it
-        // and the leftover is split between both sides instead of all going right and down.
+        // Space the cells may use. The cells stretch to fill it exactly (see
+        // cellWidth/cellHeight), so every edge keeps the same margin instead of
+        // the leftover going all to the right and down.
         readonly property real areaWidth: root.width - marginLeft - marginRight
         readonly property real areaHeight: root.height - marginTop - marginBottom
 
