@@ -228,9 +228,17 @@ test_resize_plan_passes_locked_keys_as_immovable() {
         "resizePlan must pass lockedKeys() as immovable to planMove"
 }
 
-test_desktop_grid_is_aligned_to_margin_and_margin_is_halved() {
-    assert_contains "$ICONS_SRC" 'readonly property int baseMargin: Math.round(Tokens.padding.large * 0.5 * root.effectiveScale)' \
-        "baseMargin must be halved (0.5 * large token)"
+test_desktop_grid_keeps_equal_edges_and_respects_screen_border() {
+    assert_contains "$ICONS_SRC" 'readonly property int baseMargin: Math.round(Math.max(Tokens.padding.small * root.effectiveScale, Config.border.thickness))' \
+        "baseMargin must keep the padding gap but never sit under the screen border"
+    assert_contains "$ICONS_SRC" 'readonly property int cols: Math.max(1, Math.floor(gridItem.areaWidth / baseCellWidth))' \
+        "columns must be counted from the nominal cell size"
+    assert_contains "$ICONS_SRC" 'readonly property int rows: Math.max(1, Math.floor(gridItem.areaHeight / baseCellHeight))' \
+        "rows must be counted from the nominal cell size"
+    assert_contains "$ICONS_SRC" 'readonly property real cellWidth: gridItem.areaWidth > 0 ? Math.max(baseCellWidth, gridItem.areaWidth / cols) : baseCellWidth' \
+        "cells must stretch to fill the width so the edges stay equal"
+    assert_contains "$ICONS_SRC" 'readonly property real cellHeight: gridItem.areaHeight > 0 ? Math.max(baseCellHeight, gridItem.areaHeight / rows) : baseCellHeight' \
+        "cells must stretch to fill the height so the edges stay equal"
     assert_contains "$ICONS_SRC" 'x: marginLeft' \
         "grid must align directly to marginLeft without centering offset"
     assert_contains "$ICONS_SRC" 'y: marginTop' \
