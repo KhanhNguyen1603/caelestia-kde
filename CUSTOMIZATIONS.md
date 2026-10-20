@@ -1,6 +1,6 @@
 # Tổng hợp các thay đổi và tối ưu hóa (Customizations & Optimizations)
 
-Tài liệu này tổng hợp toàn bộ các chỉnh sửa, tối ưu hóa và tính năng mới đã được thực hiện trên kho lưu trữ của bạn [caelestia-kde](https://github.com/KhanhNguyen1603/caelestia-kde.git) dựa trên phiên bản phát hành mới nhất **v2.6.1** (`ladybug-me/caelestia-kde`).
+Tài liệu này tổng hợp toàn bộ các chỉnh sửa, tối ưu hóa và tính năng mới đã được thực hiện trên kho lưu trữ của bạn [caelestia-kde](https://github.com/KhanhNguyen1603/caelestia-kde.git) dựa trên phiên bản phát hành mới nhất **v2.6.3** (`ladybug-me/caelestia-kde`).
 
 > **Phạm vi tài liệu:** Chỉ ghi lại những thay đổi còn tồn tại trong mã nguồn hiện tại. Các thử nghiệm đã bị gỡ hoặc tính năng cũ đã được upstream giải quyết trong hệ thống Desktop Widgets không được liệt kê.
 
@@ -65,3 +65,13 @@ Tài liệu này tổng hợp toàn bộ các chỉnh sửa, tối ưu hóa và 
 * **Chi tiết:** 
   * Tự động nhận diện biến thể hình nền sáng/tối (`contents/images/` <-> `contents/images_dark/` theo chuẩn KDE Wallpaper Package, hoặc các quy ước hậu tố `_dark`/`_light`, `-dark`/`-light`, `.dark`/`.light`, `_night`/`_day`).
   * Tự động tráo đổi hình nền tương ứng và đồng bộ sang desktop KDE Plasma khi người dùng chuyển đổi giữa chế độ Light và Dark.
+
+### 🖥️ Tùy biến biểu tượng & Lưới màn hình nền (Desktop Icons & Grid)
+* **Tệp tin ảnh hưởng:**
+  * [DesktopLayout.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/services/DesktopLayout.qml)
+  * [DesktopIcons.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/background/DesktopIcons.qml)
+  * [ViewOptions.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/background/desktopicons/ViewOptions.qml)
+  * [DesktopPage.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/nexus/pages/DesktopPage.qml)
+* **Chi tiết:**
+  * **Kích thước biểu tượng Super Small (32px):** Bổ sung thêm tùy chọn 32px vào danh mục kích thước biểu tượng desktop (cùng với Small 48px, Medium 64px, Large 96px, Huge 128px), giúp người dùng sắp xếp gọn gàng nhiều file/thư mục mà không chiếm diện tích màn hình.
+  * **Rút gọn lề lưới desktop (Base Margin 8px):** Tinh chỉnh khoảng cách lề cơ bản từ 32px xuống 8px (`Tokens.padding.small * root.effectiveScale`), tối đa hóa vùng hiển thị lưới ứng dụng trên mọi kích cỡ màn hình.
