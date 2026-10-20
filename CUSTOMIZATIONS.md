@@ -75,3 +75,12 @@ Tài liệu này tổng hợp toàn bộ các chỉnh sửa, tối ưu hóa và 
 * **Chi tiết:**
   * **Kích thước biểu tượng Super Small (32px):** Bổ sung thêm tùy chọn 32px vào danh mục kích thước biểu tượng desktop (cùng với Small 48px, Medium 64px, Large 96px, Huge 128px), giúp người dùng sắp xếp gọn gàng nhiều file/thư mục mà không chiếm diện tích màn hình.
   * **Rút gọn lề lưới desktop (Base Margin 8px):** Tinh chỉnh khoảng cách lề cơ bản từ 32px xuống 8px (`Tokens.padding.small * root.effectiveScale`), tối đa hóa vùng hiển thị lưới ứng dụng trên mọi kích cỡ màn hình.
+
+### 💻 Hỗ trợ tương thích đa dạng Terminal Emulator cho ứng dụng dòng lệnh (CLI Apps)
+* **Tệp tin ảnh hưởng:**
+  * [Launch.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/utils/Launch.qml)
+  * [UpdatesPage.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/nexus/pages/UpdatesPage.qml)
+  * [CalcItem.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/launcher/items/CalcItem.qml)
+* **Chi tiết:**
+  * **Tự động chèn cờ thực thi (`-e` / `--`):** Khắc phục lỗi `invalid field` khi mở các ứng dụng CLI (như Neovim, htop, btop...) được ghim trên Dock hoặc tìm từ Launcher khi người dùng thiết lập terminal mặc định là Ghostty, Alacritty, Konsole, Kitty, WezTerm hoặc GNOME Terminal / Ptyxis.
+  * Tự động bổ sung cờ `-e` cho các terminal theo chuẩn POSIX/xterm (hoặc `--` cho họ GNOME) khi chạy script `wrap_term_launch.sh`, đồng thời vẫn bảo đảm mở terminal trống bình thường qua phím tắt hay menu chuột phải.

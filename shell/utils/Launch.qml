@@ -35,8 +35,15 @@ Singleton {
             Quickshell.execDetached(root.wrap(command));
     }
 
-    function terminalCommand(command: list<string>): list<string> {
-        return [...GlobalConfig.general.apps.terminal, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, ...command];
+    function terminalCommand(command: list<string>, termOverride: var): list<string> {
+        const term = (termOverride && termOverride.length > 0) ? termOverride : GlobalConfig.general.apps.terminal;
+        if (term.includes("-e") || term.includes("--"))
+            return [...term, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, ...command];
+
+        const bin = (term[0] ?? "").split("/").pop();
+        const execFlag = ["gnome-terminal", "ptyxis", "blackbox"].includes(bin) ? ["--"] : ["-e"];
+
+        return [...term, ...execFlag, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, ...command];
     }
 
     function launchInTerminal(command: list<string>, workingDirectory: string): void {
