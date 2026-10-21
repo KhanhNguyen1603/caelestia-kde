@@ -25,6 +25,7 @@ Singleton {
     function defaultEntries() {
         return [
             { id: "paste", label: qsTr("Paste"), icon: "content_paste", action: "Paste", enabled: true, type: "default" },
+            { id: "create_new", label: qsTr("Create New..."), icon: "add_circle", action: "CreateNew", enabled: true, type: "default" },
             { id: "add_widget", label: qsTr("Add Widget"), icon: "widgets", action: "AddWidget", enabled: true, type: "default" },
             { id: "arrange_icons", label: qsTr("Arrange Icons"), icon: "sort", action: "ArrangeIcons", enabled: true, type: "default" },
             { id: "toggle_widget_lock", label: qsTr("Lock Widgets"), icon: "lock", action: "ToggleWidgetLock", enabled: true, type: "default" },

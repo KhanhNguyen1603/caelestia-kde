@@ -213,6 +213,7 @@ PageBase {
 
     property var componentMeta: ({
         "paste": { icon: "content_paste", name: qsTr("Paste") },
+        "create_new": { icon: "add_circle", name: qsTr("Create New...") },
         "add_widget": { icon: "widgets", name: qsTr("Add Widget") },
         "arrange_icons": { icon: "sort", name: qsTr("Arrange Icons") },
         "toggle_desktop_icons": { icon: "desktop_windows", name: qsTr("Desktop Icons") },

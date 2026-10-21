@@ -33,6 +33,10 @@ Controls.Menu {
             DesktopLayout.pasteRequested(root.screenName, root.attachTo.x, root.attachTo.y);
             return;
         }
+        if (entry.action === "CreateNew") {
+            DesktopLayout.createNewRequested(root.screenName, root.attachTo.x, root.attachTo.y);
+            return;
+        }
         if (entry.action === "AddWidget") {
             DesktopLayout.addWidgetRequested(root.screenName, root.attachTo.x, root.attachTo.y);
             return;

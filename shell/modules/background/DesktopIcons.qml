@@ -1061,6 +1061,45 @@ Item {
         pasteProc.running = true;
     }
 
+    function uniqueDesktopName(defaultName: string): string {
+        const dot = defaultName.lastIndexOf(".");
+        const base = dot > 0 ? defaultName.substring(0, dot) : defaultName;
+        const ext = dot > 0 ? defaultName.substring(dot) : "";
+
+        let candidate = defaultName;
+        let i = 1;
+        while (files && files[candidate]) {
+            candidate = `${base} (${i})${ext}`;
+            i++;
+        }
+        return candidate;
+    }
+
+    function createNewItem(name: string, isFolder: bool, cell: var): void {
+        const trimmed = name.trim();
+        if (!trimmed || trimmed === "." || trimmed === ".." || trimmed.includes("/"))
+            return;
+
+        const finalName = uniqueDesktopName(trimmed);
+        const key = DesktopLayout.fileKey(finalName);
+        const occ = Engine.occupancy(contextPositionsTopLevel(), null, spans);
+        const at = cell ? Engine.nearestFree(occ, cell.col, cell.row, cols, rows, { w: 1, h: 1 }) : Engine.firstFree(occ, cols, rows, { w: 1, h: 1 });
+        const posWithScreen = Object.assign({}, at, { screen: screenData.name });
+        const positions = Object.assign({}, DesktopLayout.positions, { [key]: posWithScreen });
+        DesktopLayout.setPositions(DesktopLayout.autoArrange ? Object.assign(positions, arranged(Object.assign(contextPositionsTopLevel(), { [key]: posWithScreen }), [])) : positions);
+
+        const placements = Object.assign({}, pendingPlacements);
+        placements[finalName] = at;
+        pendingPlacements = placements;
+
+        const fullPath = desktopDir + "/" + finalName;
+        if (isFolder) {
+            Quickshell.execDetached(["mkdir", "-p", "--", fullPath]);
+        } else {
+            Quickshell.execDetached(["touch", "--", fullPath]);
+        }
+    }
+
     // ---- Drag and drop ----------------------------------------------------
 
     function prepareDragImage(key: string): void {
