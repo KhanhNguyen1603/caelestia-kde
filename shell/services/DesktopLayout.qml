@@ -44,6 +44,7 @@ Singleton {
     property string pendingWallpaperSyncMode: ""
 
     signal pasteRequested(string screenName, real x, real y)
+    signal createNewRequested(string screenName, real x, real y)
     signal viewOptionsRequested(string screenName, real x, real y)
     signal addWidgetRequested(string screenName, real x, real y)
     signal arrangeRequested(string screenName, string sortKey)

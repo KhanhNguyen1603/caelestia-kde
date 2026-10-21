@@ -39,7 +39,7 @@ StyledWindow {
     // active workspace changes — hasFullscreenOn() filters by workspace, but
     // a plain function call only re-runs when its direct property deps change.
     readonly property bool actualFullscreen: (Kwin.activeWsId, Kwin.hasFullscreenOn(screen?.name ?? ""))
-    readonly property bool transientOverlayOpen: panels.popouts.isDetached || panels.popouts.isContextPopout || desktopContextMenu.expanded || desktopIconContextMenu.expanded || dropMenu.expanded || viewOptions.open || widgetGallery.open || visibilities.overview || Visibilities.launcherOpen || visibilities.dashboard || visibilities.session || visibilities.utilities
+    readonly property bool transientOverlayOpen: panels.popouts.isDetached || panels.popouts.isContextPopout || desktopContextMenu.expanded || desktopIconContextMenu.expanded || dropMenu.expanded || createNewPanel.open || viewOptions.open || widgetGallery.open || visibilities.overview || Visibilities.launcherOpen || visibilities.dashboard || visibilities.session || visibilities.utilities
     readonly property bool hasOpenOverlay: focusGrabState.active || transientOverlayOpen || visibilities.sidebar
     readonly property bool hasFullscreen: actualFullscreen && !hasOpenOverlay
     // The launcher is one panel across outputs: a screen that does not show it
@@ -84,7 +84,7 @@ StyledWindow {
 
     // The window takes the keyboard while a panel that owns text is open, and that is
     // Panels' answer to give: it is the one place that has them all.
-    readonly property bool wantsKeyboard: panels.wantsKeyboard
+    readonly property bool wantsKeyboard: panels.wantsKeyboard || createNewPanel.open
 
     onHasFullscreenChanged: {
         if (!hasFullscreen)
@@ -109,7 +109,7 @@ StyledWindow {
     anchors.right: true
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: !wantsKeyboard && (capturesOverlayInput || (actualFullscreen && fsTransitionProg < 1) || (fsTransitionProg > 0 && Config.general.showOverFullscreen) || (panels.notifications.visible && panels.notifications.height > 0 && GlobalConfig.notifs.fullscreen === "on") || (((monitor?.lastIpcObject?.specialWorkspace?.name?.length ?? 0) > 0) && (monitor?.activeWorkspace?.toplevels?.values?.some(t => (t?.lastIpcObject?.fullscreen ?? 0) > 1) ?? false))) ? WlrLayer.Overlay : WlrLayer.Top
-    WlrLayershell.keyboardFocus: wantsKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: createNewPanel.open ? WlrKeyboardFocus.Exclusive : (wantsKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
 
     // A pinned sidebar gets out of the way of fullscreen windows (games, video)
     // and comes back once fullscreen ends.
@@ -765,6 +765,13 @@ StyledWindow {
                 }
             }
 
+            function onCreateNewRequested(screenName: string, x: real, y: real): void {
+                if (root.screen.name === screenName) {
+                    const ctrl = DesktopLayout.controllerFor(screenName);
+                    createNewPanel.openAt(x, y, ctrl ? ctrl.cellAt(x, y) : null);
+                }
+            }
+
             target: DesktopLayout
         }
         Item {
@@ -788,6 +795,12 @@ StyledWindow {
 
             controller: DesktopLayout.controllerFor(root.screen.name)
             z: 9999
+        }
+        CreateNewPanel {
+            id: createNewPanel
+
+            controller: DesktopLayout.controllerFor(root.screen.name)
+            z: 10000
         }
         ViewOptions {
             id: viewOptions
