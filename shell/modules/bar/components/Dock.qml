@@ -150,9 +150,11 @@ Item {
                 }
             }
         } else if (entry.entry) {
-            let newLaunching = Object.assign({}, root.launchingApps);
-            newLaunching[entry.appClass || entry.id] = true;
-            root.launchingApps = newLaunching;
+            if (!entry.entry.runInTerminal) {
+                let newLaunching = Object.assign({}, root.launchingApps);
+                newLaunching[entry.appClass || entry.id] = true;
+                root.launchingApps = newLaunching;
+            }
 
             Launch.launchEntry(entry.entry);
         }
@@ -171,9 +173,11 @@ Item {
         if (!entry)
             return;
         if (entry.entry) {
-            let newLaunching = Object.assign({}, root.launchingApps);
-            newLaunching[entry.appClass || entry.id] = true;
-            root.launchingApps = newLaunching;
+            if (!entry.entry.runInTerminal) {
+                let newLaunching = Object.assign({}, root.launchingApps);
+                newLaunching[entry.appClass || entry.id] = true;
+                root.launchingApps = newLaunching;
+            }
 
             Launch.launchEntry(entry.entry);
         } else if (entry.toplevels.length > 0) {

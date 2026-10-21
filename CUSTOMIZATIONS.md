@@ -81,6 +81,8 @@ Tài liệu này tổng hợp toàn bộ các chỉnh sửa, tối ưu hóa và 
   * [Launch.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/utils/Launch.qml)
   * [UpdatesPage.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/nexus/pages/UpdatesPage.qml)
   * [CalcItem.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/launcher/items/CalcItem.qml)
+  * [Dock.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/bar/components/Dock.qml)
 * **Chi tiết:**
-  * **Tự động chèn cờ thực thi (`-e` / `--`):** Khắc phục lỗi `invalid field` khi mở các ứng dụng CLI (như Neovim, htop, btop...) được ghim trên Dock hoặc tìm từ Launcher khi người dùng thiết lập terminal mặc định là Ghostty, Alacritty, Konsole, Kitty, WezTerm hoặc GNOME Terminal / Ptyxis.
+  * **Tự động chèn cờ thực thi (`-e` / `--`):** Khắc phục lỗi khi mở các ứng dụng CLI (như Neovim, htop, btop...) được ghim trên Dock hoặc tìm từ Launcher khi người dùng thiết lập terminal mặc định là Ghostty, Alacritty, Konsole, Kitty, WezTerm hoặc GNOME Terminal / Ptyxis.
   * Tự động bổ sung cờ `-e` cho các terminal theo chuẩn POSIX/xterm (hoặc `--` cho họ GNOME) khi chạy script `wrap_term_launch.sh`, đồng thời vẫn bảo đảm mở terminal trống bình thường qua phím tắt hay menu chuột phải.
+  * **Ngăn chặn kẹt hiệu ứng xoay (spinner) trên Dock:** Khi mở ứng dụng CLI (`runInTerminal`), Dock không kích hoạt hiệu ứng xoay, loại bỏ triệt để lỗi icon Neovim/CLI bị xoay vĩnh viễn trên thanh dock do cửa sổ terminal mở lên không trùng định danh appClass.
