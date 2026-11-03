@@ -1,6 +1,6 @@
 # Tổng hợp các thay đổi và tối ưu hóa (Customizations & Optimizations)
 
-Tài liệu này tổng hợp toàn bộ các chỉnh sửa, tối ưu hóa và tính năng mới đã được thực hiện trên kho lưu trữ của bạn [caelestia-kde](https://github.com/KhanhNguyen1603/caelestia-kde.git) dựa trên phiên bản phát hành mới nhất **v2.6.3** (`ladybug-me/caelestia-kde`).
+Tài liệu này tổng hợp toàn bộ các chỉnh sửa, tối ưu hóa và tính năng mới đã được thực hiện trên kho lưu trữ của bạn [caelestia-kde](https://github.com/KhanhNguyen1603/caelestia-kde.git) dựa trên phiên bản phát hành mới nhất **v2.7.0** (`ladybug-me/caelestia-kde`).
 
 > **Phạm vi tài liệu:** Chỉ ghi lại những thay đổi còn tồn tại trong mã nguồn hiện tại. Các thử nghiệm đã bị gỡ hoặc tính năng cũ đã được upstream giải quyết trong hệ thống Desktop Widgets không được liệt kê.
 
@@ -71,10 +71,22 @@ Tài liệu này tổng hợp toàn bộ các chỉnh sửa, tối ưu hóa và 
   * [DesktopLayout.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/services/DesktopLayout.qml)
   * [DesktopIcons.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/background/DesktopIcons.qml)
   * [ViewOptions.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/background/desktopicons/ViewOptions.qml)
-  * [DesktopPage.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/nexus/pages/DesktopPage.qml)
+  * [DesktopSettingsPage.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/nexus/pages/desktop/DesktopSettingsPage.qml)
 * **Chi tiết:**
   * **Kích thước biểu tượng Super Small (32px):** Bổ sung thêm tùy chọn 32px vào danh mục kích thước biểu tượng desktop (cùng với Small 48px, Medium 64px, Large 96px, Huge 128px), giúp người dùng sắp xếp gọn gàng nhiều file/thư mục mà không chiếm diện tích màn hình.
   * **Rút gọn lề lưới desktop (Base Margin 8px):** Tinh chỉnh khoảng cách lề cơ bản từ 32px xuống 8px (`Tokens.padding.small * root.effectiveScale`), tối đa hóa vùng hiển thị lưới ứng dụng trên mọi kích cỡ màn hình.
+
+### 📁 Bảng Tạo Mới Tập Tin & Thư Mục Trên Desktop (Create New Panel)
+* **Tệp tin ảnh hưởng:**
+  * [DesktopContextMenu.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/background/DesktopContextMenu.qml)
+  * [DesktopIcons.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/background/DesktopIcons.qml)
+  * [CreateNewPanel.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/background/desktopicons/CreateNewPanel.qml)
+  * [ContentWindow.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/drawers/ContentWindow.qml)
+  * [ContextMenuPage.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/nexus/pages/desktop/ContextMenuPage.qml)
+  * [ContextMenuStore.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/services/ContextMenuStore.qml)
+* **Chi tiết:**
+  * Thêm mục **Create New...** trực tiếp trong Menu chuột phải desktop.
+  * Mở hộp thoại nổi tinh tế (`CreateNewPanel.qml`) hỗ trợ chọn loại tạo mới (Tập tin trống hoặc Thư mục mới), tự động đánh số thứ tự khi trùng tên (`file (1).txt`) và tự động tìm ô lưới trống gần nhất trên Desktop để đặt icon.
 
 ### 💻 Hỗ trợ tương thích đa dạng Terminal Emulator cho ứng dụng dòng lệnh (CLI Apps)
 * **Tệp tin ảnh hưởng:**
