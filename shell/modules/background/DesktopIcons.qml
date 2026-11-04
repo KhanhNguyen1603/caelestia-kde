@@ -18,13 +18,15 @@ Item {
     id: root
 
     required property ShellScreen screenData
+    property string registeredScreenName: ""
+    readonly property string screenName: screenData?.name || registeredScreenName
     // Wallpaper layer, sampled for the frosted cards of large items.
     property Item wallpaper: null
     readonly property point gridOrigin: Qt.point(gridItem.x, gridItem.y)
     // The wallpaper blurred once for all frosted cards, null when unused.
     readonly property Item glass: glassLoader.item
 
-    readonly property var screenConfig: GlobalConfig.forScreen(screenData.name).background
+    readonly property var screenConfig: GlobalConfig.forScreen(screenName).background
     readonly property bool iconsEnabled: screenConfig.desktopIconsEnabled
     // Widget editing is desktop-wide state owned by the editor; this screen follows it.
     readonly property bool widgetEditMode: WidgetEditor.active
@@ -64,7 +66,7 @@ Item {
     readonly property int cellHeight: Math.round(iconSize + 56 * effectiveScale)
     readonly property int cols: Math.max(1, Math.floor(gridItem.areaWidth / cellWidth))
     readonly property int rows: Math.max(1, Math.floor(gridItem.areaHeight / cellHeight))
-    readonly property bool isPrimaryScreen: Screens.screens.length > 0 && Screens.screens[0].name === screenData.name
+    readonly property bool isPrimaryScreen: Screens.screens.length > 0 && Screens.screens[0].name === screenName
     readonly property bool gridReady: gridItem.areaWidth > 0 && gridItem.areaHeight > 0
     readonly property bool folderReady: folderModel.status === FolderListModel.Ready
 
@@ -1747,11 +1749,12 @@ Item {
     }
 
     Component.onCompleted: {
-        DesktopLayout.registerController(screenData.name, root);
+        registeredScreenName = screenData?.name ?? "";
+        DesktopLayout.registerController(screenName, root);
         if (gridReady && isPrimaryScreen)
-            DesktopLayout.seedDefaults(cols, rows, screenData.name);
+            DesktopLayout.seedDefaults(cols, rows, screenName);
     }
-    Component.onDestruction: DesktopLayout.unregisterController(screenData.name)
+    Component.onDestruction: DesktopLayout.unregisterController(screenName, root)
 
     Connections {
         function onLoadedChanged(): void {
@@ -1988,10 +1991,10 @@ wl-paste --no-newline --type text/uri-list`]
     Item {
         id: gridItem
 
-        readonly property var barConfig: GlobalConfig.forScreen(root.screenData.name).bar
-        readonly property bool barEnabled: !Strings.testRegexList(barConfig.excludedScreens, root.screenData.name)
+        readonly property var barConfig: GlobalConfig.forScreen(root.screenName).bar
+        readonly property bool barEnabled: !Strings.testRegexList(barConfig.excludedScreens, root.screenName)
         readonly property string barPosition: barConfig.position ?? Config.bar.position
-        readonly property int barZone: barEnabled ? (Visibilities.bars.get(root.screenData.name)?.visualThickness ?? (Tokens.sizes.bar.innerWidth + Math.max(Tokens.padding.small, Config.border.thickness))) : 0
+        readonly property int barZone: barEnabled ? (Visibilities.bars.get(root.screenName)?.visualThickness ?? (Tokens.sizes.bar.innerWidth + Math.max(Tokens.padding.small, Config.border.thickness))) : 0
         readonly property int baseMargin: Math.round(Tokens.padding.small * root.effectiveScale)
         readonly property int marginLeft: barPosition === "left" ? baseMargin + barZone : baseMargin
         readonly property int marginRight: barPosition === "right" ? baseMargin + barZone : baseMargin

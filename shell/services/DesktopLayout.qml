@@ -57,7 +57,11 @@ Singleton {
         controllers = next;
     }
 
-    function unregisterController(screenName: string): void {
+    function unregisterController(screenName: string, controller: var): void {
+        if (!screenName)
+            return;
+        if (controller && controllers[screenName] && controllers[screenName] !== controller)
+            return;
         const next = Object.assign({}, controllers);
         delete next[screenName];
         controllers = next;

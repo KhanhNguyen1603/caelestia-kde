@@ -63,7 +63,7 @@ Item {
     readonly property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins * 2
 
     onDashboardTabsChanged: {
-        if (dashboardTabs.length > 0 && screenState.dashboardTab >= dashboardTabs.length) {
+        if (screenState && dashboardTabs.length > 0 && screenState.dashboardTab >= dashboardTabs.length) {
             screenState.dashboardTab = dashboardTabs.length - 1;
         }
     }
