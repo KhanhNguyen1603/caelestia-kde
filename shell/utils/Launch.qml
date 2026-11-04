@@ -59,7 +59,6 @@ Singleton {
 
         return [...term, ...execFlag, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, ...command];
     }
-    }
 
     function launchInTerminal(command: list<string>, workingDirectory: string): void {
         Quickshell.execDetached({
