@@ -98,3 +98,12 @@ Tài liệu này tổng hợp toàn bộ các chỉnh sửa, tối ưu hóa và 
   * **Tự động chèn cờ thực thi (`-e` / `--`):** Khắc phục lỗi khi mở các ứng dụng CLI (như Neovim, htop, btop...) được ghim trên Dock hoặc tìm từ Launcher khi người dùng thiết lập terminal mặc định là Ghostty, Alacritty, Konsole, Kitty, WezTerm hoặc GNOME Terminal / Ptyxis.
   * Tự động bổ sung cờ `-e` cho các terminal theo chuẩn POSIX/xterm (hoặc `--` cho họ GNOME) khi chạy script `wrap_term_launch.sh`, đồng thời vẫn bảo đảm mở terminal trống bình thường qua phím tắt hay menu chuột phải.
   * **Ngăn chặn kẹt hiệu ứng xoay (spinner) trên Dock:** Khi mở ứng dụng CLI (`runInTerminal`), Dock không kích hoạt hiệu ứng xoay, loại bỏ triệt để lỗi icon Neovim/CLI bị xoay vĩnh viễn trên thanh dock do cửa sổ terminal mở lên không trùng định danh appClass.
+
+### 🛡️ Bảo vệ an toàn con trỏ màn hình khi tắt/mở khóa (Wayland Output Teardown Null-Safety)
+* **Tệp tin ảnh hưởng:**
+  * [DesktopIcons.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/background/DesktopIcons.qml)
+  * [DesktopLayout.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/services/DesktopLayout.qml)
+  * [Content.qml](file:///home/qkhanh/Code/Kde%20caelestia/caelestia-dots-kde/shell/modules/dashboard/Content.qml)
+* **Chi tiết:**
+  * Lưu trữ tên màn hình đã đăng ký (`registeredScreenName` / `screenName`) trong `DesktopIcons.qml` và kiểm tra khớp tham chiếu controller trong `DesktopLayout.unregisterController`, ngăn chặn lỗi `TypeError: Cannot read property 'name' of null` khi màn hình cũ thành dangling object hoặc xóa nhầm controller của màn hình mới vừa khởi tạo sau khi mở khóa/wake từ sleep.
+  * Bổ sung kiểm tra `screenState` khác `null` trong `dashboard/Content.qml` trước khi truy cập `screenState.dashboardTab`.
