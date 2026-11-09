@@ -24,24 +24,24 @@ Item {
     implicitWidth: Tokens.font.body.small.pointSize * 2
     implicitHeight: Tokens.font.body.small.pointSize * 2
 
-    Drag.active: root.draggable && dragHandler.active
+    property bool dragging: false
+    property bool _dragArmed: false
+    property point _dragOrigin: Qt.point(0, 0)
+    property bool _suppressClick: false
+
+    Drag.active: root.draggable && root.dragging
     Drag.source: root
     Drag.hotSpot: Qt.point(root.width / 2, root.height / 2)
     Drag.keys: ["trayIcon"]
-    Drag.dragType: Drag.Automatic
 
-    DragHandler {
-        id: dragHandler
-
-        enabled: root.draggable
-        target: null
-        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-        grabPermissions: PointerHandler.CanTakeOverFromAnything
-
-        onActiveChanged: TrayRegistry.draggingIcon = active
+    Component.onDestruction: {
+        if (root.dragging)
+            TrayRegistry.draggingIcon = false;
     }
 
     StateLayer {
+        id: stateLayer
+
         anchors.fill: undefined
         anchors.centerIn: parent
         implicitWidth: root.implicitWidth + Tokens.padding.extraSmall
@@ -53,7 +53,44 @@ Item {
         Accessible.name: root.modelData.title || root.modelData.id
         Accessible.description: root.hasMenuEntries && root.popouts ? qsTr("Left-click activates, right-click opens the menu, middle-click runs the secondary action.") : qsTr("Left-click activates, middle- or right-click runs the secondary action.")
 
+        onPressed: mouse => {
+            if (!root.draggable)
+                return;
+            root._dragOrigin = Qt.point(mouse.x, mouse.y);
+            root._dragArmed = true;
+        }
+
+        onPositionChanged: mouse => {
+            if (!root._dragArmed || root.dragging)
+                return;
+            if (Math.hypot(mouse.x - root._dragOrigin.x, mouse.y - root._dragOrigin.y) < 8)
+                return;
+            root.dragging = true;
+            root._dragArmed = false;
+            TrayRegistry.draggingIcon = true;
+        }
+
+        onReleased: {
+            if (root.dragging) {
+                root._suppressClick = true;
+                Qt.callLater(() => root._suppressClick = false);
+            }
+            root.dragging = false;
+            root._dragArmed = false;
+            TrayRegistry.draggingIcon = false;
+        }
+
+        onCanceled: {
+            root.dragging = false;
+            root._dragArmed = false;
+            TrayRegistry.draggingIcon = false;
+        }
+
         onClicked: event => {
+            if (root._suppressClick) {
+                root._suppressClick = false;
+                return;
+            }
             if (event.button === Qt.LeftButton) {
                 root.modelData.activate();
             } else if (event.button === Qt.MiddleButton || !root.hasMenuEntries || !root.popouts) {

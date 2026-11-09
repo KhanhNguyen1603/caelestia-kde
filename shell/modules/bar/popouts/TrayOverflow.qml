@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Caelestia.Config
 import qs.components
 import qs.services
+import qs.modules.bar
 import qs.modules.bar.components as BarComponents
 
 // The tray's overflow panel: the icons that are not pinned to the bar. Dragging
@@ -19,7 +20,8 @@ Item {
     property bool _isSidebarOpen: false
 
     readonly property var items: TrayRegistry.overflowItems
-    readonly property int columns: Math.max(1, Math.min(6, Math.ceil(Math.sqrt(root.items.length))))
+    readonly property var hiddenWidgets: BarWidgets.overflowWidgets(GlobalConfig.bar)
+    readonly property int columns: Math.max(1, Math.min(6, Math.ceil(Math.sqrt(root.items.length + root.hiddenWidgets.length))))
     readonly property real cell: 42 * root.scaleOffset
     readonly property real gridWidth: root.columns * root.cell + Math.max(0, root.columns - 1) * Tokens.spacing.small * root.scaleOffset
     readonly property real preferredWidth: Math.max(280 * root.scaleOffset, Math.min(520 * root.scaleOffset, root.gridWidth + Tokens.padding.large * 2 * root.scaleOffset))
@@ -83,10 +85,28 @@ Item {
                     }
                 }
             }
+
+            Repeater {
+                model: root.hiddenWidgets
+
+                delegate: StyledRect {
+                    id: widgetTile
+
+                    implicitWidth: root.cell
+                    implicitHeight: root.cell
+                    radius: Tokens.rounding.medium * root.scaleOffset
+                    color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+
+                    BarComponents.UpdateIndicator {
+                        anchors.centerIn: parent
+                        draggable: true
+                    }
+                }
+            }
         }
 
         StyledText {
-            visible: root.items.length === 0
+            visible: root.items.length === 0 && root.hiddenWidgets.length === 0
 
             Layout.fillWidth: true
             Layout.leftMargin: Tokens.padding.small * root.scaleOffset
@@ -100,12 +120,16 @@ Item {
     // lands in depends on whether compact mode is what was hiding it.
     DropArea {
         anchors.fill: parent
-        keys: ["trayIcon"]
+        keys: ["trayIcon", "barWidget"]
 
         onDropped: drop => {
             const source = drop.source;
-            if (source && source.key)
+            if (!source)
+                return;
+            if (source.key)
                 TrayRegistry.setState(source.key, Config.bar.tray.compact ? "collapsed" : "hidden");
+            else if (source.widgetId)
+                BarWidgets.setEnabled(GlobalConfig.bar, source.widgetId, false);
             TrayRegistry.draggingIcon = false;
         }
     }

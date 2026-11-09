@@ -5,6 +5,7 @@ import Quickshell
 import Caelestia.Config
 import qs.components
 import qs.services
+import qs.modules.bar
 
 StyledRect {
     id: root
@@ -34,15 +35,13 @@ StyledRect {
     readonly property real nonAnimHeight: {
         if (isHorizontal)
             return barThickness;
-        const arrow = root.showArrow ? expandIcon.implicitHeight + (layout.implicitHeight > 0 ? spacing : 0) : 0;
-        return layout.implicitHeight + arrow + padding * 2;
+        return layout.implicitHeight + padding * 2;
     }
 
     readonly property real nonAnimWidth: {
         if (!isHorizontal)
             return barThickness;
-        const arrow = root.showArrow ? expandIcon.implicitWidth + (layout.implicitWidth > 0 ? spacing : 0) : 0;
-        return layout.implicitWidth + arrow + padding * 2;
+        return layout.implicitWidth + padding * 2;
     }
 
     // Hit test for the bar's hover routing: the positioner owns the layout, so it
@@ -144,6 +143,56 @@ StyledRect {
             }
         }
 
+        Loader {
+            id: expandIcon
+
+            visible: root.showArrow
+            active: root.showArrow
+
+            sourceComponent: Item {
+                id: arrowContainer
+
+                readonly property real iconDimension: Math.max(expandIconInner.implicitWidth, expandIconInner.implicitHeight)
+
+                implicitWidth: iconDimension
+                implicitHeight: iconDimension
+
+                TapHandler {
+                    margin: Tokens.padding.extraSmall
+                    cursorShape: Qt.PointingHandCursor
+
+                    onTapped: {
+                        if (!root.popouts)
+                            return;
+
+                        if (root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow") {
+                            root.popouts.hasCurrent = false;
+                            return;
+                        }
+
+                        root.popouts.currentName = "trayOverflow";
+                        root.popouts.currentCenter = root.isHorizontal
+                            ? arrowContainer.mapToItem(null, arrowContainer.width / 2, 0).x
+                            : arrowContainer.mapToItem(null, 0, arrowContainer.height / 2).y;
+                        root.popouts.hasCurrent = true;
+                    }
+                }
+
+                MaterialIcon {
+                    id: expandIconInner
+
+                    anchors.centerIn: parent
+                    text: "expand_less"
+                    fontStyle: Tokens.font.icon.large
+                    rotation: Config.bar.position === "top" ? 180 : Config.bar.position === "left" ? 90 : Config.bar.position === "right" ? 270 : 0
+
+                    Behavior on rotation {
+                        Anim {}
+                    }
+                }
+            }
+        }
+
         Repeater {
             id: items
 
@@ -166,71 +215,19 @@ StyledRect {
         }
     }
 
-    Loader {
-        id: expandIcon
-
-        anchors.horizontalCenter: isHorizontal ? undefined : parent.horizontalCenter
-        anchors.verticalCenter: isHorizontal ? parent.verticalCenter : undefined
-        anchors.bottom: isHorizontal ? undefined : parent.bottom
-        anchors.right: isHorizontal ? parent.right : undefined
-        anchors.bottomMargin: isHorizontal ? 0 : root.padding
-        anchors.rightMargin: isHorizontal ? root.padding : 0
-
-        active: root.showArrow
-
-        sourceComponent: Item {
-            id: arrowContainer
-
-            readonly property real iconDimension: Math.max(expandIconInner.implicitWidth, expandIconInner.implicitHeight)
-
-            implicitWidth: iconDimension
-            implicitHeight: iconDimension
-
-            TapHandler {
-                margin: root.padding
-                cursorShape: Qt.PointingHandCursor
-
-                onTapped: {
-                    if (!root.popouts)
-                        return;
-
-                    if (root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow") {
-                        root.popouts.hasCurrent = false;
-                        return;
-                    }
-
-                    root.popouts.currentName = "trayOverflow";
-                    root.popouts.currentCenter = root.isHorizontal
-                        ? arrowContainer.mapToItem(null, arrowContainer.width / 2, 0).x
-                        : arrowContainer.mapToItem(null, 0, arrowContainer.height / 2).y;
-                    root.popouts.hasCurrent = true;
-                }
-            }
-
-            MaterialIcon {
-                id: expandIconInner
-
-                anchors.centerIn: parent
-                text: "expand_less"
-                fontStyle: Tokens.font.icon.large
-                rotation: Config.bar.position === "top" ? 180 : Config.bar.position === "left" ? 90 : Config.bar.position === "right" ? 270 : 0
-
-                Behavior on rotation {
-                    Anim {}
-                }
-            }
-        }
-    }
-
     // Dropping a hidden icon on the tray pins it back to the bar.
     DropArea {
         anchors.fill: parent
-        keys: ["trayIcon"]
+        keys: ["trayIcon", "barWidget"]
 
         onDropped: drop => {
             const source = drop.source;
-            if (source && source.key)
+            if (!source)
+                return;
+            if (source.key)
                 TrayRegistry.setState(source.key, "visible");
+            else if (source.widgetId)
+                BarWidgets.setEnabled(GlobalConfig.bar, source.widgetId, true);
             TrayRegistry.draggingIcon = false;
         }
     }

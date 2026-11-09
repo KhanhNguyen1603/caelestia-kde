@@ -9,6 +9,7 @@ REGISTRY="$REPO_ROOT/shell/modules/bar/BarWidgets.qml"
 BAR="$REPO_ROOT/shell/modules/bar/Bar.qml"
 TRAY="$REPO_ROOT/shell/modules/bar/components/Tray.qml"
 TRAY_ITEM="$REPO_ROOT/shell/modules/bar/components/TrayItem.qml"
+UPDATE_INDICATOR="$REPO_ROOT/shell/modules/bar/components/UpdateIndicator.qml"
 TRAY_OVERFLOW="$REPO_ROOT/shell/modules/bar/popouts/TrayOverflow.qml"
 POPOUTS="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
 STATUS_ICONS="$REPO_ROOT/shell/modules/bar/components/StatusIcons.qml"
@@ -128,12 +129,18 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "the popout registry needs an entry for the overflow panel"
     assert_file_contains "$TRAY_OVERFLOW" 'TrayRegistry.overflowItems' \
         "the panel should list the icons that are not on the bar"
-    assert_file_contains "$TRAY_OVERFLOW" 'keys: ["trayIcon"]' \
-        "the panel should accept icons dragged off the bar"
-    assert_file_contains "$TRAY" 'keys: ["trayIcon"]' \
-        "the bar tray should accept icons dragged back from the panel"
+    assert_file_contains "$TRAY_OVERFLOW" 'BarWidgets.overflowWidgets' \
+        "the panel should also list bar widgets taken off the bar"
+    assert_file_contains "$TRAY_OVERFLOW" 'keys: ["trayIcon", "barWidget"]' \
+        "the panel should accept icons and widgets dragged off the bar"
+    assert_file_contains "$TRAY" 'keys: ["trayIcon", "barWidget"]' \
+        "the bar tray should accept icons and widgets dragged back from the panel"
     assert_file_contains "$TRAY_ITEM" 'Drag.keys: ["trayIcon"]' \
         "tray icons need to be draggable for the two-way move"
+    assert_file_contains "$UPDATE_INDICATOR" 'Drag.keys: ["barWidget"]' \
+        "the update indicator needs to be draggable into the same panel"
+    assert_file_contains "$UPDATE_INDICATOR" 'readonly property string widgetId: "updateIndicator"' \
+        "the update indicator should name the entry a drop hides"
 }
 
 test_the_toggle_helper_keeps_the_widget_list_well_formed() {
@@ -188,8 +195,9 @@ root.byId = (() => {
     return byId;
 })();
 root.ids = root.widgets.map(widget => widget.id);
+root.overflowWidgetIds = ["updateIndicator"];
 
-const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "isEnabled", "zoneFor", "setEnabled", "replaceAll", "indexFor"];
+const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "replaceAll", "indexFor"];
 Object.assign(root, new Function("root", names.map(extractFunction).join("\n") + "\nreturn {" + names.join(", ") + "};")(root));
 
 const eq = (actual, expected, msg) => {
@@ -232,6 +240,9 @@ eq(root.systemTrayShowsIcons({ entries: defaults.filter(entry => entry.id !== "t
     "disabling the tray entry leaves the widget tray without system tray icons");
 eq(ids(root.systemTrayEntries({ entries: defaults.filter(entry => entry.id !== "tray") })), ["updateIndicator"],
     "the other right widgets still belong to the tray when the tray entry is off");
+eq(root.overflowWidgets({ entries: defaults }), [], "an enabled update indicator is not in the overflow");
+eq(root.overflowWidgets({ entries: [{ id: "updateIndicator", enabled: false }, { id: "clock", enabled: false }] }), ["updateIndicator"],
+    "a disabled update indicator is the widget the overflow panel offers back");
 eq(ids(root.zoneEntries([{ id: "clock", enabled: true }], "left")), ["clock"], "an entry with no zone is a left one, which is what the bar always assumed");
 
 eq(ids(root.zoneEntries([

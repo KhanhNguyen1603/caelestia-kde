@@ -116,6 +116,20 @@ QtObject {
         return root.zoneEntries(root.entriesOf(node), "right").some(entry => entry.id === "tray");
     }
 
+    // Bar widgets that have opted into the hidden-icons panel. They are hidden
+    // by disabling their entry, which is the same state the settings page shows
+    // in its library.
+    readonly property var overflowWidgetIds: ["updateIndicator"]
+
+    function overflowWidgets(node: var): var {
+        const hidden = [];
+        for (const entry of root.entriesOf(node)) {
+            if (entry.enabled === false && root.overflowWidgetIds.indexOf(entry.id) !== -1)
+                hidden.push(entry.id);
+        }
+        return hidden;
+    }
+
     function isEnabled(node: var, id: string): bool {
         for (const entry of root.entriesOf(node)) {
             if (entry.id === id)
