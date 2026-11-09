@@ -476,6 +476,14 @@ PageBase {
                 color: Colours.palette.m3onSurfaceVariant
             }
 
+            Text {
+                Layout.fillWidth: true
+                text: qsTr("Widgets in the right zone share one system tray; the clock stays outside it.")
+                font: Tokens.font.body.small
+                color: Colours.palette.m3onSurfaceVariant
+                wrapMode: Text.WordWrap
+            }
+
             StyledRect {
                 Layout.fillWidth: true
                 implicitHeight: Math.max(root.emptyZoneHeight, leftList.contentHeight + root.zonePadding * 2)
@@ -598,7 +606,7 @@ PageBase {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     anchors.topMargin: Tokens.padding.small
-                    text: qsTr("Right Zone")
+                    text: qsTr("System tray")
                     font: Tokens.font.label.large
                     color: Colours.palette.m3onSurfaceVariant
                     visible: rightModel.count === 0 || (rightModel.count === 1 && rightModel.get(0).isPlaceholder)

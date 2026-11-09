@@ -7,6 +7,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/helpers.sh"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REGISTRY="$REPO_ROOT/shell/modules/bar/BarWidgets.qml"
 BAR="$REPO_ROOT/shell/modules/bar/Bar.qml"
+TRAY="$REPO_ROOT/shell/modules/bar/components/Tray.qml"
+STATUS_ICONS="$REPO_ROOT/shell/modules/bar/components/StatusIcons.qml"
 CONFIG="$REPO_ROOT/shell/plugin/src/Caelestia/Config/barconfig.hpp"
 EDITOR="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarComponents.qml"
 
@@ -99,6 +101,21 @@ test_nothing_else_writes_the_entry_list_by_hand() {
     done
 }
 
+test_the_right_zone_is_one_system_tray_plus_the_clock() {
+    assert_file_contains "$BAR" 'BarWidgets.rightLayoutEntries({ entries: Config.bar.entries })' \
+        "the bar should ask the registry for the unified right layout"
+    assert_file_contains "$BAR" 'widgetEntries: trayLoader.systemTray ? root.systemTrayEntries : []' \
+        "only the synthetic tray should own the right-zone widgets"
+    assert_file_contains "$TRAY" 'property var widgetEntries: []' \
+        "the tray needs somewhere to put the widgets it owns"
+    assert_file_contains "$TRAY" 'delegate: root.widgetDelegate' \
+        "the tray must draw those widgets with the bar's own delegate"
+    assert_file_contains "$TRAY" 'function widgetAt(barItem' \
+        "the bar must still be able to route hover and clicks to a nested widget"
+    assert_file_contains "$STATUS_ICONS" 'property bool embedded: false' \
+        "status icons must be able to drop their own pill inside the unified tray"
+}
+
 test_the_toggle_helper_keeps_the_widget_list_well_formed() {
     if ! command -v node >/dev/null 2>&1; then
         skip_test "node is not available"
@@ -152,7 +169,7 @@ root.byId = (() => {
 })();
 root.ids = root.widgets.map(widget => widget.id);
 
-const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "isEnabled", "zoneFor", "setEnabled", "replaceAll", "indexFor"];
+const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "isEnabled", "zoneFor", "setEnabled", "replaceAll", "indexFor"];
 Object.assign(root, new Function("root", names.map(extractFunction).join("\n") + "\nreturn {" + names.join(", ") + "};")(root));
 
 const eq = (actual, expected, msg) => {
@@ -181,6 +198,20 @@ const ids = entries => entries.map(entry => entry.id);
 eq(ids(root.zoneEntries(defaults, "left")), ["logo", "workspaces", "greeter"], "left zone");
 eq(ids(root.zoneEntries(defaults, "middle")), ["dock"], "middle zone");
 eq(ids(root.zoneEntries(defaults, "right")), ["tray", "updateIndicator", "clock", "power"], "the right zone drops the disabled widgets");
+eq(ids(root.rightLayoutEntries({ entries: defaults })), ["tray", "clock"], "the right layout is one tray plus the clock");
+eq(root.rightLayoutEntries({ entries: defaults })[0].systemTray, true, "the synthetic tray is marked as the tray container");
+eq(root.systemTrayEntries({ entries: defaults }).every(entry => entry.systemTray === false && entry.zone === "right"), true,
+    "the widgets inside the tray carry the roles the bar delegate requires");
+eq(ids(root.systemTrayEntries({ entries: defaults })), ["updateIndicator", "power"], "the tray owns every right widget except the tray itself and the clock");
+eq(root.systemTrayShowsIcons({ entries: defaults }), true, "the tray entry supplies the system tray icons");
+eq(ids(root.rightLayoutEntries({ entries: defaults.filter(entry => entry.id === "clock") })), ["clock"],
+    "a clock on its own stays outside a tray");
+eq(ids(root.rightLayoutEntries({ entries: defaults.filter(entry => entry.id !== "clock") })), ["tray"],
+    "the tray remains when the clock is not in the right zone");
+eq(root.systemTrayShowsIcons({ entries: defaults.filter(entry => entry.id !== "tray") }), false,
+    "disabling the tray entry leaves the widget tray without system tray icons");
+eq(ids(root.systemTrayEntries({ entries: defaults.filter(entry => entry.id !== "tray") })), ["updateIndicator", "power"],
+    "the other right widgets still belong to the tray when the tray entry is off");
 eq(ids(root.zoneEntries([{ id: "clock", enabled: true }], "left")), ["clock"], "an entry with no zone is a left one, which is what the bar always assumed");
 
 eq(ids(root.zoneEntries([

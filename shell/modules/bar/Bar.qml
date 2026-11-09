@@ -24,6 +24,9 @@ Item {
     required property BarPopouts.Wrapper popouts
     required property bool fullscreen
     property Item currentHoveredItem: null
+    // The tray loader that owns the item under the pointer, when that item is
+    // nested inside the unified right-zone tray.
+    property Item hoveredTray: null
 
     readonly property int vPadding: Tokens.padding.large
 
@@ -37,9 +40,14 @@ Item {
     readonly property real middleZoneSize: isHorizontal ? middleLayout.implicitWidth : middleLayout.implicitHeight
     readonly property real rightZoneSize: isHorizontal ? rightLayout.implicitWidth : rightLayout.implicitHeight
 
-    property var leftEntries: BarWidgets.zoneEntries(Config.bar.entries, "left")
-    property var middleEntries: BarWidgets.zoneEntries(Config.bar.entries, "middle")
-    property var rightEntries: BarWidgets.zoneEntries(Config.bar.entries, "right")
+    property var leftEntries: BarWidgets.normalizedZoneEntries({ entries: Config.bar.entries }, "left")
+    property var middleEntries: BarWidgets.normalizedZoneEntries({ entries: Config.bar.entries }, "middle")
+    // The right layout is the unified tray plus the clock. The widgets that go
+    // inside the tray come from systemTrayEntries; they are not drawn a second
+    // time by this layout.
+    property var rightEntries: BarWidgets.rightLayoutEntries({ entries: Config.bar.entries })
+    readonly property var systemTrayEntries: BarWidgets.systemTrayEntries({ entries: Config.bar.entries })
+    readonly property bool systemTrayShowsIcons: BarWidgets.systemTrayShowsIcons({ entries: Config.bar.entries })
 
     function resetHover(): void {
         if (currentHoveredItem) {
@@ -50,13 +58,26 @@ Item {
     }
 
     function getLoaderAt(x, y) {
+        root.hoveredTray = null;
+
         let items = [leftLayout, middleLayout, rightLayout];
         for (let i = 0; i < items.length; i++) {
             let layout = items[i];
             let localPos = mapToItem(layout, x, y);
             if (localPos.x >= 0 && localPos.x <= layout.width && localPos.y >= 0 && localPos.y <= layout.height) {
                 let ch = layout.childAt(localPos.x, localPos.y);
-                if (ch && ch.hasOwnProperty("id")) return ch;
+                if (ch && ch.hasOwnProperty("id")) {
+                    if (ch.id === "tray" && ch.item && typeof ch.item.widgetAt === "function") {
+                        const inner = ch.item.widgetAt(root, x, y);
+                        if (inner) {
+                            root.hoveredTray = ch;
+                            return inner;
+                        }
+                    }
+                    if (ch.id === "tray")
+                        root.hoveredTray = ch;
+                    return ch;
+                }
             }
         }
         return null;
@@ -96,7 +117,7 @@ Item {
         }
         currentHoveredItem = ch ? ch.item : null;
 
-        if (ch?.id === "tray") {
+        if (root.hoveredTray) {
             closeTrayTimer.stop();
         } else if (!popouts.hasCurrent || !TrayRegistry.isTrayPopout(popouts.currentName)) {
             if (!closeTrayTimer.running)
@@ -118,10 +139,10 @@ Item {
             return;
         } else if (id === "tray" && Config.bar.popouts.tray && !visibilities.sidebar) {
             const tray = ch.item as Tray;
-            if (tray.arrowHit(pos)) {
+            if (tray.arrowHit(root, pos)) {
                 popouts.hasCurrent = false;
             } else {
-                const trayItem = tray.itemAt(pos);
+                const trayItem = tray.itemAt(root, pos);
                 popouts.hasCurrent = !!trayItem;
                 if (trayItem) {
                     popouts.currentName = trayItem.popoutName;
@@ -485,8 +506,13 @@ Item {
             DelegateChoice {
                 roleValue: "tray"
                 delegate: WrappedLoader {
+                    id: trayLoader
+
                     sourceComponent: Tray {
                         popouts: root.popouts
+                        showTrayIcons: trayLoader.systemTray ? root.systemTrayShowsIcons : true
+                        widgetEntries: trayLoader.systemTray ? root.systemTrayEntries : []
+                        widgetDelegate: trayLoader.systemTray ? barDelegate : null
                     }
                 }
             }
@@ -501,8 +527,11 @@ Item {
             DelegateChoice {
                 roleValue: "statusIcons"
                 delegate: WrappedLoader {
+                    id: statusLoader
+
                     sourceComponent: StatusIcons {
                         bar: root
+                        embedded: statusLoader.zone === "right"
                     }
                 }
             }
@@ -676,6 +705,12 @@ Item {
         required enabled
         required property string id
         required property int index
+
+        // Filled from the entry the registry hands the view. `systemTray` marks
+        // the synthetic tray container, and `zone` tells a widget whether it is
+        // being drawn inside it.
+        required property bool systemTray
+        required property string zone
 
         asynchronous: false
         Layout.alignment: root.isHorizontal ? Qt.AlignVCenter : Qt.AlignHCenter

@@ -20,6 +20,11 @@ StyledRect {
     property var bar: null
     readonly property var popouts: bar?.popouts ?? null
 
+    // Drawn inside the unified system tray, the tray already owns the surface;
+    // this component should only contribute its icons.
+    property bool embedded: false
+    readonly property int edgePadding: root.embedded ? Tokens.padding.extraSmall : Tokens.padding.medium
+
     property bool isDragging: false
 
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
@@ -100,11 +105,11 @@ StyledRect {
         }
     }
 
-    color: Colours.tPalette.m3surfaceContainer
+    color: root.embedded ? "transparent" : Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.full
     clip: true
-    implicitWidth: isHorizontal ? (iconColumn.implicitWidth + Tokens.padding.medium * 2) : barThickness
-    implicitHeight: isHorizontal ? barThickness : (iconColumn.implicitHeight + Tokens.padding.medium * 2)
+    implicitWidth: isHorizontal ? (iconColumn.implicitWidth + root.edgePadding * 2) : barThickness
+    implicitHeight: isHorizontal ? barThickness : (iconColumn.implicitHeight + root.edgePadding * 2)
 
     Behavior on currentHoverSpacing { Anim { type: Anim.DefaultEffects } }
 

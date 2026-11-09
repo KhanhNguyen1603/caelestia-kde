@@ -13,8 +13,17 @@ StyledRect {
     readonly property alias items: items
     readonly property alias expandIcon: expandIcon
 
-    readonly property int padding: Config.bar.tray.background ? Tokens.padding.medium : Tokens.padding.extraSmall
-    readonly property int spacing: Config.bar.tray.background ? Tokens.spacing.small : 0
+    readonly property int padding: root.hasBackground ? Tokens.padding.medium : Tokens.padding.extraSmall
+    readonly property int spacing: root.hasBackground ? Tokens.spacing.small : 0
+
+    // When the tray owns the right-zone widgets it is the one system tray for
+    // the bar, and it draws a single surface behind all of them. Without extra
+    // widgets it keeps the old standalone-tray look.
+    property var widgetEntries: []
+    property var widgetDelegate: null
+    property bool showTrayIcons: true
+    readonly property bool unified: root.widgetEntries.length > 0
+    readonly property bool hasBackground: Config.bar.tray.background || root.unified
 
     property bool expanded
     property bool pinned: false
@@ -22,7 +31,7 @@ StyledRect {
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
 
-    readonly property bool showArrow: Config.bar.tray.compact && TrayRegistry.collapsedCount > 0
+    readonly property bool showArrow: root.showTrayIcons && Config.bar.tray.compact && TrayRegistry.collapsedCount > 0
 
     readonly property real nonAnimHeight: {
         if (isHorizontal)
@@ -39,17 +48,38 @@ StyledRect {
     }
 
     // Hit test for the bar's hover routing: the positioner owns the layout, so it
-    // also owns which icon sits under a bar coordinate.
-    function itemAt(pos: real): TrayItem {
-        const local = isHorizontal ? layout.mapFromItem(null, pos, 0) : layout.mapFromItem(null, 0, pos);
-        return layout.childAt(isHorizontal ? local.x : layout.width / 2, isHorizontal ? layout.height / 2 : local.y) as TrayItem;
+    // also owns which icon sits under a bar coordinate. `barItem` is the bar
+    // itself, because the tray may be nested inside the unified right-zone
+    // wrapper and its local coordinates are no longer the bar's.
+    function widgetAt(barItem: var, x: real, y: real): var {
+        const p = layout.mapFromItem(barItem, x, y);
+        for (let i = 0; i < widgetItems.count; i++) {
+            const child = widgetItems.itemAt(i);
+            if (!child || !child.visible)
+                continue;
+            if (p.x >= child.x && p.x <= child.x + child.width && p.y >= child.y && p.y <= child.y + child.height)
+                return child;
+        }
+        return null;
     }
 
-    function arrowHit(pos: real): bool {
+    function itemAt(barItem: var, x: real, y: real): TrayItem {
+        const p = layout.mapFromItem(barItem, x, y);
+        for (let i = 0; i < items.count; i++) {
+            const child = items.itemAt(i) as TrayItem;
+            if (!child || !child.visible)
+                continue;
+            if (p.x >= child.x && p.x <= child.x + child.width && p.y >= child.y && p.y <= child.y + child.height)
+                return child;
+        }
+        return null;
+    }
+
+    function arrowHit(barItem: var, x: real, y: real): bool {
         if (!expandIcon.item)
             return false;
-        const local = isHorizontal ? expandIcon.mapFromItem(null, pos, 0) : expandIcon.mapFromItem(null, 0, pos);
-        const coord = isHorizontal ? local.x : local.y;
+        const p = expandIcon.mapFromItem(barItem, x, y);
+        const coord = isHorizontal ? p.x : p.y;
         const size = isHorizontal ? expandIcon.width : expandIcon.height;
         return coord >= -root.spacing && coord <= size + root.padding;
     }
@@ -60,7 +90,7 @@ StyledRect {
     implicitWidth: isHorizontal ? nonAnimWidth : barThickness
     implicitHeight: isHorizontal ? barThickness : nonAnimHeight
 
-    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (Config.bar.tray.background && items.count > 0) ? Colours.tPalette.m3surfaceContainer.a : 0)
+    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (root.hasBackground && (items.count > 0 || widgetItems.count > 0)) ? Colours.tPalette.m3surfaceContainer.a : 0)
     radius: Tokens.rounding.full
 
     // icon-level
@@ -120,7 +150,7 @@ StyledRect {
             id: items
 
             model: ScriptModel {
-                values: TrayRegistry.trayItems
+                values: root.showTrayIcons ? TrayRegistry.trayItems : []
             }
 
             TrayItem {
@@ -128,6 +158,13 @@ StyledRect {
                 isHorizontal: root.isHorizontal
                 visible: root.expanded || !Config.bar.tray.compact || !TrayRegistry.isCollapsed(modelData)
             }
+        }
+
+        Repeater {
+            id: widgetItems
+
+            model: root.widgetEntries
+            delegate: root.widgetDelegate
         }
     }
 

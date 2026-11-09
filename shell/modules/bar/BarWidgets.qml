@@ -78,6 +78,42 @@ QtObject {
             && (zone === "left" ? !entry.zone || entry.zone === "left" : entry.zone === zone));
     }
 
+    // A delegate can only require a role every entry provides, so the bar hands
+    // the view entries that always carry the two fields the tray needs.
+    function normalizedEntries(entries: var, zone: string): var {
+        return (entries ?? []).map(entry => Object.assign({}, entry, {
+            zone: entry.zone ?? zone,
+            systemTray: false
+        }));
+    }
+
+    function normalizedZoneEntries(node: var, zone: string): var {
+        return root.normalizedEntries(root.zoneEntries(root.entriesOf(node), zone), zone);
+    }
+
+    // The right end of the bar is one tray plus the clock. Everything else the
+    // user put in that zone is drawn inside the tray, so adding a widget there
+    // cannot grow a second row of orphan icons.
+    function rightLayoutEntries(node: var): var {
+        const entries = root.zoneEntries(root.entriesOf(node), "right");
+        const nonClock = entries.filter(entry => entry.id !== "clock");
+        if (nonClock.length === 0)
+            return root.normalizedEntries(entries, "right");
+        return [{ id: "tray", enabled: true, zone: "right", systemTray: true }]
+            .concat(root.normalizedEntries(entries.filter(entry => entry.id === "clock"), "right"));
+    }
+
+    // Widgets the tray owns, in the order the user arranged them. The tray entry
+    // itself is the container, and the clock deliberately stays outside it.
+    function systemTrayEntries(node: var): var {
+        return root.normalizedEntries(root.zoneEntries(root.entriesOf(node), "right")
+            .filter(entry => entry.id !== "clock" && entry.id !== "tray"), "right");
+    }
+
+    function systemTrayShowsIcons(node: var): bool {
+        return root.zoneEntries(root.entriesOf(node), "right").some(entry => entry.id === "tray");
+    }
+
     function isEnabled(node: var, id: string): bool {
         for (const entry of root.entriesOf(node)) {
             if (entry.id === id)
