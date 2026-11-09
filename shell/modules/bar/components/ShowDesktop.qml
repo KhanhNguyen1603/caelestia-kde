@@ -43,6 +43,9 @@ Item {
 
         anchors.centerIn: parent
         anchors.horizontalCenterOffset: Centering.pixelAlign(parent.width, width)
+        // The double-chevron glyph sits on a higher optical centre than the
+        // status glyphs next to it; nudge it down to keep the row level.
+        anchors.verticalCenterOffset: Tokens.padding.small - Tokens.padding.extraSmall / 2
 
         text: "keyboard_double_arrow_down"
         color: Colours.palette.m3onSurfaceVariant

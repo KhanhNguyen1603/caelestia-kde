@@ -15,6 +15,10 @@ import "trayicons.js" as TrayIcons
 Singleton {
     id: root
 
+    // Set while a tray icon is being dragged between the bar and the overflow
+    // panel, so the bar's hover routing does not replace the panel mid-drag.
+    property bool draggingIcon: false
+
     // The three states an icon can be in; collapsed is the default.
     readonly property var states: [
         { value: "visible", label: qsTr("Always visible"), icon: "push_pin" },
@@ -56,14 +60,26 @@ Singleton {
         return TrayIcons.ordered(rows, GlobalConfig.bar.tray.order);
     }
 
+    // Every running icon, before the bar's state decides where it belongs.
+    readonly property var liveItems: SystemTray.items.values.filter(item => item.status !== Status.Passive)
+
     // The icons the bar draws, in bar order. Hidden icons are in neither list, so the
     // bar and the tray popout cannot disagree about which icons exist.
-    readonly property var trayItems: {
-        const rows = SystemTray.items.values.filter(item => item.status !== Status.Passive && !root.isHidden(item)).map(item => ({
-                    key: root.keyOfItem(item),
-                    item: item
-                }));
-        return TrayIcons.ordered(rows, GlobalConfig.bar.tray.order).map(row => row.item);
+    readonly property var trayItems: root.orderedItems(root.liveItems.filter(item => !root.isHidden(item)))
+
+    // In compact mode the bar only draws the icons pinned to it; the rest wait in
+    // the overflow panel. Without compact mode collapsed icons stay on the bar,
+    // and only explicitly hidden icons move to the panel.
+    readonly property var visibleItems: root.orderedItems(root.liveItems.filter(item => root.stateOfItem(item) === "visible"))
+    readonly property var overflowItems: root.orderedItems(root.liveItems.filter(item => GlobalConfig.bar.tray.compact ? root.stateOfItem(item) !== "visible" : root.stateOfItem(item) === "hidden"))
+    readonly property var barItems: GlobalConfig.bar.tray.compact ? root.visibleItems : root.trayItems
+    readonly property int overflowCount: root.overflowItems.length
+
+    function orderedItems(items: var): var {
+        return TrayIcons.ordered(items.map(item => ({
+            key: root.keyOfItem(item),
+            item: item
+        })), GlobalConfig.bar.tray.order).map(row => row.item);
     }
 
     readonly property int collapsedCount: root.trayItems.filter(item => root.isCollapsed(item)).length

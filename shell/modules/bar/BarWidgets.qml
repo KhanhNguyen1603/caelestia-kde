@@ -91,23 +91,25 @@ QtObject {
         return root.normalizedEntries(root.zoneEntries(root.entriesOf(node), zone), zone);
     }
 
-    // The right end of the bar is one tray plus the clock. Everything else the
-    // user put in that zone is drawn inside the tray, so adding a widget there
-    // cannot grow a second row of orphan icons.
+    // The right end of the bar is one tray, then the power button, then the
+    // clock. Everything else the user put in that zone is drawn inside the tray,
+    // so adding a widget there cannot grow a second row of orphan icons.
     function rightLayoutEntries(node: var): var {
         const entries = root.zoneEntries(root.entriesOf(node), "right");
-        const nonClock = entries.filter(entry => entry.id !== "clock");
-        if (nonClock.length === 0)
-            return root.normalizedEntries(entries, "right");
-        return [{ id: "tray", enabled: true, zone: "right", systemTray: true }]
-            .concat(root.normalizedEntries(entries.filter(entry => entry.id === "clock"), "right"));
+        const trayContent = entries.filter(entry => entry.id !== "clock" && entry.id !== "power" && entry.id !== "tray");
+        const model = [];
+        if (entries.some(entry => entry.id === "tray") || trayContent.length > 0)
+            model.push({ id: "tray", enabled: true, zone: "right", systemTray: true });
+        model.push(...root.normalizedEntries(entries.filter(entry => entry.id === "power"), "right"));
+        model.push(...root.normalizedEntries(entries.filter(entry => entry.id === "clock"), "right"));
+        return model;
     }
 
     // Widgets the tray owns, in the order the user arranged them. The tray entry
-    // itself is the container, and the clock deliberately stays outside it.
+    // itself is the container, and the clock and power stay outside it.
     function systemTrayEntries(node: var): var {
         return root.normalizedEntries(root.zoneEntries(root.entriesOf(node), "right")
-            .filter(entry => entry.id !== "clock" && entry.id !== "tray"), "right");
+            .filter(entry => entry.id !== "clock" && entry.id !== "power" && entry.id !== "tray"), "right");
     }
 
     function systemTrayShowsIcons(node: var): bool {

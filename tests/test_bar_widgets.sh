@@ -8,6 +8,9 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REGISTRY="$REPO_ROOT/shell/modules/bar/BarWidgets.qml"
 BAR="$REPO_ROOT/shell/modules/bar/Bar.qml"
 TRAY="$REPO_ROOT/shell/modules/bar/components/Tray.qml"
+TRAY_ITEM="$REPO_ROOT/shell/modules/bar/components/TrayItem.qml"
+TRAY_OVERFLOW="$REPO_ROOT/shell/modules/bar/popouts/TrayOverflow.qml"
+POPOUTS="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
 STATUS_ICONS="$REPO_ROOT/shell/modules/bar/components/StatusIcons.qml"
 CONFIG="$REPO_ROOT/shell/plugin/src/Caelestia/Config/barconfig.hpp"
 EDITOR="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarComponents.qml"
@@ -116,6 +119,23 @@ test_the_right_zone_is_one_system_tray_plus_the_clock() {
         "status icons must be able to drop their own pill inside the unified tray"
 }
 
+test_the_tray_arrow_opens_a_hidden_icons_panel() {
+    assert_file_contains "$TRAY" 'TrayRegistry.overflowCount > 0' \
+        "the up arrow should appear when there are icons outside the bar"
+    assert_file_contains "$TRAY" 'popouts.currentName = "trayOverflow"' \
+        "clicking the arrow should open the overflow panel"
+    assert_file_contains "$POPOUTS" 'name: "trayOverflow"' \
+        "the popout registry needs an entry for the overflow panel"
+    assert_file_contains "$TRAY_OVERFLOW" 'TrayRegistry.overflowItems' \
+        "the panel should list the icons that are not on the bar"
+    assert_file_contains "$TRAY_OVERFLOW" 'keys: ["trayIcon"]' \
+        "the panel should accept icons dragged off the bar"
+    assert_file_contains "$TRAY" 'keys: ["trayIcon"]' \
+        "the bar tray should accept icons dragged back from the panel"
+    assert_file_contains "$TRAY_ITEM" 'Drag.keys: ["trayIcon"]' \
+        "tray icons need to be draggable for the two-way move"
+}
+
 test_the_toggle_helper_keeps_the_widget_list_well_formed() {
     if ! command -v node >/dev/null 2>&1; then
         skip_test "node is not available"
@@ -198,19 +218,19 @@ const ids = entries => entries.map(entry => entry.id);
 eq(ids(root.zoneEntries(defaults, "left")), ["logo", "workspaces", "greeter"], "left zone");
 eq(ids(root.zoneEntries(defaults, "middle")), ["dock"], "middle zone");
 eq(ids(root.zoneEntries(defaults, "right")), ["tray", "updateIndicator", "clock", "power"], "the right zone drops the disabled widgets");
-eq(ids(root.rightLayoutEntries({ entries: defaults })), ["tray", "clock"], "the right layout is one tray plus the clock");
+eq(ids(root.rightLayoutEntries({ entries: defaults })), ["tray", "power", "clock"], "the right layout is one tray, the power button and the clock");
 eq(root.rightLayoutEntries({ entries: defaults })[0].systemTray, true, "the synthetic tray is marked as the tray container");
 eq(root.systemTrayEntries({ entries: defaults }).every(entry => entry.systemTray === false && entry.zone === "right"), true,
     "the widgets inside the tray carry the roles the bar delegate requires");
-eq(ids(root.systemTrayEntries({ entries: defaults })), ["updateIndicator", "power"], "the tray owns every right widget except the tray itself and the clock");
+eq(ids(root.systemTrayEntries({ entries: defaults })), ["updateIndicator"], "the tray owns the right widgets but not the power button or the clock");
 eq(root.systemTrayShowsIcons({ entries: defaults }), true, "the tray entry supplies the system tray icons");
 eq(ids(root.rightLayoutEntries({ entries: defaults.filter(entry => entry.id === "clock") })), ["clock"],
     "a clock on its own stays outside a tray");
-eq(ids(root.rightLayoutEntries({ entries: defaults.filter(entry => entry.id !== "clock") })), ["tray"],
-    "the tray remains when the clock is not in the right zone");
+eq(ids(root.rightLayoutEntries({ entries: defaults.filter(entry => entry.id !== "clock") })), ["tray", "power"],
+    "the tray and the power button remain when the clock is not in the right zone");
 eq(root.systemTrayShowsIcons({ entries: defaults.filter(entry => entry.id !== "tray") }), false,
     "disabling the tray entry leaves the widget tray without system tray icons");
-eq(ids(root.systemTrayEntries({ entries: defaults.filter(entry => entry.id !== "tray") })), ["updateIndicator", "power"],
+eq(ids(root.systemTrayEntries({ entries: defaults.filter(entry => entry.id !== "tray") })), ["updateIndicator"],
     "the other right widgets still belong to the tray when the tray entry is off");
 eq(ids(root.zoneEntries([{ id: "clock", enabled: true }], "left")), ["clock"], "an entry with no zone is a left one, which is what the bar always assumed");
 

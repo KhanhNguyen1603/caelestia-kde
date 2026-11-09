@@ -8,6 +8,7 @@ REGISTRY="$SERVICES/TrayRegistry.qml"
 MIGRATIONS="$SERVICES/ConfigMigrations.qml"
 ICONS="$REPO_ROOT/shell/utils/Icons.qml"
 BAR="$REPO_ROOT/shell/modules/bar/Bar.qml"
+TRAY="$REPO_ROOT/shell/modules/bar/components/Tray.qml"
 CONTENT="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
 PAGE="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarTray.qml"
 LIST_EDITOR="$REPO_ROOT/shell/modules/nexus/common/ListEditor.qml"
@@ -65,10 +66,13 @@ assert.deepStrictEqual(Icons.ordered([], ["a"]), [], "no rows need no order");
 
 test_the_bar_and_the_popout_read_one_list() {
     assert_file_contains "$REGISTRY" "readonly property var trayItems" "the registry publishes the bar's icons"
+    assert_file_contains "$REGISTRY" "readonly property var barItems" "the registry publishes the list the bar actually draws"
+    assert_file_contains "$REGISTRY" "readonly property var overflowItems" "the registry publishes the overflow list"
+    assert_file_contains "$TRAY" "TrayRegistry.barItems" "the bar reads the list it is meant to draw"
     assert_file_contains "$CONTENT" "TrayRegistry.trayItems" "the tray popout reads the bar's icons"
     assert_file_not_contains "$CONTENT" "SystemTray.items.values.filter" "the popout must not re-derive which icons exist"
     assert_file_not_contains "$BAR" "tray.layout.childAt" "the bar must not reach into the tray's layout"
-    assert_file_contains "$BAR" "tray.itemAt(pos)" "the tray owns its own hit test"
+    assert_file_contains "$BAR" "tray.itemAt(root, pos)" "the tray owns its own hit test"
 }
 
 test_popout_names_have_one_definition() {

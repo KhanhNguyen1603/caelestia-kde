@@ -25,13 +25,11 @@ StyledRect {
     readonly property bool unified: root.widgetEntries.length > 0
     readonly property bool hasBackground: Config.bar.tray.background || root.unified
 
-    property bool expanded
-    property bool pinned: false
     property var popouts
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
 
-    readonly property bool showArrow: root.showTrayIcons && Config.bar.tray.compact && TrayRegistry.collapsedCount > 0
+    readonly property bool showArrow: root.showTrayIcons && TrayRegistry.overflowCount > 0
 
     readonly property real nonAnimHeight: {
         if (isHorizontal)
@@ -150,13 +148,13 @@ StyledRect {
             id: items
 
             model: ScriptModel {
-                values: root.showTrayIcons ? TrayRegistry.trayItems : []
+                values: root.showTrayIcons ? TrayRegistry.barItems : []
             }
 
             TrayItem {
                 popouts: root.popouts
                 isHorizontal: root.isHorizontal
-                visible: root.expanded || !Config.bar.tray.compact || !TrayRegistry.isCollapsed(modelData)
+                draggable: true
             }
         }
 
@@ -193,8 +191,19 @@ StyledRect {
                 cursorShape: Qt.PointingHandCursor
 
                 onTapped: {
-                    root.pinned = !root.pinned;
-                    root.expanded = root.pinned;
+                    if (!root.popouts)
+                        return;
+
+                    if (root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow") {
+                        root.popouts.hasCurrent = false;
+                        return;
+                    }
+
+                    root.popouts.currentName = "trayOverflow";
+                    root.popouts.currentCenter = root.isHorizontal
+                        ? arrowContainer.mapToItem(null, arrowContainer.width / 2, 0).x
+                        : arrowContainer.mapToItem(null, 0, arrowContainer.height / 2).y;
+                    root.popouts.hasCurrent = true;
                 }
             }
 
@@ -204,12 +213,25 @@ StyledRect {
                 anchors.centerIn: parent
                 text: "expand_less"
                 fontStyle: Tokens.font.icon.large
-                rotation: isHorizontal ? (root.expanded ? 270 : 90) : (root.expanded ? 180 : 0)
+                rotation: Config.bar.position === "top" ? 180 : Config.bar.position === "left" ? 90 : Config.bar.position === "right" ? 270 : 0
 
                 Behavior on rotation {
                     Anim {}
                 }
             }
+        }
+    }
+
+    // Dropping a hidden icon on the tray pins it back to the bar.
+    DropArea {
+        anchors.fill: parent
+        keys: ["trayIcon"]
+
+        onDropped: drop => {
+            const source = drop.source;
+            if (source && source.key)
+                TrayRegistry.setState(source.key, "visible");
+            TrayRegistry.draggingIcon = false;
         }
     }
 

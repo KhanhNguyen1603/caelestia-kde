@@ -326,6 +326,14 @@ Item {
         }
 
         Popout {
+            name: "trayOverflow"
+            previewKey: "tray"
+            sourceComponent: TrayOverflow {
+                popouts: root.popouts
+            }
+        }
+
+        Popout {
             name: "traycontext"
             isContext: true
             sourceComponent: BarComponentContext {

@@ -15,12 +15,31 @@ Item {
     required property SystemTrayItem modelData
     property var popouts
     property bool isHorizontal: false
+    // Bar and overflow icons can be dragged between the two surfaces.
+    property bool draggable: false
     readonly property string key: TrayRegistry.keyOfItem(root.modelData)
     readonly property string popoutName: TrayRegistry.popoutNameOf(root.modelData)
     readonly property bool hasMenuEntries: menuOpener.children.values.some(entry => !entry.isSeparator)
 
     implicitWidth: Tokens.font.body.small.pointSize * 2
     implicitHeight: Tokens.font.body.small.pointSize * 2
+
+    Drag.active: root.draggable && dragHandler.active
+    Drag.source: root
+    Drag.hotSpot: Qt.point(root.width / 2, root.height / 2)
+    Drag.keys: ["trayIcon"]
+    Drag.dragType: Drag.Automatic
+
+    DragHandler {
+        id: dragHandler
+
+        enabled: root.draggable
+        target: null
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        grabPermissions: PointerHandler.CanTakeOverFromAnything
+
+        onActiveChanged: TrayRegistry.draggingIcon = active
+    }
 
     StateLayer {
         anchors.fill: undefined

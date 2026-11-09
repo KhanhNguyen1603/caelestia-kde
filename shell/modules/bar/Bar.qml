@@ -84,29 +84,19 @@ Item {
     }
 
     function closeTray(): void {
-        if (!Config.bar.tray.compact)
-            return;
-
-        let repeaters = [leftRepeater, middleRepeater, rightRepeater];
-        for (let r = 0; r < 3; r++) {
-            let rep = repeaters[r];
-            for (let i = 0; i < rep.count; i++) {
-                const loader = rep.itemAt(i) as WrappedLoader;
-                if (loader?.enabled && loader.id === "tray") {
-                    const tray = loader.item as Tray;
-                    if (tray) {
-                        tray.expanded = false;
-                        tray.pinned = false;
-                    }
-                }
-            }
-        }
+        if (popouts.currentName === "trayOverflow")
+            popouts.hasCurrent = false;
     }
 
     function checkPopout(pos: real): void {
         // A context menu stays open while the pointer moves over the bar, so
         // the hover routing below must not take it over or close it.
         if (popouts.isContextPopout)
+            return;
+
+        // Dragging an icon between the tray and its overflow panel must not let
+        // the hover routing swap the panel out from under the pointer.
+        if (TrayRegistry.draggingIcon)
             return;
 
         const ch = getLoaderAt(isHorizontal ? pos : width / 2, isHorizontal ? height / 2 : pos) as WrappedLoader;
@@ -140,7 +130,10 @@ Item {
         } else if (id === "tray" && Config.bar.popouts.tray && !visibilities.sidebar) {
             const tray = ch.item as Tray;
             if (tray.arrowHit(root, pos)) {
-                popouts.hasCurrent = false;
+                // The arrow opens the overflow panel. Do not let the bar's hover
+                // routing close that panel the moment the pointer reaches it.
+                if (popouts.currentName !== "trayOverflow")
+                    popouts.hasCurrent = false;
             } else {
                 const trayItem = tray.itemAt(root, pos);
                 popouts.hasCurrent = !!trayItem;
