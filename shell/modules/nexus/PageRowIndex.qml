@@ -2199,6 +2199,13 @@ QtObject {
             subPage: "osdPanel"
         },
         {
+            label: qsTr("Show on hover"),
+            description: qsTr("Reveal the edge drawer when the cursor reaches the screen edge"),
+            section: qsTr("OSD"),
+            pageIdx: 2,
+            subPage: "osdPanel"
+        },
+        {
             label: qsTr("Depth"),
             description: qsTr("Distance from the screen edge to trigger the drawer"),
             section: qsTr("OSD"),
