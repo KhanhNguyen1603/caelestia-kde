@@ -86,6 +86,20 @@ Item {
             popouts.hasCurrent = false;
     }
 
+    // Icons tell you what they are on hover, and that is all: the panel behind one of
+    // them opens on a click, or on a right-click when it is a menu.
+    function isInfoOnlyOnHover(id: string): bool {
+        switch (id) {
+        case "keepawake":
+        case "shortcuts":
+        case "screencapture":
+        case "updateIndicator":
+            return true;
+        default:
+            return BarWidgets.statusIconId(id).length > 0;
+        }
+    }
+
     function checkPopout(pos: real): void {
         // A context menu stays open while the pointer moves over the bar, so
         // the hover routing below must not take it over or close it.
@@ -122,31 +136,15 @@ Item {
         if (id === "tray" && !Config.bar.popouts.tray) {
             return;
         } else if (id === "tray" && Config.bar.popouts.tray && !visibilities.sidebar) {
-            const tray = ch.item as Tray;
-            if (tray.arrowHit(root, pos)) {
-                // The arrow opens the overflow panel. Do not let the bar's hover
-                // routing close that panel the moment the pointer reaches it.
-                if (popouts.currentName !== "trayOverflow")
-                    popouts.hasCurrent = false;
-            } else {
-                const trayItem = tray.itemAt(root, pos);
-                popouts.hasCurrent = !!trayItem;
-                if (trayItem) {
-                    popouts.currentName = trayItem.popoutName;
-                    popouts.currentCenter = isHorizontal ? trayItem.mapToItem(null, trayItem.implicitWidth / 2, 0).x : trayItem.mapToItem(null, 0, trayItem.implicitHeight / 2).y;
-                }
-            }
-        } else if (BarWidgets.statusIconId(id).length > 0) {
-            // Each status icon is its own widget, so the icon under the pointer is
-            // the one whose popout opens: no hit test inside a shared row.
-            const icon = ch.item;
-            if (!Config.bar.popouts.statusIcons || !icon || (id === BarWidgets.statusIconPrefix + "notifications" && root.visibilities.sidebar)) {
+            // The arrow opens the overflow panel, and the bar's hover routing must not
+            // close that panel the moment the pointer reaches it. Reaching an icon
+            // only names it: the menu behind one is the right button's job.
+            if ((ch.item as Tray).arrowHit(root, pos) && popouts.currentName !== "trayOverflow")
                 popouts.hasCurrent = false;
-                return;
-            }
-            popouts.currentName = icon.popoutName;
-            popouts.currentCenter = isHorizontal ? icon.mapToItem(null, icon.width / 2, 0).x : icon.mapToItem(null, 0, icon.height / 2).y;
-            popouts.hasCurrent = true;
+        } else if (root.isInfoOnlyOnHover(id)) {
+            // Hovering an icon says what it is. Its panel opens on a click, or on a
+            // right-click for an icon with a menu, so nothing opens here.
+            return;
         } else if (id === "greeter" && Config.bar.popouts.greeter && Config.bar.greeter.showOnHover) {
             const item = ch.item as Item;
             if (item) {
@@ -191,7 +189,7 @@ Item {
             } else {
                 popouts.hasCurrent = false;
             }
-        } else if (id === "notes" || id === "weather" || id === "performance" || id === "shortcuts" || id === "screencapture" || id === "keepawake") {
+        } else if (id === "weather") {
             const item = ch.item as Item;
             if (item) {
                 const relPos = pos - top;
@@ -213,21 +211,6 @@ Item {
                 const inside = isHorizontal ? (relPos >= 0 && relPos <= item.implicitWidth) : (relPos >= 0 && relPos <= item.implicitHeight);
                 if (inside) {
                     popouts.currentName = "media";
-                    popouts.currentCenter = isHorizontal ? item.mapToItem(null, item.implicitWidth / 2, 0).x : (item.mapToItem(null, 0, item.implicitHeight / 2).y ?? 0);
-                    popouts.hasCurrent = true;
-                } else {
-                    popouts.hasCurrent = false;
-                }
-            } else {
-                popouts.hasCurrent = false;
-            }
-        } else if (id === "updateIndicator") {
-            const item = ch.item as Item;
-            if (item) {
-                const relPos = pos - top;
-                const inside = isHorizontal ? (relPos >= 0 && relPos <= item.implicitWidth) : (relPos >= 0 && relPos <= item.implicitHeight);
-                if (inside) {
-                    popouts.currentName = "updateIndicator";
                     popouts.currentCenter = isHorizontal ? item.mapToItem(null, item.implicitWidth / 2, 0).x : (item.mapToItem(null, 0, item.implicitHeight / 2).y ?? 0);
                     popouts.hasCurrent = true;
                 } else {
@@ -548,7 +531,9 @@ Item {
                 roleValue: "updateIndicator"
                 delegate: WrappedLoader {
                     visible: enabled && GlobalConfig.general.checkUpdates
-                    sourceComponent: UpdateIndicator {}
+                    sourceComponent: UpdateIndicator {
+                        popouts: root.popouts
+                    }
                 }
             }
             DelegateChoice {

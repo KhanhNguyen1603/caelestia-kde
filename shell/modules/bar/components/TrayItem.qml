@@ -29,7 +29,7 @@ Item {
     readonly property real glyphSize: Math.round(Tokens.font.body.small.pointSize * 1.5)
     // Hovering says what the icon is; the menu is the right button's job.
     readonly property string tooltip: root.modelData ? (root.modelData.title || root.modelData.id) : ""
-    readonly property bool hovered: stateLayer.containsMouse
+    readonly property bool hovered: stateLayer.containsMouse && !(root.popouts?.hasCurrent ?? false)
 
     implicitWidth: root.isHorizontal ? root.glyphSize + Tokens.padding.small * 2 : root.barThickness
     implicitHeight: root.isHorizontal ? root.barThickness : root.glyphSize + Tokens.padding.small * 2
@@ -118,6 +118,9 @@ Item {
 
         sourceComponent: Component {
             Tooltip {
+                // The window is the whole screen, unlike the bar's clipped strip:
+                // a tooltip placed against it is not cut off by the bar.
+                parent: root.Window.contentItem
                 target: root
                 text: root.tooltip
             }

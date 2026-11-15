@@ -41,21 +41,6 @@ StyledRect {
             }
             mouse.accepted = true;
         }
-
-        onEntered: {
-            if (Config.bar.showOnHover && !root.popouts.hasCurrent) {
-                root.popouts.currentName = "keepawake";
-                root.popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
-                root.popouts.hasCurrent = true;
-            }
-        }
-
-        onExited: {
-            if (Config.bar.showOnHover && root.popouts.currentName === "keepawake" && !root.popouts.hasCurrent) {
-                root.popouts.currentName = "";
-                root.popouts.hasCurrent = false;
-            }
-        }
     }
 
     Item {

@@ -74,7 +74,7 @@ Item {
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * scaleFactor)
     readonly property color colour: Colours.palette.m3secondary
     readonly property bool dragging: dragGesture.active
-    readonly property bool hovered: area.containsMouse
+    readonly property bool hovered: area.containsMouse && !(root.popouts?.hasCurrent ?? false)
 
     function openPopout(): void {
         const popouts = root.popouts;
@@ -505,6 +505,9 @@ Item {
 
         sourceComponent: Component {
             Tooltip {
+                // The window is the whole screen, unlike the bar's clipped strip:
+                // a tooltip placed against it is not cut off by the bar.
+                parent: root.Window.contentItem
                 target: root
                 text: root.tooltip
             }

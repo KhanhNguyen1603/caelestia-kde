@@ -72,13 +72,13 @@ test_the_bar_and_the_popout_read_one_list() {
     assert_file_contains "$CONTENT" "TrayRegistry.trayItems" "the tray popout reads the bar's icons"
     assert_file_not_contains "$CONTENT" "SystemTray.items.values.filter" "the popout must not re-derive which icons exist"
     assert_file_not_contains "$BAR" "tray.layout.childAt" "the bar must not reach into the tray's layout"
-    assert_file_contains "$BAR" "tray.itemAt(root, pos)" "the tray owns its own hit test"
+    assert_file_not_contains "$BAR" "tray.itemAt(root, pos)" "the bar does not hit-test the tray's icons: hovering one opens nothing, so there is nothing to ask them"
 }
 
 test_popout_names_have_one_definition() {
     assert_file_contains "$REGISTRY" "function popoutName(key: string): string" "the popout name prefix lives in the registry"
     assert_file_not_contains "$BAR" "traymenu" "the bar must not rebuild the popout name"
-    assert_file_contains "$BAR" "trayItem.popoutName" "the bar asks the icon for its popout name"
+    assert_file_not_contains "$BAR" "trayItem.popoutName" "hovering an icon opens nothing, so the bar never asks it for its menu"
     assert_file_contains "$CONTENT" "TrayRegistry.popoutNameOf" "the popout names itself through the registry"
 }
 
