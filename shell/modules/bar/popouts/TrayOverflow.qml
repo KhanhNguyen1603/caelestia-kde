@@ -20,12 +20,15 @@ Item {
     property real scaleOffset: 1.0
     property real fontScale: 1.0
     property bool _isSidebarOpen: false
+    // The panel's own frame, tighter than a text popout's: the grid already spaces
+    // the glyphs.
+    readonly property real popoutMargin: Tokens.padding.small
 
     readonly property var items: TrayRegistry.overflowItems
     readonly property var widgets: BarWidgets.overflowWidgets(GlobalConfig.bar)
     // A status icon is one glyph, so the box draws it as a cell of its own like the
     // tray icons. Any other widget is live and may be wider than a glyph, so the bar's
-    // own delegate draws it and it takes the space it asks for.
+    // own delegate draws it and the grid centres it in its cell.
     readonly property var iconWidgets: root.widgets.filter(widget => widget.kind === "statusIcon")
     readonly property var liveWidgets: root.widgets.filter(widget => widget.kind !== "statusIcon")
 
@@ -38,7 +41,6 @@ Item {
 
     readonly property real cell: 32 * root.scaleOffset * root.fontScale
     readonly property real gap: Tokens.spacing.extraSmall * root.scaleOffset
-    readonly property real inset: Tokens.padding.small * root.scaleOffset
     readonly property real gridWidth: root.columns * root.cell + (root.columns - 1) * root.gap
     readonly property real gridHeight: root.rows * root.cell + (root.rows - 1) * root.gap
     // The box leans in when a drag is over it, so it is obvious the icon will land
@@ -72,8 +74,9 @@ Item {
             TrayRegistry.sendToBox(source.key);
     }
 
-    implicitWidth: Math.max(root.gridWidth, grid.implicitWidth) + root.inset * 2
-    implicitHeight: Math.max(root.gridHeight, grid.implicitHeight) + root.inset * 2
+    // The panel frames the grid; the box is exactly the cells it holds.
+    implicitWidth: Math.max(root.gridWidth, grid.implicitWidth)
+    implicitHeight: Math.max(root.gridHeight, grid.implicitHeight)
     width: implicitWidth
     height: implicitHeight
 
@@ -99,6 +102,10 @@ Item {
         anchors.centerIn: parent
         columns: root.columns
         spacing: root.gap
+        // A widget drawn by the bar can be wider or taller than a cell; centred, its
+        // glyph sits on the same optical line as the icons around it.
+        horizontalItemAlignment: Grid.AlignHCenter
+        verticalItemAlignment: Grid.AlignVCenter
         scale: root.targeted ? 1.06 : 1
 
         // Cells take their places rather than appearing where they end up, so a box

@@ -7,6 +7,7 @@ import Quickshell.Bluetooth
 import Quickshell.Services.UPower
 import Caelestia.Config
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.utils
 import qs.modules.bar
@@ -23,6 +24,37 @@ Item {
     property bool draggable: false
 
     readonly property string iconId: BarWidgets.statusIconId(root.entryId)
+    // Hovering says what the icon is; the menu is the right button's job.
+    readonly property string tooltip: {
+        switch (root.iconId) {
+        case "lockStatus":
+            return qsTr("Lock keys");
+        case "kbLayout":
+            return qsTr("Keyboard layout");
+        case "audio":
+            return qsTr("Volume");
+        case "microphone":
+            return qsTr("Microphone");
+        case "privacy":
+            return qsTr("Privacy");
+        case "network":
+            return qsTr("Network");
+        case "ethernet":
+            return qsTr("Ethernet");
+        case "bluetooth":
+            return qsTr("Bluetooth");
+        case "battery":
+            return qsTr("Battery");
+        case "peripheralBattery":
+            return qsTr("Device battery");
+        case "nightlight":
+            return qsTr("Night light");
+        case "notifications":
+            return qsTr("Notifications");
+        default:
+            return root.iconId;
+        }
+    }
     readonly property string popoutName: {
         switch (root.iconId) {
         case "lockStatus":
@@ -42,6 +74,7 @@ Item {
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * scaleFactor)
     readonly property color colour: Colours.palette.m3secondary
     readonly property bool dragging: dragGesture.active
+    readonly property bool hovered: area.containsMouse
 
     function openPopout(): void {
         const popouts = root.popouts;
@@ -95,8 +128,11 @@ Item {
     }
 
     MouseArea {
+        id: area
+
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
 
         onClicked: mouse => {
@@ -457,6 +493,21 @@ Item {
                 return "notifications";
             }
             color: root.colour
+        }
+    }
+
+    Loader {
+        asynchronous: true
+        active: root.tooltip.length > 0
+        z: 10000
+        width: 0
+        height: 0
+
+        sourceComponent: Component {
+            Tooltip {
+                target: root
+                text: root.tooltip
+            }
         }
     }
 }

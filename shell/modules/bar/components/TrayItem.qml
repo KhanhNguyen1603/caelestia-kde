@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Services.SystemTray
 import Caelestia.Config
 import qs.components
+import qs.components.controls
 import qs.components.effects
 import qs.services
 import qs.utils
@@ -26,6 +27,9 @@ Item {
     // the slot the way an application logo would.
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
     readonly property real glyphSize: Math.round(Tokens.font.body.small.pointSize * 1.5)
+    // Hovering says what the icon is; the menu is the right button's job.
+    readonly property string tooltip: root.modelData ? (root.modelData.title || root.modelData.id) : ""
+    readonly property bool hovered: stateLayer.containsMouse
 
     implicitWidth: root.isHorizontal ? root.glyphSize + Tokens.padding.small * 2 : root.barThickness
     implicitHeight: root.isHorizontal ? root.barThickness : root.glyphSize + Tokens.padding.small * 2
@@ -49,6 +53,8 @@ Item {
         implicitWidth: root.implicitWidth + Tokens.padding.extraSmall
         implicitHeight: root.implicitHeight + Tokens.padding.extraSmall
         radius: Tokens.rounding.full
+        // No plate under the pointer: hover is for reading the icon's name.
+        showHoverBackground: false
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
         Accessible.role: Accessible.Button
@@ -101,5 +107,20 @@ Item {
         source: Icons.getTrayIcon(root.key, root.modelData.icon)
         colour: Colours.palette.m3secondary
         layer.enabled: Config.bar.tray.recolour
+    }
+
+    Loader {
+        asynchronous: true
+        active: root.tooltip.length > 0
+        z: 10000
+        width: 0
+        height: 0
+
+        sourceComponent: Component {
+            Tooltip {
+                target: root
+                text: root.tooltip
+            }
+        }
     }
 }

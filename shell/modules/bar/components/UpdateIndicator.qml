@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Caelestia.Config
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.utils
 import qs.modules.nexus
@@ -18,6 +19,10 @@ Item {
 
     readonly property int updatesPageIdx: PageRegistry.updatesPageIdx
 
+    // Hovering says what the icon is; the menu is the right button's job.
+    readonly property string tooltip: root.status.title
+    readonly property bool hovered: layer.containsMouse
+
     implicitWidth: isHorizontal ? (icon.implicitWidth + Tokens.padding.small * 2) : barThickness
     implicitHeight: isHorizontal ? barThickness : (icon.implicitHeight + Tokens.padding.small * 2)
 
@@ -31,11 +36,15 @@ Item {
     }
 
     StateLayer {
+        id: layer
+
         anchors.fill: undefined
         anchors.centerIn: parent
         implicitWidth: root.implicitWidth
         implicitHeight: root.implicitHeight
         radius: Tokens.rounding.full
+        // No plate under the pointer: hover is for reading the icon's name.
+        showHoverBackground: false
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         Accessible.name: qsTr("Caelestia updates: %1").arg(root.status.title)
         Accessible.role: Accessible.Button
@@ -46,6 +55,21 @@ Item {
                 UpdateChecker.checkNow();
             } else {
                 WindowFactory.create(null, { initialPageIdx: root.updatesPageIdx });
+            }
+        }
+    }
+
+    Loader {
+        asynchronous: true
+        active: root.tooltip.length > 0
+        z: 10000
+        width: 0
+        height: 0
+
+        sourceComponent: Component {
+            Tooltip {
+                target: root
+                text: root.tooltip
             }
         }
     }
