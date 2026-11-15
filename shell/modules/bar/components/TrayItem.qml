@@ -26,7 +26,9 @@ Item {
     // and its glyph is drawn at the size of the icons beside it instead of filling
     // the slot the way an application logo would.
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
-    readonly property real glyphSize: Math.round(Tokens.font.body.small.pointSize * 1.5)
+    // Bigger than the text it sits beside: a tray glyph is read at a glance, and the
+    // bar has room for it.
+    readonly property real glyphSize: Math.round(Tokens.font.icon.small.pointSize * 1.2)
     // Hovering says what the icon is; the menu is the right button's job.
     readonly property string tooltip: root.modelData ? (root.modelData.title || root.modelData.id) : ""
     readonly property bool hovered: stateLayer.containsMouse && !(root.popouts?.hasCurrent ?? false)
@@ -89,6 +91,7 @@ Item {
         kind: "icon"
         key: root.key
         enabled: root.draggable
+        ghostSource: icon
 
         onDropped: stateLayer.suppressClick = true
     }

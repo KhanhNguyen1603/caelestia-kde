@@ -73,6 +73,9 @@ Item {
     readonly property real scaleFactor: rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * scaleFactor)
     readonly property color colour: Colours.palette.m3secondary
+    // Each glyph is drawn a little larger than its slot asks for: an icon in the bar
+    // or the box is read at a glance.
+    readonly property real iconScale: 1.2
     readonly property bool dragging: dragGesture.active
     readonly property bool hovered: area.containsMouse && !(root.popouts?.hasCurrent ?? false)
 
@@ -106,8 +109,8 @@ Item {
         popouts.hasCurrent = true;
     }
 
-    implicitWidth: root.isHorizontal ? loader.implicitWidth : root.barThickness
-    implicitHeight: root.isHorizontal ? root.barThickness : loader.implicitHeight
+    implicitWidth: root.isHorizontal ? Math.round(loader.implicitWidth * root.iconScale) : root.barThickness
+    implicitHeight: root.isHorizontal ? root.barThickness : Math.round(loader.implicitHeight * root.iconScale)
     // Fading only once the ghost exists keeps the snapshot clean and means the icon
     // never disappears before there is something under the pointer to replace it.
     opacity: root.dragging && TrayDrag.ghost !== null ? 0.35 : 1
@@ -125,6 +128,7 @@ Item {
 
         widgetId: root.entryId
         enabled: root.draggable
+        ghostSource: loader
     }
 
     MouseArea {
@@ -163,6 +167,7 @@ Item {
         id: loader
 
         anchors.centerIn: parent
+        scale: root.iconScale
 
         sourceComponent: {
             switch (root.iconId) {

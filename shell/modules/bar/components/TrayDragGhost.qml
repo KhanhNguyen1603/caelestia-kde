@@ -5,22 +5,21 @@ import Caelestia.Config
 import qs.components
 import qs.services
 
-// What a drag carries: one tile holding the part of the item that was under the
-// pointer. A widget can be as long as the row it draws, so the snapshot is cropped
-// to a square around the grab rather than carried at its full length; lifting a
-// widget then reads as lifting an item, not as dragging a copy of the bar along.
-// The item it came from stays where it was and fades, so both the thing being
-// moved and the thing being left are visible at once.
+// What a drag carries: a snapshot of the part of the item that was under the pointer.
+// A widget can be as long as the row it draws, so the snapshot is cropped to a square
+// around the grab rather than carried at its full length; lifting a widget then reads
+// as lifting an item, not as dragging a copy of the bar along. The item it came from
+// stays where it was and fades, so both the thing being moved and the thing being left
+// are visible at once.
 Item {
     id: root
 
     property bool shown: false
 
-    readonly property real pad: Math.round(Tokens.padding.medium)
     readonly property real side: Math.max(Math.min(TrayDrag.ghostWidth, TrayDrag.ghostHeight), Tokens.sizes.bar.innerWidth)
 
-    width: root.side + root.pad * 2
-    height: root.side + root.pad * 2
+    width: root.side
+    height: root.side
 
     visible: root.shown && TrayDrag.ghost !== null
     x: TrayDrag.pos.x - root.width / 2
@@ -57,18 +56,12 @@ Item {
         onTriggered: root.shown = false
     }
 
-    StyledRect {
-        anchors.fill: parent
-        radius: Tokens.rounding.medium
-        color: Colours.tPalette.m3surfaceContainer
-        opacity: 0.9
-    }
-
+    // Just the icon: no plate behind it, the way a lifted icon reads on every other
+    // surface.
     Item {
         id: viewport
 
         anchors.fill: parent
-        anchors.margins: root.pad
         clip: true
 
         Image {

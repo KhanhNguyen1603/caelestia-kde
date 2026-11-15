@@ -34,6 +34,7 @@ Item {
         anchors.horizontalCenterOffset: Centering.pixelAlign(parent.width, width)
         text: root.status.icon
         color: root.status.highlight ? Colours.palette.m3primary : Colours.palette.m3secondary
+        fontStyle: Tokens.font.icon.medium
     }
 
     StateLayer {

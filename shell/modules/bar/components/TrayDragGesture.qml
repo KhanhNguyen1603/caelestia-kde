@@ -12,6 +12,9 @@ DragHandler {
     property string kind: "widget"
     property string key: ""
     property string widgetId: ""
+    // What the drag carries. An icon hands over its glyph alone, so the ghost is the
+    // icon itself and not the slot or plate the pointer happened to be over.
+    property Item ghostSource: root.item
 
     readonly property Item item: parent
 
@@ -29,8 +32,9 @@ DragHandler {
         if (active) {
             TrayDrag.begin(root.kind, root.key, root.widgetId, root.item.Window.window);
             TrayDrag.move(centroid.scenePosition);
-            const grabbedAt = centroid.pressPosition;
-            root.item.grabToImage(result => TrayDrag.setGhost(result, root.item.width, root.item.height, grabbedAt));
+            const source = root.ghostSource ?? root.item;
+            const grabbedAt = source.mapFromItem(root.item, centroid.pressPosition.x, centroid.pressPosition.y);
+            source.grabToImage(result => TrayDrag.setGhost(result, source.width, source.height, grabbedAt));
         } else if (TrayDrag.active) {
             TrayDrag.finish();
             root.dropped();
