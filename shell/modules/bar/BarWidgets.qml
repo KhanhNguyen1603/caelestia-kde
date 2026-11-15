@@ -339,10 +339,18 @@ QtObject {
 
     // Where a dragged widget lands: in the place of the widget it was dropped on. The
     // entry keeps its zone and enabled flag, so this is a move and not a re-add; a
-    // widget the list does not hold yet is inserted rather than ignored.
+    // widget the list does not hold yet is inserted rather than ignored. Status icons
+    // are drawn in the order of the icons list, so two of them move there instead.
     function moveBefore(node: var, id: string, beforeId: string): void {
         if (id === beforeId)
             return;
+
+        const iconId = root.statusIconId(id);
+        const beforeIconId = root.statusIconId(beforeId);
+        if (iconId.length > 0 && beforeIconId.length > 0) {
+            root.moveStatusIconBefore(iconId, beforeIconId);
+            return;
+        }
 
         const entries = root.entriesOf(node);
         const moving = entries.find(entry => entry.id === id) ?? {
@@ -354,6 +362,17 @@ QtObject {
         const at = rest.findIndex(entry => entry.id === beforeId);
         rest.splice(at < 0 ? rest.length : at, 0, moving);
         node.entries = rest;
+    }
+
+    // The status-icons list is the pill's own order, so a drag between two icons edits
+    // it directly rather than leaving a row in `bar.entries`.
+    function moveStatusIconBefore(iconId: string, beforeIconId: string): void {
+        const icons = Config.bar.statusIcons.values ?? [];
+        const from = icons.findIndex(icon => icon.id === iconId);
+        const to = icons.findIndex(icon => icon.id === beforeIconId);
+        if (from < 0 || to < 0 || from === to)
+            return;
+        GlobalConfig.bar.statusIcons.move(from, from < to ? to - 1 : to);
     }
 
     function resetToDefaults(node: var): void {

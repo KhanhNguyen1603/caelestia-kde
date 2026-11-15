@@ -55,9 +55,9 @@ Item {
     // also owns which icon sits under a bar coordinate. `barItem` is the bar
     // itself, because the tray may be nested inside the unified right-zone
     // wrapper and its local coordinates are no longer the bar's.
-    // The child of the row a drop lands on, by the middle of the cell, so an icon
-    // dropped between two others still has somewhere to go.
-    function closestChild(repeater: var, barItem: var, x: real, y: real): var {
+    // The child of the row nearest the point, among the ones that can take the drop:
+    // dropping between two icons still has somewhere to go.
+    function closestChild(repeater: var, barItem: var, x: real, y: real, accept: var): var {
         const p = layout.mapFromItem(barItem, x, y);
         const along = root.isHorizontal ? p.x : p.y;
         let best = null;
@@ -65,6 +65,8 @@ Item {
         for (let i = 0; i < repeater.count; i++) {
             const child = repeater.itemAt(i);
             if (!child || !child.visible)
+                continue;
+            if (accept && !accept(child))
                 continue;
             const start = root.isHorizontal ? child.x : child.y;
             const size = root.isHorizontal ? child.width : child.height;
@@ -77,6 +79,22 @@ Item {
             }
         }
         return best;
+    }
+
+    // A status icon and any other widget are ordered by different lists, so only a
+    // widget of the same sort can be the one a drag lands on.
+    function sameOrder(child: var, id: string): bool {
+        const childIsIcon = BarWidgets.statusIconId(child.id ?? "").length > 0;
+        const isIcon = BarWidgets.statusIconId(id).length > 0;
+        return childIsIcon === isIcon;
+    }
+
+    // Where the widget a drag carries would land, or null when nothing on the bar can
+    // take it.
+    function dropTarget(kind: string, id: string, x: real, y: real): var {
+        if (kind === "icon")
+            return root.closestChild(items, null, x, y);
+        return root.closestChild(widgetItems, null, x, y, child => root.sameOrder(child, id));
     }
 
     function widgetAt(barItem: var, x: real, y: real): var {
@@ -186,17 +204,16 @@ Item {
             return;
         }
 
-        // Scene coordinates: `closestChild` maps from the item it is given, and the
-        // drop arrives in the window's space. The nearest icon or widget takes the
-        // drop, so landing between two of them still moves something.
+        // Scene coordinates: `dropTarget` maps from the item it is given, and the drop
+        // arrives in the window's space. The nearest icon or widget takes the drop, so
+        // landing between two of them still moves something.
+        const target = root.dropTarget(source.kind, source.kind === "icon" ? source.key : source.widgetId, x, y);
         if (source.kind === "widget") {
             BarWidgets.setOnBar(GlobalConfig.bar, source.widgetId);
-            const target = root.closestChild(widgetItems, null, x, y);
             if (target && target.id)
                 BarWidgets.moveBefore(GlobalConfig.bar, source.widgetId, target.id);
         } else if (source.kind === "icon") {
             TrayRegistry.sendToBar(source.key);
-            const target = root.closestChild(items, null, x, y);
             if (target)
                 TrayRegistry.moveBefore(source.key, target.key);
         }
@@ -371,7 +388,7 @@ Item {
     StyledRect {
         id: dropMarker
 
-        readonly property var slot: TrayDrag.active && root.trayDropAt(TrayDrag.window, TrayDrag.pos.x, TrayDrag.pos.y) ? root.closestChild(TrayDrag.kind === "icon" ? items : widgetItems, null, TrayDrag.pos.x, TrayDrag.pos.y) : null
+        readonly property var slot: TrayDrag.active && root.trayDropAt(TrayDrag.window, TrayDrag.pos.x, TrayDrag.pos.y) ? root.dropTarget(TrayDrag.kind, TrayDrag.kind === "icon" ? TrayDrag.key : TrayDrag.widgetId, TrayDrag.pos.x, TrayDrag.pos.y) : null
 
         visible: root.isHorizontal && dropMarker.slot !== null
         width: Tokens.padding.extraSmall
