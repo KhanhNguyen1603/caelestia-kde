@@ -48,7 +48,7 @@ Item {
     // Alphabetical mode keeps favourites on top and sorts the rest by name,
     // case-insensitively; "most used" leaves the launcher's own ranking alone.
     function sortedApps(list: var): var {
-        if (!list || !Array.isArray(list) || list.length === 0)
+        if (!list || !list.length)
             return list;
         // The classic launcher has no ordering control: it keeps the launcher's
         // own ranking, exactly as it shipped.
@@ -56,10 +56,11 @@ Item {
             return list;
         if (sortSettings.sortMode !== "alpha")
             return list;
+        const items = Array.from(list);
         const favourites = GlobalConfig.launcher.favouriteApps ?? [];
         const isFavourite = app => Boolean(app?.id) && Strings.testRegexList(favourites, app.id);
         const byName = (a, b) => (a?.name ?? "").localeCompare(b?.name ?? "", undefined, { sensitivity: "base" });
-        return list.filter(a => isFavourite(a)).sort(byName).concat(list.filter(a => !isFavourite(a)).sort(byName));
+        return items.filter(a => isFavourite(a)).sort(byName).concat(items.filter(a => !isFavourite(a)).sort(byName));
     }
 
     function setSortMode(mode: string): void {
