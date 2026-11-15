@@ -28,7 +28,7 @@ Singleton {
                 win.nexus.nState.goToSubPage(pageIdx, String(subPage));
             }
             win.visible = true;
-            win.raise();
+            Qt.callLater(win.raise);
             win.nexus.forceActiveFocus();
             Logger.mark("nexus=reused");
             return win;
@@ -100,6 +100,12 @@ Singleton {
             }
 
             visible: true
+
+            onClosed: {
+                if (root.openWindow === win)
+                    root.openWindow = null;
+                win.destroy();
+            }
 
             Component.onDestruction: {
                 Logger.mark("nexus=destroyed");
