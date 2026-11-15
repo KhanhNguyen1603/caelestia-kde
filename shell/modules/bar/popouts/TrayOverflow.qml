@@ -37,8 +37,19 @@ Item {
     // here rather than being dropped somewhere else.
     readonly property bool targeted: TrayDrag.active && root.trayDropAt(TrayDrag.window, TrayDrag.pos.x, TrayDrag.pos.y)
 
+    // A drag that starts on the bar is lifted from the bar's window and released
+    // over the popout's, so the move has to work across the two: they are compared by
+    // screen, and only when both report one, which keeps another output's box from
+    // answering for this one.
+    function onDragScreen(window: var): bool {
+        const mine = root.Window.window;
+        if (!window || !mine)
+            return false;
+        return !window.screen || !mine.screen || window.screen === mine.screen;
+    }
+
     function trayDropAt(window: var, x: real, y: real): bool {
-        if (!root.visible || root.Window.window !== window)
+        if (!root.visible || !root.onDragScreen(window))
             return false;
         const p = root.mapFromItem(null, x, y);
         return p.x >= 0 && p.y >= 0 && p.x <= root.width && p.y <= root.height;

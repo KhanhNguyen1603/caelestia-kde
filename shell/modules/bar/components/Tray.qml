@@ -127,8 +127,19 @@ Item {
         return x >= corner.x - reach && x <= corner.x + root.arrowSize + reach && y >= corner.y - reach && y <= corner.y + root.arrowSize + reach;
     }
 
+    // A drag that starts in the box is lifted from the popout's window and released
+    // over the bar's, so the move has to work across the two: they are compared by
+    // screen, and only when both report one, which keeps another output's tray from
+    // answering for this one.
+    function onDragScreen(window: var): bool {
+        const mine = root.Window.window;
+        if (!window || !mine)
+            return false;
+        return !window.screen || !mine.screen || window.screen === mine.screen;
+    }
+
     function trayDropAt(window: var, x: real, y: real): bool {
-        if (!root.visible || root.Window.window !== window)
+        if (!root.visible || !root.onDragScreen(window))
             return false;
         const p = root.mapFromItem(null, x, y);
         return p.x >= 0 && p.y >= 0 && p.x <= root.width && p.y <= root.height;
