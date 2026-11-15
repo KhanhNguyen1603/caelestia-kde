@@ -24,6 +24,7 @@ PipeWireWorker::PipeWireWorker(
     : m_loop(nullptr)
     , m_stream(nullptr)
     , m_timer(nullptr)
+    , m_stopEvent(nullptr)
     , m_idle(true)
     , m_token(token)
     , m_collector(collector) {
@@ -45,6 +46,14 @@ PipeWireWorker::PipeWireWorker(
         return;
     }
     pw_loop_update_timer(pw_main_loop_get_loop(m_loop), m_timer, &timeout, &timeout, false);
+
+    m_stopEvent = pw_loop_add_event(pw_main_loop_get_loop(m_loop), handleStop, this);
+    if (!m_stopEvent) {
+        qCWarning(lcAcWorker) << "init: failed to create stop event";
+        pw_main_loop_destroy(m_loop);
+        pw_deinit();
+        return;
+    }
 
     // Output taps the default sink's monitor - everything the system is playing,
     // and so the only case that is actually "Music". Input stays a plain capture
@@ -104,11 +113,25 @@ PipeWireWorker::PipeWireWorker(
         return;
     }
 
-    pw_main_loop_run(m_loop);
+    {
+        // stop() joins this thread from the main thread. While the stream is STREAMING the
+        // timer is off, so with no audio flowing (e.g. a bluetooth sink went away) no callback
+        // ever checks the token, the loop never exits and the whole shell hangs on join().
+        // The event wakes the loop up.
+        std::stop_callback onStop(m_token, [this] {
+            pw_loop_signal_event(pw_main_loop_get_loop(m_loop), m_stopEvent);
+        });
+        pw_main_loop_run(m_loop);
+    }
 
     pw_stream_destroy(m_stream);
     pw_main_loop_destroy(m_loop);
     pw_deinit();
+}
+
+void PipeWireWorker::handleStop(void* data, uint64_t) {
+    auto* self = static_cast<PipeWireWorker*>(data);
+    pw_main_loop_quit(self->m_loop);
 }
 
 void PipeWireWorker::handleTimeout(void* data, uint64_t expirations) {
