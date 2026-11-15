@@ -88,7 +88,8 @@ Item {
             if (active) {
                 TrayDrag.begin("icon", root.key, "", root.Window.window);
                 TrayDrag.move(centroid.scenePosition);
-                root.grabToImage(result => TrayDrag.setGhost(result, root.width, root.height));
+                const grabbedAt = centroid.pressPosition;
+                root.grabToImage(result => TrayDrag.setGhost(result, root.width, root.height, grabbedAt));
             } else if (TrayDrag.active) {
                 TrayDrag.finish();
                 stateLayer.suppressClick = true;

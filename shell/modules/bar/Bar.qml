@@ -746,7 +746,8 @@ Item {
                 if (active) {
                     TrayDrag.begin("widget", "", wrapper.widgetId, wrapper.Window.window);
                     TrayDrag.move(centroid.scenePosition);
-                    wrapper.grabToImage(result => TrayDrag.setGhost(result, wrapper.width, wrapper.height));
+                    const grabbedAt = centroid.pressPosition;
+                    wrapper.grabToImage(result => TrayDrag.setGhost(result, wrapper.width, wrapper.height, grabbedAt));
                 } else if (TrayDrag.active) {
                     TrayDrag.finish();
                 }

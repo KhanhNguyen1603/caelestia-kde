@@ -25,6 +25,9 @@ Singleton {
     property var ghost: null
     property real ghostWidth: 0
     property real ghostHeight: 0
+    // Where in the snapshot the pointer was, so an item longer than one slot can be
+    // carried by the part of it that was grabbed.
+    property point ghostOffset: Qt.point(0, 0)
 
     // The surfaces that take a drop, in the order they were created. Anything that
     // wants one registers itself and answers the two calls below.
@@ -39,11 +42,12 @@ Singleton {
         root.active = true;
     }
 
-    function setGhost(result: var, width: real, height: real): void {
+    function setGhost(result: var, width: real, height: real, offset: point): void {
         if (!result)
             return;
         root.ghostWidth = width;
         root.ghostHeight = height;
+        root.ghostOffset = offset;
         root.ghost = result;
     }
 
