@@ -82,20 +82,14 @@ ColumnLayout {
                 fontScale: root.fontScale
 
                 onActivated: {
-                    const current = GlobalConfig.bar.dock.pinnedApps ? [...GlobalConfig.bar.dock.pinnedApps] : [];
                     const idToPin = model.entry ? model.entry.id : model.id;
 
                     if (root.isPinned) {
-                        let index = current.indexOf(model.id);
-                        if (index === -1)
-                            index = current.indexOf(idToPin);
-                        if (index !== -1) {
-                            current.splice(index, 1);
-                            GlobalConfig.bar.dock.pinnedApps = current;
-                        }
-                    } else if (!current.includes(idToPin)) {
-                        current.push(idToPin);
-                        GlobalConfig.bar.dock.pinnedApps = current;
+                        DockManager.unpinApp(model.id);
+                        if (idToPin !== model.id)
+                            DockManager.unpinApp(idToPin);
+                    } else {
+                        DockManager.pinApp(idToPin);
                     }
 
                     root.popouts.hasCurrent = false;
@@ -207,10 +201,8 @@ ColumnLayout {
             for (const toplevel of model.toplevels) {
                 if (toplevel.pid) {
                     Quickshell.execDetached({ command: ["kill", "-15", String(toplevel.pid)] });
-                } else if (Kwin.windowList.length > 0) {
-                    Kwin.closeWindow(toplevel.address);
                 } else {
-                    Kwin.dispatch(Kwin.usingLua ? `hl.dsp.window.close({ window = "address:0x${toplevel.address}" })` : `closewindow address:0x${toplevel.address}`);
+                    Kwin.closeWindow(String(toplevel.address));
                 }
             }
             root.popouts.hasCurrent = false;

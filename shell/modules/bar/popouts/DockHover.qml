@@ -29,11 +29,7 @@ StyledRect {
 
     function closeToplevel(address: string): void {
         Kwin.clearHighlight();
-        if (Kwin.windowList.length > 0) {
-            Kwin.closeWindow(address);
-        } else {
-            Kwin.dispatch(Kwin.usingLua ? `hl.dsp.window.close({ window = "address:0x${address}" })` : `closewindow address:0x${address}`);
-        }
+        Kwin.closeWindow(String(address));
 
         if (!root.model || !root.model.toplevels)
             return;
@@ -172,11 +168,7 @@ StyledRect {
                             previewTimer.stop();
                             Kwin.clearHighlight();
                             if (card.modelData.address) {
-                                if (Kwin.windowList.length > 0) {
-                                    Kwin.focusWindow(card.modelData.address);
-                                } else {
-                                    Kwin.dispatch(Kwin.usingLua ? `hl.dsp.focus({ window = "address:0x${card.modelData.address}" })` : `focuswindow address:0x${card.modelData.address}`);
-                                }
+                                Kwin.focusWindow(String(card.modelData.address));
                             }
                             root.popouts.hasCurrent = false;
                         }
