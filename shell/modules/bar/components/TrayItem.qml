@@ -20,9 +20,14 @@ Item {
     readonly property string popoutName: TrayRegistry.popoutNameOf(root.modelData)
     readonly property bool hasMenuEntries: menuOpener.children.values.some(entry => !entry.isSeparator)
     readonly property bool dragging: stateLayer.dragging
+    // A tray icon sits in the same slot as the bar's widgets, so the row lines up,
+    // and its glyph is drawn at the size of the icons beside it instead of filling
+    // the slot the way an application logo would.
+    readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
+    readonly property real glyphSize: Math.round(Tokens.font.body.small.pointSize * 1.5)
 
-    implicitWidth: Tokens.font.body.small.pointSize * 2
-    implicitHeight: Tokens.font.body.small.pointSize * 2
+    implicitWidth: root.isHorizontal ? root.glyphSize + Tokens.padding.small * 2 : root.barThickness
+    implicitHeight: root.isHorizontal ? root.barThickness : root.glyphSize + Tokens.padding.small * 2
 
     opacity: root.dragging ? 0.4 : 1
 
@@ -72,7 +77,8 @@ Item {
     ColouredIcon {
         id: icon
 
-        anchors.fill: parent
+        anchors.centerIn: parent
+        implicitSize: root.glyphSize
         source: Icons.getTrayIcon(root.key, root.modelData.icon)
         colour: Colours.palette.m3secondary
         layer.enabled: Config.bar.tray.recolour
