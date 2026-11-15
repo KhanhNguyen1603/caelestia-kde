@@ -200,7 +200,6 @@ class BarScreenCapture : public settings::ObjectNode {
 class BarKeepAwake : public settings::ObjectNode {
     CONFIG_NODE(BarKeepAwake, settings::ObjectNode)
 
-    CONFIG_PROPERTY(bool, showActiveChip, true)
     CONFIG_PROPERTY(bool, autoHide, false)
 };
 

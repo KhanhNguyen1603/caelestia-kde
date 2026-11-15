@@ -92,41 +92,5 @@ StyledRect {
                 onClicked: IdleInhibitor.setEnabled(!IdleInhibitor.enabled)
             }
         }
-
-        Loader {
-            id: activeChip
-
-            sourceComponent: StyledRect {
-                implicitWidth: text.implicitWidth + Tokens.padding.medium * 2
-                implicitHeight: text.implicitHeight + Tokens.padding.small
-
-                radius: Tokens.rounding.full
-                color: Colours.palette.m3primary
-
-                StyledText {
-                    id: text
-
-                    anchors.centerIn: parent
-                    text: IdleInhibitor.enabled ? qsTr("Active since %1").arg(Time.clockTime(IdleInhibitor.enabledSince)) : qsTr("Inactive")
-                    color: Colours.palette.m3onPrimary
-                    font: Tokens.font.body.builders.small.size(Math.round(Tokens.font.body.small.pointSize * 0.9)).build()
-                }
-            }
-
-            active: IdleInhibitor.enabled && Config.bar.keepawake.showActiveChip
-            anchors.top: button.bottom
-            anchors.horizontalCenter: button.horizontalCenter
-            anchors.topMargin: IdleInhibitor.enabled ? Tokens.spacing.small : 0
-            opacity: IdleInhibitor.enabled ? 1 : 0
-            scale: IdleInhibitor.enabled ? 1 : 0.5
-
-            Behavior on opacity {
-                Anim { type: Anim.StandardSmall }
-            }
-
-            Behavior on scale {
-                Anim { type: Anim.StandardSmall }
-            }
-        }
     }
 }

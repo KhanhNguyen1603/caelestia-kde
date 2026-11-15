@@ -702,13 +702,6 @@ QtObject {
             subPageIdx: 8
         },
         {
-            label: qsTr("Show active indicator"),
-            description: qsTr("Show a chip with the activation time when Keep Awake is on"),
-            section: qsTr("Keep Awake"),
-            pageIdx: 2,
-            subPageIdx: 23
-        },
-        {
             label: qsTr("Auto-hide when inactive"),
             description: qsTr("Hide the widget when Keep Awake is off"),
             section: qsTr("Keep Awake"),
