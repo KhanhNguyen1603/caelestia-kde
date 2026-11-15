@@ -372,6 +372,11 @@ CustomMouseArea {
         onTriggered: {
             if (popouts.isContextPopout || panels.popoutsWrapper.hovered)
                 return;
+            // A drag out of the bar opens the box under the pointer, which is
+            // outside every panel until the pointer reaches it: taking the panel
+            // away mid-gesture would leave the drag with nothing to land on.
+            if (TrayDrag.active)
+                return;
             if (!TrayRegistry.isTrayPopout(popouts.currentName) || ((popouts.current as StackView)?.depth ?? 0) <= 1) {
                 popouts.hasCurrent = false;
                 bar.closeTray();
