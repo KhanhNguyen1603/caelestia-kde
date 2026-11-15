@@ -29,12 +29,13 @@ Item {
     readonly property var cellWidgets: root.widgets.filter(widget => widget.kind === "statusIcon")
     readonly property var rowWidgets: root.widgets.filter(widget => widget.kind !== "statusIcon")
 
-    // Four rows is the height the box keeps: it grows a column at a time as icons
-    // come in (4x4, then 4x5, 4x6), so it is never a 5x1 or any other strip.
-    readonly property int rows: 4
+    // The grid is only as big as the icons in it: as square as it can be, never more
+    // than four rows, and a column wider once those are full. Nothing is reserved, so
+    // the box is exactly the cells its icons need.
+    readonly property int maxRows: 4
     readonly property int filled: root.items.length + root.cellWidgets.length
-    readonly property int columns: Math.max(root.rows, Math.ceil(root.filled / root.rows))
-    readonly property int emptyCells: Math.max(0, root.columns * root.rows - root.filled)
+    readonly property int columns: Math.max(1, Math.ceil(Math.sqrt(root.filled)), Math.ceil(root.filled / root.maxRows))
+    readonly property int rows: Math.max(1, Math.ceil(root.filled / root.columns))
 
     readonly property real cell: 42 * root.scaleOffset * root.fontScale
     readonly property real gap: Tokens.spacing.small * root.scaleOffset
@@ -183,9 +184,9 @@ Item {
             }
 
             // An empty box still opens from the chevron, and a blank panel reads as a
-            // mistake: the free slots are drawn so the grid is there to be filled.
+            // mistake: one faint cell stands in for the icons that will fill it.
             Repeater {
-                model: root.emptyCells
+                model: root.filled === 0 ? 1 : 0
 
                 delegate: StyledRect {
                     implicitWidth: root.cell

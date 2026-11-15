@@ -417,12 +417,14 @@ test_the_hidden_icons_box_is_icons_only() {
         "the box holds tiles, not copy"
     assert_file_contains "$TRAY_OVERFLOW" 'delegate: root.popouts.trayWidgetDelegate' \
         "the widgets in the box are the bar's own, so they stay live there"
-    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int rows: 4' \
-        "the box keeps a height of four rows"
-    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int columns: Math.max(root.rows, Math.ceil(root.filled / root.rows))' \
-        "and grows a column at a time, never into a strip of one row"
-    assert_file_contains "$TRAY_OVERFLOW" 'model: root.emptyCells' \
-        "the free slots are drawn, so the grid is visible before it is full"
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int maxRows: 4' \
+        "the box fills at most four rows"
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int columns: Math.max(1, Math.ceil(Math.sqrt(root.filled)), Math.ceil(root.filled / root.maxRows))' \
+        "the grid is the squarest shape its icons fit, and a column wider once four rows are full"
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int rows: Math.max(1, Math.ceil(root.filled / root.columns))' \
+        "with no rows reserved beyond the icons themselves"
+    assert_file_contains "$TRAY_OVERFLOW" 'model: root.filled === 0 ? 1 : 0' \
+        "a box with nothing in it still shows the one cell waiting to be filled"
     assert_file_contains "$TRAY_OVERFLOW" 'BarComponents.StatusIcon' \
         "a status icon in the box is a cell of the grid, not a row of its own"
     assert_file_contains "$TRAY_OVERFLOW" 'function trayDropAt(window: var, x: real, y: real): bool' \
