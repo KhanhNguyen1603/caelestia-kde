@@ -1377,6 +1377,167 @@ QtObject {
             subPage: "displays"
         },
         {
+            label: qsTr("Enable floating dock"),
+            description: qsTr("Show a standalone floating dock on your screen"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Screen edge"),
+            description: qsTr("Position of the floating dock on the screen"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Alignment"),
+            description: qsTr("Placement along the chosen screen edge"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Always visible"),
+            description: qsTr("Keep the dock visible on screen at all times instead of auto-hiding"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Intelligent auto-hide (Intellihide)"),
+            description: qsTr("Only hide the dock when an open window overlaps its area"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Dodge focused window only"),
+            description: qsTr("Only hide when the active, focused window intersects with the dock"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Hover reveal delay"),
+            description: qsTr("Milliseconds to wait before revealing the hidden dock on mouse hover"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Reserve screen space"),
+            description: qsTr("Prevent maximized windows from covering the dock area (exclusive zone)"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Icon size"),
+            description: qsTr("Size of application icons in the dock"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Floating distance"),
+            description: qsTr("Margin separating the dock pill from the screen boundary"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Inner padding"),
+            description: qsTr("Padding around icons inside the dock container"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Item spacing"),
+            description: qsTr("Distance between adjacent icons"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Icon magnification on hover"),
+            description: qsTr("Smoothly magnify icons and their neighbours under the mouse pointer"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Maximum magnification"),
+            description: qsTr("Peak scale multiplier for hovered dock icons"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Background opacity"),
+            description: qsTr("Translucency of the frosted glass dock pill"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Running indicator style"),
+            description: qsTr("Visual shape for active and running application indicators"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Show running indicators"),
+            description: qsTr("Display pips or bars below running applications"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Show unread badges"),
+            description: qsTr("Display notification count, progress, and urgency badges on app icons"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Show app launcher icon"),
+            description: qsTr("Display an application launcher button directly on the dock"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Recolor icons"),
+            description: qsTr("Apply system theme palette colors to monochrome and app icons"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Window grouping"),
+            description: qsTr("How multiple windows of the same app share a dock icon"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Filter by current desktop"),
+            description: qsTr("Only show applications and windows belonging to the active virtual workspace"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Preview window on desktop"),
+            description: qsTr("Highlight and show the window itself on the workspace while hovering over dock previews"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
             label: qsTr("Focus sessions"),
             description: qsTr("Turn notifications off by themselves on a schedule"),
             section: qsTr("Focus Sessions"),
