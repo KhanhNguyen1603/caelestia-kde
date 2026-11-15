@@ -9,7 +9,6 @@ REGISTRY="$REPO_ROOT/shell/modules/bar/BarWidgets.qml"
 BAR="$REPO_ROOT/shell/modules/bar/Bar.qml"
 TRAY="$REPO_ROOT/shell/modules/bar/components/Tray.qml"
 TRAY_ITEM="$REPO_ROOT/shell/modules/bar/components/TrayItem.qml"
-DRAG_SURFACE="$REPO_ROOT/shell/modules/bar/components/TrayDragSurface.qml"
 UPDATE_INDICATOR="$REPO_ROOT/shell/modules/bar/components/UpdateIndicator.qml"
 TRAY_OVERFLOW="$REPO_ROOT/shell/modules/bar/popouts/TrayOverflow.qml"
 POPOUTS="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
@@ -140,12 +139,12 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "the tray has to resolve what a drag leaves on it"
     assert_file_contains "$TRAY" 'TrayRegistry.sendToBar(source.key)' \
         "dropping an icon on the icons puts it back on the bar"
-    assert_file_contains "$TRAY_ITEM" 'draggable: root.draggable' \
-        "tray icons take the gesture from the surface under them"
-    assert_file_contains "$DRAG_SURFACE" 'TrayDrag.begin("icon"' \
-        "a press that turns into a move lifts the icon off the bar"
-    assert_file_contains "$DRAG_SURFACE" 'TrayDrag.finish()' \
+    assert_file_contains "$TRAY_ITEM" 'TrayDrag.begin("icon"' \
+        "tray icons lift out of the bar and report where the pointer is"
+    assert_file_contains "$TRAY_ITEM" 'TrayDrag.finish()' \
         "and letting go decides where it lands"
+    assert_file_contains "$TRAY_ITEM" 'root.grabToImage(result => TrayDrag.setGhost' \
+        "the gesture carries a snapshot of the icon it lifted"
     assert_file_contains "$BAR" 'TrayDrag.begin("widget"' \
         "bar widgets need to be draggable into the same panel"
     assert_file_contains "$BAR" 'readonly property string widgetId: id' \

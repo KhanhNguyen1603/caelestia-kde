@@ -33,6 +33,9 @@ Item {
     readonly property real inset: Tokens.padding.medium * 2 * root.scaleOffset
     readonly property real gridWidth: root.columns * root.cell + Math.max(0, root.columns - 1) * root.gap
     readonly property real side: root.gridWidth + root.inset
+    // The box leans in when a drag is over it, so it is obvious the icon will land
+    // here rather than being dropped somewhere else.
+    readonly property bool targeted: TrayDrag.active && root.trayDropAt(TrayDrag.window, TrayDrag.pos.x, TrayDrag.pos.y)
 
     function trayDropAt(window: var, x: real, y: real): bool {
         if (!root.visible || root.Window.window !== window)
@@ -76,6 +79,11 @@ Item {
 
         anchors.centerIn: parent
         spacing: Tokens.spacing.medium * root.scaleOffset
+        scale: root.targeted ? 1.06 : 1
+
+        Behavior on scale {
+            Anim {}
+        }
 
         Grid {
             id: grid

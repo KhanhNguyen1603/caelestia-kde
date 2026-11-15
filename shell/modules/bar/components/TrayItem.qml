@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Window
 import Quickshell
 import Quickshell.Services.SystemTray
 import Caelestia.Config
@@ -19,7 +20,7 @@ Item {
     readonly property string key: TrayRegistry.keyOfItem(root.modelData)
     readonly property string popoutName: TrayRegistry.popoutNameOf(root.modelData)
     readonly property bool hasMenuEntries: menuOpener.children.values.some(entry => !entry.isSeparator)
-    readonly property bool dragging: stateLayer.dragging
+    readonly property bool dragging: dragHandler.active
     // A tray icon sits in the same slot as the bar's widgets, so the row lines up,
     // and its glyph is drawn at the size of the icons beside it instead of filling
     // the slot the way an application logo would.
@@ -28,8 +29,9 @@ Item {
 
     implicitWidth: root.isHorizontal ? root.glyphSize + Tokens.padding.small * 2 : root.barThickness
     implicitHeight: root.isHorizontal ? root.barThickness : root.glyphSize + Tokens.padding.small * 2
-
-    opacity: root.dragging ? 0.4 : 1
+    // Fading only once the ghost exists keeps the snapshot clean and means the icon
+    // never disappears before there is something under the pointer to replace it.
+    opacity: root.dragging && TrayDrag.ghost !== null ? 0.35 : 1
 
     Behavior on opacity {
         Anim {
@@ -37,8 +39,10 @@ Item {
         }
     }
 
-    TrayDragSurface {
+    StateLayer {
         id: stateLayer
+
+        property bool suppressClick: false
 
         anchors.fill: undefined
         anchors.centerIn: parent
@@ -46,14 +50,16 @@ Item {
         implicitHeight: root.implicitHeight + Tokens.padding.extraSmall
         radius: Tokens.rounding.full
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-        draggable: root.draggable
-        key: root.key
 
         Accessible.role: Accessible.Button
         Accessible.name: root.modelData.title || root.modelData.id
         Accessible.description: root.hasMenuEntries && root.popouts ? qsTr("Left-click activates, right-click opens the menu, middle-click runs the secondary action.") : qsTr("Left-click activates, middle- or right-click runs the secondary action.")
 
-        onTapped: event => {
+        onClicked: event => {
+            if (stateLayer.suppressClick) {
+                stateLayer.suppressClick = false;
+                return;
+            }
             if (event.button === Qt.LeftButton) {
                 root.modelData.activate();
             } else if (event.button === Qt.MiddleButton || !root.hasMenuEntries || !root.popouts) {
@@ -65,6 +71,33 @@ Item {
                     : root.mapToItem(null, 0, root.implicitHeight / 2).y;
                 root.popouts.hasCurrent = true;
             }
+        }
+    }
+
+    // The gesture is recognised over the icon rather than by watching its press: a
+    // pointer handler lifts the icon without stopping the click underneath it, which
+    // is how a bar widget is lifted too, so both kinds of item behave alike.
+    DragHandler {
+        id: dragHandler
+
+        target: null
+        enabled: root.draggable
+        grabPermissions: PointerHandler.CanTakeOverFromAnything | PointerHandler.ApprovesTakeOverByAnything
+
+        onActiveChanged: {
+            if (active) {
+                TrayDrag.begin("icon", root.key, "", root.Window.window);
+                TrayDrag.move(centroid.scenePosition);
+                root.grabToImage(result => TrayDrag.setGhost(result, root.width, root.height));
+            } else if (TrayDrag.active) {
+                TrayDrag.finish();
+                stateLayer.suppressClick = true;
+            }
+        }
+
+        onTranslationChanged: {
+            if (active)
+                TrayDrag.move(centroid.scenePosition);
         }
     }
 

@@ -19,6 +19,13 @@ Singleton {
     property point pos: Qt.point(0, 0)
     property var window: null
 
+    // A snapshot of the item the drag lifted, kept alive here because the grab
+    // result owns the image its url points at. The gesture draws this under the
+    // pointer so what is being carried is never a guess.
+    property var ghost: null
+    property real ghostWidth: 0
+    property real ghostHeight: 0
+
     // The surfaces that take a drop, in the order they were created. Anything that
     // wants one registers itself and answers the two calls below.
     readonly property var targets: []
@@ -28,7 +35,16 @@ Singleton {
         root.key = key;
         root.widgetId = widgetId;
         root.window = window;
+        root.ghost = null;
         root.active = true;
+    }
+
+    function setGhost(result: var, width: real, height: real): void {
+        if (!result)
+            return;
+        root.ghostWidth = width;
+        root.ghostHeight = height;
+        root.ghost = result;
     }
 
     function move(position: point): void {

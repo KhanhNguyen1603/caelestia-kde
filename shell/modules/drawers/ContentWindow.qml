@@ -17,6 +17,7 @@ import qs.utils
 import qs.modules.background
 import qs.modules.bar
 import qs.modules.overview as Overview
+import qs.modules.bar.components as BarComponents
 import qs.modules.background.desktopicons
 
 StyledWindow {
@@ -1036,6 +1037,10 @@ StyledWindow {
             offsetScale: panels.floatingOsd.offsetScale
         }
     }
+
+    // Drawn last so the drag ghost passes over the bar and the box it is heading for
+    // instead of disappearing underneath them.
+    BarComponents.TrayDragGhost {}
 
     component PanelBg: BlobRect {
         required property Item panel

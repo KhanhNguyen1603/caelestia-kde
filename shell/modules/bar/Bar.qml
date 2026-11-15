@@ -736,7 +736,9 @@ Item {
         Layout.minimumWidth: implicitWidth
         Layout.minimumHeight: implicitHeight
 
-        opacity: wrapper.dragging ? 0.4 : 1
+        // Fading only once the ghost exists keeps the snapshot clean and means the
+        // widget never disappears before there is something under the pointer.
+        opacity: wrapper.dragging && TrayDrag.ghost !== null ? 0.35 : 1
 
         visible: enabled
         active: enabled
@@ -752,6 +754,7 @@ Item {
                 if (active) {
                     TrayDrag.begin("widget", "", wrapper.widgetId, wrapper.Window.window);
                     TrayDrag.move(centroid.scenePosition);
+                    wrapper.grabToImage(result => TrayDrag.setGhost(result, wrapper.width, wrapper.height));
                 } else if (TrayDrag.active) {
                     TrayDrag.finish();
                 }
