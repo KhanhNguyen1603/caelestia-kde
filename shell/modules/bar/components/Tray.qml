@@ -7,7 +7,7 @@ import qs.components
 import qs.services
 import qs.modules.bar
 
-StyledRect {
+Item {
     id: root
 
     readonly property alias layout: layout
@@ -30,19 +30,26 @@ StyledRect {
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
 
-    readonly property bool showArrow: root.showTrayIcons && TrayRegistry.overflowCount > 0
+    // The chevron is the box's handle, so it is on the bar for as long as the tray
+    // is: an empty box still needs somewhere to be opened from.
+    readonly property bool showArrow: root.showTrayIcons
 
     readonly property real nonAnimHeight: {
         if (isHorizontal)
             return barThickness;
-        return layout.implicitHeight + padding * 2;
+        return arrowSize + arrowGap + layout.implicitHeight + padding * 2;
     }
 
     readonly property real nonAnimWidth: {
         if (!isHorizontal)
             return barThickness;
-        return layout.implicitWidth + padding * 2;
+        return arrowSize + arrowGap + layout.implicitWidth + padding * 2;
     }
+
+    // The chevron sits on the bar, outside the surface the icons share, and is the
+    // only thing that makes the surface start further in.
+    readonly property real arrowSize: root.showArrow && expandIcon.item ? (root.isHorizontal ? expandIcon.item.implicitWidth : expandIcon.item.implicitHeight) : 0
+    readonly property real arrowGap: root.showArrow && expandIcon.item ? root.spacing : 0
 
     // Hit test for the bar's hover routing: the positioner owns the layout, so it
     // also owns which icon sits under a bar coordinate. `barItem` is the bar
@@ -78,157 +85,237 @@ StyledRect {
         const p = expandIcon.mapFromItem(barItem, x, y);
         const coord = isHorizontal ? p.x : p.y;
         const size = isHorizontal ? expandIcon.width : expandIcon.height;
-        return coord >= -root.spacing && coord <= size + root.padding;
+        return coord >= -root.spacing && coord <= size + root.spacing;
     }
 
-    clip: true
+    // The point on the bar the box hangs from: the chevron when it is there, the
+    // tray itself when it is not.
+    function anchor(): real {
+        if (expandIcon.item) {
+            return root.isHorizontal
+                ? expandIcon.item.mapToItem(null, expandIcon.item.width / 2, 0).x
+                : expandIcon.item.mapToItem(null, 0, expandIcon.item.height / 2).y;
+        }
+        return root.isHorizontal ? root.mapToItem(null, root.width / 2, 0).x : root.mapToItem(null, 0, root.height / 2).y;
+    }
+
+    // The box opens from the chevron and is centred on it, or on the tray when there
+    // is no chevron yet. Opening it for the whole of a drag is what lets a tray icon
+    // be dropped into it: there is nowhere else for the gesture to end.
+    function openOverflow(): void {
+        if (!root.popouts)
+            return;
+        if (root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow")
+            return;
+        root.popouts.currentName = "trayOverflow";
+        root.popouts.currentCenter = root.anchor();
+        root.popouts.hasCurrent = true;
+    }
+
+    function toggleOverflow(): void {
+        if (root.popouts && root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow")
+            root.popouts.hasCurrent = false;
+        else
+            root.openOverflow();
+    }
+
+    function overChevron(x: real, y: real): bool {
+        if (!root.showArrow || !expandIcon.item)
+            return false;
+        const corner = expandIcon.mapToItem(null, 0, 0);
+        const reach = root.spacing;
+        return x >= corner.x - reach && x <= corner.x + root.arrowSize + reach && y >= corner.y - reach && y <= corner.y + root.arrowSize + reach;
+    }
+
+    function trayDropAt(window: var, x: real, y: real): bool {
+        if (!root.visible || root.Window.window !== window)
+            return false;
+        const p = root.mapFromItem(null, x, y);
+        return p.x >= 0 && p.y >= 0 && p.x <= root.width && p.y <= root.height;
+    }
+
+    // Dropping on the chevron is the same move as dropping in the box, and dropping
+    // on the icons puts the icon or the widget back on the bar.
+    function trayDrop(source: var): void {
+        if (!source)
+            return;
+        const toBox = root.overChevron(TrayDrag.pos.x, TrayDrag.pos.y);
+        if (toBox)
+            root.openOverflow();
+        if (source.kind === "widget") {
+            if (toBox)
+                BarWidgets.setInTray(GlobalConfig.bar, source.widgetId);
+            else
+                BarWidgets.setOnBar(GlobalConfig.bar, source.widgetId);
+        } else if (source.kind === "icon") {
+            if (toBox)
+                TrayRegistry.sendToBox(source.key);
+            else
+                TrayRegistry.sendToBar(source.key);
+        }
+    }
+
     visible: height > 0
 
     implicitWidth: isHorizontal ? nonAnimWidth : barThickness
     implicitHeight: isHorizontal ? barThickness : nonAnimHeight
 
-    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (root.hasBackground && (items.count > 0 || widgetItems.count > 0)) ? Colours.tPalette.m3surfaceContainer.a : 0)
-    radius: Tokens.rounding.full
+    Component.onCompleted: TrayDrag.register(root)
 
-    // icon-level
-    // right-clicks stay with the icons themselves (their own handlers sit on top
-    // of this one, so they win first).
-    MouseArea {
-        anchors.fill: parent
-        acceptedButtons: Qt.RightButton
-        cursorShape: Qt.PointingHandCursor
-        onClicked: mouse => {
-            if (!root.popouts)
-                return;
-            root.popouts.currentName = "traycontext";
-            root.popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
-            root.popouts.hasCurrent = true;
-            mouse.accepted = true;
+    Component.onDestruction: TrayDrag.unregister(root)
+
+    // The box is where a drag off the bar ends, so it is open for the whole gesture.
+    Connections {
+        function onActiveChanged(): void {
+            if (TrayDrag.active)
+                Qt.callLater(() => root.openOverflow());
         }
+
+        target: TrayDrag
     }
 
-    Grid {
-        id: layout
+    // The hidden-icons chevron sits on the bar, not in the cluster: that is where
+    // Windows keeps it, and it is what the box opens from.
+    Loader {
+        id: expandIcon
 
-        anchors.horizontalCenter: isHorizontal ? undefined : parent.horizontalCenter
-        anchors.verticalCenter: isHorizontal ? parent.verticalCenter : undefined
-        anchors.top: isHorizontal ? undefined : parent.top
-        anchors.topMargin: isHorizontal ? 0 : root.padding
-        anchors.left: isHorizontal ? parent.left : undefined
-        anchors.leftMargin: isHorizontal ? root.padding : 0
+        visible: root.showArrow
+        active: root.showArrow
 
-        columns: isHorizontal ? -1 : 1
-        rows: isHorizontal ? 1 : -1
-        flow: isHorizontal ? Grid.LeftToRight : Grid.TopToBottom
+        anchors.left: root.isHorizontal ? parent.left : undefined
+        anchors.top: root.isHorizontal ? undefined : parent.top
+        anchors.verticalCenter: root.isHorizontal ? parent.verticalCenter : undefined
+        anchors.horizontalCenter: root.isHorizontal ? undefined : parent.horizontalCenter
 
-        spacing: Tokens.spacing.small
+        sourceComponent: Item {
+            id: arrowContainer
 
-        add: Transition {
-            Anim {
-                properties: "scale"
-                from: 0
-                to: 1
-                easing: Tokens.anim.standardDecel
+            readonly property real iconDimension: Math.max(arrowIcon.implicitWidth, arrowIcon.implicitHeight)
+            // The chevron is a control on the bar, so it takes a hover wash instead
+            // of floating on its own.
+            property bool hovered: false
+
+            implicitWidth: iconDimension
+            implicitHeight: iconDimension
+
+            HoverHandler {
+                onHoveredChanged: arrowContainer.hovered = hovered
             }
-        }
 
-        move: Transition {
-            Anim {
-                properties: "scale"
-                to: 1
-                easing: Tokens.anim.standardDecel
-            }
-            Anim {
-                properties: "x,y"
-            }
-        }
+            StyledRect {
+                anchors.fill: parent
+                radius: Tokens.rounding.full
+                color: Colours.tPalette.m3surfaceContainer
+                opacity: arrowContainer.hovered ? 0.9 : 0
 
-        Loader {
-            id: expandIcon
-
-            visible: root.showArrow
-            active: root.showArrow
-
-            sourceComponent: Item {
-                id: arrowContainer
-
-                readonly property real iconDimension: Math.max(expandIconInner.implicitWidth, expandIconInner.implicitHeight)
-
-                implicitWidth: iconDimension
-                implicitHeight: iconDimension
-
-                TapHandler {
-                    margin: Tokens.padding.extraSmall
-                    cursorShape: Qt.PointingHandCursor
-
-                    onTapped: {
-                        if (!root.popouts)
-                            return;
-
-                        if (root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow") {
-                            root.popouts.hasCurrent = false;
-                            return;
-                        }
-
-                        root.popouts.currentName = "trayOverflow";
-                        root.popouts.currentCenter = root.isHorizontal
-                            ? arrowContainer.mapToItem(null, arrowContainer.width / 2, 0).x
-                            : arrowContainer.mapToItem(null, 0, arrowContainer.height / 2).y;
-                        root.popouts.hasCurrent = true;
-                    }
+                Behavior on opacity {
+                    Anim {}
                 }
+            }
 
-                MaterialIcon {
-                    id: expandIconInner
+            TapHandler {
+                margin: Tokens.padding.extraSmall
+                cursorShape: Qt.PointingHandCursor
+                onTapped: root.toggleOverflow()
+            }
 
-                    anchors.centerIn: parent
-                    text: "expand_less"
-                    fontStyle: Tokens.font.icon.large
-                    rotation: Config.bar.position === "top" ? 180 : Config.bar.position === "left" ? 90 : Config.bar.position === "right" ? 270 : 0
+            MaterialIcon {
+                id: arrowIcon
 
-                    Behavior on rotation {
-                        Anim {}
-                    }
+                anchors.centerIn: parent
+                text: "expand_less"
+                fontStyle: Tokens.font.icon.large
+                rotation: Config.bar.position === "top" ? 180 : Config.bar.position === "left" ? 90 : Config.bar.position === "right" ? 270 : 0
+
+                Behavior on rotation {
+                    Anim {}
                 }
             }
         }
-
-        Repeater {
-            id: items
-
-            model: ScriptModel {
-                values: root.showTrayIcons ? TrayRegistry.barItems : []
-            }
-
-            TrayItem {
-                popouts: root.popouts
-                isHorizontal: root.isHorizontal
-                draggable: true
-            }
-        }
-
-        Repeater {
-            id: widgetItems
-
-            model: root.widgetEntries
-            delegate: root.widgetDelegate
-        }
     }
 
-    // Dropping a hidden icon on the tray pins it back to the bar.
-    DropArea {
-        anchors.fill: parent
-        keys: ["trayIcon", "barWidget"]
+    StyledRect {
+        id: surface
 
-        onDropped: drop => {
-            const source = drop.source;
-            if (!source)
-                return;
-            if (source.key)
-                TrayRegistry.setState(source.key, "visible");
-            else if (source.widgetId)
-                BarWidgets.setEnabled(GlobalConfig.bar, source.widgetId, true);
-            TrayRegistry.draggingIcon = false;
+        readonly property bool filled: root.hasBackground && (items.count > 0 || widgetItems.count > 0)
+
+        x: root.isHorizontal ? root.arrowSize + root.arrowGap : 0
+        y: root.isHorizontal ? 0 : root.arrowSize + root.arrowGap
+        width: root.isHorizontal ? root.width - x : root.width
+        height: root.isHorizontal ? root.height : root.height - y
+        clip: true
+
+        color: Qt.alpha(Colours.tPalette.m3surfaceContainer, surface.filled ? Colours.tPalette.m3surfaceContainer.a : 0)
+        radius: Tokens.rounding.full
+
+        // icon-level
+        // right-clicks stay with the icons themselves (their own handlers sit on top
+        // of this one, so they win first).
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton
+            cursorShape: Qt.PointingHandCursor
+            onClicked: mouse => {
+                if (!root.popouts)
+                    return;
+                root.popouts.currentName = "traycontext";
+                root.popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
+                root.popouts.hasCurrent = true;
+                mouse.accepted = true;
+            }
+        }
+
+        Grid {
+            id: layout
+
+            anchors.centerIn: parent
+
+            columns: isHorizontal ? -1 : 1
+            rows: isHorizontal ? 1 : -1
+            flow: isHorizontal ? Grid.LeftToRight : Grid.TopToBottom
+
+            spacing: Tokens.spacing.small
+
+            add: Transition {
+                Anim {
+                    properties: "scale"
+                    from: 0
+                    to: 1
+                    easing: Tokens.anim.standardDecel
+                }
+            }
+
+            move: Transition {
+                Anim {
+                    properties: "scale"
+                    to: 1
+                    easing: Tokens.anim.standardDecel
+                }
+                Anim {
+                    properties: "x,y"
+                }
+            }
+
+            Repeater {
+                id: items
+
+                model: ScriptModel {
+                    values: root.showTrayIcons ? TrayRegistry.barItems : []
+                }
+
+                TrayItem {
+                    popouts: root.popouts
+                    isHorizontal: root.isHorizontal
+                    draggable: true
+                }
+            }
+
+            Repeater {
+                id: widgetItems
+
+                model: root.widgetEntries
+                delegate: root.widgetDelegate
+            }
         }
     }
 

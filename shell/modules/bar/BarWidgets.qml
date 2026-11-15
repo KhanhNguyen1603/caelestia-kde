@@ -59,6 +59,11 @@ QtObject {
 
     readonly property var ids: root.allWidgets.map(widget => widget.id)
 
+    // A widget dragged out of the tray lives here: it keeps its place in the
+    // config, but no zone draws it, so the hidden-icons box is the only place it
+    // appears until it is dragged back.
+    readonly property string overflowZone: "tray"
+
     function widget(id: string): var {
         return root.byId[id] ?? null;
     }
@@ -79,11 +84,12 @@ QtObject {
     }
 
     // A delegate can only require a role every entry provides, so the bar hands
-    // the view entries that always carry the two fields the tray needs.
+    // the view entries that always carry the three fields a tray needs.
     function normalizedEntries(entries: var, zone: string): var {
         return (entries ?? []).map(entry => Object.assign({}, entry, {
             zone: entry.zone ?? zone,
-            systemTray: false
+            systemTray: false,
+            draggable: false
         }));
     }
 
@@ -99,33 +105,39 @@ QtObject {
         const trayContent = entries.filter(entry => entry.id !== "clock" && entry.id !== "power" && entry.id !== "tray");
         const model = [];
         if (entries.some(entry => entry.id === "tray") || trayContent.length > 0)
-            model.push({ id: "tray", enabled: true, zone: "right", systemTray: true });
+            model.push({ id: "tray", enabled: true, zone: "right", systemTray: true, draggable: false });
         model.push(...root.normalizedEntries(entries.filter(entry => entry.id === "power"), "right"));
         model.push(...root.normalizedEntries(entries.filter(entry => entry.id === "clock"), "right"));
         return model;
     }
 
     // Widgets the tray owns, in the order the user arranged them. The tray entry
-    // itself is the container, and the clock and power stay outside it.
+    // itself is the container, and the clock and power stay outside it. Everything
+    // here is draggable into the hidden-icons box.
     function systemTrayEntries(node: var): var {
         return root.normalizedEntries(root.zoneEntries(root.entriesOf(node), "right")
-            .filter(entry => entry.id !== "clock" && entry.id !== "power" && entry.id !== "tray"), "right");
+            .filter(entry => entry.id !== "clock" && entry.id !== "power" && entry.id !== "tray"), "right")
+            .map(entry => Object.assign(entry, { draggable: true }));
     }
 
     function systemTrayShowsIcons(node: var): bool {
         return root.zoneEntries(root.entriesOf(node), "right").some(entry => entry.id === "tray");
     }
 
-    // Bar widgets that have opted into the hidden-icons panel. They are hidden
-    // by disabling their entry, which is the same state the settings page shows
-    // in its library.
-    readonly property var overflowWidgetIds: ["updateIndicator"]
-
     function overflowWidgets(node: var): var {
         const hidden = [];
+        let index = 0;
         for (const entry of root.entriesOf(node)) {
-            if (entry.enabled === false && root.overflowWidgetIds.indexOf(entry.id) !== -1)
-                hidden.push(entry.id);
+            if (entry.zone !== root.overflowZone || !root.isKnown(entry.id) || entry.id === "tray")
+                continue;
+            hidden.push({
+                id: entry.id,
+                enabled: true,
+                zone: root.overflowZone,
+                systemTray: false,
+                draggable: true,
+                index: index++
+            });
         }
         return hidden;
     }
@@ -166,6 +178,40 @@ QtObject {
             next.splice(root.indexFor(entries, id), 0, { id: id, enabled: enabled, zone: zone });
 
         node.entries = next;
+    }
+
+    function setZone(node: var, id: string, zone: string): void {
+        const entries = root.entriesOf(node);
+        const fallback = root.widget(id)?.zone ?? "left";
+        const next = [];
+        let found = false;
+
+        for (const entry of entries) {
+            if (entry.id !== id || found) {
+                next.push(entry);
+                continue;
+            }
+
+            found = true;
+            next.push({ id: id, enabled: entry.enabled === true, zone: zone });
+        }
+
+        if (!found)
+            next.splice(root.indexFor(entries, id), 0, { id: id, enabled: true, zone: zone });
+
+        node.entries = next;
+    }
+
+    // The two moves a drag between the tray and its hidden-icons box performs. A
+    // widget coming back to the bar is shown again even if it had been switched
+    // off, because the drag is the request to see it.
+    function setInTray(node: var, id: string): void {
+        root.setZone(node, id, root.overflowZone);
+    }
+
+    function setOnBar(node: var, id: string): void {
+        root.setEnabled(node, id, true);
+        root.setZone(node, id, "right");
     }
 
     function replaceAll(node: var, entries: var): void {

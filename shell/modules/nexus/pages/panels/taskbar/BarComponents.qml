@@ -396,7 +396,10 @@ PageBase {
                 let zone = entry.zone || "left";
                 if (zone === "left") leftModel.append({ "compId": entry.id, "isPlaceholder": false });
                 else if (zone === "middle") middleModel.append({ "compId": entry.id, "isPlaceholder": false });
-                else if (zone === "right") rightModel.append({ "compId": entry.id, "isPlaceholder": false });
+                // A widget in the tray's hidden-icons box is still a right-zone
+                // widget: it is listed here so the editor can bring it back, and
+                // moving it anywhere writes the zone the drop asked for.
+                else if (zone === "right" || zone === BarWidgets.overflowZone) rightModel.append({ "compId": entry.id, "isPlaceholder": false });
             } else {
                 libraryModel.append({ "compId": entry.id, "isPlaceholder": false });
             }

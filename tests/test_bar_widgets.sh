@@ -9,6 +9,7 @@ REGISTRY="$REPO_ROOT/shell/modules/bar/BarWidgets.qml"
 BAR="$REPO_ROOT/shell/modules/bar/Bar.qml"
 TRAY="$REPO_ROOT/shell/modules/bar/components/Tray.qml"
 TRAY_ITEM="$REPO_ROOT/shell/modules/bar/components/TrayItem.qml"
+DRAG_SURFACE="$REPO_ROOT/shell/modules/bar/components/TrayDragSurface.qml"
 UPDATE_INDICATOR="$REPO_ROOT/shell/modules/bar/components/UpdateIndicator.qml"
 TRAY_OVERFLOW="$REPO_ROOT/shell/modules/bar/popouts/TrayOverflow.qml"
 POPOUTS="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
@@ -121,8 +122,8 @@ test_the_right_zone_is_one_system_tray_plus_the_clock() {
 }
 
 test_the_tray_arrow_opens_a_hidden_icons_panel() {
-    assert_file_contains "$TRAY" 'TrayRegistry.overflowCount > 0' \
-        "the up arrow should appear when there are icons outside the bar"
+    assert_file_contains "$TRAY" 'readonly property bool showArrow: root.showTrayIcons' \
+        "the chevron is on the bar for as long as the tray is"
     assert_file_contains "$TRAY" 'popouts.currentName = "trayOverflow"' \
         "clicking the arrow should open the overflow panel"
     assert_file_contains "$POPOUTS" 'name: "trayOverflow"' \
@@ -131,16 +132,26 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "the panel should list the icons that are not on the bar"
     assert_file_contains "$TRAY_OVERFLOW" 'BarWidgets.overflowWidgets' \
         "the panel should also list bar widgets taken off the bar"
-    assert_file_contains "$TRAY_OVERFLOW" 'keys: ["trayIcon", "barWidget"]' \
-        "the panel should accept icons and widgets dragged off the bar"
-    assert_file_contains "$TRAY" 'keys: ["trayIcon", "barWidget"]' \
-        "the bar tray should accept icons and widgets dragged back from the panel"
-    assert_file_contains "$TRAY_ITEM" 'Drag.keys: ["trayIcon"]' \
-        "tray icons need to be draggable for the two-way move"
-    assert_file_contains "$UPDATE_INDICATOR" 'Drag.keys: ["barWidget"]' \
-        "the update indicator needs to be draggable into the same panel"
-    assert_file_contains "$UPDATE_INDICATOR" 'readonly property string widgetId: "updateIndicator"' \
-        "the update indicator should name the entry a drop hides"
+    assert_file_contains "$TRAY_OVERFLOW" 'function trayDrop(source: var): void' \
+        "the panel has to resolve what a drag leaves in it"
+    assert_file_contains "$TRAY_OVERFLOW" 'TrayRegistry.sendToBox(source.key)' \
+        "dropping an icon in the box moves it off the bar"
+    assert_file_contains "$TRAY" 'function trayDrop(source: var): void' \
+        "the tray has to resolve what a drag leaves on it"
+    assert_file_contains "$TRAY" 'TrayRegistry.sendToBar(source.key)' \
+        "dropping an icon on the icons puts it back on the bar"
+    assert_file_contains "$TRAY_ITEM" 'draggable: root.draggable' \
+        "tray icons take the gesture from the surface under them"
+    assert_file_contains "$DRAG_SURFACE" 'TrayDrag.begin("icon"' \
+        "a press that turns into a move lifts the icon off the bar"
+    assert_file_contains "$DRAG_SURFACE" 'TrayDrag.finish()' \
+        "and letting go decides where it lands"
+    assert_file_contains "$BAR" 'TrayDrag.begin("widget"' \
+        "bar widgets need to be draggable into the same panel"
+    assert_file_contains "$BAR" 'readonly property string widgetId: id' \
+        "a dragged widget should name the entry a drop hides"
+    assert_file_not_contains "$UPDATE_INDICATOR" 'TrayDrag' \
+        "the update indicator drags through its bar wrapper, not on its own"
 }
 
 test_the_toggle_helper_keeps_the_widget_list_well_formed() {
@@ -195,9 +206,9 @@ root.byId = (() => {
     return byId;
 })();
 root.ids = root.widgets.map(widget => widget.id);
-root.overflowWidgetIds = ["updateIndicator"];
+root.overflowZone = "tray";
 
-const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "replaceAll", "indexFor"];
+const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "indexFor"];
 Object.assign(root, new Function("root", names.map(extractFunction).join("\n") + "\nreturn {" + names.join(", ") + "};")(root));
 
 const eq = (actual, expected, msg) => {
@@ -240,9 +251,19 @@ eq(root.systemTrayShowsIcons({ entries: defaults.filter(entry => entry.id !== "t
     "disabling the tray entry leaves the widget tray without system tray icons");
 eq(ids(root.systemTrayEntries({ entries: defaults.filter(entry => entry.id !== "tray") })), ["updateIndicator"],
     "the other right widgets still belong to the tray when the tray entry is off");
-eq(root.overflowWidgets({ entries: defaults }), [], "an enabled update indicator is not in the overflow");
-eq(root.overflowWidgets({ entries: [{ id: "updateIndicator", enabled: false }, { id: "clock", enabled: false }] }), ["updateIndicator"],
-    "a disabled update indicator is the widget the overflow panel offers back");
+eq(root.overflowWidgets({ entries: defaults }), [], "nothing is in the box while every right-zone widget is on the bar");
+eq(root.overflowWidgets({ entries: [{ id: "updateIndicator", enabled: true, zone: "tray" }, { id: "clock", enabled: true, zone: "right" }] }).map(entry => entry.id), ["updateIndicator"],
+    "a widget dragged into the box is the one the box draws");
+eq(root.overflowWidgets({ entries: [{ id: "updateIndicator", enabled: true, zone: "tray" }] })[0].enabled, true,
+    "the box draws it live, so the delegate must activate it");
+eq(root.overflowWidgets({ entries: [{ id: "updateIndicator", enabled: true, zone: "tray" }] })[0].draggable, true,
+    "and it can be dragged back out");
+eq(root.overflowWidgets({ entries: [{ id: "nonsense", enabled: true, zone: "tray" }] }), [],
+    "an id no widget answers to never reaches the box");
+eq(root.systemTrayEntries({ entries: defaults }).every(entry => entry.draggable === true), true,
+    "everything the tray draws can be dragged into the box");
+eq(ids(root.zoneEntries([{ id: "clock", enabled: true, zone: "tray" }], "right")), [],
+    "a widget in the box is drawn by no zone");
 eq(ids(root.zoneEntries([{ id: "clock", enabled: true }], "left")), ["clock"], "an entry with no zone is a left one, which is what the bar always assumed");
 
 eq(ids(root.zoneEntries([
@@ -286,6 +307,24 @@ root.replaceAll(editor, source);
 source.push({ id: "dock", enabled: true, zone: "middle" });
 eq(ids(editor.entries), ["clock"], "the editor's list is snapshotted, not aliased");
 
+const moved = { entries: defaults.map(entry => Object.assign({}, entry)) };
+root.setInTray(moved, "updateIndicator");
+eq(moved.entries.find(entry => entry.id === "updateIndicator").zone, "tray",
+    "dropping a widget in the box is what moves it out of the bar's zones");
+eq(root.isEnabled(moved, "updateIndicator"), true, "and it keeps its own on/off state");
+eq(ids(root.zoneEntries(moved.entries, "right")), ["tray", "clock", "power"],
+    "so the tray no longer draws it");
+
+root.setOnBar(moved, "updateIndicator");
+eq(moved.entries.find(entry => entry.id === "updateIndicator").zone, "right",
+    "dragging it back puts it in the tray's zone again");
+eq(root.isEnabled(moved, "updateIndicator"), true, "switched on, because the drag asked to see it");
+eq(ids(root.systemTrayEntries(moved)), ["updateIndicator"], "and the tray draws it again");
+
+const woken = { entries: [{ id: "updateIndicator", enabled: false, zone: "tray" }] };
+root.setOnBar(woken, "updateIndicator");
+eq(root.isEnabled(woken, "updateIndicator"), true, "a widget dragged back is shown even if it had been switched off");
+
 console.log("bar widget registry: all harness cases passed");
 EOF
 
@@ -295,6 +334,32 @@ EOF
         return 0
     fi
     rm -f "$harness"
+}
+
+test_the_hidden_icons_box_is_icons_only() {
+    assert_file_not_contains "$TRAY_OVERFLOW" "qsTr(" \
+        "the box holds tiles, not copy"
+    assert_file_contains "$TRAY_OVERFLOW" 'delegate: root.popouts.trayWidgetDelegate' \
+        "the widgets in the box are the bar's own, so they stay live there"
+    assert_file_contains "$TRAY_OVERFLOW" 'function trayDropAt(window: var, x: real, y: real): bool' \
+        "anything the tray draws can be dropped into the box"
+    assert_file_contains "$BAR" 'property: "trayWidgetDelegate"' \
+        "the bar is what hands that delegate over"
+    assert_file_contains "$BAR" 'grabPermissions: PointerHandler.CanTakeOverFromAnything' \
+        "a drag over a widget takes the gesture without stealing the click under it"
+    assert_file_contains "$BAR" 'TrayDrag.move(centroid.scenePosition)' \
+        "and reports where the pointer is so the drop can be resolved"
+}
+
+test_the_chevron_sits_outside_the_icons_surface() {
+    assert_file_contains "$TRAY" 'id: surface' \
+        "the icons share one surface, and the chevron is not in it"
+    assert_file_contains "$TRAY" 'x: root.isHorizontal ? root.arrowSize + root.arrowGap : 0' \
+        "the surface starts after the chevron instead of containing it"
+    assert_file_contains "$TRAY" 'return arrowSize + arrowGap + layout.implicitWidth + padding * 2' \
+        "and the tray is as wide as both"
+    assert_file_contains "$TRAY" 'if (TrayDrag.active)' \
+        "the box is open for the whole drag, so the icon has somewhere to land"
 }
 
 run_tests

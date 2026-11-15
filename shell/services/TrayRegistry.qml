@@ -15,10 +15,6 @@ import "trayicons.js" as TrayIcons
 Singleton {
     id: root
 
-    // Set while a tray icon is being dragged between the bar and the overflow
-    // panel, so the bar's hover routing does not replace the panel mid-drag.
-    property bool draggingIcon: false
-
     // The three states an icon can be in; collapsed is the default.
     readonly property var states: [
         { value: "visible", label: qsTr("Always visible"), icon: "push_pin" },
@@ -75,18 +71,18 @@ Singleton {
     readonly property var barItems: GlobalConfig.bar.tray.compact ? root.visibleItems : root.trayItems
     readonly property int overflowCount: root.overflowItems.length
 
-    function orderedItems(items: var): var {
-        return TrayIcons.ordered(items.map(item => ({
-            key: root.keyOfItem(item),
-            item: item
-        })), GlobalConfig.bar.tray.order).map(row => row.item);
-    }
-
     readonly property int collapsedCount: root.trayItems.filter(item => root.isCollapsed(item)).length
 
     readonly property var configuredKeys: {
         const tray = GlobalConfig.bar.tray;
         return [...new Set(tray.order.concat(tray.alwaysVisible, tray.hiddenIcons))];
+    }
+
+    function orderedItems(items: var): var {
+        return TrayIcons.ordered(items.map(item => ({
+            key: root.keyOfItem(item),
+            item: item
+        })), GlobalConfig.bar.tray.order).map(row => row.item);
     }
 
     function liveRows(): var {
@@ -147,6 +143,16 @@ Singleton {
         const hidden = tray.hiddenIcons.filter(entry => entry !== key);
         tray.alwaysVisible = state === "visible" ? [...visible, key] : visible;
         tray.hiddenIcons = state === "hidden" ? [...hidden, key] : hidden;
+    }
+
+    // Moving an icon off the bar takes a different state depending on compact mode:
+    // compact keeps collapsed icons in the box, otherwise only hidden ones go there.
+    function sendToBox(key: string): void {
+        root.setState(key, GlobalConfig.bar.tray.compact ? "collapsed" : "hidden");
+    }
+
+    function sendToBar(key: string): void {
+        root.setState(key, "visible");
     }
 
     function forget(key: string): void {

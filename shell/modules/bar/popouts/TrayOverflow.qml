@@ -2,15 +2,17 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 import Caelestia.Config
 import qs.components
 import qs.services
 import qs.modules.bar
 import qs.modules.bar.components as BarComponents
 
-// The tray's overflow panel: the icons that are not pinned to the bar. Dragging
-// an icon between here and the tray changes its TrayRegistry state, which is the
-// same setting the tray page writes.
+// The tray's box: the icons that are not on the bar and the widgets the tray owns.
+// No text: the tiles are the whole content. The cells are square and the box is as
+// many of them as the icons need, so it is always a square that grows and shrinks
+// with what it holds.
 Item {
     id: root
 
@@ -20,48 +22,81 @@ Item {
     property bool _isSidebarOpen: false
 
     readonly property var items: TrayRegistry.overflowItems
-    readonly property var hiddenWidgets: BarWidgets.overflowWidgets(GlobalConfig.bar)
-    readonly property int columns: Math.max(1, Math.min(6, Math.ceil(Math.sqrt(root.items.length + root.hiddenWidgets.length))))
-    readonly property real cell: 42 * root.scaleOffset
-    readonly property real gridWidth: root.columns * root.cell + Math.max(0, root.columns - 1) * Tokens.spacing.small * root.scaleOffset
-    readonly property real preferredWidth: Math.max(280 * root.scaleOffset, Math.min(520 * root.scaleOffset, root.gridWidth + Tokens.padding.large * 2 * root.scaleOffset))
+    readonly property var widgets: BarWidgets.overflowWidgets(GlobalConfig.bar)
 
-    implicitWidth: root.preferredWidth
-    implicitHeight: layout.implicitHeight
+    // ceil(sqrt(n)) columns is the smallest square that holds n cells: 1 icon is
+    // a 1x1 box, 2 to 4 a 2x2, 5 to 9 a 3x3, and the box is that square whatever
+    // the last row actually fills.
+    readonly property int columns: Math.max(1, Math.ceil(Math.sqrt(Math.max(1, root.items.length))))
+    readonly property real cell: 42 * root.scaleOffset * root.fontScale
+    readonly property real gap: Tokens.spacing.small * root.scaleOffset
+    readonly property real inset: Tokens.padding.medium * 2 * root.scaleOffset
+    readonly property real gridWidth: root.columns * root.cell + Math.max(0, root.columns - 1) * root.gap
+    readonly property real side: root.gridWidth + root.inset
+
+    function trayDropAt(window: var, x: real, y: real): bool {
+        if (!root.visible || root.Window.window !== window)
+            return false;
+        const p = root.mapFromItem(null, x, y);
+        return p.x >= 0 && p.y >= 0 && p.x <= root.width && p.y <= root.height;
+    }
+
+    function trayDrop(source: var): void {
+        if (!source)
+            return;
+        if (source.kind === "widget")
+            BarWidgets.setInTray(GlobalConfig.bar, source.widgetId);
+        else if (source.kind === "icon")
+            TrayRegistry.sendToBox(source.key);
+    }
+
+    implicitWidth: Math.max(root.side, content.implicitWidth + root.inset)
+    implicitHeight: Math.max(root.side, content.implicitHeight + root.inset)
     width: implicitWidth
     height: implicitHeight
 
+    Component.onCompleted: TrayDrag.register(root)
+
+    Component.onDestruction: TrayDrag.unregister(root)
+
+    Behavior on implicitWidth {
+        Anim {
+            type: Anim.DefaultSpatial
+        }
+    }
+
+    Behavior on implicitHeight {
+        Anim {
+            type: Anim.DefaultSpatial
+        }
+    }
+
     ColumnLayout {
-        id: layout
+        id: content
 
-        anchors.fill: parent
-        spacing: Tokens.spacing.small * root.scaleOffset
-
-        StyledText {
-            Layout.leftMargin: Tokens.padding.small * root.scaleOffset
-            text: qsTr("Hidden icons")
-            font: Tokens.font.title.small
-            color: Colours.palette.m3onSurface
-        }
-
-        StyledText {
-            Layout.fillWidth: true
-            Layout.leftMargin: Tokens.padding.small * root.scaleOffset
-            Layout.rightMargin: Tokens.padding.small * root.scaleOffset
-            text: qsTr("Drag icons here to take them off the bar.")
-            font: Tokens.font.body.small
-            color: Colours.palette.m3onSurfaceVariant
-            wrapMode: Text.WordWrap
-        }
+        anchors.centerIn: parent
+        spacing: Tokens.spacing.medium * root.scaleOffset
 
         Grid {
             id: grid
 
-            Layout.fillWidth: true
-            Layout.leftMargin: Tokens.padding.small * root.scaleOffset
-            Layout.rightMargin: Tokens.padding.small * root.scaleOffset
+            Layout.alignment: Qt.AlignHCenter
+            // The grid is told how wide it is: left to itself a layout hands it a
+            // width, the columns follow that width, and the square never forms.
+            Layout.preferredWidth: root.gridWidth
+            Layout.preferredHeight: implicitHeight
             columns: root.columns
             spacing: Tokens.spacing.small * root.scaleOffset
+
+            // An empty box still opens from the chevron, and a blank panel reads as
+            // a mistake: one faint cell is the slot waiting to be filled.
+            StyledRect {
+                visible: root.items.length === 0 && root.widgets.length === 0
+                implicitWidth: root.cell
+                implicitHeight: root.cell
+                radius: Tokens.rounding.medium * root.scaleOffset
+                color: Qt.alpha(Colours.palette.m3onSurface, 0.06)
+            }
 
             Repeater {
                 model: root.items
@@ -85,52 +120,20 @@ Item {
                     }
                 }
             }
+        }
+
+        // Widgets are live here, and some of them are a row of icons rather than
+        // one, so they keep their natural size instead of being squeezed into a
+        // cell: they sit under the square on their own line.
+        RowLayout {
+            Layout.alignment: Qt.AlignHCenter
+            visible: root.widgets.length > 0
+            spacing: Tokens.spacing.small * root.scaleOffset
 
             Repeater {
-                model: root.hiddenWidgets
-
-                delegate: StyledRect {
-                    id: widgetTile
-
-                    implicitWidth: root.cell
-                    implicitHeight: root.cell
-                    radius: Tokens.rounding.medium * root.scaleOffset
-                    color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
-
-                    BarComponents.UpdateIndicator {
-                        anchors.centerIn: parent
-                        draggable: true
-                    }
-                }
+                model: root.widgets
+                delegate: root.popouts.trayWidgetDelegate
             }
-        }
-
-        StyledText {
-            visible: root.items.length === 0 && root.hiddenWidgets.length === 0
-
-            Layout.fillWidth: true
-            Layout.leftMargin: Tokens.padding.small * root.scaleOffset
-            text: qsTr("No hidden icons")
-            font: Tokens.font.body.small
-            color: Colours.palette.m3onSurfaceVariant
-        }
-    }
-
-    // A bar icon dropped anywhere on this panel leaves the bar. Which state it
-    // lands in depends on whether compact mode is what was hiding it.
-    DropArea {
-        anchors.fill: parent
-        keys: ["trayIcon", "barWidget"]
-
-        onDropped: drop => {
-            const source = drop.source;
-            if (!source)
-                return;
-            if (source.key)
-                TrayRegistry.setState(source.key, Config.bar.tray.compact ? "collapsed" : "hidden");
-            else if (source.widgetId)
-                BarWidgets.setEnabled(GlobalConfig.bar, source.widgetId, false);
-            TrayRegistry.draggingIcon = false;
         }
     }
 }

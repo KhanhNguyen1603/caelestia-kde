@@ -6,6 +6,7 @@ import "components/workspaces"
 import "components/performance"
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 import Quickshell
 import Quickshell.Services.UPower
 import Caelestia.Config
@@ -94,9 +95,9 @@ Item {
         if (popouts.isContextPopout)
             return;
 
-        // Dragging an icon between the tray and its overflow panel must not let
+        // Dragging a widget between the tray and its overflow panel must not let
         // the hover routing swap the panel out from under the pointer.
-        if (TrayRegistry.draggingIcon)
+        if (TrayDrag.active)
             return;
 
         const ch = getLoaderAt(isHorizontal ? pos : width / 2, isHorizontal ? height / 2 : pos) as WrappedLoader;
@@ -359,9 +360,21 @@ Item {
                 widget[name] = context[name];
     }
 
-    Component.onCompleted: Logger.mark("bar-ready")
+    Component.onCompleted: {
+        Logger.mark("bar-ready");
+    }
 
     clip: true
+
+    // The hidden-icons box draws the widgets the user dragged out of the tray with
+    // the same delegate the bar uses, so they are live there rather than a stale
+    // copy of an icon. A binding rather than an assignment: the box may be built
+    // before the bar is.
+    Binding {
+        target: root.popouts
+        property: "trayWidgetDelegate"
+        value: barDelegate
+    }
 
     Timer {
         id: closeTrayTimer
@@ -695,6 +708,8 @@ Item {
         }
 
     component WrappedLoader: Loader {
+        id: wrapper
+
         required enabled
         required property string id
         required property int index
@@ -705,17 +720,15 @@ Item {
         required property bool systemTray
         required property string zone
 
+        // Anything the tray draws can be dragged into its hidden-icons box, and
+        // anything in the box can be dragged back. The widget itself is untouched:
+        // the gesture is recognised over it, so a click still reaches the widget.
+        required property bool draggable
+        readonly property string widgetId: id
+        readonly property bool dragging: trayDrag.active
+
         asynchronous: false
         Layout.alignment: root.isHorizontal ? Qt.AlignVCenter : Qt.AlignHCenter
-
-
-
-
-
-
-
-
-
         Layout.preferredWidth: implicitWidth
         Layout.preferredHeight: implicitHeight
         Layout.maximumWidth: implicitWidth
@@ -723,7 +736,31 @@ Item {
         Layout.minimumWidth: implicitWidth
         Layout.minimumHeight: implicitHeight
 
+        opacity: wrapper.dragging ? 0.4 : 1
+
         visible: enabled
         active: enabled
+
+        DragHandler {
+            id: trayDrag
+
+            target: null
+            enabled: wrapper.draggable
+            grabPermissions: PointerHandler.CanTakeOverFromAnything | PointerHandler.ApprovesTakeOverByAnything
+
+            onActiveChanged: {
+                if (active) {
+                    TrayDrag.begin("widget", "", wrapper.widgetId, wrapper.Window.window);
+                    TrayDrag.move(centroid.scenePosition);
+                } else if (TrayDrag.active) {
+                    TrayDrag.finish();
+                }
+            }
+
+            onTranslationChanged: {
+                if (active)
+                    TrayDrag.move(centroid.scenePosition);
+            }
+        }
     }
 }

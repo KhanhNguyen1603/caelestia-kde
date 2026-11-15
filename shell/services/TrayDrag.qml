@@ -1,0 +1,75 @@
+pragma Singleton
+
+import QtQuick
+import Quickshell
+
+// Moving a tray icon or a bar widget between the bar and the hidden-icons box.
+// Qt's own drag and drop is no use here: the gesture starts on the bar, which is
+// a layer surface whose input region covers only its panels, so the pointer leaves
+// the surface the drop would be delivered on. Tracking the pointer and resolving
+// the release against the surfaces that accept it keeps the whole gesture inside
+// one window.
+Singleton {
+    id: root
+
+    property bool active: false
+    property string kind: ""
+    property string key: ""
+    property string widgetId: ""
+    property point pos: Qt.point(0, 0)
+    property var window: null
+
+    // The surfaces that take a drop, in the order they were created. Anything that
+    // wants one registers itself and answers the two calls below.
+    readonly property var targets: []
+
+    function begin(kind: string, key: string, widgetId: string, window: var): void {
+        root.kind = kind;
+        root.key = key;
+        root.widgetId = widgetId;
+        root.window = window;
+        root.active = true;
+    }
+
+    function move(position: point): void {
+        if (root.active)
+            root.pos = position;
+    }
+
+    function finish(): void {
+        if (!root.active)
+            return;
+        const source = {
+            kind: root.kind,
+            key: root.key,
+            widgetId: root.widgetId
+        };
+        for (let i = root.targets.length - 1; i >= 0; i--) {
+            const target = root.targets[i];
+            if (target && target.trayDropAt(root.window, root.pos.x, root.pos.y)) {
+                target.trayDrop(source);
+                break;
+            }
+        }
+        root.cancel();
+    }
+
+    function cancel(): void {
+        root.active = false;
+        root.kind = "";
+        root.key = "";
+        root.widgetId = "";
+        root.window = null;
+    }
+
+    function register(target: var): void {
+        if (!root.targets.includes(target))
+            root.targets.push(target);
+    }
+
+    function unregister(target: var): void {
+        const index = root.targets.indexOf(target);
+        if (index >= 0)
+            root.targets.splice(index, 1);
+    }
+}

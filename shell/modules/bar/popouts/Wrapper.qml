@@ -38,6 +38,9 @@ Item {
     property alias hasCurrent: popoutState.hasCurrent
     property alias dockModel: popoutState.dockModel
     property alias tasksModel: popoutState.tasksModel
+    // The bar hands its widget delegate to the hidden-icons box, so the widgets a
+    // user drags out of the tray stay live there instead of becoming a picture.
+    property alias trayWidgetDelegate: popoutState.trayWidgetDelegate
     property real currentCenter
     // Set by ClipWrapper: whether the current bar item sits under the sidebar,
     // which can be narrower than the bar's right side now that it is resizable.
