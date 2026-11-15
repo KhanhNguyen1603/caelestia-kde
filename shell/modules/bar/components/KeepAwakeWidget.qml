@@ -74,15 +74,16 @@ StyledRect {
             implicitWidth: isHorizontal ? Tokens.sizes.bar.innerWidth : implicitHeight
             implicitHeight: isHorizontal ? Tokens.sizes.bar.innerWidth : implicitHeight
 
-            radius: Tokens.rounding.full
-            color: IdleInhibitor.enabled ? Colours.palette.m3secondaryContainer : Colours.palette.m3surfaceContainerHigh
+            // No plate behind the glyph: a bar icon is its glyph, and being on is
+            // carried by its colour like every other indicator's state is.
+            color: "transparent"
 
             MaterialIcon {
                 id: icon
 
                 anchors.centerIn: parent
                 text: "coffee"
-                color: IdleInhibitor.enabled ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+                color: IdleInhibitor.enabled ? Colours.palette.m3primary : Colours.palette.m3secondary
                 fontStyle: Tokens.font.icon.builders.medium.build()
             }
 
