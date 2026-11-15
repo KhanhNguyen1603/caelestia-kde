@@ -12,7 +12,7 @@ TRAY_ITEM="$REPO_ROOT/shell/modules/bar/components/TrayItem.qml"
 UPDATE_INDICATOR="$REPO_ROOT/shell/modules/bar/components/UpdateIndicator.qml"
 TRAY_OVERFLOW="$REPO_ROOT/shell/modules/bar/popouts/TrayOverflow.qml"
 POPOUTS="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
-STATUS_ICONS="$REPO_ROOT/shell/modules/bar/components/StatusIcons.qml"
+STATUS_ICON="$REPO_ROOT/shell/modules/bar/components/StatusIcon.qml"
 CONFIG="$REPO_ROOT/shell/plugin/src/Caelestia/Config/barconfig.hpp"
 EDITOR="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarComponents.qml"
 
@@ -54,7 +54,9 @@ assert_matched_something() {
 
 test_the_registry_and_the_bar_draw_the_same_widgets() {
     local registry drawn
-    registry="$(registry_ids)"
+    # The status icons group is drawn as one widget per icon, so the chooser answers
+    # to the kind its entries carry rather than to the group id itself.
+    registry="$(registry_ids | sed 's/^statusIcons$/statusIcon/' | sort)"
     drawn="$(bar_choice_ids)"
 
     assert_matched_something "no widgets are declared in BarWidgets.qml" "$registry"
@@ -116,8 +118,12 @@ test_the_right_zone_is_one_system_tray_plus_the_clock() {
         "the tray must draw those widgets with the bar's own delegate"
     assert_file_contains "$TRAY" 'function widgetAt(barItem' \
         "the bar must still be able to route hover and clicks to a nested widget"
-    assert_file_contains "$STATUS_ICONS" 'property bool embedded: false' \
-        "status icons must be able to drop their own pill inside the unified tray"
+    assert_file_contains "$STATUS_ICON" 'readonly property string iconId: BarWidgets.statusIconId(root.entryId)' \
+        "one status icon per widget, named by the entry that carries it"
+    assert_file_contains "$REGISTRY" 'kind: "statusIcon"' \
+        "the registry expands the status icons group into one entry per icon"
+    assert_file_contains "$REGISTRY" 'const entries = root.zoneEntries(root.viewEntries(node), "right");' \
+        "the readers expand the group, the writers keep to the configured entries"
 }
 
 test_the_tray_arrow_opens_a_hidden_icons_panel() {
@@ -206,8 +212,29 @@ root.byId = (() => {
 })();
 root.ids = root.widgets.map(widget => widget.id);
 root.overflowZone = "tray";
+root.statusIconPrefix = "statusIcon:";
 
-const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "indexFor"];
+// The status icons come from the config and ask the services what they have to
+// say, so both are stood up here.
+globalThis.Config = {
+    bar: {
+        status: { showWifi: true },
+        statusIcons: {
+            values: [
+                { id: "audio", enabled: true },
+                { id: "battery", enabled: true },
+                { id: "privacy", enabled: true },
+                { id: "nightlight", enabled: false }
+            ]
+        }
+    }
+};
+globalThis.Kwin = { capsLock: false, numLock: false, kbLayout: "" };
+globalThis.Privacy = { inUse: false };
+globalThis.Nmcli = { activeEthernet: false };
+globalThis.HyprSunset = { active: false };
+
+const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "viewEntries"];
 Object.assign(root, new Function("root", names.map(extractFunction).join("\n") + "\nreturn {" + names.join(", ") + "};")(root));
 
 const eq = (actual, expected, msg) => {
@@ -323,6 +350,51 @@ eq(ids(root.systemTrayEntries(moved)), ["updateIndicator"], "and the tray draws 
 const woken = { entries: [{ id: "updateIndicator", enabled: false, zone: "tray" }] };
 root.setOnBar(woken, "updateIndicator");
 eq(root.isEnabled(woken, "updateIndicator"), true, "a widget dragged back is shown even if it had been switched off");
+
+// The status icons are one widget each, so they move one at a time.
+// A privacy indicator only exists while something is watching or listening.
+globalThis.Privacy.inUse = true;
+const groups = [
+    { id: "tray", enabled: true, zone: "right" },
+    { id: "statusIcons", enabled: true, zone: "right" },
+    { id: "clock", enabled: true, zone: "right" }
+];
+eq(ids(root.viewEntries({ entries: groups })), ["tray", "statusIcon:audio", "statusIcon:battery", "statusIcon:privacy", "clock"],
+    "the group is expanded in place: one entry per icon, in the configured order, with the switched-off one left out");
+eq(root.viewEntries({ entries: groups }).filter(entry => entry.kind === "statusIcon").every(entry => entry.draggable === true), true,
+    "and each icon is draggable on its own");
+eq(ids(root.systemTrayEntries({ entries: groups })), ["statusIcon:audio", "statusIcon:battery", "statusIcon:privacy"],
+    "the tray draws each icon separately, so each can be lifted off the bar");
+eq(root.rightLayoutEntries({ entries: groups }).length, 2, "one tray and one clock: the icons are drawn inside the tray");
+
+globalThis.Privacy.inUse = false;
+eq(root.statusIconActive("privacy"), false, "an icon that has nothing to say is not drawn");
+eq(ids(root.viewEntries({ entries: groups })), ["tray", "statusIcon:audio", "statusIcon:battery", "clock"],
+    "so the row it would have taken closes up");
+globalThis.Privacy.inUse = true;
+
+const movedIcon = { entries: groups.map(entry => Object.assign({}, entry)) };
+root.setInTray(movedIcon, "statusIcon:battery");
+eq(movedIcon.entries.find(entry => entry.id === "statusIcon:battery").zone, "tray",
+    "dropping one icon in the box moves that icon and only that icon");
+eq(ids(root.viewEntries(movedIcon)).filter(id => id === "statusIcon:battery"), ["statusIcon:battery"],
+    "the expansion reads the override, so the icon is still drawn once");
+eq(ids(root.zoneEntries(root.viewEntries(movedIcon), "right")), ["tray", "statusIcon:audio", "statusIcon:privacy", "clock"],
+    "and the bar no longer draws it");
+eq(root.overflowWidgets(movedIcon).map(entry => entry.id), ["statusIcon:battery"],
+    "the box is where it went");
+eq(root.zoneFor(movedIcon, "statusIcon:battery"), "tray", "the registry knows the zone an icon was dragged to");
+eq(ids(movedIcon.entries), ["tray", "statusIcons", "clock", "statusIcon:battery"],
+    "the drag writes one row for that icon and leaves the configured group where it was");
+
+root.setOnBar(movedIcon, "statusIcon:battery");
+eq(root.zoneFor(movedIcon, "statusIcon:battery"), "right", "dragging it back returns it to the tray");
+eq(ids(root.systemTrayEntries(movedIcon)), ["statusIcon:audio", "statusIcon:battery", "statusIcon:privacy"],
+    "in the place the configured order gives it");
+
+const orphan = { entries: [{ id: "statusIcon:audio", enabled: true, zone: "tray" }] };
+eq(ids(root.viewEntries(orphan)), ["statusIcon:audio", "statusIcon:battery", "statusIcon:privacy"],
+    "icon rows outlive the group row: the icons it left behind still belong to the bar");
 
 console.log("bar widget registry: all harness cases passed");
 EOF

@@ -136,40 +136,17 @@ Item {
                     popouts.currentCenter = isHorizontal ? trayItem.mapToItem(null, trayItem.implicitWidth / 2, 0).x : trayItem.mapToItem(null, 0, trayItem.implicitHeight / 2).y;
                 }
             }
-        } else if (id === "statusIcons") {
-            const statusIcons = ch.item as StatusIcons;
-            const items = statusIcons.items;
-            const localX = isHorizontal ? items.mapFromItem(null, pos, 0).x : items.width / 2;
-            const localY = isHorizontal ? items.height / 2 : items.mapFromItem(null, 0, pos).y;
-
-            if (!Config.bar.popouts.statusIcons) return;
-
-            let icon = items.childAt(localX, localY);
-            if (!icon) {
-                let bestDist = 1e9;
-                for (let i = 0; i < items.children.length; i++) {
-                    const child = items.children[i];
-                    if (!child.visible || !child.name) continue;
-                    const center = isHorizontal
-                        ? child.mapToItem(items, child.width / 2, 0).x
-                        : child.mapToItem(items, 0, child.height / 2).y;
-                    const dist = Math.abs((isHorizontal ? localX : localY) - center);
-                    if (dist < bestDist) {
-                        bestDist = dist;
-                        icon = child;
-                    }
-                }
-            }
-            // The bell and the sidebar are the two halves of the same notification
-            // panel: hovering it must not stack the small popout on top of the
-            // sidebar, or the two panels animate against each other.
-            if (icon && !(icon.name === "notifications" && root.visibilities.sidebar)) {
-                popouts.currentName = icon.popoutName ?? icon.name;
-                popouts.currentCenter = isHorizontal ? icon.mapToItem(null, icon.width / 2, 0).x : icon.mapToItem(null, 0, icon.height / 2).y;
-                popouts.hasCurrent = true;
-            } else {
+        } else if (BarWidgets.statusIconId(id).length > 0) {
+            // Each status icon is its own widget, so the icon under the pointer is
+            // the one whose popout opens: no hit test inside a shared row.
+            const icon = ch.item;
+            if (!Config.bar.popouts.statusIcons || !icon || (id === BarWidgets.statusIconPrefix + "notifications" && root.visibilities.sidebar)) {
                 popouts.hasCurrent = false;
+                return;
             }
+            popouts.currentName = icon.popoutName;
+            popouts.currentCenter = isHorizontal ? icon.mapToItem(null, icon.width / 2, 0).x : icon.mapToItem(null, 0, icon.height / 2).y;
+            popouts.hasCurrent = true;
         } else if (id === "greeter" && Config.bar.popouts.greeter && Config.bar.greeter.showOnHover) {
             const item = ch.item as Item;
             if (item) {
@@ -464,7 +441,10 @@ Item {
     DelegateChooser {
         id: barDelegate
 
-        role: "id"
+        // The chooser picks on `kind`, which is the widget id for everything the
+        // registry declares and its own name for entries that stand for one item
+        // of a group, like a single status icon.
+        role: "kind"
 
             DelegateChoice {
                 roleValue: "logo"
@@ -523,13 +503,14 @@ Item {
                 }
             }
             DelegateChoice {
-                roleValue: "statusIcons"
+                roleValue: "statusIcon"
                 delegate: WrappedLoader {
                     id: statusLoader
 
-                    sourceComponent: StatusIcons {
+                    sourceComponent: StatusIcon {
+                        entryId: statusLoader.widgetId
+                        popouts: root.popouts
                         bar: root
-                        embedded: statusLoader.zone === "right"
                     }
                 }
             }

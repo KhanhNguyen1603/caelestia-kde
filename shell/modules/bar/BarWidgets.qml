@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import Caelestia.Config
 import qs.services
 
 QtObject {
@@ -64,12 +65,116 @@ QtObject {
     // appears until it is dragged back.
     readonly property string overflowZone: "tray"
 
+    // The status icons are drawn one widget per icon, so that each of them can be
+    // dragged into the box on its own. Which icons exist, and in what order, is the
+    // `bar.statusIcons` list; a row in `bar.entries` under an icon's own id is the
+    // override a drag writes, and the `statusIcons` row is the group's anchor.
+    readonly property string statusIconPrefix: "statusIcon:"
+
+    function statusIconId(id: string): string {
+        return id.startsWith(root.statusIconPrefix) ? id.substring(root.statusIconPrefix.length) : "";
+    }
+
+    // Whether an icon has anything to say right now: the list says which icons the
+    // user wants on the bar, this says whether the machine has one to show.
+    function statusIconActive(id: string): bool {
+        switch (id) {
+        case "lockStatus":
+            return Kwin.capsLock || Kwin.numLock;
+        case "privacy":
+            return Privacy.inUse;
+        case "kbLayout":
+            return (Kwin.kbLayout || "").length > 0;
+        case "network":
+            return !Nmcli.activeEthernet || Config.bar.status.showWifi;
+        case "ethernet":
+            return Nmcli.activeEthernet;
+        case "nightlight":
+            return HyprSunset.active;
+        case "audio":
+        case "microphone":
+        case "bluetooth":
+        case "battery":
+        case "peripheralBattery":
+        case "notifications":
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    function statusIconEntries(node: var): var {
+        const raw = root.entriesOf(node);
+        const overrides = {};
+        for (const entry of raw) {
+            const iconId = root.statusIconId(entry.id);
+            if (iconId.length > 0)
+                overrides[iconId] = entry;
+        }
+        const anchor = raw.find(entry => entry.id === "statusIcons") ?? {};
+
+        const entries = [];
+        for (const icon of Config.bar.statusIcons.values ?? []) {
+            if (!icon.enabled || !root.statusIconActive(icon.id))
+                continue;
+            const override = overrides[icon.id];
+            entries.push({
+                id: root.statusIconPrefix + icon.id,
+                kind: "statusIcon",
+                enabled: override ? override.enabled !== false : true,
+                zone: override?.zone ?? anchor.zone ?? "right",
+                systemTray: false,
+                draggable: true
+            });
+        }
+        return entries;
+    }
+
+    // What the bar draws: the configured entries with the status-icons group
+    // expanded into the icons it holds. Only the readers expand; the writers below
+    // stay on `entriesOf`, so writing a zone back never turns the expansion into
+    // config.
+    function viewEntries(node: var): var {
+        const raw = root.entriesOf(node);
+        const entries = [];
+        let expanded = false;
+        for (const entry of raw) {
+            if (root.statusIconId(entry.id).length > 0)
+                continue;
+            if (entry.id === "statusIcons") {
+                entries.push(...root.statusIconEntries(node));
+                expanded = true;
+                continue;
+            }
+            entries.push(entry);
+        }
+        // An icon row outlives the group row it was dragged out of, so icons sent
+        // to the box keep belonging to the box even without their anchor.
+        if (!expanded && raw.some(entry => root.statusIconId(entry.id).length > 0))
+            entries.push(...root.statusIconEntries(node));
+        return entries;
+    }
+
     function widget(id: string): var {
-        return root.byId[id] ?? null;
+        const known = root.byId[id];
+        if (known !== undefined)
+            return known;
+
+        // A status icon is a widget in its own right, declared by the status-icons
+        // list rather than by the list above, so it is answered here.
+        const iconId = root.statusIconId(id);
+        if (iconId.length === 0 || !(Config.bar.statusIcons.values ?? []).some(icon => icon.id === iconId))
+            return null;
+        return {
+            id: id,
+            kind: "statusIcon",
+            zone: "right",
+            index: root.byId.statusIcons?.index ?? 0
+        };
     }
 
     function isKnown(id: string): bool {
-        return root.byId[id] !== undefined;
+        return root.widget(id) !== null;
     }
 
     function entriesOf(node: var): var {
@@ -84,9 +189,11 @@ QtObject {
     }
 
     // A delegate can only require a role every entry provides, so the bar hands
-    // the view entries that always carry the three fields a tray needs.
+    // the view entries that always carry the fields a tray needs. `kind` is what
+    // the delegate chooser picks on: the widget id, unless an entry says otherwise.
     function normalizedEntries(entries: var, zone: string): var {
         return (entries ?? []).map(entry => Object.assign({}, entry, {
+            kind: entry.kind ?? entry.id,
             zone: entry.zone ?? zone,
             systemTray: false,
             draggable: false
@@ -94,18 +201,18 @@ QtObject {
     }
 
     function normalizedZoneEntries(node: var, zone: string): var {
-        return root.normalizedEntries(root.zoneEntries(root.entriesOf(node), zone), zone);
+        return root.normalizedEntries(root.zoneEntries(root.viewEntries(node), zone), zone);
     }
 
     // The right end of the bar is one tray, then the power button, then the
     // clock. Everything else the user put in that zone is drawn inside the tray,
     // so adding a widget there cannot grow a second row of orphan icons.
     function rightLayoutEntries(node: var): var {
-        const entries = root.zoneEntries(root.entriesOf(node), "right");
+        const entries = root.zoneEntries(root.viewEntries(node), "right");
         const trayContent = entries.filter(entry => entry.id !== "clock" && entry.id !== "power" && entry.id !== "tray");
         const model = [];
         if (entries.some(entry => entry.id === "tray") || trayContent.length > 0)
-            model.push({ id: "tray", enabled: true, zone: "right", systemTray: true, draggable: false });
+            model.push({ id: "tray", kind: "tray", enabled: true, zone: "right", systemTray: true, draggable: false });
         model.push(...root.normalizedEntries(entries.filter(entry => entry.id === "power"), "right"));
         model.push(...root.normalizedEntries(entries.filter(entry => entry.id === "clock"), "right"));
         return model;
@@ -115,23 +222,24 @@ QtObject {
     // itself is the container, and the clock and power stay outside it. Everything
     // here is draggable into the hidden-icons box.
     function systemTrayEntries(node: var): var {
-        return root.normalizedEntries(root.zoneEntries(root.entriesOf(node), "right")
+        return root.normalizedEntries(root.zoneEntries(root.viewEntries(node), "right")
             .filter(entry => entry.id !== "clock" && entry.id !== "power" && entry.id !== "tray"), "right")
             .map(entry => Object.assign(entry, { draggable: true }));
     }
 
     function systemTrayShowsIcons(node: var): bool {
-        return root.zoneEntries(root.entriesOf(node), "right").some(entry => entry.id === "tray");
+        return root.zoneEntries(root.viewEntries(node), "right").some(entry => entry.id === "tray");
     }
 
     function overflowWidgets(node: var): var {
         const hidden = [];
         let index = 0;
-        for (const entry of root.entriesOf(node)) {
+        for (const entry of root.viewEntries(node)) {
             if (entry.zone !== root.overflowZone || !root.isKnown(entry.id) || entry.id === "tray")
                 continue;
             hidden.push({
                 id: entry.id,
+                kind: entry.kind ?? entry.id,
                 enabled: true,
                 zone: root.overflowZone,
                 systemTray: false,

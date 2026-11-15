@@ -30,8 +30,8 @@ test_the_bar_widget_list_merges_the_plugin_registry() {
     assert_file_contains "$BAR_WIDGETS" 'allWidgets' \
         "built-ins and plugin widgets are combined into one list"
     # The merge must not leak into the helpers the node harness re-implements.
-    assert_file_contains "$BAR_WIDGETS" 'return root.byId[id] !== undefined' \
-        "isKnown reads the merged map so the harness keeps working"
+    assert_file_contains "$BAR_WIDGETS" 'return root.widget(id) !== null' \
+        "isKnown asks the merged map, so plugins and generated entries answer the same way"
 }
 
 test_the_bar_falls_back_to_plugin_widgets() {
