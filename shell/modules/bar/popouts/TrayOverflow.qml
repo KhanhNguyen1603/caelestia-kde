@@ -1,18 +1,18 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Layouts
 import QtQuick.Window
+import Quickshell
 import Caelestia.Config
 import qs.components
 import qs.services
 import qs.modules.bar
 import qs.modules.bar.components as BarComponents
 
-// The tray's box: the icons that are not on the bar, as square tiles. The grid is
-// four rows tall and as wide as the icons need, in whole columns, so it never turns
-// into a strip of one row. Slots that are still free are drawn faint, which is what
-// makes the box read as a grid icons drop into rather than as a gap.
+// The tray's box: the icons that are not on the bar, laid out as one grid. The grid
+// is four rows tall and as wide as the icons need, in whole columns, so it never
+// turns into a strip of one row. Nothing is reserved, so the box is exactly the cells
+// its icons need.
 Item {
     id: root
 
@@ -23,23 +23,22 @@ Item {
 
     readonly property var items: TrayRegistry.overflowItems
     readonly property var widgets: BarWidgets.overflowWidgets(GlobalConfig.bar)
-    // A widget that is one icon is a cell like the tray icons are. The rest are live
-    // widgets, some of them a row of icons rather than one, so they keep their
-    // natural size on their own line under the square.
-    readonly property var cellWidgets: root.widgets.filter(widget => widget.kind === "statusIcon")
-    readonly property var rowWidgets: root.widgets.filter(widget => widget.kind !== "statusIcon")
+    // A status icon is one glyph, so the box draws it as a cell of its own like the
+    // tray icons. Any other widget is live and may be wider than a glyph, so the bar's
+    // own delegate draws it and it takes the space it asks for.
+    readonly property var iconWidgets: root.widgets.filter(widget => widget.kind === "statusIcon")
+    readonly property var liveWidgets: root.widgets.filter(widget => widget.kind !== "statusIcon")
 
     // The grid is only as big as the icons in it: as square as it can be, never more
-    // than four rows, and a column wider once those are full. Nothing is reserved, so
-    // the box is exactly the cells its icons need.
+    // than four rows, and a column wider once those are full.
     readonly property int maxRows: 4
-    readonly property int filled: root.items.length + root.cellWidgets.length
+    readonly property int filled: root.items.length + root.widgets.length
     readonly property int columns: Math.max(1, Math.ceil(Math.sqrt(root.filled)), Math.ceil(root.filled / root.maxRows))
     readonly property int rows: Math.max(1, Math.ceil(root.filled / root.columns))
 
-    readonly property real cell: 42 * root.scaleOffset * root.fontScale
-    readonly property real gap: Tokens.spacing.small * root.scaleOffset
-    readonly property real inset: Tokens.padding.medium * root.scaleOffset
+    readonly property real cell: 32 * root.scaleOffset * root.fontScale
+    readonly property real gap: Tokens.spacing.extraSmall * root.scaleOffset
+    readonly property real inset: Tokens.padding.small * root.scaleOffset
     readonly property real gridWidth: root.columns * root.cell + (root.columns - 1) * root.gap
     readonly property real gridHeight: root.rows * root.cell + (root.rows - 1) * root.gap
     // The box leans in when a drag is over it, so it is obvious the icon will land
@@ -73,8 +72,8 @@ Item {
             TrayRegistry.sendToBox(source.key);
     }
 
-    implicitWidth: Math.max(root.gridWidth, content.implicitWidth) + root.inset * 2
-    implicitHeight: Math.max(root.gridHeight, content.implicitHeight) + root.inset * 2
+    implicitWidth: Math.max(root.gridWidth, grid.implicitWidth) + root.inset * 2
+    implicitHeight: Math.max(root.gridHeight, grid.implicitHeight) + root.inset * 2
     width: implicitWidth
     height: implicitHeight
 
@@ -94,120 +93,101 @@ Item {
         }
     }
 
-    ColumnLayout {
-        id: content
+    Grid {
+        id: grid
 
         anchors.centerIn: parent
-        spacing: Tokens.spacing.medium * root.scaleOffset
+        columns: root.columns
+        spacing: root.gap
         scale: root.targeted ? 1.06 : 1
+
+        // Cells take their places rather than appearing where they end up, so a box
+        // that grows reads as snapping to the next column.
+        add: Transition {
+            Anim {
+                properties: "scale"
+                from: 0
+                to: 1
+                easing: Tokens.anim.standardDecel
+            }
+        }
+
+        move: Transition {
+            Anim {
+                properties: "x,y"
+                easing: Tokens.anim.standardDecel
+            }
+        }
 
         Behavior on scale {
             Anim {}
         }
 
-        Grid {
-            id: grid
-
-            Layout.alignment: Qt.AlignHCenter
-            // The grid is told how wide and tall it is: left to itself a layout hands
-            // it a size, the columns follow that size, and the grid never forms.
-            Layout.preferredWidth: root.gridWidth
-            Layout.preferredHeight: root.gridHeight
-            columns: root.columns
-            spacing: root.gap
-
-            // Tiles take their places rather than appearing where they end up, so a
-            // box that grows reads as snapping to the next column.
-            add: Transition {
-                Anim {
-                    properties: "scale"
-                    from: 0
-                    to: 1
-                    easing: Tokens.anim.standardDecel
-                }
+        Repeater {
+            model: ScriptModel {
+                values: root.items
             }
 
-            move: Transition {
-                Anim {
-                    properties: "scale"
-                    to: 1
-                    easing: Tokens.anim.standardDecel
-                }
-                Anim {
-                    properties: "x,y"
-                }
-            }
+            delegate: Item {
+                id: tile
 
-            Repeater {
-                model: root.items
+                required property var modelData
 
-                delegate: StyledRect {
-                    id: tile
+                implicitWidth: root.cell
+                implicitHeight: root.cell
 
-                    required property var modelData
-
-                    implicitWidth: root.cell
-                    implicitHeight: root.cell
-                    radius: Tokens.rounding.medium * root.scaleOffset
-                    color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
-
-                    BarComponents.TrayItem {
-                        anchors.centerIn: parent
-                        modelData: tile.modelData
-                        popouts: root.popouts
-                        isHorizontal: true
-                        draggable: true
-                    }
-                }
-            }
-
-            Repeater {
-                model: root.cellWidgets
-
-                delegate: StyledRect {
-                    id: cellTile
-
-                    required property var modelData
-
-                    implicitWidth: root.cell
-                    implicitHeight: root.cell
-                    radius: Tokens.rounding.medium * root.scaleOffset
-                    color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
-
-                    BarComponents.StatusIcon {
-                        anchors.centerIn: parent
-                        entryId: cellTile.modelData.id
-                        popouts: root.popouts
-                        draggable: true
-                    }
-                }
-            }
-
-            // An empty box still opens from the chevron, and a blank panel reads as a
-            // mistake: one faint cell stands in for the icons that will fill it.
-            Repeater {
-                model: root.filled === 0 ? 1 : 0
-
-                delegate: StyledRect {
-                    implicitWidth: root.cell
-                    implicitHeight: root.cell
-                    radius: Tokens.rounding.medium * root.scaleOffset
-                    color: Qt.alpha(Colours.palette.m3onSurface, 0.06)
+                BarComponents.TrayItem {
+                    anchors.centerIn: parent
+                    modelData: tile.modelData
+                    popouts: root.popouts
+                    isHorizontal: true
+                    draggable: true
                 }
             }
         }
 
-        // Widgets are live here, and some of them are a row of icons rather than
-        // one, so they keep their natural size instead of being squeezed into a
-        // cell: they sit under the grid on their own line.
-        RowLayout {
-            Layout.alignment: Qt.AlignHCenter
-            visible: root.rowWidgets.length > 0
-            spacing: Tokens.spacing.small * root.scaleOffset
+        // Status icons are one glyph each, so they are cells like the tray icons are.
+        Repeater {
+            model: ScriptModel {
+                values: root.iconWidgets
+            }
 
-            Repeater {
-                model: root.rowWidgets
-                delegate: root.popouts.trayWidgetDelegate
+            delegate: Item {
+                id: iconCell
+
+                required property var modelData
+
+                implicitWidth: root.cell
+                implicitHeight: root.cell
+
+                BarComponents.StatusIcon {
+                    anchors.centerIn: parent
+                    entryId: iconCell.modelData.id
+                    popouts: root.popouts
+                    draggable: true
+                }
+            }
+        }
+
+        // Any other widget stays live, drawn by the same delegate the bar uses. A
+        // plain array, not a ScriptModel: the delegate picks its component from the
+        // entry's `kind` role, which only the array model exposes.
+        Repeater {
+            model: root.liveWidgets
+
+            delegate: root.popouts.trayWidgetDelegate
+        }
+
+        // An empty box still opens from the chevron, and a blank panel reads as a
+        // mistake: one faint cell stands in for the icons that will fill it.
+        Repeater {
+            model: root.filled === 0 ? 1 : 0
+
+            delegate: StyledRect {
+                implicitWidth: root.cell
+                implicitHeight: root.cell
+                radius: Tokens.rounding.medium * root.scaleOffset
+                color: Qt.alpha(Colours.palette.m3onSurface, 0.06)
             }
         }
     }
