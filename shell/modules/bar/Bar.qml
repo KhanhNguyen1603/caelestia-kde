@@ -51,11 +51,8 @@ Item {
     readonly property bool systemTrayShowsIcons: BarWidgets.systemTrayShowsIcons({ entries: Config.bar.entries })
 
     function resetHover(): void {
-        if (currentHoveredItem) {
-            if (currentHoveredItem.hasOwnProperty("hoverPos"))
-                currentHoveredItem.hoverPos = -1;
+        if (currentHoveredItem)
             currentHoveredItem = null;
-        }
     }
 
     function getLoaderAt(x, y) {
@@ -102,10 +99,6 @@ Item {
 
         const ch = getLoaderAt(isHorizontal ? pos : width / 2, isHorizontal ? height / 2 : pos) as WrappedLoader;
 
-        if (currentHoveredItem && currentHoveredItem !== ch?.item) {
-            if (currentHoveredItem.hasOwnProperty("hoverPos"))
-                currentHoveredItem.hoverPos = -1;
-        }
         currentHoveredItem = ch ? ch.item : null;
 
         if (root.hoveredTray) {
@@ -148,7 +141,6 @@ Item {
             const items = statusIcons.items;
             const localX = isHorizontal ? items.mapFromItem(null, pos, 0).x : items.width / 2;
             const localY = isHorizontal ? items.height / 2 : items.mapFromItem(null, 0, pos).y;
-            statusIcons.hoverPos = isHorizontal ? localX : localY;
 
             if (!Config.bar.popouts.statusIcons) return;
 

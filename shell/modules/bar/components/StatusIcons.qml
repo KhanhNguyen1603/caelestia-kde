@@ -35,12 +35,6 @@ StyledRect {
     readonly property int effectiveThickness: rawScale < 1.0 ? baseThickness : barThickness
     readonly property int iconSize: Math.round(effectiveThickness * 0.42)
 
-    property real hoverPos: -1
-    property real hoverSpacing: Tokens.spacing.small
-
-    readonly property bool isHovering: hoverPos !== -1
-    property real currentHoverSpacing: isHovering ? hoverSpacing : 0
-
     readonly property var activeEntries: Config.bar.statusIcons.values.filter(entry => entry.enabled && root.entryActive(entry.id))
 
     readonly property var popoutNames: ({
@@ -111,8 +105,6 @@ StyledRect {
     implicitWidth: isHorizontal ? (iconColumn.implicitWidth + root.edgePadding * 2) : barThickness
     implicitHeight: isHorizontal ? barThickness : (iconColumn.implicitHeight + root.edgePadding * 2)
 
-    Behavior on currentHoverSpacing { Anim { type: Anim.DefaultEffects } }
-
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.RightButton
@@ -127,7 +119,6 @@ StyledRect {
         id: iconColumn
 
         readonly property real baseSpacing: Tokens.spacing.medium / 2
-        readonly property real dynamicSpacing: baseSpacing + root.currentHoverSpacing
 
         anchors.centerIn: parent
 
@@ -135,8 +126,8 @@ StyledRect {
         rows: isHorizontal ? 1 : -1
         flow: isHorizontal ? Grid.LeftToRight : Grid.TopToBottom
 
-        columnSpacing: isHorizontal ? dynamicSpacing : baseSpacing
-        rowSpacing: !isHorizontal ? dynamicSpacing : baseSpacing
+        columnSpacing: baseSpacing
+        rowSpacing: baseSpacing
 
         move: Transition {
             Anim {
