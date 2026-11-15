@@ -99,7 +99,8 @@ Item {
     Item {
         id: avatar
 
-        property int ring: Math.max(6, Math.round(root.avatarSize * 0.08))
+        // No card sits behind the avatar, so the picture fills the circle.
+        property int ring: 2
 
         visible: root.modernStyle
         anchors.horizontalCenter: parent.horizontalCenter

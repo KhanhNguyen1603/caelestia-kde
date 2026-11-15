@@ -403,13 +403,6 @@ StyledWindow {
             deformAmount: 0.1
         }
         PanelBg {
-            id: launcherAvatarBg
-
-            panel: panels.launcherAvatar
-            deformAmount: 0.1
-            radius: Tokens.rounding.full
-        }
-        PanelBg {
             id: sessionBg
 
             panel: panels.sessionWrapper
@@ -962,18 +955,6 @@ StyledWindow {
             hAnchor: panels.launcher.hAnchor
             offsetScale: panels.launcher.offsetScale
             deformMatrix: launcherBg.deformMatrix
-        }
-        BlurMask {
-            target: panels.launcherAvatar
-            contentItem: root.contentItem
-            blurOffsetTop: root.blurOffsetTop
-            blurOffsetBottom: root.blurOffsetBottom
-            blurOffsetLeft: root.blurOffsetLeft
-            blurOffsetRight: root.blurOffsetRight
-            vAnchor: "none"
-            hAnchor: "none"
-            offsetScale: 1 - panels.launcher.avatarOpenScale
-            deformMatrix: launcherAvatarBg.deformMatrix
         }
         BlurMask {
             target: panels.dashboard
