@@ -217,6 +217,7 @@ root.byId = (() => {
 })();
 root.ids = root.widgets.map(widget => widget.id);
 root.overflowZone = "tray";
+root.overflowCache = {};
 root.statusIconPrefix = "statusIcon:";
 
 // The status icons come from the config and ask the services what they have to
@@ -268,7 +269,7 @@ const ids = entries => entries.map(entry => entry.id);
 eq(ids(root.zoneEntries(defaults, "left")), ["logo", "workspaces", "greeter"], "left zone");
 eq(ids(root.zoneEntries(defaults, "middle")), ["dock"], "middle zone");
 eq(ids(root.zoneEntries(defaults, "right")), ["tray", "updateIndicator", "clock", "power"], "the right zone drops the disabled widgets");
-eq(ids(root.rightLayoutEntries({ entries: defaults })), ["tray", "power", "clock"], "the right layout is one tray, the power button and the clock");
+eq(ids(root.rightLayoutEntries({ entries: defaults })), ["tray", "clock", "power"], "the right layout is one tray, the clock and the power button");
 eq(root.rightLayoutEntries({ entries: defaults })[0].systemTray, true, "the synthetic tray is marked as the tray container");
 eq(root.systemTrayEntries({ entries: defaults }).every(entry => entry.systemTray === false && entry.zone === "right"), true,
     "the widgets inside the tray carry the roles the bar delegate requires");
@@ -426,7 +427,9 @@ test_the_hidden_icons_box_is_icons_only() {
     assert_file_contains "$TRAY_OVERFLOW" 'model: root.filled === 0 ? 1 : 0' \
         "a box with nothing in it still shows the one cell waiting to be filled"
     assert_file_contains "$TRAY_OVERFLOW" 'BarComponents.StatusIcon' \
-        "a status icon in the box is a cell of the grid, not a row of its own"
+        "a status icon in the box is a cell the box sizes, not a widget that sizes itself"
+    assert_file_not_contains "$TRAY_OVERFLOW" 'RowLayout' \
+        "every entry is a cell of the one grid, with nothing on a line of its own"
     assert_file_contains "$TRAY_OVERFLOW" 'function trayDropAt(window: var, x: real, y: real): bool' \
         "anything the tray draws can be dropped into the box"
     assert_file_contains "$BAR" 'property: "trayWidgetDelegate"' \

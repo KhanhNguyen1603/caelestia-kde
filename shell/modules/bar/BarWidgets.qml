@@ -26,7 +26,6 @@ QtObject {
         { id: "perfNetwork", zone: "right" },
         { id: "perfGpu", zone: "right" },
         { id: "perfBattery", zone: "right" },
-        { id: "showDesktop", zone: "right" },
         { id: "power", zone: "right" },
         { id: "notes", zone: "right" },
         { id: "performance", zone: "right" },
@@ -64,6 +63,11 @@ QtObject {
     // config, but no zone draws it, so the hidden-icons box is the only place it
     // appears until it is dragged back.
     readonly property string overflowZone: "tray"
+
+    // The box animates the tiles it holds, and an entry recomputed into a fresh
+    // object every time would rebuild its tile instead of moving it. Entries are kept
+    // by id here and only replaced when the widget they stand for changes kind.
+    readonly property var overflowCache: ({})
 
     // The status icons are drawn one widget per icon, so that each of them can be
     // dragged into the box on its own. Which icons exist, and in what order, is the
@@ -204,17 +208,18 @@ QtObject {
         return root.normalizedEntries(root.zoneEntries(root.viewEntries(node), zone), zone);
     }
 
-    // The right end of the bar is one tray, then the power button, then the
-    // clock. Everything else the user put in that zone is drawn inside the tray,
-    // so adding a widget there cannot grow a second row of orphan icons.
+    // The right end of the bar is one tray, then the clock, then the power button
+    // where Windows puts shutdown. Everything else the user put in that zone is
+    // drawn inside the tray, so adding a widget there cannot grow a second row of
+    // orphan icons.
     function rightLayoutEntries(node: var): var {
         const entries = root.zoneEntries(root.viewEntries(node), "right");
         const trayContent = entries.filter(entry => entry.id !== "clock" && entry.id !== "power" && entry.id !== "tray");
         const model = [];
         if (entries.some(entry => entry.id === "tray") || trayContent.length > 0)
             model.push({ id: "tray", kind: "tray", enabled: true, zone: "right", systemTray: true, draggable: false });
-        model.push(...root.normalizedEntries(entries.filter(entry => entry.id === "power"), "right"));
         model.push(...root.normalizedEntries(entries.filter(entry => entry.id === "clock"), "right"));
+        model.push(...root.normalizedEntries(entries.filter(entry => entry.id === "power"), "right"));
         return model;
     }
 
@@ -233,19 +238,25 @@ QtObject {
 
     function overflowWidgets(node: var): var {
         const hidden = [];
+        const cache = root.overflowCache;
         let index = 0;
         for (const entry of root.viewEntries(node)) {
             if (entry.zone !== root.overflowZone || !root.isKnown(entry.id) || entry.id === "tray")
                 continue;
-            hidden.push({
+            const kind = entry.kind ?? entry.id;
+            const reused = cache[entry.id];
+            const widget = reused && reused.kind === kind ? reused : {
                 id: entry.id,
-                kind: entry.kind ?? entry.id,
+                kind: kind,
                 enabled: true,
                 zone: root.overflowZone,
                 systemTray: false,
                 draggable: true,
-                index: index++
-            });
+                index: index
+            };
+            cache[entry.id] = widget;
+            hidden.push(widget);
+            index++;
         }
         return hidden;
     }

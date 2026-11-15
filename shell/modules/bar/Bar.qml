@@ -421,8 +421,8 @@ Item {
         anchors.verticalCenter: isHorizontal ? parent.verticalCenter : undefined
         anchors.horizontalCenter: !isHorizontal ? parent.horizontalCenter : undefined
 
-        anchors.rightMargin: isHorizontal ? root.vPadding : 0
-        anchors.bottomMargin: !isHorizontal ? root.vPadding : 0
+        anchors.rightMargin: isHorizontal ? root.vPadding + showDesktop.implicitWidth : 0
+        anchors.bottomMargin: !isHorizontal ? root.vPadding + showDesktop.implicitHeight : 0
 
         columns: isHorizontal ? -1 : 1
         rows: isHorizontal ? 1 : -1
@@ -436,6 +436,20 @@ Item {
             model: root.rightEntries
             delegate: barDelegate
         }
+    }
+
+    // Show desktop stays on the bar's edge instead of in the tray, where Windows puts
+    // it: one strip at the far right, anchored to the bar so no layout can move it in.
+    ShowDesktop {
+        id: showDesktop
+
+        isHorizontal: root.isHorizontal
+        thickness: root.thickness
+
+        anchors.right: root.isHorizontal ? parent.right : undefined
+        anchors.bottom: !root.isHorizontal ? parent.bottom : undefined
+        anchors.verticalCenter: root.isHorizontal ? parent.verticalCenter : undefined
+        anchors.horizontalCenter: !root.isHorizontal ? parent.horizontalCenter : undefined
     }
 
     DelegateChooser {
@@ -653,12 +667,6 @@ Item {
                     sourceComponent: KeepAwakeWidget {
                         popouts: root.popouts
                     }
-                }
-            }
-            DelegateChoice {
-                roleValue: "showDesktop"
-                delegate: WrappedLoader {
-                    sourceComponent: ShowDesktop {}
                 }
             }
             DelegateChoice {
