@@ -68,13 +68,11 @@ StyledRect {
 
                 anchors.centerIn: parent
                 text: "coffee"
+                // Filled while it is on: the tint difference alone is too slight to
+                // read across a bar.
+                fill: IdleInhibitor.enabled ? 1 : 0
                 color: IdleInhibitor.enabled ? Colours.palette.m3primary : Colours.palette.m3secondary
                 fontStyle: Tokens.font.icon.builders.medium.build()
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: IdleInhibitor.setEnabled(!IdleInhibitor.enabled)
             }
         }
     }
