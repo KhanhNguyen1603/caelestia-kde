@@ -154,8 +154,11 @@ Singleton {
         return `${root.popoutPrefix}${key}`;
     }
 
+    // The settings alias is shared on purpose: two live notifiers can resolve to
+    // the same key. The popout name carries the item id as well, so a second icon
+    // with the same alias cannot match the selected name and draw its menu too.
     function popoutNameOf(item: var): string {
-        return root.popoutName(root.keyOfItem(item));
+        return `${root.popoutName(root.keyOfItem(item))}#${item.id}`;
     }
 
     function isTrayPopout(name: string): bool {

@@ -459,6 +459,9 @@ Item {
 
                 name: QsServices.TrayRegistry.popoutNameOf(modelData)
                 previewKey: "trayMenu"
+                // The outgoing menu keeps its Loader alive until the fade ends;
+                // hide it instead so it cannot draw over the incoming one.
+                visible: shouldBeActive
                 sourceComponent: trayMenuComp
 
                 Connections {
