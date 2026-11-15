@@ -172,6 +172,20 @@ Singleton {
         GlobalConfig.bar.tray.order = keys;
     }
 
+    // Where a dragged icon lands: in the place of the icon it was dropped on. The
+    // order list holds every key the tray knows, so a key new to it is inserted
+    // rather than dropped.
+    function moveBefore(key: string, beforeKey: string): void {
+        if (key === beforeKey)
+            return;
+
+        const tray = GlobalConfig.bar.tray;
+        const order = [...new Set([...(tray.order ?? []), ...root.configuredKeys])].filter(entry => entry !== key);
+        const at = order.indexOf(beforeKey);
+        order.splice(at < 0 ? order.length : at, 0, key);
+        tray.order = order;
+    }
+
     function popoutName(key: string): string {
         return `${root.popoutPrefix}${key}`;
     }

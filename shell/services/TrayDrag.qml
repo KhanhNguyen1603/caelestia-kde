@@ -67,7 +67,7 @@ Singleton {
         for (let i = root.targets.length - 1; i >= 0; i--) {
             const target = root.targets[i];
             if (target && target.trayDropAt(root.window, root.pos.x, root.pos.y)) {
-                target.trayDrop(source);
+                target.trayDrop(source, root.pos.x, root.pos.y);
                 break;
             }
         }

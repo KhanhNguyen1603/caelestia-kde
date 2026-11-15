@@ -65,13 +65,54 @@ Item {
         return p.x >= 0 && p.y >= 0 && p.x <= root.width && p.y <= root.height;
     }
 
-    function trayDrop(source: var): void {
+    // The cell a drop lands in, as the entry it holds: a tray icon answers with its
+    // key, a widget with its id. The nearest cell answers when the pointer is between
+    // cells, so an icon dropped onto the box always lands somewhere.
+    function entryAt(x: real, y: real): var {
+        let best = null;
+        let bestDist = Infinity;
+        for (let i = 0; i < grid.children.length; i++) {
+            const child = grid.children[i];
+            if (!child || child.width <= 0 || !child.visible)
+                continue;
+
+            const key = child.trayKey ?? "";
+            const id = child.widgetId ?? child.id ?? "";
+            if (key.length === 0 && (typeof id !== "string" || id.length === 0))
+                continue;
+
+            const origin = child.mapToItem(null, 0, 0);
+            const dx = x - (origin.x + child.width / 2);
+            const dy = y - (origin.y + child.height / 2);
+            const dist = dx * dx + dy * dy;
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = key.length > 0 ? {
+                    key: key
+                } : {
+                    id: id
+                };
+            }
+        }
+        return best;
+    }
+
+    function trayDrop(source: var, x: real, y: real): void {
         if (!source)
             return;
-        if (source.kind === "widget")
+
+        // The cell the pointer is on decides the place; the last cell is a place too,
+        // so an icon dropped past the end simply lands last.
+        const target = root.entryAt(x, y);
+        if (source.kind === "widget") {
             BarWidgets.setInTray(GlobalConfig.bar, source.widgetId);
-        else if (source.kind === "icon")
+            if (target?.id)
+                BarWidgets.moveBefore(GlobalConfig.bar, source.widgetId, target.id);
+        } else if (source.kind === "icon") {
             TrayRegistry.sendToBox(source.key);
+            if (target?.key)
+                TrayRegistry.moveBefore(source.key, target.key);
+        }
     }
 
     // The panel frames the grid; the box is exactly the cells it holds.
@@ -139,6 +180,8 @@ Item {
                 id: tile
 
                 required property var modelData
+                // What a drop read back from the cell: the key the tray orders by.
+                readonly property string trayKey: TrayRegistry.keyOfItem(tile.modelData)
 
                 implicitWidth: root.cell
                 implicitHeight: root.cell
@@ -163,6 +206,7 @@ Item {
                 id: iconCell
 
                 required property var modelData
+                readonly property string widgetId: iconCell.modelData.id
 
                 implicitWidth: root.cell
                 implicitHeight: root.cell

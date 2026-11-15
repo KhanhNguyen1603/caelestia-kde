@@ -138,11 +138,11 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "the panel should list the icons that are not on the bar"
     assert_file_contains "$TRAY_OVERFLOW" 'BarWidgets.overflowWidgets' \
         "the panel should also list bar widgets taken off the bar"
-    assert_file_contains "$TRAY_OVERFLOW" 'function trayDrop(source: var): void' \
+    assert_file_contains "$TRAY_OVERFLOW" 'function trayDrop(source: var, x: real, y: real): void' \
         "the panel has to resolve what a drag leaves in it"
     assert_file_contains "$TRAY_OVERFLOW" 'TrayRegistry.sendToBox(source.key)' \
         "dropping an icon in the box moves it off the bar"
-    assert_file_contains "$TRAY" 'function trayDrop(source: var): void' \
+    assert_file_contains "$TRAY" 'function trayDrop(source: var, x: real, y: real): void' \
         "the tray has to resolve what a drag leaves on it"
     assert_file_contains "$TRAY" 'TrayRegistry.sendToBar(source.key)' \
         "dropping an icon on the icons puts it back on the bar"

@@ -337,6 +337,25 @@ QtObject {
         node.entries = entries.slice();
     }
 
+    // Where a dragged widget lands: in the place of the widget it was dropped on. The
+    // entry keeps its zone and enabled flag, so this is a move and not a re-add; a
+    // widget the list does not hold yet is inserted rather than ignored.
+    function moveBefore(node: var, id: string, beforeId: string): void {
+        if (id === beforeId)
+            return;
+
+        const entries = root.entriesOf(node);
+        const moving = entries.find(entry => entry.id === id) ?? {
+            id: id,
+            enabled: true,
+            zone: root.widget(id)?.zone ?? "right"
+        };
+        const rest = entries.filter(entry => entry.id !== id);
+        const at = rest.findIndex(entry => entry.id === beforeId);
+        rest.splice(at < 0 ? rest.length : at, 0, moving);
+        node.entries = rest;
+    }
+
     function resetToDefaults(node: var): void {
         node.resetOption("entries");
     }

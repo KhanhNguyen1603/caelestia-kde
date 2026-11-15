@@ -55,6 +55,30 @@ Item {
     // also owns which icon sits under a bar coordinate. `barItem` is the bar
     // itself, because the tray may be nested inside the unified right-zone
     // wrapper and its local coordinates are no longer the bar's.
+    // The child of the row a drop lands on, by the middle of the cell, so an icon
+    // dropped between two others still has somewhere to go.
+    function closestChild(repeater: var, barItem: var, x: real, y: real): var {
+        const p = layout.mapFromItem(barItem, x, y);
+        const along = root.isHorizontal ? p.x : p.y;
+        let best = null;
+        let bestDist = Infinity;
+        for (let i = 0; i < repeater.count; i++) {
+            const child = repeater.itemAt(i);
+            if (!child || !child.visible)
+                continue;
+            const start = root.isHorizontal ? child.x : child.y;
+            const size = root.isHorizontal ? child.width : child.height;
+            if (along >= start && along <= start + size)
+                return child;
+            const dist = Math.abs(along - (start + size / 2));
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = child;
+            }
+        }
+        return best;
+    }
+
     function widgetAt(barItem: var, x: real, y: real): var {
         const p = layout.mapFromItem(barItem, x, y);
         for (let i = 0; i < widgetItems.count; i++) {
@@ -146,23 +170,35 @@ Item {
     }
 
     // Dropping on the chevron is the same move as dropping in the box, and dropping
-    // on the icons puts the icon or the widget back on the bar.
-    function trayDrop(source: var): void {
+    // on the icons puts the icon or the widget back on the bar, in the place of the
+    // one it landed on.
+    function trayDrop(source: var, x: real, y: real): void {
         if (!source)
             return;
-        const toBox = root.overChevron(TrayDrag.pos.x, TrayDrag.pos.y);
-        if (toBox)
+
+        const toBox = root.overChevron(x, y);
+        if (toBox) {
             root.openOverflow();
-        if (source.kind === "widget") {
-            if (toBox)
+            if (source.kind === "widget")
                 BarWidgets.setInTray(GlobalConfig.bar, source.widgetId);
-            else
-                BarWidgets.setOnBar(GlobalConfig.bar, source.widgetId);
-        } else if (source.kind === "icon") {
-            if (toBox)
+            else if (source.kind === "icon")
                 TrayRegistry.sendToBox(source.key);
-            else
-                TrayRegistry.sendToBar(source.key);
+            return;
+        }
+
+        // Scene coordinates: `closestChild` maps from the item it is given, and the
+        // drop arrives in the window's space. The nearest icon or widget takes the
+        // drop, so landing between two of them still moves something.
+        if (source.kind === "widget") {
+            BarWidgets.setOnBar(GlobalConfig.bar, source.widgetId);
+            const target = root.closestChild(widgetItems, null, x, y);
+            if (target && target.id)
+                BarWidgets.moveBefore(GlobalConfig.bar, source.widgetId, target.id);
+        } else if (source.kind === "icon") {
+            TrayRegistry.sendToBar(source.key);
+            const target = root.closestChild(items, null, x, y);
+            if (target)
+                TrayRegistry.moveBefore(source.key, target.key);
         }
     }
 
@@ -328,6 +364,22 @@ Item {
                 delegate: root.widgetDelegate
             }
         }
+    }
+
+    // Where a dragged icon would land: a bar between two icons, so a drop reads as a
+    // move before the button is let go.
+    StyledRect {
+        id: dropMarker
+
+        readonly property var slot: TrayDrag.active && root.trayDropAt(TrayDrag.window, TrayDrag.pos.x, TrayDrag.pos.y) ? root.closestChild(TrayDrag.kind === "icon" ? items : widgetItems, null, TrayDrag.pos.x, TrayDrag.pos.y) : null
+
+        visible: root.isHorizontal && dropMarker.slot !== null
+        width: Tokens.padding.extraSmall
+        height: Math.round(root.barThickness * 0.6)
+        radius: width / 2
+        color: Colours.palette.m3primary
+        x: dropMarker.slot ? Math.round(dropMarker.slot.mapToItem(root, dropMarker.slot.width / 2, 0).x - width / 2) : 0
+        y: Math.round((root.height - height) / 2)
     }
 
     Behavior on implicitHeight {
