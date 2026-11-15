@@ -13,6 +13,7 @@ UPDATE_INDICATOR="$REPO_ROOT/shell/modules/bar/components/UpdateIndicator.qml"
 TRAY_OVERFLOW="$REPO_ROOT/shell/modules/bar/popouts/TrayOverflow.qml"
 POPOUTS="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
 STATUS_ICON="$REPO_ROOT/shell/modules/bar/components/StatusIcon.qml"
+GESTURE="$REPO_ROOT/shell/modules/bar/components/TrayDragGesture.qml"
 CONFIG="$REPO_ROOT/shell/plugin/src/Caelestia/Config/barconfig.hpp"
 EDITOR="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarComponents.qml"
 
@@ -145,16 +146,20 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "the tray has to resolve what a drag leaves on it"
     assert_file_contains "$TRAY" 'TrayRegistry.sendToBar(source.key)' \
         "dropping an icon on the icons puts it back on the bar"
-    assert_file_contains "$TRAY_ITEM" 'TrayDrag.begin("icon"' \
-        "tray icons lift out of the bar and report where the pointer is"
-    assert_file_contains "$TRAY_ITEM" 'TrayDrag.finish()' \
+    assert_file_contains "$GESTURE" 'TrayDrag.begin(root.kind, root.key, root.widgetId, root.item.Window.window)' \
+        "one gesture lifts whatever it is put on and says what it lifted"
+    assert_file_contains "$GESTURE" 'TrayDrag.finish()' \
         "and letting go decides where it lands"
-    assert_file_contains "$TRAY_ITEM" 'root.grabToImage(result => TrayDrag.setGhost' \
-        "the gesture carries a snapshot of the icon it lifted"
-    assert_file_contains "$BAR" 'TrayDrag.begin("widget"' \
-        "bar widgets need to be draggable into the same panel"
+    assert_file_contains "$GESTURE" 'grabToImage(result => TrayDrag.setGhost' \
+        "the gesture carries a snapshot of the item it lifted"
+    assert_file_contains "$TRAY_ITEM" 'kind: "icon"' \
+        "a tray icon lifts as an icon"
     assert_file_contains "$BAR" 'readonly property string widgetId: id' \
         "a dragged widget should name the entry a drop hides"
+    assert_file_contains "$STATUS_ICON" 'widgetId: root.entryId' \
+        "a status icon lifts on its own, by the entry it is drawn from"
+    assert_file_contains "$BAR" 'enabled: wrapper.draggable && wrapper.kind !== "statusIcon"' \
+        "the wrapper stays out of the way of an icon that lifts itself"
     assert_file_not_contains "$UPDATE_INDICATOR" 'TrayDrag' \
         "the update indicator drags through its bar wrapper, not on its own"
 }
@@ -412,13 +417,21 @@ test_the_hidden_icons_box_is_icons_only() {
         "the box holds tiles, not copy"
     assert_file_contains "$TRAY_OVERFLOW" 'delegate: root.popouts.trayWidgetDelegate' \
         "the widgets in the box are the bar's own, so they stay live there"
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int rows: 4' \
+        "the box keeps a height of four rows"
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int columns: Math.max(root.rows, Math.ceil(root.filled / root.rows))' \
+        "and grows a column at a time, never into a strip of one row"
+    assert_file_contains "$TRAY_OVERFLOW" 'model: root.emptyCells' \
+        "the free slots are drawn, so the grid is visible before it is full"
+    assert_file_contains "$TRAY_OVERFLOW" 'BarComponents.StatusIcon' \
+        "a status icon in the box is a cell of the grid, not a row of its own"
     assert_file_contains "$TRAY_OVERFLOW" 'function trayDropAt(window: var, x: real, y: real): bool' \
         "anything the tray draws can be dropped into the box"
     assert_file_contains "$BAR" 'property: "trayWidgetDelegate"' \
         "the bar is what hands that delegate over"
-    assert_file_contains "$BAR" 'grabPermissions: PointerHandler.CanTakeOverFromAnything' \
+    assert_file_contains "$GESTURE" 'grabPermissions: PointerHandler.CanTakeOverFromAnything' \
         "a drag over a widget takes the gesture without stealing the click under it"
-    assert_file_contains "$BAR" 'TrayDrag.move(centroid.scenePosition)' \
+    assert_file_contains "$GESTURE" 'TrayDrag.move(centroid.scenePosition)' \
         "and reports where the pointer is so the drop can be resolved"
 }
 

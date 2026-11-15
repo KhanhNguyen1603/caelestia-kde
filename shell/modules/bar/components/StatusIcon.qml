@@ -20,6 +20,7 @@ Item {
     required property string entryId
     property var popouts
     property var bar
+    property bool draggable: false
 
     readonly property string iconId: BarWidgets.statusIconId(root.entryId)
     readonly property string popoutName: {
@@ -40,6 +41,7 @@ Item {
     readonly property real scaleFactor: rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * scaleFactor)
     readonly property color colour: Colours.palette.m3secondary
+    readonly property bool dragging: dragGesture.active
 
     function openPopout(): void {
         const popouts = root.popouts;
@@ -73,6 +75,24 @@ Item {
 
     implicitWidth: root.isHorizontal ? loader.implicitWidth : root.barThickness
     implicitHeight: root.isHorizontal ? root.barThickness : loader.implicitHeight
+    // Fading only once the ghost exists keeps the snapshot clean and means the icon
+    // never disappears before there is something under the pointer to replace it.
+    opacity: root.dragging && TrayDrag.ghost !== null ? 0.35 : 1
+
+    Behavior on opacity {
+        Anim {
+            type: Anim.DefaultEffects
+        }
+    }
+
+    // Each icon is lifted on its own, so it carries the gesture instead of leaving
+    // it to the wrapper the bar draws it in.
+    TrayDragGesture {
+        id: dragGesture
+
+        widgetId: root.entryId
+        enabled: root.draggable
+    }
 
     MouseArea {
         anchors.fill: parent

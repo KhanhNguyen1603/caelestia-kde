@@ -511,6 +511,7 @@ Item {
                         entryId: statusLoader.widgetId
                         popouts: root.popouts
                         bar: root
+                        draggable: statusLoader.draggable
                     }
                 }
             }
@@ -697,6 +698,7 @@ Item {
         // anything in the box can be dragged back. The widget itself is untouched:
         // the gesture is recognised over it, so a click still reaches the widget.
         required property bool draggable
+        required property string kind
         readonly property string widgetId: id
         readonly property bool dragging: trayDrag.active
 
@@ -716,28 +718,13 @@ Item {
         visible: enabled
         active: enabled
 
-        DragHandler {
+        TrayDragGesture {
             id: trayDrag
 
-            target: null
-            enabled: wrapper.draggable
-            grabPermissions: PointerHandler.CanTakeOverFromAnything | PointerHandler.ApprovesTakeOverByAnything
-
-            onActiveChanged: {
-                if (active) {
-                    TrayDrag.begin("widget", "", wrapper.widgetId, wrapper.Window.window);
-                    TrayDrag.move(centroid.scenePosition);
-                    const grabbedAt = centroid.pressPosition;
-                    wrapper.grabToImage(result => TrayDrag.setGhost(result, wrapper.width, wrapper.height, grabbedAt));
-                } else if (TrayDrag.active) {
-                    TrayDrag.finish();
-                }
-            }
-
-            onTranslationChanged: {
-                if (active)
-                    TrayDrag.move(centroid.scenePosition);
-            }
+            widgetId: wrapper.widgetId
+            // A status icon is lifted by the icon itself, so the wrapper that draws
+            // it stays out of the way.
+            enabled: wrapper.draggable && wrapper.kind !== "statusIcon"
         }
     }
 }

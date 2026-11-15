@@ -9,10 +9,10 @@ import qs.services
 import qs.modules.bar
 import qs.modules.bar.components as BarComponents
 
-// The tray's box: the icons that are not on the bar and the widgets the tray owns.
-// No text: the tiles are the whole content. The cells are square and the box is as
-// many of them as the icons need, so it is always a square that grows and shrinks
-// with what it holds.
+// The tray's box: the icons that are not on the bar, as square tiles. The grid is
+// four rows tall and as wide as the icons need, in whole columns, so it never turns
+// into a strip of one row. Slots that are still free are drawn faint, which is what
+// makes the box read as a grid icons drop into rather than as a gap.
 Item {
     id: root
 
@@ -23,16 +23,24 @@ Item {
 
     readonly property var items: TrayRegistry.overflowItems
     readonly property var widgets: BarWidgets.overflowWidgets(GlobalConfig.bar)
+    // A widget that is one icon is a cell like the tray icons are. The rest are live
+    // widgets, some of them a row of icons rather than one, so they keep their
+    // natural size on their own line under the square.
+    readonly property var cellWidgets: root.widgets.filter(widget => widget.kind === "statusIcon")
+    readonly property var rowWidgets: root.widgets.filter(widget => widget.kind !== "statusIcon")
 
-    // ceil(sqrt(n)) columns is the smallest square that holds n cells: 1 icon is
-    // a 1x1 box, 2 to 4 a 2x2, 5 to 9 a 3x3, and the box is that square whatever
-    // the last row actually fills.
-    readonly property int columns: Math.max(1, Math.ceil(Math.sqrt(Math.max(1, root.items.length))))
+    // Four rows is the height the box keeps: it grows a column at a time as icons
+    // come in (4x4, then 4x5, 4x6), so it is never a 5x1 or any other strip.
+    readonly property int rows: 4
+    readonly property int filled: root.items.length + root.cellWidgets.length
+    readonly property int columns: Math.max(root.rows, Math.ceil(root.filled / root.rows))
+    readonly property int emptyCells: Math.max(0, root.columns * root.rows - root.filled)
+
     readonly property real cell: 42 * root.scaleOffset * root.fontScale
     readonly property real gap: Tokens.spacing.small * root.scaleOffset
-    readonly property real inset: Tokens.padding.medium * 2 * root.scaleOffset
-    readonly property real gridWidth: root.columns * root.cell + Math.max(0, root.columns - 1) * root.gap
-    readonly property real side: root.gridWidth + root.inset
+    readonly property real inset: Tokens.padding.medium * root.scaleOffset
+    readonly property real gridWidth: root.columns * root.cell + (root.columns - 1) * root.gap
+    readonly property real gridHeight: root.rows * root.cell + (root.rows - 1) * root.gap
     // The box leans in when a drag is over it, so it is obvious the icon will land
     // here rather than being dropped somewhere else.
     readonly property bool targeted: TrayDrag.active && root.trayDropAt(TrayDrag.window, TrayDrag.pos.x, TrayDrag.pos.y)
@@ -64,8 +72,8 @@ Item {
             TrayRegistry.sendToBox(source.key);
     }
 
-    implicitWidth: Math.max(root.side, content.implicitWidth + root.inset)
-    implicitHeight: Math.max(root.side, content.implicitHeight + root.inset)
+    implicitWidth: Math.max(root.gridWidth, content.implicitWidth) + root.inset * 2
+    implicitHeight: Math.max(root.gridHeight, content.implicitHeight) + root.inset * 2
     width: implicitWidth
     height: implicitHeight
 
@@ -100,21 +108,33 @@ Item {
             id: grid
 
             Layout.alignment: Qt.AlignHCenter
-            // The grid is told how wide it is: left to itself a layout hands it a
-            // width, the columns follow that width, and the square never forms.
+            // The grid is told how wide and tall it is: left to itself a layout hands
+            // it a size, the columns follow that size, and the grid never forms.
             Layout.preferredWidth: root.gridWidth
-            Layout.preferredHeight: implicitHeight
+            Layout.preferredHeight: root.gridHeight
             columns: root.columns
-            spacing: Tokens.spacing.small * root.scaleOffset
+            spacing: root.gap
 
-            // An empty box still opens from the chevron, and a blank panel reads as
-            // a mistake: one faint cell is the slot waiting to be filled.
-            StyledRect {
-                visible: root.items.length === 0 && root.widgets.length === 0
-                implicitWidth: root.cell
-                implicitHeight: root.cell
-                radius: Tokens.rounding.medium * root.scaleOffset
-                color: Qt.alpha(Colours.palette.m3onSurface, 0.06)
+            // Tiles take their places rather than appearing where they end up, so a
+            // box that grows reads as snapping to the next column.
+            add: Transition {
+                Anim {
+                    properties: "scale"
+                    from: 0
+                    to: 1
+                    easing: Tokens.anim.standardDecel
+                }
+            }
+
+            move: Transition {
+                Anim {
+                    properties: "scale"
+                    to: 1
+                    easing: Tokens.anim.standardDecel
+                }
+                Anim {
+                    properties: "x,y"
+                }
             }
 
             Repeater {
@@ -139,18 +159,53 @@ Item {
                     }
                 }
             }
+
+            Repeater {
+                model: root.cellWidgets
+
+                delegate: StyledRect {
+                    id: cellTile
+
+                    required property var modelData
+
+                    implicitWidth: root.cell
+                    implicitHeight: root.cell
+                    radius: Tokens.rounding.medium * root.scaleOffset
+                    color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+
+                    BarComponents.StatusIcon {
+                        anchors.centerIn: parent
+                        entryId: cellTile.modelData.id
+                        popouts: root.popouts
+                        draggable: true
+                    }
+                }
+            }
+
+            // An empty box still opens from the chevron, and a blank panel reads as a
+            // mistake: the free slots are drawn so the grid is there to be filled.
+            Repeater {
+                model: root.emptyCells
+
+                delegate: StyledRect {
+                    implicitWidth: root.cell
+                    implicitHeight: root.cell
+                    radius: Tokens.rounding.medium * root.scaleOffset
+                    color: Qt.alpha(Colours.palette.m3onSurface, 0.06)
+                }
+            }
         }
 
         // Widgets are live here, and some of them are a row of icons rather than
         // one, so they keep their natural size instead of being squeezed into a
-        // cell: they sit under the square on their own line.
+        // cell: they sit under the grid on their own line.
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
-            visible: root.widgets.length > 0
+            visible: root.rowWidgets.length > 0
             spacing: Tokens.spacing.small * root.scaleOffset
 
             Repeater {
-                model: root.widgets
+                model: root.rowWidgets
                 delegate: root.popouts.trayWidgetDelegate
             }
         }

@@ -77,29 +77,14 @@ Item {
     // The gesture is recognised over the icon rather than by watching its press: a
     // pointer handler lifts the icon without stopping the click underneath it, which
     // is how a bar widget is lifted too, so both kinds of item behave alike.
-    DragHandler {
+    TrayDragGesture {
         id: dragHandler
 
-        target: null
+        kind: "icon"
+        key: root.key
         enabled: root.draggable
-        grabPermissions: PointerHandler.CanTakeOverFromAnything | PointerHandler.ApprovesTakeOverByAnything
 
-        onActiveChanged: {
-            if (active) {
-                TrayDrag.begin("icon", root.key, "", root.Window.window);
-                TrayDrag.move(centroid.scenePosition);
-                const grabbedAt = centroid.pressPosition;
-                root.grabToImage(result => TrayDrag.setGhost(result, root.width, root.height, grabbedAt));
-            } else if (TrayDrag.active) {
-                TrayDrag.finish();
-                stateLayer.suppressClick = true;
-            }
-        }
-
-        onTranslationChanged: {
-            if (active)
-                TrayDrag.move(centroid.scenePosition);
-        }
+        onDropped: stateLayer.suppressClick = true
     }
 
     QsMenuOpener {
