@@ -519,8 +519,13 @@ StyledWindow {
         PanelBg {
             id: popoutBg
 
+            // The tray's box is a few glyphs sitting on the bar's own surface already, so a
+            // plate under them is a second panel saying nothing: it opens with no plate.
+            readonly property bool boxOpen: panels.popouts.hasCurrent && panels.popouts.currentName === "trayOverflow"
             property real extraShift: panels.popouts.isDetached ? 0 : 0.2
             property bool connectedToSidebar: (bar.position === "top" || bar.position === "bottom") && panels.popouts.sidebarOpen && panels.popouts.implicitWidth <= Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) + 1 && !panels.popouts.isDockPopout
+
+            visible: panel.visible && !popoutBg.boxOpen
 
             panel: panels.popoutsWrapper
             deformAmount: connectedToSidebar ? 0.03 : (panels.popouts.isDetached ? 0.05 : panels.popouts.hasCurrent ? 0.15 : 0.1)

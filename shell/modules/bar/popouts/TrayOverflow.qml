@@ -20,9 +20,9 @@ Item {
     property real scaleOffset: 1.0
     property real fontScale: 1.0
     property bool _isSidebarOpen: false
-    // The panel's own frame, tighter than a text popout's but wide enough that the cells
-    // do not touch its edge.
-    readonly property real popoutMargin: Tokens.padding.medium
+    // The box draws no plate of its own, so its frame is only the room the glyphs need
+    // to not sit under the pointer's edge.
+    readonly property real popoutMargin: Tokens.padding.small
 
     readonly property var items: TrayRegistry.overflowItems
     // Every widget the box holds, in the order the bar gives them: status icons and the

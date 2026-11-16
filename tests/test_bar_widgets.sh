@@ -473,8 +473,13 @@ test_the_box_is_the_size_its_cells_are() {
         "in both directions, so one icon is not a hole the size of one icon"
     assert_file_contains "$TRAY_OVERFLOW" 'readonly property real gap: Tokens.spacing.small * root.scaleOffset' \
         "the cells are spaced to be read apart from each other"
-    assert_file_contains "$TRAY_OVERFLOW" 'readonly property real popoutMargin: Tokens.padding.medium' \
-        "and the panel is framed wider than its cells"
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property real popoutMargin: Tokens.padding.small' \
+        "its frame is only the room the glyphs need, now that it draws no plate"
+    local content_window="$REPO_ROOT/shell/modules/drawers/ContentWindow.qml"
+    assert_file_contains "$content_window" 'readonly property bool boxOpen: panels.popouts.hasCurrent && panels.popouts.currentName === "trayOverflow"' \
+        "the box is the one popout that opens without a panel behind it"
+    assert_file_contains "$content_window" 'visible: panel.visible && !popoutBg.boxOpen' \
+        "so the shared popout plate stays down for it"
     assert_file_contains "$TRAY_OVERFLOW" 'anchors.centerIn: parent
                     visible: !widgetCell.isIcon' \
         "a widget in a cell is centred in it"
