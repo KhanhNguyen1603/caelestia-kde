@@ -14,7 +14,7 @@ Region {
     required property var win
     readonly property real borderThickness: Config.border.thickness
     readonly property real clampedThickness: Config.border.clampedThickness
-    readonly property real dockPanelThickness: dockPanel ? dockPanel.clampedThickness : 0
+    readonly property real dockPanelThickness: dockPanel && !dockPanel.disabled ? (!Config.dockPanel.persistent ? Math.max(dockPanel.clampedThickness, edgeExtent(Config.dockPanel.dragThreshold)) : dockPanel.clampedThickness) : 0
     readonly property string dockPanelPosition: dockPanel ? dockPanel.position : Config.dockPanel.position
     readonly property real barLeftWidth: (bar.position === "left" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "left" ? dockPanelThickness : 0)
     readonly property real barRightWidth: (bar.position === "right" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "right" ? dockPanelThickness : 0)
@@ -80,6 +80,13 @@ Region {
     R {
         panel: root.panels.popoutsWrapper
         width: panel.width * (1 - root.panels.popoutsWrapper.offsetScale)
+    }
+    Region {
+        x: root.dockPanel ? root.dockPanel.x : 0
+        y: root.dockPanel ? root.dockPanel.y : 0
+        width: (root.dockPanel && root.dockPanel.visible) ? root.dockPanel.width : 0
+        height: (root.dockPanel && root.dockPanel.visible) ? root.dockPanel.height : 0
+        intersection: Intersection.Subtract
     }
     Region {
         x: 0; y: 0

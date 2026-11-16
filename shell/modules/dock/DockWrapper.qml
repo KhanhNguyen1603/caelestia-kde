@@ -21,7 +21,7 @@ Item {
     readonly property string position: Config.dockPanel.position
     readonly property int padding: Math.max(Tokens.padding.small, Config.border.thickness)
     readonly property int contentWidth: Math.max(Config.dockPanel.size, Tokens.sizes.bar.innerWidth) + padding * 2
-    readonly property bool dodgeEnabled: Config.dockPanel.dodgeWindows && Config.dockPanel.persistent && !disabled
+    readonly property bool dodgeEnabled: Config.dockPanel.dodgeWindows && !Config.dockPanel.persistent && !disabled
     readonly property rect dodgeRect: {
         const ox = screen.x ?? 0;
         const oy = screen.y ?? 0;
@@ -45,16 +45,31 @@ Item {
         return dodgeEnabled && Kwin.hasWindowOverlapping(screen.name, dodgeRect.x, dodgeRect.y, dodgeRect.width, dodgeRect.height, Config.dockPanel.dodgeFocusedOnly);
     }
 
-    readonly property bool keptOpen: Config.dockPanel.persistent && !dodging
+    readonly property bool keptOpen: (Config.dockPanel.persistent || dodgeEnabled) && !dodging
     readonly property int exclusiveZone: Config.dockPanel.reserveSpace && !disabled && !dodgeEnabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? contentWidth : Config.border.thickness
     readonly property int visualThickness: !disabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? contentWidth : Config.border.thickness
     readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dockPanel || hovered)
     property bool pointerInReach: false
-    readonly property bool hovered: dockHover.hovered || pointerInReach
+    property bool revealActive: false
+    readonly property bool hovered: revealActive || dockHover.hovered
     readonly property bool isHorizontal: root.position === "top" || root.position === "bottom"
     readonly property int clampedThickness: Math.max(Config.border.minThickness, isHorizontal ? implicitHeight : implicitWidth)
     readonly property int clampedWidth: isHorizontal ? root.width : clampedThickness
     readonly property int clampedHeight: isHorizontal ? clampedThickness : root.height
+
+    onPointerInReachChanged: {
+        if (pointerInReach) {
+            unhoverTimer.stop();
+            if (Config.dockPanel.autoHideDelay > 0 && !hovered)
+                revealDelayTimer.restart();
+            else
+                revealActive = true;
+        } else {
+            revealDelayTimer.stop();
+            if (revealActive && !dockHover.hovered)
+                unhoverTimer.restart();
+        }
+    }
 
     clip: true
     visible: isHorizontal ? height > Config.border.thickness : width > Config.border.thickness
@@ -101,13 +116,42 @@ Item {
     }
 
     Timer {
-        id: dockUnhoverTimer
+        id: revealDelayTimer
+
+        interval: Math.max(0, Config.dockPanel.autoHideDelay)
+        onTriggered: root.revealActive = true
+    }
+
+    Timer {
+        id: unhoverTimer
 
         interval: 400
-        running: root.pointerInReach && !dockHover.hovered
-        onTriggered: root.pointerInReach = false
+        onTriggered: {
+            if (!root.pointerInReach && !dockHover.hovered)
+                root.revealActive = false;
+        }
     }
+
     HoverHandler {
         id: dockHover
+
+        onHoveredChanged: {
+            if (hovered) {
+                unhoverTimer.stop();
+            } else if (!root.pointerInReach && root.revealActive) {
+                unhoverTimer.restart();
+            }
+        }
+    }
+
+    Connections {
+        function onShowOnHoverChanged(): void {
+            if (!Config.dockPanel.showOnHover) {
+                revealDelayTimer.stop();
+                root.revealActive = false;
+            }
+        }
+
+        target: Config.dockPanel
     }
 }

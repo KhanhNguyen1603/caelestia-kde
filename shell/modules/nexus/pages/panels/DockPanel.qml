@@ -165,7 +165,7 @@ PageBase {
             subtext: qsTr("Only hide the dock when an open window overlaps its area")
             reset: ({ node: GlobalConfig.dockPanel, setting: "dodgeWindows" })
             checked: Config.dockPanel.dodgeWindows
-            enabled: Config.dockPanel.persistent
+            enabled: !Config.dockPanel.persistent
             opacity: enabled ? 1.0 : 0.5
             onToggled: GlobalConfig.dockPanel.dodgeWindows = checked
         }
@@ -175,7 +175,7 @@ PageBase {
             subtext: qsTr("Only hide when the active, focused window intersects with the dock")
             reset: ({ node: GlobalConfig.dockPanel, setting: "dodgeFocusedOnly" })
             checked: Config.dockPanel.dodgeFocusedOnly
-            enabled: Config.dockPanel.persistent && Config.dockPanel.dodgeWindows
+            enabled: !Config.dockPanel.persistent && Config.dockPanel.dodgeWindows
             opacity: enabled ? 1.0 : 0.5
             onToggled: GlobalConfig.dockPanel.dodgeFocusedOnly = checked
         }

@@ -45,17 +45,34 @@ CustomMouseArea {
             return y > bar.y + bar.height - bar.clampedThickness;
         return false;
     }
-    function inDockPanelArea(x: real, y: real): bool {
-        if (!dockPanel || !dockPanel.visible)
+    function inDockPanelArea(x: real, y: real, requireVisible = false): bool {
+        if (!dockPanel || dockPanel.disabled)
             return false;
-        if (dockPanel.position === "left")
-            return x >= dockPanel.x && x <= dockPanel.x + dockPanel.clampedThickness;
-        if (dockPanel.position === "right")
-            return x >= dockPanel.x + dockPanel.width - dockPanel.clampedThickness && x <= dockPanel.x + dockPanel.width;
-        if (dockPanel.position === "top")
-            return y >= dockPanel.y && y <= dockPanel.y + dockPanel.clampedThickness;
-        if (dockPanel.position === "bottom")
-            return y >= dockPanel.y + dockPanel.height - dockPanel.clampedThickness && y <= dockPanel.y + dockPanel.height;
+        if (requireVisible) {
+            if (!dockPanel.visible)
+                return false;
+            return x >= dockPanel.x && x <= dockPanel.x + dockPanel.width && y >= dockPanel.y && y <= dockPanel.y + dockPanel.height;
+        }
+
+        const thickness = Math.max(Config.border.thickness, Config.dockPanel.dragThreshold, 20);
+        const reach = (dockPanel.visible || dockPanel.pointerInReach) ? (dockPanel.contentWidth + thickness) : thickness;
+
+        if (dockPanel.position === "bottom") {
+            const barOffset = bar.position === "bottom" ? bar.implicitHeight : 0;
+            return y >= screen.height - barOffset - reach && y <= screen.height;
+        }
+        if (dockPanel.position === "top") {
+            const barOffset = bar.position === "top" ? bar.implicitHeight : 0;
+            return y >= 0 && y <= barOffset + reach;
+        }
+        if (dockPanel.position === "left") {
+            const barOffset = bar.position === "left" ? bar.implicitWidth : 0;
+            return x >= 0 && x <= barOffset + reach;
+        }
+        if (dockPanel.position === "right") {
+            const barOffset = bar.position === "right" ? bar.implicitWidth : 0;
+            return x >= screen.width - barOffset - reach && x <= screen.width;
+        }
         return false;
     }
     function spanBounds(near: real, far: real, span: real): point {
@@ -160,7 +177,7 @@ CustomMouseArea {
         if (grabActive || menuOpen) {
             let inside = false;
 
-            if (inBarArea(event.x, event.y) || inDockPanelArea(event.x, event.y)) inside = true;
+            if (inBarArea(event.x, event.y) || inDockPanelArea(event.x, event.y, true)) inside = true;
             else if (visibilities.launcher && ((inBottomPanel(panels.launcher, event.x, event.y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, event.x, event.y)) || inLauncherAvatar(event.x, event.y))) inside = true;
             else if (visibilities.session && inRightPanel(panels.sessionWrapper, event.x, event.y)) inside = true;
             else if (visibilities.sidebar && inRightPanel(panels.sidebar, event.x, event.y)) inside = true;
@@ -178,6 +195,9 @@ CustomMouseArea {
     }
     onContainsMouseChanged: {
         if (!containsMouse) {
+            if (dockPanel)
+                dockPanel.pointerInReach = false;
+
             if (!osdShortcutActive) {
                 visibilities.osd = false;
                 root.panels.osd.hovered = false;
