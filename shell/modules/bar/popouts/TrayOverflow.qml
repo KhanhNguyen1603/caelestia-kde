@@ -103,16 +103,11 @@ Item {
         // The cell the pointer is on decides the place; the last cell is a place too,
         // so an icon dropped past the end simply lands last.
         const target = root.entryAt(x, y);
-        if (source.kind === "widget") {
-            BarWidgets.setInTray(GlobalConfig.bar, source.widgetId);
-            if (target?.id)
-                BarWidgets.moveBefore(GlobalConfig.bar, source.widgetId, target.id);
-        } else if (source.kind === "icon") {
-            BarWidgets.clearRow(GlobalConfig.bar, TrayRegistry.rowOf(source.key));
-            TrayRegistry.sendToBox(source.key);
-            if (target?.key)
-                TrayRegistry.moveBefore(source.key, target.key);
-        }
+        const id = source.kind === "icon" ? TrayRegistry.rowOf(source.key) : source.widgetId;
+        BarPlacements.setPlacement(id, BarPlacements.trayZone, {
+            beforeId: target?.id ?? "",
+            beforeKey: target?.key ?? ""
+        });
     }
 
     // The panel frames the grid; the box is exactly the cells it holds.
@@ -222,15 +217,11 @@ Item {
                     draggable: true
                 }
 
-                Loader {
-                    id: widgetLoader
-
+                BarComponents.BarWidgetCell {
                     anchors.centerIn: parent
-                    active: !widgetCell.isIcon
-                    sourceComponent: root.popouts ? root.popouts.trayWidgetDelegate : null
-                    // The host draws one entry and picks the widget from what the entry
-                    // says, so it is handed the entry it stands for.
-                    onLoaded: widgetLoader.item.entry = widgetCell.modelData
+                    visible: !widgetCell.isIcon
+                    entry: widgetCell.modelData
+                    popouts: root.popouts
                 }
             }
         }

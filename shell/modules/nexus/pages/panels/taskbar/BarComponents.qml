@@ -398,7 +398,7 @@ PageBase {
                 // A widget in the tray's hidden-icons box is still a right-zone
                 // widget: it is listed here so the editor can bring it back, and
                 // moving it anywhere writes the zone the drop asked for.
-                else if (zone === "right" || zone === BarWidgets.overflowZone) rightModel.append({ "compId": entry.id, "isPlaceholder": false });
+                else if (zone === "right" || zone === BarPlacements.trayZone) rightModel.append({ "compId": entry.id, "isPlaceholder": false });
             } else {
                 libraryModel.append({ "compId": entry.id, "isPlaceholder": false });
             }
@@ -412,12 +412,16 @@ PageBase {
     }
 
     function resetToDefaults(): void {
-        BarWidgets.resetToDefaults(GlobalConfig.bar);
+        BarPlacements.resetToDefaults();
         load();
     }
 
     function save(): void {
         let newEntries = [];
+        const current = BarWidgets.entriesOf(Config.bar);
+        // A widget in the box is listed with the right ones, so saving this page has to
+        // leave it in the box instead of putting it back on the bar.
+        const zoneOf = id => (current.find(entry => entry.id === id)?.zone === BarPlacements.trayZone ? BarPlacements.trayZone : "right");
 
         for (let i = 0; i < leftModel.count; i++) {
             if (!leftModel.get(i).isPlaceholder) {
@@ -431,17 +435,18 @@ PageBase {
         }
         for (let i = 0; i < rightModel.count; i++) {
             if (!rightModel.get(i).isPlaceholder) {
-                newEntries.push({ id: rightModel.get(i).compId, enabled: true, zone: "right" });
+                const id = rightModel.get(i).compId;
+                newEntries.push({ id: id, enabled: true, zone: zoneOf(id) });
             }
         }
         for (let i = 0; i < libraryModel.count; i++) {
             if (!libraryModel.get(i).isPlaceholder) {
                 const id = libraryModel.get(i).compId;
-                newEntries.push({ id: id, enabled: false, zone: BarWidgets.zoneFor(Config.bar, id) });
+                newEntries.push({ id: id, enabled: false, zone: BarPlacements.declaredZone(id) });
             }
         }
 
-        BarWidgets.replaceAll(GlobalConfig.bar, newEntries);
+        BarPlacements.replaceAll(newEntries);
     }
 
     title: qsTr("Toggle & rearrange")

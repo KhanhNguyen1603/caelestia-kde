@@ -11,6 +11,9 @@ TRAY="$REPO_ROOT/shell/modules/bar/components/Tray.qml"
 TRAY_ITEM="$REPO_ROOT/shell/modules/bar/components/TrayItem.qml"
 UPDATE_INDICATOR="$REPO_ROOT/shell/modules/bar/components/UpdateIndicator.qml"
 TRAY_OVERFLOW="$REPO_ROOT/shell/modules/bar/popouts/TrayOverflow.qml"
+DELEGATE="$REPO_ROOT/shell/modules/bar/components/BarWidgetDelegate.qml"
+PLACEMENT="$REPO_ROOT/shell/modules/bar/BarPlacements.qml"
+PLACEMENT_JS="$REPO_ROOT/shell/services/trayplacement.js"
 POPOUTS="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
 STATUS_ICON="$REPO_ROOT/shell/modules/bar/components/StatusIcon.qml"
 BAR_ICON="$REPO_ROOT/shell/modules/bar/components/BarIcon.qml"
@@ -32,7 +35,7 @@ schema_entries() {
 }
 
 bar_choice_ids() {
-    sed -nE 's/^ *roleValue: "([A-Za-z0-9_]+)"$/\1/p' "$BAR" | sort
+    sed -nE 's/^ *roleValue: "([A-Za-z0-9_]+)"$/\1/p' "$DELEGATE" | sort
 }
 
 editor_ids() {
@@ -88,11 +91,11 @@ test_the_editor_labels_every_registered_widget() {
 }
 
 test_resetting_the_layout_asks_the_schema_for_its_defaults() {
-    assert_file_contains "$EDITOR" 'BarWidgets.resetToDefaults(GlobalConfig.bar)' \
+    assert_file_contains "$EDITOR" 'BarPlacements.resetToDefaults()' \
         "the reset button has to go back to the schema's own defaults"
     assert_file_not_contains "$EDITOR" '{ id: "dock", enabled: true, zone: "middle" }' \
         "and must not grow another copy of the default layout - that copy is how resetting lost media"
-    assert_file_contains "$EDITOR" 'BarWidgets.zoneFor(Config.bar, id)' \
+    assert_file_contains "$EDITOR" 'BarPlacements.declaredZone(id)' \
         "a widget dragged out of the bar keeps the zone it had, or it comes back on the left"
 }
 
@@ -114,7 +117,7 @@ test_nothing_else_writes_the_entry_list_by_hand() {
 test_the_right_zone_is_one_system_tray_plus_the_clock() {
     assert_file_contains "$BAR" 'BarWidgets.rightLayoutEntries({ entries: Config.bar.entries })' \
         "the bar should ask the registry for the unified right layout"
-    assert_file_contains "$BAR" 'widgetEntries: trayLoader.systemTray ? root.systemTrayEntries : []' \
+    assert_file_contains "$DELEGATE" 'widgetEntries: trayLoader.systemTray ? root.bar.systemTrayEntries : []' \
         "only the synthetic tray should own the right-zone widgets"
     assert_file_contains "$TRAY" 'property var widgetEntries: []' \
         "the tray needs somewhere to put the widgets it owns"
@@ -143,11 +146,11 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "the panel should also list bar widgets taken off the bar"
     assert_file_contains "$TRAY_OVERFLOW" 'function trayDrop(source: var, x: real, y: real): void' \
         "the panel has to resolve what a drag leaves in it"
-    assert_file_contains "$TRAY_OVERFLOW" 'TrayRegistry.sendToBox(source.key)' \
+    assert_file_contains "$TRAY_OVERFLOW" 'BarPlacements.setPlacement(id, BarPlacements.trayZone' \
         "dropping an icon in the box moves it off the bar"
     assert_file_contains "$TRAY" 'function trayDrop(source: var, x: real, y: real): void' \
         "the tray has to resolve what a drag leaves on it"
-    assert_file_contains "$TRAY" 'TrayRegistry.sendToBar(source.key)' \
+    assert_file_contains "$TRAY" 'BarPlacements.setPlacement(id, "bar"' \
         "dropping an icon on the icons puts it back on the bar"
     assert_file_contains "$GESTURE" 'TrayDrag.begin(root.kind, root.key, root.widgetId, root.item.Window.window)' \
         "one gesture lifts whatever it is put on and says what it lifted"
@@ -157,7 +160,7 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "the gesture carries a snapshot of the item it lifted"
     assert_file_contains "$TRAY_ITEM" 'kind: "icon"' \
         "a tray icon lifts as an icon"
-    assert_file_contains "$BAR" 'readonly property string widgetId: id' \
+    assert_file_contains "$DELEGATE" 'readonly property string widgetId: id' \
         "a dragged widget should name the entry a drop hides"
     assert_file_contains "$BAR_ICON" 'widgetId: root.entryId' \
         "an icon lifts on its own, by the entry it is drawn from"
@@ -165,389 +168,222 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "the coffee cup is the same icon the status icons are"
     assert_file_contains "$UPDATE_INDICATOR" 'BarIcon {' \
         "and so is the updates indicator"
-    assert_file_contains "$BAR" 'enabled: wrapper.draggable && !BarWidgets.dragsItself(wrapper.kind)' \
+    assert_file_contains "$DELEGATE" 'enabled: wrapper.draggable && !BarWidgets.dragsItself(wrapper.kind)' \
         "the wrapper stays out of the way of an icon that lifts itself"
     assert_file_not_contains "$UPDATE_INDICATOR" 'TrayDrag' \
         "the update indicator drags through its own icon, not on its own again"
+    local writers
+    writers="$(grep -rlE '\.entries = ' "$REPO_ROOT/shell" --include='*.qml' 2>/dev/null | grep -v 'BarPlacements.qml' | grep -v 'Autostart.qml' | grep -v 'ContextMenuStore.qml' || true)"
+    assert_eq "" "$writers" \
+        "one writer owns the bar's entry list: every switch, drag and settings page asks it"
 }
 
-test_the_toggle_helper_keeps_the_widget_list_well_formed() {
+test_the_placement_model_says_where_an_icon_is() {
     if ! command -v node >/dev/null 2>&1; then
         skip_test "node is not available"
         return 0
     fi
 
-    local harness
-    harness="$(mktemp "${TMPDIR:-/tmp}/caelestia-barwidgets.XXXXXX.mjs")"
-    cat > "$harness" <<'EOF'
-import { readFileSync } from "node:fs";
+    check_js "a row is the icon's place: off when it says so, in the box when its zone is the box's" "$PLACEMENT_JS" Placement '
+assert.equal(Placement.placeOf({ id: "dock", enabled: false, zone: "middle" }, "bar"), "off");
+assert.equal(Placement.placeOf({ id: "dock", enabled: true, zone: "tray" }, "bar"), "tray");
+assert.equal(Placement.placeOf({ id: "dock", enabled: true, zone: "middle" }, "bar"), "bar");
+assert.equal(Placement.placeOf(null, "bar"), "bar", "an icon without a row is where its list puts it");
+assert.equal(Placement.placeOf(null, "off"), "off");
+'
 
-const src = readFileSync(process.argv[2], "utf8");
+    check_js "the tray places its own icons until the bar holds a row for one" "$PLACEMENT_JS" Placement '
+assert.equal(Placement.trayFallback("hidden", true), "off");
+assert.equal(Placement.trayFallback("visible", true), "bar");
+assert.equal(Placement.trayFallback("collapsed", true), "tray");
+assert.equal(Placement.trayFallback("collapsed", false), "bar", "without compact mode there is no box to wait in");
+'
 
-function sliceBalanced(from, open, close) {
-    let depth = 0;
-    for (let i = from; i < src.length; i++) {
-        if (src[i] === open) depth++;
-        else if (src[i] === close && --depth === 0) return src.slice(from, i + 1);
-    }
-    throw new Error("unbalanced " + open);
-}
+    check_js "the icons list decides whether a status icon exists at all" "$PLACEMENT_JS" Placement '
+assert.equal(Placement.statusPlace(false, { id: "statusIcon:battery", enabled: true, zone: "right" }, "bar"), "off");
+assert.equal(Placement.statusPlace(true, { id: "statusIcon:battery", enabled: true, zone: "tray" }, "bar"), "tray");
+assert.equal(Placement.statusPlace(true, null, "bar"), "bar");
+'
 
-function stripTypes(header) {
-    return header
-        .replace(/\)\s*:\s*[A-Za-z_][\w<>.\[\]|]*\s*$/, ") ")
-        .replace(/([(,\s])([A-Za-z_]\w*)\s*:\s*[A-Za-z_][\w<>.\[\]|]*/g, "$1$2");
-}
+    check_js "a widget switched off keeps the place it had, so switching it back on does not move it" "$PLACEMENT_JS" Placement '
+const rows = [{ id: "tray", enabled: true, zone: "right" }, { id: "clock", enabled: true, zone: "right" }];
+const off = Placement.plan({
+    rows: rows,
+    id: "clock",
+    place: "off",
+    kind: "widget",
+    declaredZone: "right"
+});
+assert.deepEqual(off.rows, [{ id: "tray", enabled: true, zone: "right" }, { id: "clock", enabled: false, zone: "right" }]);
+assert.equal(rows[1].enabled, true, "the list handed in is not written through");
+'
 
-function extractFunction(name) {
-    const marker = "function " + name + "(";
-    const start = src.indexOf(marker);
-    if (start === -1) throw new Error(name + " not found");
-    const text = sliceBalanced(start, "{", "}");
-    const brace = text.indexOf("{");
-    return stripTypes(text.slice(0, brace)) + text.slice(brace);
-}
+    check_js "a widget dropped in the box is one row, in one write" "$PLACEMENT_JS" Placement '
+const rows = [{ id: "tray", enabled: true, zone: "right" }, { id: "clock", enabled: true, zone: "right" }];
+const boxed = Placement.plan({
+    rows: rows,
+    id: "clock",
+    place: "tray",
+    kind: "widget",
+    declaredZone: "right"
+});
+assert.deepEqual(boxed.rows, [{ id: "tray", enabled: true, zone: "right" }, { id: "clock", enabled: true, zone: "tray" }],
+    "shown again, in the box, in the place the row already held");
+assert.equal(boxed.trayState, undefined, "a widget has no tray state to set");
+'
 
-function extractArray(name) {
-    const marker = name + ": [";
-    const start = src.indexOf(marker);
-    if (start === -1) throw new Error(name + " not found");
-    return sliceBalanced(src.indexOf("[", start), "[", "]");
-}
+    check_js "a drop takes the place of the icon it landed on, and gives that icon a row of its own" "$PLACEMENT_JS" Placement '
+const widgets = [{ id: "tray", zone: "right" }, { id: "updateIndicator", zone: "right" }, { id: "clock", zone: "right" }];
+const zones = { tray: "right", updateIndicator: "right", clock: "right" };
+const dropped = Placement.plan({
+    rows: [{ id: "tray", enabled: true, zone: "right" }, { id: "updateIndicator", enabled: false, zone: "tray" }, { id: "clock", enabled: true, zone: "right" }],
+    id: "updateIndicator",
+    place: "bar",
+    zone: "right",
+    beforeId: "clock",
+    kind: "widget",
+    declaredZone: "right",
+    widgets: widgets,
+    zones: zones,
+    anchorOf: id => id === "tray" ? "tray" : ""
+});
+assert.deepEqual(dropped.rows.map(entry => entry.id), ["tray", "updateIndicator", "clock"], "in the place it was dropped");
+assert.equal(dropped.rows[1].enabled, true, "switched on by the drag");
+assert.equal(dropped.rows[1].zone, "right", "and drawn on the bar");
+'
 
-const widgets = new Function("return " + extractArray("widgets") + ";")();
-const root = { widgets };
-root.byId = (() => {
-    const byId = {};
-    root.widgets.forEach((widget, index) => byId[widget.id] = Object.assign({ index: index }, widget));
-    return byId;
-})();
-root.ids = root.widgets.map(widget => widget.id);
-root.allWidgets = root.widgets;
-root.overflowZone = "tray";
-root.overflowCache = {};
-root.statusIconPrefix = "statusIcon:";
+    check_js "a move onto the icon it is already in front of says the same thing the list already says" "$PLACEMENT_JS" Placement '
+const rows = [{ id: "tray", enabled: true, zone: "right" }, { id: "clock", enabled: true, zone: "right" }];
+const settled = Placement.plan({
+    rows: rows,
+    id: "tray",
+    place: "bar",
+    beforeId: "clock",
+    kind: "widget",
+    declaredZone: "right"
+});
+assert.equal(Placement.sameRows(settled.rows, rows), true, "so the writer has nothing to write");
+const moved = Placement.plan({
+    rows: rows,
+    id: "clock",
+    place: "bar",
+    beforeId: "tray",
+    kind: "widget",
+    declaredZone: "right"
+});
+assert.deepEqual(moved.rows.map(entry => entry.id), ["clock", "tray"]);
+assert.equal(Placement.sameRows(moved.rows, rows), false, "a move that changes the order is written");
+'
 
-// The status icons come from the config and ask the services what they have to
-// say, so both are stood up here.
-globalThis.Config = {
-    bar: {
-        status: { showWifi: true },
-        tray: { compact: false },
-        keepawake: { autoHide: false },
-        statusIcons: {
-            values: [
-                { id: "audio", enabled: true },
-                { id: "battery", enabled: true },
-                { id: "privacy", enabled: true },
-                { id: "nightlight", enabled: false }
-            ]
-        }
-    },
-    general: { checkUpdates: true }
+    check_js "a status icon switched off is switched out of the icons list, and its row follows" "$PLACEMENT_JS" Placement '
+const rows = [{ id: "statusIcon:battery", enabled: true, zone: "right" }];
+const off = Placement.plan({
+    rows: rows,
+    id: "statusIcon:battery",
+    place: "off",
+    kind: "statusIcon",
+    declaredZone: "right"
+});
+assert.equal(off.iconEnabled, false);
+assert.equal(off.rows[0].enabled, false, "a row that said otherwise is the older answer");
+const on = Placement.plan({
+    rows: off.rows,
+    id: "statusIcon:battery",
+    place: "bar",
+    kind: "statusIcon",
+    declaredZone: "right"
+});
+assert.equal(on.iconEnabled, true);
+assert.deepEqual(on.rows, [{ id: "statusIcon:battery", enabled: true, zone: "right" }], "and it holds the place it had");
+'
+
+    check_js "a status icon dropped in the box gets a row that says so" "$PLACEMENT_JS" Placement '
+const boxed = Placement.plan({
+    rows: [{ id: "tray", enabled: true, zone: "right" }, { id: "statusIcons", enabled: true, zone: "right" }],
+    id: "statusIcon:battery",
+    place: "tray",
+    kind: "statusIcon",
+    declaredZone: "right",
+    widgets: [{ id: "tray" }, { id: "statusIcons" }],
+    anchorOf: id => id.startsWith("statusIcon:") ? "statusIcons" : ""
+});
+assert.deepEqual(boxed.rows.map(entry => [entry.id, entry.zone]), [
+    ["tray", "right"],
+    ["statusIcon:battery", "tray"],
+    ["statusIcons", "right"]
+], "a row of its own, in front of the group it came out of");
+assert.equal(boxed.iconEnabled, true, "still one of the icons the list draws");
+'
+
+    check_js "a status icon dropped back on the bar gives up its row, so its own place in the list returns" "$PLACEMENT_JS" Placement '
+const onBar = Placement.plan({
+    rows: [{ id: "tray", enabled: true, zone: "right" }, { id: "statusIcon:battery", enabled: true, zone: "tray" }],
+    id: "statusIcon:battery",
+    place: "bar",
+    zone: "right",
+    kind: "statusIcon",
+    declaredZone: "right"
+});
+assert.deepEqual(onBar.rows.map(entry => entry.id), ["tray"]);
+assert.equal(onBar.iconEnabled, true);
+'
+
+    check_js "a tray app is shown by its own state, and a row is only the place a drag gives it" "$PLACEMENT_JS" Placement '
+const request = {
+    kind: "trayItem",
+    id: "tray:cachy-update",
+    trayKey: "cachy-update",
+    declaredZone: "right",
+    compact: true
 };
-globalThis.IdleInhibitor = { enabled: false };
-globalThis.GlobalConfig = {
-    bar: {
-        tray: { compact: false },
-        statusIcons: {
-            at: index => Config.bar.statusIcons.values[index]
-        }
-    }
-};
-globalThis.Kwin = { capsLock: false, numLock: false, kbLayout: "" };
-// The tray's own icons hold rows in the bar's list, so the registry is stood up here
-// with one icon on the bar.
-globalThis.TrayRegistry = {
-    rowPrefix: "tray:",
-    barItems: [{ id: "1-cachy", icon: "cachy-update" }],
-    entries: [{ key: "cachy-update", title: "CachyOS", icon: "cachy-update", running: true }],
-    state: "collapsed",
-    calls: [],
-    stateOf: () => TrayRegistry.state,
-    sendToBox: key => TrayRegistry.calls.push(["box", key]),
-    sendToBar: key => TrayRegistry.calls.push(["bar", key]),
-    setState: (key, state) => TrayRegistry.calls.push(["state", key, state]),
-    rowOf: key => "tray:" + key,
-    keyOfRow: id => id.startsWith("tray:") ? id.substring(5) : "",
-    keyOfItem: item => item.icon ?? "",
-    itemOf: () => null
-};
-globalThis.Privacy = { inUse: false };
-globalThis.Nmcli = { activeEthernet: false };
-globalThis.HyprSunset = { active: false };
+const off = Placement.plan(Object.assign({}, request, {
+    rows: [{ id: "tray", enabled: true, zone: "right" }],
+    place: "off"
+}));
+assert.equal(off.trayState, "hidden", "off is the tray being told to hide it");
+assert.deepEqual(off.rows.map(entry => [entry.id, entry.enabled]), [["tray", true], ["tray:cachy-update", false]],
+    "with a row that keeps it out of the bar and the box alike");
 
-const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "clearRow", "placementRows", "widgetSaysSomething", "setShown", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "trayEntry", "trayEntries", "viewEntries", "moveBefore", "placeBefore", "rowsWith", "dragsItself"];
-Object.assign(root, new Function("root", names.map(extractFunction).join("\n") + "\nreturn {" + names.join(", ") + "};")(root));
+const shown = Placement.plan(Object.assign({}, request, {
+    rows: [{ id: "tray", enabled: true, zone: "right" }, { id: "tray:cachy-update", enabled: false, zone: "right" }],
+    place: "bar"
+}));
+assert.equal(shown.trayState, "visible");
+assert.deepEqual(shown.rows.map(entry => [entry.id, entry.enabled]), [["tray", true], ["tray:cachy-update", true]],
+    "shown again in the place the row held");
 
-const eq = (actual, expected, msg) => {
-    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-        console.error("FAIL:", msg);
-        console.error("  actual:  ", JSON.stringify(actual));
-        console.error("  expected:", JSON.stringify(expected));
-        process.exit(1);
-    }
-};
+const boxed = Placement.plan(Object.assign({}, request, {
+    rows: [{ id: "tray", enabled: true, zone: "right" }, { id: "tray:cachy-update", enabled: true, zone: "right" }],
+    place: "tray"
+}));
+assert.equal(boxed.trayState, "collapsed", "compact mode waits in the box");
+assert.deepEqual(boxed.rows.map(entry => entry.id), ["tray"], "and the row goes, so the state decides again");
 
-const defaults = [
-    { id: "logo", enabled: true, zone: "left" },
-    { id: "workspaces", enabled: true, zone: "left" },
-    { id: "greeter", enabled: true, zone: "left" },
-    { id: "dock", enabled: true, zone: "middle" },
-    { id: "tray", enabled: true, zone: "right" },
-    { id: "updateIndicator", enabled: true, zone: "right" },
-    { id: "github", enabled: false, zone: "right" },
-    { id: "media", enabled: false, zone: "right" },
-    { id: "clock", enabled: true, zone: "right" },
-    { id: "power", enabled: true, zone: "right" }
-];
-const ids = entries => entries.map(entry => entry.id);
+const pinned = Placement.plan(Object.assign({}, request, {
+    rows: [{ id: "tray", enabled: true, zone: "right" }, { id: "clock", enabled: true, zone: "right" }],
+    place: "bar",
+    beforeId: "clock"
+}));
+assert.deepEqual(pinned.rows.map(entry => entry.id), ["tray", "tray:cachy-update", "clock"],
+    "dropped on an icon, it holds a row in front of it");
+assert.equal(pinned.rows[1].zone, "right");
+'
 
-eq(ids(root.zoneEntries(defaults, "left")), ["logo", "workspaces", "greeter"], "left zone");
-eq(ids(root.zoneEntries(defaults, "middle")), ["dock"], "middle zone");
-eq(ids(root.zoneEntries(defaults, "right")), ["tray", "updateIndicator", "clock", "power"], "the right zone drops the disabled widgets");
-eq(ids(root.rightLayoutEntries({ entries: defaults })), ["tray", "clock", "power"], "the right layout is one tray, the clock and the power button");
-eq(root.rightLayoutEntries({ entries: defaults })[0].systemTray, true, "the synthetic tray is marked as the tray container");
-eq(root.systemTrayEntries({ entries: defaults }).every(entry => entry.systemTray === false && entry.zone === "right"), true,
-    "the widgets inside the tray carry the roles the bar delegate requires");
-eq(ids(root.systemTrayEntries({ entries: defaults })), ["tray:cachy-update", "updateIndicator"], "the tray owns its own icons and the right widgets, but not the power button or the clock");
-eq(root.systemTrayShowsIcons({ entries: defaults }), true, "the tray entry supplies the system tray icons");
-eq(ids(root.rightLayoutEntries({ entries: defaults.filter(entry => entry.id === "clock") })), ["clock"],
-    "a clock on its own stays outside a tray");
-eq(ids(root.rightLayoutEntries({ entries: defaults.filter(entry => entry.id !== "clock") })), ["tray", "power"],
-    "the tray and the power button remain when the clock is not in the right zone");
-eq(root.systemTrayShowsIcons({ entries: defaults.filter(entry => entry.id !== "tray") }), false,
-    "disabling the tray entry leaves the widget tray without system tray icons");
-eq(ids(root.systemTrayEntries({ entries: defaults.filter(entry => entry.id !== "tray") })), ["updateIndicator"],
-    "the other right widgets still belong to the tray when the tray entry is off");
-eq(root.overflowWidgets({ entries: defaults }), [], "nothing is in the box while every right-zone widget is on the bar");
-eq(root.overflowWidgets({ entries: [{ id: "updateIndicator", enabled: true, zone: "tray" }, { id: "clock", enabled: true, zone: "right" }] }).map(entry => entry.id), ["updateIndicator"],
-    "a widget dragged into the box is the one the box draws");
-eq(root.overflowWidgets({ entries: [{ id: "updateIndicator", enabled: true, zone: "tray" }] })[0].enabled, true,
-    "the box draws it live, so the delegate must activate it");
-eq(root.overflowWidgets({ entries: [{ id: "updateIndicator", enabled: true, zone: "tray" }] })[0].draggable, true,
-    "and it can be dragged back out");
-eq(root.overflowWidgets({ entries: [{ id: "nonsense", enabled: true, zone: "tray" }] }), [],
-    "an id no widget answers to never reaches the box");
-eq(root.systemTrayEntries({ entries: defaults }).every(entry => entry.draggable === true), true,
-    "everything the tray draws can be dragged into the box");
-eq(ids(root.zoneEntries([{ id: "clock", enabled: true, zone: "tray" }], "right")), [],
-    "a widget in the box is drawn by no zone");
-eq(ids(root.zoneEntries([{ id: "clock", enabled: true }], "left")), ["clock"], "an entry with no zone is a left one, which is what the bar always assumed");
-
-eq(ids(root.zoneEntries([
-    { id: "spacer", enabled: true, zone: "left" },
-    { id: "nonsense", enabled: true, zone: "left" },
-    { id: "clock", enabled: true, zone: "left" }
-], "left")), ["clock"], "spacer and unknown ids never reach the bar");
-eq(root.isKnown("media"), true, "media is a widget");
-eq(root.isKnown("spacer"), false, "spacer is not");
-
-eq(root.isEnabled({ entries: defaults }, "dock"), true, "dock is on");
-eq(root.isEnabled({ entries: defaults }, "github"), false, "github is off");
-eq(root.isEnabled({ entries: defaults }, "perfCpu"), false, "a widget with no entry is off");
-eq(root.isEnabled({}, "dock"), false, "an empty list reads as off");
-
-eq(root.zoneFor({ entries: defaults }, "dock"), "middle", "an entry's own zone wins");
-eq(root.zoneFor({}, "dock"), "middle", "and a widget with no entry keeps the zone it was declared with");
-eq(root.zoneFor({}, "nonsense"), "left", "an id the registry does not know still lands somewhere");
-
-const toggled = { entries: defaults.map(entry => Object.assign({}, entry)) };
-const handedOver = toggled.entries;
-root.setEnabled(toggled, "github", true);
-eq(ids(toggled.entries), ["logo", "workspaces", "greeter", "dock", "tray", "updateIndicator", "github", "media", "clock", "power"],
-    "an existing widget keeps its place");
-eq(root.isEnabled(toggled, "github"), true, "and turns on");
-eq(handedOver[6].enabled, false, "without writing through the entry objects the old list handed over");
-
-const restored = { entries: defaults.filter(entry => entry.id !== "updateIndicator") };
-root.setEnabled(restored, "updateIndicator", true);
-eq(ids(restored.entries).indexOf("updateIndicator"), ids(restored.entries).indexOf("tray") + 1,
-    "a widget missing from the list goes back beside the neighbours it was declared with");
-eq(restored.entries.find(entry => entry.id === "updateIndicator").zone, "right", "with its declared zone");
-
-const empty = {};
-root.setEnabled(empty, "dock", true);
-eq(empty.entries, [{ id: "dock", enabled: true, zone: "middle" }], "and into an empty list the registry supplies the zone");
-
-const source = [{ id: "clock", enabled: true, zone: "right" }];
-const editor = {};
-root.replaceAll(editor, source);
-source.push({ id: "dock", enabled: true, zone: "middle" });
-eq(ids(editor.entries), ["clock"], "the editor's list is snapshotted, not aliased");
-
-const moved = { entries: defaults.map(entry => Object.assign({}, entry)) };
-root.setInTray(moved, "updateIndicator");
-eq(moved.entries.find(entry => entry.id === "updateIndicator").zone, "tray",
-    "dropping a widget in the box is what moves it out of the bar's zones");
-eq(root.isEnabled(moved, "updateIndicator"), true, "and it keeps its own on/off state");
-eq(ids(root.zoneEntries(moved.entries, "right")), ["tray", "clock", "power"],
-    "so the tray no longer draws it");
-
-root.setOnBar(moved, "updateIndicator");
-eq(moved.entries.find(entry => entry.id === "updateIndicator").zone, "right",
-    "dragging it back puts it in the tray's zone again");
-eq(root.isEnabled(moved, "updateIndicator"), true, "switched on, because the drag asked to see it");
-eq(ids(root.systemTrayEntries(moved)), ["tray:cachy-update", "updateIndicator"], "and the tray draws it again");
-
-const woken = { entries: [{ id: "updateIndicator", enabled: false, zone: "tray" }] };
-root.setOnBar(woken, "updateIndicator");
-eq(root.isEnabled(woken, "updateIndicator"), true, "a widget dragged back is shown even if it had been switched off");
-
-// The status icons are one widget each, so they move one at a time.
-// A privacy indicator only exists while something is watching or listening.
-globalThis.Privacy.inUse = true;
-const groups = [
-    { id: "tray", enabled: true, zone: "right" },
-    { id: "statusIcons", enabled: true, zone: "right" },
-    { id: "clock", enabled: true, zone: "right" }
-];
-eq(ids(root.viewEntries({ entries: groups })), ["tray", "tray:cachy-update", "statusIcon:audio", "statusIcon:battery", "statusIcon:privacy", "clock"],
-    "the groups are expanded in place: the tray lays out its own icons and the status group one entry per icon, in the configured order, with the switched-off one left out");
-eq(root.viewEntries({ entries: groups }).filter(entry => entry.kind === "statusIcon").every(entry => entry.draggable === true), true,
-    "and each icon is draggable on its own");
-eq(ids(root.systemTrayEntries({ entries: groups })), ["tray:cachy-update", "statusIcon:audio", "statusIcon:battery", "statusIcon:privacy"],
-    "the tray draws each icon separately, so each can be lifted off the bar");
-eq(root.rightLayoutEntries({ entries: groups }).length, 2, "one tray and one clock: the icons are drawn inside the tray");
-
-globalThis.Privacy.inUse = false;
-eq(root.statusIconActive("privacy"), false, "an icon that has nothing to say is not drawn");
-eq(ids(root.viewEntries({ entries: groups })), ["tray", "tray:cachy-update", "statusIcon:audio", "statusIcon:battery", "clock"],
-    "so the row it would have taken closes up");
-globalThis.Privacy.inUse = true;
-
-const movedIcon = { entries: groups.map(entry => Object.assign({}, entry)) };
-root.setInTray(movedIcon, "statusIcon:battery");
-eq(movedIcon.entries.find(entry => entry.id === "statusIcon:battery").zone, "tray",
-    "dropping one icon in the box moves that icon and only that icon");
-eq(ids(root.viewEntries(movedIcon)).filter(id => id === "statusIcon:battery"), ["statusIcon:battery"],
-    "the expansion reads the override, so the icon is still drawn once");
-eq(ids(root.zoneEntries(root.viewEntries(movedIcon), "right")), ["tray", "tray:cachy-update", "statusIcon:audio", "statusIcon:privacy", "clock"],
-    "and the bar no longer draws it");
-eq(root.overflowWidgets(movedIcon).map(entry => entry.id), ["statusIcon:battery"],
-    "the box is where it went");
-eq(root.zoneFor(movedIcon, "statusIcon:battery"), "tray", "the registry knows the zone an icon was dragged to");
-eq(ids(movedIcon.entries), ["tray", "statusIcons", "clock", "statusIcon:battery"],
-    "the drag writes one row for that icon and leaves the configured group where it was");
-
-root.setOnBar(movedIcon, "statusIcon:battery");
-eq(root.zoneFor(movedIcon, "statusIcon:battery"), "right", "dragging it back returns it to the tray");
-eq(ids(root.systemTrayEntries(movedIcon)), ["tray:cachy-update", "statusIcon:audio", "statusIcon:battery", "statusIcon:privacy"],
-    "in the place the configured order gives it");
-
-const orphan = { entries: [{ id: "statusIcon:audio", enabled: true, zone: "tray" }] };
-eq(ids(root.viewEntries(orphan)), ["statusIcon:audio", "statusIcon:battery", "statusIcon:privacy"],
-    "icon rows outlive the group row: the icons it left behind still belong to the bar");
-
-// A tray icon's row is its place on the bar, so dropping it in the box takes the row
-// with it: an icon with a row and an icon the tray places are never both drawn.
-const rowed = { entries: [{ id: "tray", enabled: true, zone: "right" }, { id: "tray:cachy-update", enabled: true, zone: "right" }, { id: "clock", enabled: true, zone: "right" }] };
-root.clearRow(rowed, "tray:cachy-update");
-eq(ids(rowed.entries), ["tray", "clock"], "the icon that left the bar gives up its row");
-eq(ids(root.viewEntries(rowed)), ["tray", "tray:cachy-update", "clock"],
-    "and it falls back to the place the tray's own order gives it");
-root.clearRow(rowed, "tray:cachy-update");
-eq(ids(rowed.entries), ["tray", "clock"], "clearing a row that is not there leaves the list alone");
-
-// The panel that offers the switch reads one list, whatever kind of icon it is.
-const placementList = { entries: [{ id: "tray", enabled: true, zone: "right" }, { id: "clock", enabled: true, zone: "right" }] };
-const placements = root.placementRows(placementList);
-eq(placements.map(row => [row.id, row.place]), [
-    ["tray:cachy-update", "bar"],
-    ["updateIndicator", "bar"],
-    ["keepawake", "bar"],
-    ["statusIcon:audio", "bar"],
-    ["statusIcon:battery", "bar"],
-    ["statusIcon:privacy", "bar"],
-    ["statusIcon:nightlight", "off"]
-], "every icon the bar can draw is listed once, with the place it is in, the tray's apps first");
-
-root.setShown(placementList, placements[0], false);
-eq(root.placementRows(placementList)[0].place, "off", "an icon switched off is off");
-eq(ids(root.zoneEntries(root.viewEntries(placementList), "right")).includes("tray:cachy-update"), false, "and the bar stops drawing it");
-eq(root.overflowWidgets(placementList).some(entry => entry.id === "tray:cachy-update"), false, "without the box taking it either");
-eq(TrayRegistry.calls, [["state", "cachy-update", "hidden"]], "the tray is told it is hidden, so its own page agrees");
-
-root.setShown(placementList, placements[1], false);
-eq(root.placementRows(placementList)[1].place, "off", "a widget switched off is off");
-eq(ids(root.zoneEntries(root.viewEntries(placementList), "right")).includes("updateIndicator"), false, "the bar stops drawing it");
-eq(root.overflowWidgets(placementList).some(entry => entry.id === "updateIndicator"), false, "and the box does not take it");
-
-root.setShown(placementList, root.placementRows(placementList)[3], false);
-eq(root.placementRows(placementList)[3].place, "off", "a status icon switched off is off");
-eq(root.overflowWidgets(placementList).some(entry => entry.id === "statusIcon:audio"), false, "and nothing draws it");
-root.setShown(placementList, root.placementRows(placementList)[3], true);
-eq(root.placementRows(placementList)[3].place, "bar", "switching it back on returns it to the bar");
-
-// A row left behind by an earlier place does not keep an icon the icons list switched off.
-const staleRow = { entries: [{ id: "statusIcon:battery", enabled: true, zone: "right" }, { id: "tray", enabled: true, zone: "right" }] };
-root.setShown(staleRow, root.placementRows(staleRow).find(row => row.id === "statusIcon:battery"), false);
-eq(root.placementRows(staleRow).find(row => row.id === "statusIcon:battery").place, "off", "the icons list decides whether the icon is there at all");
-eq(staleRow.entries.find(entry => entry.id === "statusIcon:battery").enabled, false, "and the row follows it");
-
-// A tray app switched on is shown by the tray, so switching one on lands it in the box.
-const offApp = { entries: [{ id: "tray:cachy-update", enabled: true, zone: "right" }, { id: "tray", enabled: true, zone: "right" }] };
-TrayRegistry.calls = [];
-root.setShown(offApp, root.placementRows(offApp).find(row => row.kind === "trayItem"), false);
-eq(TrayRegistry.calls, [["state", "cachy-update", "hidden"]], "an app switched off is hidden by the tray, and says so");
-eq(offApp.entries.find(entry => entry.id === "tray:cachy-update").enabled, false, "with a row that keeps it out of the bar");
-eq(offApp.entries.find(entry => entry.id === "tray:cachy-update").zone, "right", "in the place it held");
-
-TrayRegistry.calls = [];
-root.setShown(offApp, root.placementRows(offApp).find(row => row.kind === "trayItem"), true);
-eq(TrayRegistry.calls, [["bar", "cachy-update"]], "switching it on asks the tray for the bar");
-eq(ids(offApp.entries).includes("tray:cachy-update"), false, "and takes the row away, so the tray's own list decides again");
-
-// An icon with nothing to say right now is still listed, and marked as quiet.
-const quiet = root.placementRows(placementList).find(row => row.id === "statusIcon:nightlight");
-eq(quiet.active, false, "a switched-off status icon is not available either");
-eq(root.placementRows(placementList).find(row => row.id === "statusIcon:battery").active, true, "one that is on says so");
-
-// The box leaves out an icon with nothing to say rather than holding a blank cell.
-const boxed = { entries: [{ id: "tray", enabled: true, zone: "right" }, { id: "updateIndicator", enabled: true, zone: "tray" }, { id: "keeping", enabled: true, zone: "tray" }] };
-eq(ids(root.overflowWidgets(boxed)), ["updateIndicator"], "a widget in the box is one cell");
-Config.general.checkUpdates = false;
-eq(ids(root.overflowWidgets(boxed)), [], "and no cell once updates are off");
-eq(root.placementRows(boxed).find(row => row.id === "updateIndicator").active, false, "the list says it has nothing to show");
-Config.general.checkUpdates = true;
-
-// A drop that leaves the rows where they already are writes nothing: the write is what
-// makes the bar draw all of its widgets again, and the tray redraw them from nothing.
-const settled = { entries: [{ id: "tray", enabled: true, zone: "right" }, { id: "clock", enabled: true, zone: "right" }] };
-const handedOn = settled.entries;
-root.moveBefore(settled, "tray", "clock");
-eq(settled.entries === handedOn, true, "a move onto the icon it is already in front of leaves the list alone");
-root.setEnabled(settled, "clock", true);
-root.setZone(settled, "clock", "right");
-eq(settled.entries === handedOn, true, "and so does saying what a row already says");
-root.moveBefore(settled, "clock", "tray");
-eq(settled.entries === handedOn, false, "a move that changes the order writes it once");
-eq(ids(settled.entries), ["clock", "tray"], "with the dropped icon in front of the one it landed on");
-
-// A widget dropped on the bar is placed and switched on in the same write.
-const dropped = { entries: [{ id: "tray", enabled: true, zone: "right" }, { id: "updateIndicator", enabled: false, zone: "tray" }, { id: "clock", enabled: true, zone: "right" }] };
-const beforeDrop = dropped.entries;
-root.setOnBar(dropped, "updateIndicator", "clock");
-eq(dropped.entries === beforeDrop, false, "a drop writes the list once");
-eq(ids(dropped.entries), ["tray", "updateIndicator", "clock"], "in the place it was dropped");
-eq(root.isEnabled(dropped, "updateIndicator"), true, "switched on, in the same write");
-eq(dropped.entries.find(entry => entry.id === "updateIndicator").zone, "right", "and in the tray's zone");
-
-console.log("bar widget registry: all harness cases passed");
-EOF
-
-    if ! timeout 15 node "$harness" "$REGISTRY"; then
-        rm -f "$harness"
-        fail "the bar widget registry harness failed"
-        return 0
-    fi
-    rm -f "$harness"
+    check_js "a row for an icon the list does not hold goes beside the neighbours it is declared with" "$PLACEMENT_JS" Placement '
+const widgets = [{ id: "tray" }, { id: "updateIndicator" }, { id: "clock" }, { id: "power" }];
+assert.equal(Placement.insertIndex([{ id: "tray" }, { id: "clock" }], "updateIndicator", widgets), 1,
+    "after the last row whose widget comes before it in the registry");
+assert.equal(Placement.insertIndex([], "power", widgets), 0);
+assert.equal(Placement.insertIndex([{ id: "tray" }], "statusIcon:battery", widgets, "statusIcons"), 1,
+    "an icon from a group goes where the group is");
+assert.equal(Placement.insertIndex([{ id: "clock" }], "tray:cachy-update", widgets, "tray"), 1);
+'
 }
 
 test_the_hidden_icons_box_is_icons_only() {
     assert_file_not_contains "$TRAY_OVERFLOW" "qsTr(" \
         "the box holds tiles, not copy"
-    assert_file_contains "$TRAY_OVERFLOW" 'sourceComponent: root.popouts ? root.popouts.trayWidgetDelegate : null' \
+    assert_file_contains "$TRAY_OVERFLOW" 'BarComponents.BarWidgetCell' \
         "the widgets in the box are the bar's own, so they stay live there"
     assert_file_contains "$TRAY_OVERFLOW" 'readonly property int maxRows: 4' \
         "the box fills at most four rows"
@@ -563,8 +399,10 @@ test_the_hidden_icons_box_is_icons_only() {
         "every entry is a cell of the one grid, with nothing on a line of its own"
     assert_file_contains "$TRAY_OVERFLOW" 'function trayDropAt(window: var, x: real, y: real): bool' \
         "anything the tray draws can be dropped into the box"
-    assert_file_contains "$BAR" 'property: "trayWidgetDelegate"' \
-        "the bar is what hands that delegate over"
+    assert_file_contains "$TRAY_OVERFLOW" 'BarComponents.BarWidgetCell' \
+        "the box draws the widgets it holds with the bar's own delegate, so they stay live there"
+    assert_file_not_contains "$BAR" 'trayWidgetDelegate' \
+        "and the bar does not hand its popout state a component to do it with"
     assert_file_contains "$GESTURE" 'grabPermissions: PointerHandler.CanTakeOverFromAnything' \
         "a drag over a widget takes the gesture without stealing the click under it"
     assert_file_contains "$GESTURE" 'TrayDrag.move(root.screenPoint(centroid.scenePosition))' \
@@ -578,9 +416,9 @@ test_a_move_lands_without_redrawing_the_row() {
         "the tray's icons keep their size: the row is rebuilt when the bar's list is written, not moved"
     assert_file_not_contains "$TRAY_OVERFLOW" 'from: 0' \
         "and the box's cells are not scaled in either"
-    assert_file_contains "$TRAY" 'BarWidgets.setOnBar(GlobalConfig.bar, source.widgetId, target?.id ?? "")' \
+    assert_file_contains "$TRAY" 'zone: beforeId || source.kind === "widget" ? "right" : undefined' \
         "a widget dropped on the bar is placed and moved in one write"
-    assert_file_contains "$REGISTRY" "function placeBefore(node: var, id: string, beforeId: string, place: var): void" \
+    assert_file_contains "$PLACEMENT" "function setPlacement(id: string, place: string, options: var): void" \
         "because placing and moving are one statement"
 }
 

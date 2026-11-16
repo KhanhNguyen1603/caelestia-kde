@@ -153,7 +153,7 @@ Item {
         }
 
         root.openOverflow();
-        root.popouts.trayPinned = true;
+        root.popouts.staysOpen = true;
     }
 
     function overChevron(x: real, y: real): bool {
@@ -201,11 +201,9 @@ Item {
         if (toBox) {
             root.openOverflow();
             if (source.kind === "widget")
-                BarWidgets.setInTray(GlobalConfig.bar, source.widgetId);
-            else if (source.kind === "icon") {
-                BarWidgets.clearRow(GlobalConfig.bar, TrayRegistry.rowOf(source.key));
-                TrayRegistry.sendToBox(source.key);
-            }
+                BarPlacements.setPlacement(source.widgetId, BarPlacements.trayZone);
+            else if (source.kind === "icon")
+                BarPlacements.setPlacement(TrayRegistry.rowOf(source.key), BarPlacements.trayZone);
             return;
         }
 
@@ -214,13 +212,14 @@ Item {
         // between two icons still moves something. A tray icon now holds a row like any
         // other, so it is moved the same way.
         const target = root.dropTarget(source.kind, source.kind === "icon" ? source.key : source.widgetId, x, y);
-        if (source.kind === "widget") {
-            BarWidgets.setOnBar(GlobalConfig.bar, source.widgetId, target?.id ?? "");
-        } else if (source.kind === "icon") {
-            TrayRegistry.sendToBar(source.key);
-            if (target && target.id)
-                BarWidgets.moveBefore(GlobalConfig.bar, TrayRegistry.rowOf(source.key), target.id);
-        }
+        const id = source.kind === "icon" ? TrayRegistry.rowOf(source.key) : source.widgetId;
+        const beforeId = target?.id ?? "";
+        // A drop on an icon takes that icon's place. One on empty bar space only says the
+        // icon belongs on the bar, so its own place is kept where it has one.
+        BarPlacements.setPlacement(id, "bar", {
+            zone: beforeId || source.kind === "widget" ? "right" : undefined,
+            beforeId: beforeId
+        });
     }
 
     visible: height > 0

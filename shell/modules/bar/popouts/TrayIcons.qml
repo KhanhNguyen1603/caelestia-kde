@@ -22,7 +22,7 @@ ColumnLayout {
     property real fontScale: 1.0
     property bool _isSidebarOpen: false
 
-    readonly property var rows: BarWidgets.placementRows(GlobalConfig.bar)
+    readonly property var rows: BarPlacements.rows
     // The tray's apps name and draw themselves; the bar's icons are named by the map the
     // settings pages read too.
     readonly property var trayItems: {
@@ -87,8 +87,8 @@ ColumnLayout {
             rowModel.remove(rowModel.count - 1);
     }
 
-    function setShown(row: var, shown: bool): void {
-        BarWidgets.setShown(GlobalConfig.bar, row, shown);
+    function setShown(id: string, shown: bool): void {
+        BarPlacements.setShown(id, shown);
     }
 
     onRowsChanged: root.syncRows()
@@ -206,12 +206,7 @@ ColumnLayout {
                         // can animate: a click breaks the binding, and the row it writes
                         // is where the answer comes back.
                         checked: rowItem.place !== "off"
-                        onToggled: root.setShown({
-                            "kind": rowItem.kind,
-                            "id": rowItem.rowId,
-                            "key": rowItem.key,
-                            "place": rowItem.place
-                        }, showSwitch.checked)
+                        onToggled: root.setShown(rowItem.rowId, showSwitch.checked)
                     }
                 }
             }

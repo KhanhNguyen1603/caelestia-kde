@@ -62,7 +62,7 @@ QtObject {
     // A widget dragged out of the tray lives here: it keeps its place in the
     // config, but no zone draws it, so the hidden-icons box is the only place it
     // appears until it is dragged back.
-    readonly property string overflowZone: "tray"
+    readonly property string trayZone: "tray"
 
     // The box animates the tiles it holds, and an entry recomputed into a fresh
     // object every time would rebuild its tile instead of moving it. Entries are kept
@@ -246,6 +246,19 @@ QtObject {
         return root.widget(id) !== null || TrayRegistry.keyOfRow(id).length > 0;
     }
 
+    // An icon with nothing to say right now is still the user's to place: it stays in the
+    // lists and appears when it has something to say.
+    function saysSomething(id: string): bool {
+        switch (id) {
+        case "updateIndicator":
+            return Config.general.checkUpdates !== false;
+        case "keepawake":
+            return !Config.bar.keepawake.autoHide || IdleInhibitor.enabled;
+        default:
+            return true;
+        }
+    }
+
     // Widgets the bar draws as one of its icons carry their own drag, so the wrapper
     // around them must not add a second gesture.
     function dragsItself(kind: string): bool {
@@ -312,7 +325,7 @@ QtObject {
         const cache = root.overflowCache;
         let index = 0;
         for (const entry of root.viewEntries(node)) {
-            if (entry.enabled === false || entry.zone !== root.overflowZone || !root.isKnown(entry.id) || entry.id === "tray" || !root.widgetSaysSomething(entry.id))
+            if (entry.enabled === false || entry.zone !== root.trayZone || !root.isKnown(entry.id) || entry.id === "tray" || !root.saysSomething(entry.id))
                 continue;
             const kind = entry.kind ?? entry.id;
             const reused = cache[entry.id];
@@ -320,7 +333,7 @@ QtObject {
                 id: entry.id,
                 kind: kind,
                 enabled: true,
-                zone: root.overflowZone,
+                zone: root.trayZone,
                 systemTray: false,
                 draggable: true,
                 index: index
@@ -330,334 +343,5 @@ QtObject {
             index++;
         }
         return hidden;
-    }
-
-    function isEnabled(node: var, id: string): bool {
-        for (const entry of root.entriesOf(node)) {
-            if (entry.id === id)
-                return entry.enabled === true;
-        }
-        return false;
-    }
-
-    function zoneFor(node: var, id: string): string {
-        for (const entry of root.entriesOf(node)) {
-            if (entry.id === id)
-                return entry.zone ?? root.widget(id)?.zone ?? "left";
-        }
-        return root.widget(id)?.zone ?? "left";
-    }
-
-    function setEnabled(node: var, id: string, enabled: bool): void {
-        const entries = root.entriesOf(node);
-        const zone = root.widget(id)?.zone ?? "left";
-        const row = entries.find(entry => entry.id === id) ?? null;
-        // A row that already says this is written anyway only to make the bar draw every
-        // widget it holds again.
-        if (row && row.enabled === enabled)
-            return;
-        const next = [];
-        let found = false;
-
-        for (const entry of entries) {
-            if (entry.id !== id || found) {
-                next.push(entry);
-                continue;
-            }
-
-            found = true;
-            next.push({ id: id, enabled: enabled, zone: entry.zone ?? zone });
-        }
-
-        if (!found)
-            next.splice(root.indexFor(entries, id), 0, { id: id, enabled: enabled, zone: zone });
-
-        node.entries = next;
-    }
-
-    // Moving something to the zone it belongs in is the same as not saying anything, so
-    // the row goes: the place it holds in the bar is the configured one again, and a
-    // drag is the only thing that writes a place down.
-    function setZone(node: var, id: string, zone: string): void {
-        const entries = root.entriesOf(node);
-        const fallback = root.widget(id)?.zone ?? "left";
-        const row = entries.find(entry => entry.id === id) ?? null;
-
-        // A status icon is placed by the icons list unless a row says otherwise, so
-        // sending one back to the bar removes the row and its configured place returns.
-        if (root.statusIconId(id).length > 0 && zone === fallback) {
-            root.clearRow(node, id);
-            return;
-        }
-
-        // Saying what is already true writes nothing: every write redraws the bar.
-        if (row ? (row.zone ?? fallback) === zone : zone === fallback)
-            return;
-
-        const next = [];
-        let found = false;
-
-        for (const entry of entries) {
-            if (entry.id !== id || found) {
-                next.push(entry);
-                continue;
-            }
-
-            found = true;
-            next.push({ id: id, enabled: entry.enabled === true, zone: zone });
-        }
-
-        if (!found)
-            next.splice(root.indexFor(entries, id), 0, { id: id, enabled: true, zone: zone });
-
-        node.entries = next;
-    }
-
-    // The two moves a drag between the tray and its hidden-icons box performs. A
-    // widget coming back to the bar is shown again even if it had been switched
-    // off, because the drag is the request to see it.
-    function setInTray(node: var, id: string): void {
-        root.setZone(node, id, root.overflowZone);
-    }
-
-    function setOnBar(node: var, id: string, beforeId: string): void {
-        const before = beforeId ?? "";
-
-        // A status icon is placed by the icons list, so a drop that only says "on the
-        // bar" takes the row the icon left behind when it went into the box: with no
-        // target there is no place of its own to hold on to.
-        if (before.length === 0 && root.statusIconId(id).length > 0 && (root.widget(id)?.zone ?? "left") === "right") {
-            root.clearRow(node, id);
-            return;
-        }
-
-        root.placeBefore(node, id, before, {
-            enabled: true,
-            zone: "right"
-        });
-    }
-
-    function replaceAll(node: var, entries: var): void {
-        node.entries = entries.slice();
-    }
-
-    // Dropping the row gives the widget back to whatever places it by default: the icons
-    // list for a status icon, the tray's own order for one of its icons.
-    function clearRow(node: var, id: string): void {
-        const entries = root.entriesOf(node);
-        const rest = entries.filter(entry => entry.id !== id);
-        if (rest.length !== entries.length)
-            node.entries = rest;
-    }
-
-    // Every icon the bar can show, with the place it is in and whether it has anything to
-    // say right now: the bar's status icons, the icons beside them and the tray's own
-    // apps are one list here, because choosing where an icon goes is one decision
-    // whatever kind of icon it is. The tray's apps come first: they are the ones that
-    // come and go.
-    function placementRows(node: var): var {
-        const entries = root.entriesOf(node);
-        const rowOf = id => entries.find(entry => entry.id === id) ?? null;
-        // A row is the icon's place: off when it says so, in the tray's box when its
-        // zone is the box's, on the bar everywhere else. An icon without a row is
-        // wherever the list that declares it puts it.
-        const placeOf = (row, fallback) => {
-            if (row)
-                return row.enabled === false ? "off" : row.zone === root.overflowZone ? "tray" : "bar";
-            return fallback;
-        };
-
-        const rows = [];
-        // A tray app's own state lists decide its place until the bar holds a row for
-        // it; past that the row is the answer, so the two can never disagree. An app
-        // that is not running and was never placed is not something to place now, so
-        // the list leaves it to the settings page.
-        const compact = GlobalConfig.bar.tray.compact;
-        for (const item of TrayRegistry.entries ?? []) {
-            const id = TrayRegistry.rowOf(item.key);
-            const row = rowOf(id);
-            if (!item.running && !row)
-                continue;
-            const state = TrayRegistry.stateOf(item.key);
-            const fallback = state === "hidden" ? "off" : state === "visible" || !compact ? "bar" : "tray";
-            rows.push({ kind: "trayItem", id: id, key: item.key, place: placeOf(row, fallback), active: item.running !== false });
-        }
-
-        for (const widget of root.allWidgets) {
-            const id = widget.id;
-            if (!root.dragsItself(id) || id === "statusIcon" || id === "trayItem")
-                continue;
-            rows.push({ kind: id, id: id, key: "", place: placeOf(rowOf(id), "bar"), active: root.widgetSaysSomething(id) });
-        }
-
-        for (const icon of Config.bar.statusIcons.values ?? []) {
-            const id = root.statusIconPrefix + icon.id;
-            // The icons list decides whether the icon exists at all; a row only says
-            // where it goes, so a row left over from a switch that was turned off
-            // cannot keep the icon in the list as shown.
-            rows.push({ kind: "statusIcon", id: id, key: "", place: icon.enabled ? placeOf(rowOf(id), "bar") : "off", active: root.statusIconActive(icon.id) });
-        }
-        return rows;
-    }
-
-    // An icon with nothing to say right now is still the user's to switch on: it appears
-    // when it has something to say, and the list says so in the meantime.
-    function widgetSaysSomething(id: string): bool {
-        switch (id) {
-        case "updateIndicator":
-            return Config.general.checkUpdates !== false;
-        case "keepawake":
-            return !Config.bar.keepawake.autoHide || IdleInhibitor.enabled;
-        default:
-            return true;
-        }
-    }
-
-    // Whether an icon is shown at all. Where it shows is the row's business: one switched
-    // on with no place of its own lands in the tray, and dragging it from there is what
-    // moves it onto the bar's other icons or into the box.
-    function setShown(node: var, row: var, shown: bool): void {
-        // Switching an icon to what it already is writes nothing, so a click that lands
-        // on the state it is in leaves the config alone.
-        if ((row.place !== "off") === shown)
-            return;
-
-        // The status icons have a switch of their own, which is the one the settings
-        // page writes, so the two cannot disagree.
-        if (row.kind === "statusIcon") {
-            const values = Config.bar.statusIcons.values ?? [];
-            const index = values.findIndex(icon => icon.id === root.statusIconId(row.id));
-            if (index >= 0)
-                GlobalConfig.bar.statusIcons.at(index).enabled = shown;
-            // A row that said otherwise is the older answer, so it follows the list.
-            const entries = root.entriesOf(node);
-            if (entries.some(entry => entry.id === row.id && entry.enabled !== shown))
-                node.entries = entries.map(entry => entry.id === row.id ? Object.assign({}, entry, { enabled: shown }) : entry);
-            return;
-        }
-
-        const entries = root.entriesOf(node);
-        const existing = entries.find(entry => entry.id === row.id) ?? null;
-
-        if (row.kind === "trayItem") {
-            // A tray app is shown by its own state, which is the list the tray draws. A
-            // row that said it was off goes, so the state decides again.
-            if (shown) {
-                root.clearRow(node, row.id);
-                TrayRegistry.sendToBar(row.key);
-                return;
-            }
-            // Off is a row that says so, and that is what keeps the app out of the bar
-            // and the box alike.
-            TrayRegistry.setState(row.key, "hidden");
-        }
-
-        // The row keeps a place the icon already holds, so switching one off and on does
-        // not move it away from where the user put it.
-        const zone = existing?.zone ?? "right";
-        const placed = {
-            id: row.id,
-            enabled: shown,
-            zone: zone
-        };
-
-        if (existing) {
-            node.entries = entries.map(entry => entry.id === row.id ? placed : entry);
-            return;
-        }
-
-        const next = entries.slice();
-        next.splice(root.indexFor(entries, row.id), 0, placed);
-        node.entries = next;
-    }
-
-    // Where a dragged widget lands: in the place of the widget it was dropped on. The
-    // order of the bar is the order of `entries`, so anything that only exists in a group
-    // — a status icon, a tray icon — gets a row of its own first; that is what lets them
-    // trade places with the rest instead of each kind only moving among its own.
-    function moveBefore(node: var, id: string, beforeId: string): void {
-        root.placeBefore(node, id, beforeId, null);
-    }
-
-    // The rows with one moved in front of another, written once. `place`, when it is
-    // given, is what the moving row says afterwards: a widget dropped on the bar is
-    // shown there whatever it said before. One write is what a drop should cost, because
-    // every write makes the bar draw all of its widgets again.
-    function placeBefore(node: var, id: string, beforeId: string, place: var): void {
-        const before = beforeId ?? "";
-        if (id === before)
-            return;
-
-        // Built up in memory, so the row a group only implies is already there when the
-        // move is worked out.
-        let rows = root.rowsWith(node, id);
-        if (before.length > 0)
-            rows = root.rowsWith({ entries: rows }, before);
-
-        const at = rows.findIndex(entry => entry.id === id);
-        if (at < 0)
-            return;
-
-        const moving = place ? Object.assign({}, rows[at], place) : rows[at];
-        const rest = rows.slice();
-        rest.splice(at, 1);
-        if (before.length === 0) {
-            rest.splice(at, 0, moving);
-        } else {
-            const target = rest.findIndex(entry => entry.id === before);
-            rest.splice(target < 0 ? rest.length : target, 0, moving);
-        }
-
-        // A drop that leaves every row where it already is writes nothing.
-        const current = root.entriesOf(node);
-        const unchanged = current.length === rest.length && rest.every((entry, index) => entry.id === current[index].id && entry.enabled === current[index].enabled && entry.zone === current[index].zone);
-        if (unchanged)
-            return;
-
-        node.entries = rest;
-    }
-
-    // The entries with a row for `id` in them. An icon is declared by the icons list and
-    // a tray icon by the tray, so neither has a row of its own until one is needed.
-    function rowsWith(node: var, id: string): var {
-        const entries = root.entriesOf(node);
-        if (entries.some(entry => entry.id === id))
-            return entries;
-
-        const next = entries.slice();
-        if (root.statusIconId(id).length > 0) {
-            const anchorAt = next.findIndex(entry => entry.id === "statusIcons");
-            next.splice(anchorAt < 0 ? next.length : anchorAt, 0, {
-                id: id,
-                enabled: true,
-                zone: anchorAt >= 0 ? (next[anchorAt].zone ?? "right") : (root.widget(id)?.zone ?? "right")
-            });
-            return next;
-        }
-
-        const trayAt = TrayRegistry.keyOfRow(id).length > 0 ? next.findIndex(entry => entry.id === "tray") : -1;
-        next.splice(trayAt < 0 ? next.length : trayAt, 0, {
-            id: id,
-            enabled: true,
-            zone: root.widget(id)?.zone ?? "right"
-        });
-        return next;
-    }
-
-    function resetToDefaults(node: var): void {
-        node.resetOption("entries");
-    }
-
-    function indexFor(entries: var, id: string): int {
-        const target = root.widget(id);
-        if (target === null)
-            return entries.length;
-
-        for (let i = entries.length - 1; i >= 0; i--) {
-            const other = root.widget(entries[i].id);
-            if (other !== null && other.index < target.index)
-                return i + 1;
-        }
-        return 0;
     }
 }

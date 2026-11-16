@@ -144,7 +144,7 @@ CustomMouseArea {
         const menuOpen = Visibilities.contextPopoutOpen;
         // A pinned hidden-icons box is dismissed by clicking away from it, the way a
         // menu is: the click belongs to the dismiss, not to what is under it.
-        const boxOpen = popouts.trayPinned && popouts.hasCurrent;
+        const boxOpen = popouts.staysOpen && popouts.hasCurrent;
 
         if (grabActive || menuOpen || boxOpen) {
             let inside = false;
@@ -389,7 +389,7 @@ CustomMouseArea {
             if (popouts.isContextPopout || panels.popoutsWrapper.hovered)
                 return;
             // A box the user opened is theirs to dismiss, not the pointer's.
-            if (popouts.trayPinned)
+            if (popouts.staysOpen)
                 return;
             // A drag out of the bar opens the box under the pointer, which is
             // outside every panel until the pointer reaches it: taking the panel

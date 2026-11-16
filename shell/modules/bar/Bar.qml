@@ -85,7 +85,7 @@ Item {
         if (popouts.currentName !== "trayOverflow")
             return;
         // A box the user opened stays until they dismiss it.
-        if (popouts.trayPinned)
+        if (popouts.staysOpen)
             return;
         popouts.hasCurrent = false;
     }
@@ -112,7 +112,7 @@ Item {
 
         // A box the user opened is theirs to dismiss: hovering the bar must not swap
         // it for another panel or take it away.
-        if (popouts.trayPinned && popouts.hasCurrent)
+        if (popouts.staysOpen && popouts.hasCurrent)
             return;
 
         // Dragging a widget between the tray and its overflow panel must not let
@@ -120,7 +120,7 @@ Item {
         if (TrayDrag.active)
             return;
 
-        const ch = getLoaderAt(isHorizontal ? pos : width / 2, isHorizontal ? height / 2 : pos) as WrappedLoader;
+        const ch = getLoaderAt(isHorizontal ? pos : width / 2, isHorizontal ? height / 2 : pos);
 
         currentHoveredItem = ch ? ch.item : null;
 
@@ -260,7 +260,7 @@ Item {
     }
 
     function handleWheel(pos: real, angleDelta: point): void {
-        const ch = getLoaderAt(isHorizontal ? pos : width / 2, isHorizontal ? height / 2 : pos) as WrappedLoader;
+        const ch = getLoaderAt(isHorizontal ? pos : width / 2, isHorizontal ? height / 2 : pos);
 
         if (ch?.id === "dock") {
             if (ch.item && typeof ch.item.handleWheel === "function") {
@@ -327,40 +327,11 @@ Item {
 
     clip: true
 
-    // The hidden-icons box draws the widgets it holds with the same delegate the bar uses,
-    // so they are live there rather than a stale copy of an icon. The chooser picks on an
-    // entry's `kind`, and a loader hands it no entry at all, so the box is given a host
-    // that puts the entry through a one-row model first.
-    // A binding rather than an assignment: the box may be built before the bar is.
-    Binding {
-        target: root.popouts
-        property: "trayWidgetDelegate"
-        value: boxedEntryComponent
-    }
-
-    Component {
-        id: boxedEntryComponent
-
-        BoxedEntry {}
-    }
-
     Timer {
         id: closeTrayTimer
 
         interval: 400
         onTriggered: root.closeTray()
-    }
-
-    Connections {
-        // The box goes when a window takes the focus: that is the click that landed
-        // somewhere else. Opening the box leaves no window focused, so an empty one is
-        // not a dismissal.
-        function onActiveWindowChanged(): void {
-            if (popouts.trayPinned && Kwin.activeWindow?.class)
-                popouts.hasCurrent = false;
-        }
-
-        target: Kwin
     }
 
     GridLayout {
@@ -463,326 +434,11 @@ Item {
         anchors.horizontalCenter: !root.isHorizontal ? parent.horizontalCenter : undefined
     }
 
-    DelegateChooser {
+    // Every entry of the bar is drawn by one chooser, which the tray's box shares so
+    // the widgets it holds stay live rather than becoming a copy of an icon.
+    BarWidgetDelegate {
         id: barDelegate
 
-        // The chooser picks on `kind`, which is the widget id for everything the
-        // registry declares and its own name for entries that stand for one item
-        // of a group, like a single status icon.
-        role: "kind"
-
-            DelegateChoice {
-                roleValue: "logo"
-                delegate: WrappedLoader {
-                    sourceComponent: OsIcon {
-                        bar: root
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "workspaces"
-                delegate: WrappedLoader {
-                    sourceComponent: Workspaces {
-                        bar: root
-                        screen: root.screen
-                        fullscreen: root.fullscreen
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "dock"
-                delegate: WrappedLoader {
-                    sourceComponent: Dock {
-                        bar: root
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "greeter"
-                delegate: WrappedLoader {
-                    sourceComponent: Greeter {
-                        bar: root
-                        monitor: Brightness.getMonitorForScreen(root.screen)
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "tray"
-                delegate: WrappedLoader {
-                    id: trayLoader
-
-                    sourceComponent: Tray {
-                        popouts: root.popouts
-                        showTrayIcons: trayLoader.systemTray ? root.systemTrayShowsIcons : true
-                        widgetEntries: trayLoader.systemTray ? root.systemTrayEntries : []
-                        widgetDelegate: trayLoader.systemTray ? barDelegate : null
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "clock"
-                delegate: WrappedLoader {
-                    sourceComponent: Clock {
-                        bar: root
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "trayItem"
-                delegate: WrappedLoader {
-                    id: trayItemLoader
-
-                    readonly property string trayKey: TrayRegistry.keyOfRow(trayItemLoader.id)
-
-                    sourceComponent: TrayItem {
-                        modelData: TrayRegistry.itemOf(trayItemLoader.trayKey)
-                        popouts: root.popouts
-                        isHorizontal: root.isHorizontal
-                        draggable: true
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "statusIcon"
-                delegate: WrappedLoader {
-                    id: statusLoader
-
-                    sourceComponent: StatusIcon {
-                        entryId: statusLoader.widgetId
-                        popouts: root.popouts
-                        bar: root
-                        draggable: statusLoader.draggable
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "kbLayoutIndicator"
-                delegate: WrappedLoader {
-                    visible: enabled && (Kwin.kbLayout || "").length > 0
-                    sourceComponent: KbLayoutIndicator {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "notificationsIndicator"
-                delegate: WrappedLoader {
-                    sourceComponent: NotificationsIndicator {}
-                }
-            }
-            DelegateChoice {
-                roleValue: "updateIndicator"
-                delegate: WrappedLoader {
-                    visible: enabled && GlobalConfig.general.checkUpdates
-                    sourceComponent: UpdateIndicator {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "perfCpu"
-                delegate: WrappedLoader {
-                    visible: enabled && Cpu.name.length > 0
-                    sourceComponent: PerfCpu {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "perfMemory"
-                delegate: WrappedLoader {
-                    visible: enabled && Memory.total > 1
-                    sourceComponent: PerfMemory {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "perfStorage"
-                delegate: WrappedLoader {
-                    visible: enabled && Storage.disks.length > 0
-                    sourceComponent: PerfStorage {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "perfNetwork"
-                delegate: WrappedLoader {
-                    sourceComponent: PerfNetwork {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "perfGpu"
-                delegate: WrappedLoader {
-                    visible: enabled && Gpu.type !== Gpu.None
-                    sourceComponent: PerfGpu {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "perfBattery"
-                delegate: WrappedLoader {
-                    visible: enabled && UPower.displayDevice.isLaptopBattery
-                    sourceComponent: PerfBattery {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "github"
-                delegate: WrappedLoader {
-                    visible: enabled && GithubStore.available
-                    sourceComponent: GithubActivity {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "media"
-                delegate: WrappedLoader {
-                    sourceComponent: Media {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "notes"
-                delegate: WrappedLoader {
-                    sourceComponent: Notes {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "weather"
-                delegate: WrappedLoader {
-                    sourceComponent: WeatherWidget {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "performance"
-                delegate: WrappedLoader {
-                    sourceComponent: PerformanceWidget {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "shortcuts"
-                delegate: WrappedLoader {
-                    sourceComponent: ShortcutsWidget {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "screencapture"
-                delegate: WrappedLoader {
-                    sourceComponent: ScreenCaptureWidget {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "keepawake"
-                delegate: WrappedLoader {
-                    sourceComponent: KeepAwakeWidget {
-                        popouts: root.popouts
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "power"
-                delegate: WrappedLoader {
-                    sourceComponent: Power {
-                        visibilities: root.visibilities
-                    }
-                }
-            }
-            // Fallback for plugin-provided widgets: DelegateChooser needs a
-            // static choice per id, so unknown ids resolve their component at
-            // runtime from the plugin registry.
-            DelegateChoice {
-                delegate: WrappedLoader {
-                    source: BarWidgetRegistry.widget(id)?.componentUrl ?? ""
-
-                    onItemChanged: root.applyWidgetContext(item)
-                }
-            }
-        }
-
-    component WrappedLoader: Loader {
-        id: wrapper
-
-        required enabled
-        required property string id
-        required property int index
-
-        // Filled from the entry the registry hands the view. `systemTray` marks
-        // the synthetic tray container, and `zone` tells a widget whether it is
-        // being drawn inside it.
-        required property bool systemTray
-        required property string zone
-
-        // Anything the tray draws can be dragged into its hidden-icons box, and
-        // anything in the box can be dragged back. The widget itself is untouched:
-        // the gesture is recognised over it, so a click still reaches the widget.
-        required property bool draggable
-        required property string kind
-        readonly property string widgetId: id
-        readonly property bool dragging: trayDrag.active
-
-        asynchronous: false
-        Layout.alignment: root.isHorizontal ? Qt.AlignVCenter : Qt.AlignHCenter
-        Layout.preferredWidth: implicitWidth
-        Layout.preferredHeight: implicitHeight
-        Layout.maximumWidth: implicitWidth
-        Layout.maximumHeight: implicitHeight
-        Layout.minimumWidth: implicitWidth
-        Layout.minimumHeight: implicitHeight
-
-        // Fading only once the ghost exists keeps the snapshot clean and means the
-        // widget never disappears before there is something under the pointer.
-        opacity: wrapper.dragging && TrayDrag.ghost !== null ? 0.35 : 1
-
-        visible: enabled
-        active: enabled
-
-        TrayDragGesture {
-            id: trayDrag
-
-            widgetId: wrapper.widgetId
-            // Widgets drawn as a bar icon lift themselves, so the wrapper that draws
-            // them stays out of the way; the rest are lifted whole.
-            enabled: wrapper.draggable && !BarWidgets.dragsItself(wrapper.kind)
-        }
-    }
-
-    // The box hands the bar's delegate one entry at a time: the chooser picks on `kind`,
-    // which only a model provides, so the entry goes through a one-row model here.
-    component BoxedEntry: Item {
-        id: host
-
-        property var entry: null
-
-        // The chooser's item, which the repeater parents here rather than to itself, so
-        // the host takes the size of the icon that came back.
-        readonly property var child: inner.count > 0 ? inner.itemAt(0) : null
-
-        implicitWidth: host.child ? host.child.implicitWidth : 0
-        implicitHeight: host.child ? host.child.implicitHeight : 0
-
-        Repeater {
-            id: inner
-
-            model: host.entry ? [host.entry] : []
-            delegate: barDelegate
-        }
+        bar: root
     }
 }

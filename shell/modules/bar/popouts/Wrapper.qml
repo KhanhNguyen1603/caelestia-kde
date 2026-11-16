@@ -36,14 +36,11 @@ Item {
     readonly property bool isDockPopout: currentName === "dockhover" || currentName === "greeter" || currentName === "activewindow" || currentName === "github" || currentIsContext
     property alias currentName: popoutState.currentName
     property alias hasCurrent: popoutState.hasCurrent
-    // Whether the hidden-icons box was pinned open, so the bar and the overlay agree
-    // that it is not to be closed by the pointer moving away.
-    property alias trayPinned: popoutState.trayPinned
+    // Whether the current popout was opened to be picked from, so the bar and the overlay
+    // agree that it is not to be closed by the pointer moving away.
+    property alias staysOpen: popoutState.staysOpen
     property alias dockModel: popoutState.dockModel
     property alias tasksModel: popoutState.tasksModel
-    // The bar hands its widget delegate to the hidden-icons box, so the widgets a
-    // user drags out of the tray stay live there instead of becoming a picture.
-    property alias trayWidgetDelegate: popoutState.trayWidgetDelegate
     property real currentCenter
     // Set by ClipWrapper: whether the current bar item sits under the sidebar,
     // which can be narrower than the bar's right side now that it is resizable.
