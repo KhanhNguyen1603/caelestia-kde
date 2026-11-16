@@ -474,16 +474,21 @@ test_the_box_is_the_size_its_cells_are() {
     assert_file_contains "$TRAY_OVERFLOW" 'readonly property real gap: Tokens.spacing.small * root.scaleOffset' \
         "the cells are spaced to be read apart from each other"
     assert_file_contains "$TRAY_OVERFLOW" 'readonly property real popoutMargin: Tokens.padding.small' \
-        "its frame is only the room the glyphs need, now that it draws no plate"
+        "its frame is only the room the glyphs need"
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property bool popoutOwnSurface: true' \
+        "it says it draws its own surface, so the drawer puts nothing behind it"
+    assert_file_contains "$TRAY_OVERFLOW" 'color: Qt.alpha(Colours.palette.m3surfaceContainer, 0.92)' \
+        "and draws it from the opaque palette, since the transparent one barely shows over the desktop"
     local content_window="$REPO_ROOT/shell/modules/drawers/ContentWindow.qml"
-    assert_file_contains "$content_window" 'readonly property bool boxOpen: panels.popouts.hasCurrent && panels.popouts.currentName === "trayOverflow"' \
+    assert_file_contains "$content_window" 'readonly property bool ownsSurface: panels.popouts.currentOwnsSurface' \
         "the box is the one popout that opens without a panel behind it"
-    assert_file_contains "$content_window" 'visible: panel.visible && !popoutBg.boxOpen' \
+    assert_file_contains "$content_window" 'visible: panel.visible && !popoutBg.ownsSurface' \
         "so the shared popout plate stays down for it"
-    assert_file_contains "$TRAY_OVERFLOW" 'color: Colours.tPalette.m3surfaceContainer' \
-        "and the box carries its own wash, the one the tray's pill is drawn in"
-    assert_file_contains "$TRAY_OVERFLOW" 'anchors.margins: -root.popoutMargin' \
-        "reaching past the grid by its frame, so the panel and the glyphs are one shape"
+    assert_file_contains "$content_window" 'target: popoutBg.ownsSurface ? null : panels.popoutsWrapper' \
+        "and nothing is blurred where that plate would have been, which showed as the box split across its middle"
+    local wrapper="$REPO_ROOT/shell/modules/bar/popouts/Wrapper.qml"
+    assert_file_contains "$wrapper" 'readonly property bool currentOwnsSurface: (content.item as Content)?.currentOwnsSurface ?? false' \
+        "a popout's own answer about its surface reaches the drawer"
     assert_file_contains "$TRAY_OVERFLOW" 'anchors.centerIn: parent
                     visible: !widgetCell.isIcon' \
         "a widget in a cell is centred in it"

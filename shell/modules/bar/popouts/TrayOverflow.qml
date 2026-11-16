@@ -24,6 +24,9 @@ Item {
     // as one panel whether it hangs over the bar or past it. Its frame is only the room
     // the glyphs need to not sit under the pointer's edge.
     readonly property real popoutMargin: Tokens.padding.small
+    // It draws that surface itself, so the drawer puts nothing behind it: a plate or a
+    // blur of its own would only show at the edges, offset from the panel they back.
+    readonly property bool popoutOwnSurface: true
 
     readonly property var items: TrayRegistry.overflowItems
     // Every widget the box holds, in the order the bar gives them: status icons and the
@@ -138,14 +141,14 @@ Item {
         }
     }
 
-    // The surface reaches past the grid by the frame, so the panel and the glyphs are one
-    // shape instead of a wash that stops short of its own edge.
+    // The box draws its own panel, so the glyphs sit on one surface instead of the bar's
+    // colour above and the desktop below. It is mixed from the opaque palette: it hangs
+    // over the desktop, where the transparent one would barely show.
     StyledRect {
         anchors.fill: parent
-        anchors.margins: -root.popoutMargin
         z: -1
         radius: Tokens.rounding.large * root.scaleOffset
-        color: Colours.tPalette.m3surfaceContainer
+        color: Qt.alpha(Colours.palette.m3surfaceContainer, 0.92)
     }
 
     Grid {

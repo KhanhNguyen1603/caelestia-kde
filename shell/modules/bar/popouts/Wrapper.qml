@@ -27,6 +27,8 @@ Item {
     // Right-click menus are transient. The type is keyed on currentName so it
     // survives the close animation; isContextPopout also requires one to be open.
     readonly property bool currentIsContext: (content.item as Content)?.currentIsContext ?? false
+    // A popout that draws its own surface asks the drawer for nothing behind it.
+    readonly property bool currentOwnsSurface: (content.item as Content)?.currentOwnsSurface ?? false
     readonly property bool isContextPopout: hasCurrent && currentIsContext
     // Popouts excluded from pushing the notification column / sidebar out of the
     // way (Panels.qml) and from visually merging with the sidebar (ContentWindow.qml):

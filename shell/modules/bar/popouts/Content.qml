@@ -20,6 +20,9 @@ Item {
     readonly property Popout currentPopout: content.children.find(c => c.shouldBeActive) ?? null
     readonly property Item current: currentPopout?.item ?? null
     readonly property bool currentIsContext: currentPopout?.isContext ?? false
+    // A popout that draws its own surface asks the drawer for nothing behind it: the
+    // plate and the blur a panel would have been given would only show around its edges.
+    readonly property bool currentOwnsSurface: currentPopout?.item?.popoutOwnSurface ?? false
 
     // A popout can ask for a tighter frame than the default: the hidden-icons box is
     // a grid of glyphs, and needs less room around it than a panel of text does.

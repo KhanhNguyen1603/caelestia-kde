@@ -519,13 +519,13 @@ StyledWindow {
         PanelBg {
             id: popoutBg
 
-            // The tray's box is a few glyphs sitting on the bar's own surface already, so a
-            // plate under them is a second panel saying nothing: it opens with no plate.
-            readonly property bool boxOpen: panels.popouts.hasCurrent && panels.popouts.currentName === "trayOverflow"
+            // The tray's box brings its own surface, so a plate under it is a second
+            // panel saying nothing.
+            readonly property bool ownsSurface: panels.popouts.currentOwnsSurface
             property real extraShift: panels.popouts.isDetached ? 0 : 0.2
             property bool connectedToSidebar: (bar.position === "top" || bar.position === "bottom") && panels.popouts.sidebarOpen && panels.popouts.implicitWidth <= Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) + 1 && !panels.popouts.isDockPopout
 
-            visible: panel.visible && !popoutBg.boxOpen
+            visible: panel.visible && !popoutBg.ownsSurface
 
             panel: panels.popoutsWrapper
             deformAmount: connectedToSidebar ? 0.03 : (panels.popouts.isDetached ? 0.05 : panels.popouts.hasCurrent ? 0.15 : 0.1)
@@ -994,7 +994,10 @@ StyledWindow {
             deformMatrix: dashBg.deformMatrix
         }
         BlurMask {
-            target: panels.popoutsWrapper
+            // Nothing is blurred behind the box: it is drawn on a surface of its own, and
+            // a blur cut to the plate it does not have covers it only in part, which reads
+            // as the box being split across its middle.
+            target: popoutBg.ownsSurface ? null : panels.popoutsWrapper
             contentItem: root.contentItem
             blurOffsetTop: root.blurOffsetTop - (popoutBg.connectedToSidebar ? Tokens.spacing.extraLarge + 10 + Tokens.rounding.extraLarge : 0)
             blurOffsetBottom: root.blurOffsetBottom
