@@ -1,79 +1,35 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Layouts
 import Caelestia.Config
 import Caelestia.Services
 import qs.components
 import qs.components.controls
 import qs.services
-import qs.modules.bar.popouts as BarPopouts
 
-StyledRect {
+// Keep awake: one icon of the bar's own kind, so it lifts like the status icons do
+// instead of being a widget that only looks like one.
+BarIcon {
     id: root
 
-    required property var popouts
+    readonly property bool awake: IdleInhibitor.enabled
 
-    property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
+    entryId: "keepawake"
+    draggable: true
+    tooltip: qsTr("Keep awake")
 
-    implicitWidth: isHorizontal ? Tokens.sizes.bar.innerWidth : Tokens.sizes.bar.innerWidth
-    implicitHeight: isHorizontal ? Tokens.sizes.bar.innerWidth : Tokens.sizes.bar.innerWidth
+    visible: enabled && (!Config.bar.keepawake.autoHide || root.awake)
 
-    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, 0)
-    radius: Tokens.rounding.full
-
-    visible: enabled && (!Config.bar.keepawake.autoHide || IdleInhibitor.enabled)
-
-    MouseArea {
-        id: clickArea
-
-        anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        hoverEnabled: true
-
-        onClicked: {
-            if (mouse.button === Qt.LeftButton) {
-                IdleInhibitor.setEnabled(!IdleInhibitor.enabled);
-            } else if (mouse.button === Qt.RightButton) {
-                root.popouts.currentName = "keepawakecontext";
-                root.popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
-                root.popouts.hasCurrent = true;
-            }
-            mouse.accepted = true;
+    glyphComponent: Component {
+        MaterialIcon {
+            // Filled while it is on: the tint difference alone is too slight to read
+            // across a bar.
+            text: "coffee"
+            fill: root.awake ? 1 : 0
+            color: root.awake ? Colours.palette.m3primary : Colours.palette.m3secondary
         }
     }
 
-    Item {
-        id: content
-
-        anchors.centerIn: parent
-
-        width: root.isHorizontal ? Tokens.sizes.bar.innerWidth : Tokens.sizes.bar.innerWidth
-        height: root.isHorizontal ? Tokens.sizes.bar.innerWidth : Tokens.sizes.bar.innerWidth
-
-        StyledRect {
-            id: button
-
-            anchors.centerIn: parent
-
-            implicitWidth: isHorizontal ? Tokens.sizes.bar.innerWidth : implicitHeight
-            implicitHeight: isHorizontal ? Tokens.sizes.bar.innerWidth : implicitHeight
-
-            // No plate behind the glyph: a bar icon is its glyph, and being on is
-            // carried by its colour like every other indicator's state is.
-            color: "transparent"
-
-            MaterialIcon {
-                id: icon
-
-                anchors.centerIn: parent
-                text: "coffee"
-                // Filled while it is on: the tint difference alone is too slight to
-                // read across a bar.
-                fill: IdleInhibitor.enabled ? 1 : 0
-                color: IdleInhibitor.enabled ? Colours.palette.m3primary : Colours.palette.m3secondary
-                fontStyle: Tokens.font.icon.builders.medium.build()
-            }
-        }
-    }
+    onActivated: IdleInhibitor.setEnabled(!IdleInhibitor.enabled)
+    onContextMenuRequested: root.openPopout("keepawakecontext")
 }

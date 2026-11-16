@@ -107,7 +107,7 @@ QtObject {
         }
     }
 
-    function statusIconEntries(node: var): var {
+    function statusIconEntries(node: var, placed: var): var {
         const raw = root.entriesOf(node);
         const overrides = {};
         for (const entry of raw) {
@@ -120,6 +120,8 @@ QtObject {
         const entries = [];
         for (const icon of Config.bar.statusIcons.values ?? []) {
             if (!icon.enabled || !root.statusIconActive(icon.id))
+                continue;
+            if (placed && placed[icon.id])
                 continue;
             const override = overrides[icon.id];
             entries.push({
@@ -134,28 +136,50 @@ QtObject {
         return entries;
     }
 
-    // What the bar draws: the configured entries with the status-icons group
-    // expanded into the icons it holds. Only the readers expand; the writers below
-    // stay on `entriesOf`, so writing a zone back never turns the expansion into
-    // config.
+    // What the bar draws: the configured entries with the status-icons group expanded
+    // into the icons it holds. Only the readers expand; the writers below stay on
+    // `entriesOf`, so writing a zone back never turns the expansion into config.
     function viewEntries(node: var): var {
         const raw = root.entriesOf(node);
-        const entries = [];
-        let expanded = false;
+        const icons = Config.bar.statusIcons.values ?? [];
+        // An icon with a row of its own is drawn where that row sits, not with the rest
+        // of the group, so a drag can put it anywhere in the bar.
+        const ownRows = {};
         for (const entry of raw) {
-            if (root.statusIconId(entry.id).length > 0)
+            const iconId = root.statusIconId(entry.id);
+            if (iconId.length > 0)
+                ownRows[iconId] = true;
+        }
+
+        let anchored = false;
+        const entries = [];
+        for (const entry of raw) {
+            const iconId = root.statusIconId(entry.id);
+            if (iconId.length > 0) {
+                const icon = icons.find(icon => icon.id === iconId);
+                if (icon && icon.enabled && root.statusIconActive(iconId)) {
+                    entries.push({
+                        id: entry.id,
+                        kind: "statusIcon",
+                        enabled: entry.enabled !== false,
+                        zone: entry.zone ?? "right",
+                        systemTray: false,
+                        draggable: true
+                    });
+                }
                 continue;
+            }
             if (entry.id === "statusIcons") {
-                entries.push(...root.statusIconEntries(node));
-                expanded = true;
+                entries.push(...root.statusIconEntries(node, ownRows));
+                anchored = true;
                 continue;
             }
             entries.push(entry);
         }
         // An icon row outlives the group row it was dragged out of, so icons sent
-        // to the box keep belonging to the box even without their anchor.
-        if (!expanded && raw.some(entry => root.statusIconId(entry.id).length > 0))
-            entries.push(...root.statusIconEntries(node));
+        // somewhere keep belonging there even without their anchor.
+        if (!anchored && raw.some(entry => root.statusIconId(entry.id).length > 0))
+            entries.push(...root.statusIconEntries(node, ownRows));
         return entries;
     }
 
@@ -179,6 +203,12 @@ QtObject {
 
     function isKnown(id: string): bool {
         return root.widget(id) !== null;
+    }
+
+    // Widgets the bar draws as one of its icons carry their own drag, so the wrapper
+    // around them must not add a second gesture.
+    function dragsItself(kind: string): bool {
+        return kind === "statusIcon" || kind === "keepawake" || kind === "updateIndicator";
     }
 
     function entriesOf(node: var): var {
@@ -299,9 +329,25 @@ QtObject {
         node.entries = next;
     }
 
+    // Moving something to the zone it belongs in is the same as not saying anything, so
+    // the row goes: the place it holds in the bar is the configured one again, and a
+    // drag is the only thing that writes a place down.
+    // Moving something to the zone it belongs in is the same as not saying anything, so
+    // the row goes: the place it holds in the bar is the configured one again, and a
+    // drag is the only thing that writes a place down.
     function setZone(node: var, id: string, zone: string): void {
         const entries = root.entriesOf(node);
         const fallback = root.widget(id)?.zone ?? "left";
+
+        // A status icon is placed by the icons list unless a row says otherwise, so
+        // sending one back to the bar removes the row and its configured place returns.
+        if (root.statusIconId(id).length > 0 && zone === fallback) {
+            const rest = entries.filter(entry => entry.id !== id);
+            if (rest.length !== entries.length)
+                node.entries = rest;
+            return;
+        }
+
         const next = [];
         let found = false;
 
@@ -338,41 +384,53 @@ QtObject {
     }
 
     // Where a dragged widget lands: in the place of the widget it was dropped on. The
-    // entry keeps its zone and enabled flag, so this is a move and not a re-add; a
-    // widget the list does not hold yet is inserted rather than ignored. Status icons
-    // are drawn in the order of the icons list, so two of them move there instead.
+    // order of the bar is the order of `entries`, so a status icon that only exists in
+    // the icons list gets a row of its own first — that is what lets an icon and any
+    // other widget trade places instead of each kind only moving among its own.
     function moveBefore(node: var, id: string, beforeId: string): void {
         if (id === beforeId)
             return;
 
-        const iconId = root.statusIconId(id);
-        const beforeIconId = root.statusIconId(beforeId);
-        if (iconId.length > 0 && beforeIconId.length > 0) {
-            root.moveStatusIconBefore(iconId, beforeIconId);
-            return;
-        }
+        root.ensureRow(node, id);
+        root.ensureRow(node, beforeId);
 
         const entries = root.entriesOf(node);
-        const moving = entries.find(entry => entry.id === id) ?? {
-            id: id,
-            enabled: true,
-            zone: root.widget(id)?.zone ?? "right"
-        };
-        const rest = entries.filter(entry => entry.id !== id);
-        const at = rest.findIndex(entry => entry.id === beforeId);
-        rest.splice(at < 0 ? rest.length : at, 0, moving);
+        const at = entries.findIndex(entry => entry.id === id);
+        if (at < 0)
+            return;
+        const moving = entries[at];
+        const rest = entries.slice();
+        rest.splice(at, 1);
+        const target = rest.findIndex(entry => entry.id === beforeId);
+        rest.splice(target < 0 ? rest.length : target, 0, moving);
         node.entries = rest;
     }
 
-    // The status-icons list is the pill's own order, so a drag between two icons edits
-    // it directly rather than leaving a row in `bar.entries`.
-    function moveStatusIconBefore(iconId: string, beforeIconId: string): void {
-        const icons = Config.bar.statusIcons.values ?? [];
-        const from = icons.findIndex(icon => icon.id === iconId);
-        const to = icons.findIndex(icon => icon.id === beforeIconId);
-        if (from < 0 || to < 0 || from === to)
+    // A status icon is declared by the icons list and drawn where the group's anchor row
+    // is, so it has no row of its own until something is dropped beside it.
+    function ensureRow(node: var, id: string): void {
+        const entries = root.entriesOf(node);
+        if (entries.some(entry => entry.id === id))
             return;
-        GlobalConfig.bar.statusIcons.move(from, from < to ? to - 1 : to);
+
+        const next = entries.slice();
+        if (root.statusIconId(id).length === 0) {
+            next.push({
+                id: id,
+                enabled: true,
+                zone: root.widget(id)?.zone ?? "right"
+            });
+            node.entries = next;
+            return;
+        }
+
+        const anchorAt = next.findIndex(entry => entry.id === "statusIcons");
+        next.splice(anchorAt < 0 ? next.length : anchorAt, 0, {
+            id: id,
+            enabled: true,
+            zone: anchorAt >= 0 ? (next[anchorAt].zone ?? "right") : (root.widget(id)?.zone ?? "right")
+        });
+        node.entries = next;
     }
 
     function resetToDefaults(node: var): void {

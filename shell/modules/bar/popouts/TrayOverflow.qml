@@ -25,12 +25,9 @@ Item {
     readonly property real popoutMargin: Tokens.padding.small
 
     readonly property var items: TrayRegistry.overflowItems
+    // Every widget the box holds, in the order the bar gives them: status icons and the
+    // rest are one sequence, so a drag can put any of them in any cell.
     readonly property var widgets: BarWidgets.overflowWidgets(GlobalConfig.bar)
-    // A status icon is one glyph, so the box draws it as a cell of its own like the
-    // tray icons. Any other widget is live and may be wider than a glyph, so the bar's
-    // own delegate draws it and the grid centres it in its cell.
-    readonly property var iconWidgets: root.widgets.filter(widget => widget.kind === "statusIcon")
-    readonly property var liveWidgets: root.widgets.filter(widget => widget.kind !== "statusIcon")
 
     // The grid is only as big as the icons in it: as square as it can be, never more
     // than four rows, and a column wider once those are full.
@@ -61,7 +58,8 @@ Item {
     function trayDropAt(window: var, x: real, y: real): bool {
         if (!root.visible || !root.onDragScreen(window))
             return false;
-        const p = root.mapFromItem(null, x, y);
+        const own = TrayDrag.toLocal(root.Window.window, x, y);
+        const p = root.mapFromItem(null, own.x, own.y);
         return p.x >= 0 && p.y >= 0 && p.x <= root.width && p.y <= root.height;
     }
 
@@ -69,6 +67,7 @@ Item {
     // key, a widget with its id. The nearest cell answers when the pointer is between
     // cells, so an icon dropped onto the box always lands somewhere.
     function entryAt(x: real, y: real): var {
+        const own = TrayDrag.toLocal(root.Window.window, x, y);
         let best = null;
         let bestDist = Infinity;
         for (let i = 0; i < grid.children.length; i++) {
@@ -82,8 +81,8 @@ Item {
                 continue;
 
             const origin = child.mapToItem(null, 0, 0);
-            const dx = x - (origin.x + child.width / 2);
-            const dy = y - (origin.y + child.height / 2);
+            const dx = own.x - (origin.x + child.width / 2);
+            const dy = own.y - (origin.y + child.height / 2);
             const dist = dx * dx + dy * dy;
             if (dist < bestDist) {
                 bestDist = dist;
@@ -196,37 +195,40 @@ Item {
             }
         }
 
-        // Status icons are one glyph each, so they are cells like the tray icons are.
+        // Every widget the box holds, in the one order the bar gives them: a status icon
+        // is one glyph and draws as a cell, anything else stays live and is drawn by the
+        // same delegate the bar uses. One row of cells rather than one per kind is what
+        // lets a drag put any of them in any cell.
         Repeater {
             model: ScriptModel {
-                values: root.iconWidgets
+                values: root.widgets
             }
 
             delegate: Item {
-                id: iconCell
+                id: widgetCell
 
                 required property var modelData
-                readonly property string widgetId: iconCell.modelData.id
+
+                readonly property string widgetId: widgetCell.modelData.id
+                readonly property bool isIcon: widgetCell.modelData.kind === "statusIcon"
 
                 implicitWidth: root.cell
                 implicitHeight: root.cell
 
                 BarComponents.StatusIcon {
                     anchors.centerIn: parent
-                    entryId: iconCell.modelData.id
+                    visible: widgetCell.isIcon
+                    entryId: widgetCell.widgetId
                     popouts: root.popouts
                     draggable: true
                 }
+
+                Loader {
+                    anchors.centerIn: parent
+                    active: !widgetCell.isIcon
+                    sourceComponent: root.popouts ? root.popouts.trayWidgetDelegate : null
+                }
             }
-        }
-
-        // Any other widget stays live, drawn by the same delegate the bar uses. A
-        // plain array, not a ScriptModel: the delegate picks its component from the
-        // entry's `kind` role, which only the array model exposes.
-        Repeater {
-            model: root.liveWidgets
-
-            delegate: root.popouts.trayWidgetDelegate
         }
 
         // An empty box still opens from the chevron, and a blank panel reads as a

@@ -12,20 +12,30 @@ import qs.services
 import qs.utils
 import qs.modules.bar
 
-// One status icon. Each icon is a bar widget of its own instead of a cell in a
-// shared row, so the bar can drag them one at a time and the hidden-icons box can
-// hold a single one.
-Item {
+// One status icon: the same glyph icon the rest of the tray uses, so it lifts, names
+// itself and opens its menu the way every other icon on the bar does.
+BarIcon {
     id: root
 
-    required property string entryId
-    property var popouts
     property var bar
-    property bool draggable: false
 
     readonly property string iconId: BarWidgets.statusIconId(root.entryId)
+    readonly property color colour: Colours.palette.m3secondary
+    readonly property string popoutName: {
+        switch (root.iconId) {
+        case "lockStatus":
+            return "lockstatus";
+        case "kbLayout":
+            return "kblayout";
+        case "microphone":
+            return "audio";
+        default:
+            return root.iconId;
+        }
+    }
+
     // Hovering says what the icon is; the menu is the right button's job.
-    readonly property string tooltip: {
+    tooltip: {
         switch (root.iconId) {
         case "lockStatus":
             return qsTr("Lock keys");
@@ -55,149 +65,54 @@ Item {
             return root.iconId;
         }
     }
-    readonly property string popoutName: {
+
+    onActivated: {
+        if (root.iconId === "notifications") {
+            // Hovering the bell may have opened the small notification popout already;
+            // leaving it open on top of the sidebar makes both panels jitter.
+            if (root.popouts)
+                root.popouts.hasCurrent = false;
+
+            const vis = root.bar?.visibilities ?? Visibilities.getForActive();
+            vis.sidebar = !vis.sidebar;
+            return;
+        }
+
+        // Hover popouts are a convenience, not the only way in: a click opens the same
+        // popout when they are disabled.
+        root.openPopout(root.popoutName);
+    }
+
+    onContextMenuRequested: root.openPopout("statusiconscontext")
+
+    glyphComponent: {
         switch (root.iconId) {
         case "lockStatus":
-            return "lockstatus";
-        case "kbLayout":
-            return "kblayout";
+            return lockstatusComp;
+        case "privacy":
+            return privacyComp;
+        case "audio":
+            return audioComp;
         case "microphone":
-            return "audio";
+            return microphoneComp;
+        case "kbLayout":
+            return kblayoutComp;
+        case "network":
+            return networkComp;
+        case "ethernet":
+            return ethernetComp;
+        case "bluetooth":
+            return bluetoothComp;
+        case "battery":
+            return batteryComp;
+        case "peripheralBattery":
+            return peripheralBatteryComp;
+        case "nightlight":
+            return nightlightComp;
+        case "notifications":
+            return notificationsComp;
         default:
-            return root.iconId;
-        }
-    }
-
-    readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
-    readonly property real rawScale: !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0
-    readonly property real scaleFactor: rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
-    readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * scaleFactor)
-    readonly property color colour: Colours.palette.m3secondary
-    // Each glyph is drawn a little larger than its slot asks for: an icon in the bar
-    // or the box is read at a glance.
-    readonly property real iconScale: 1.2
-    readonly property bool dragging: dragGesture.active
-    readonly property bool hovered: area.containsMouse && !(root.popouts?.hasCurrent ?? false)
-
-    function openPopout(): void {
-        const popouts = root.popouts;
-        if (!popouts)
-            return;
-
-        if (popouts.hasCurrent && popouts.currentName === root.popoutName) {
-            popouts.hasCurrent = false;
-            return;
-        }
-
-        popouts.currentName = root.popoutName;
-        popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.width / 2, 0).x : root.mapToItem(null, 0, root.height / 2).y;
-        popouts.hasCurrent = true;
-    }
-
-    function openContextMenu(): void {
-        const popouts = root.popouts;
-        if (!popouts)
-            return;
-
-        if (popouts.hasCurrent && popouts.currentName === "statusiconscontext") {
-            popouts.hasCurrent = false;
-            return;
-        }
-
-        popouts.currentName = "statusiconscontext";
-        popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.width / 2, 0).x : root.mapToItem(null, 0, root.height / 2).y;
-        popouts.hasCurrent = true;
-    }
-
-    implicitWidth: root.isHorizontal ? Math.round(loader.implicitWidth * root.iconScale) : root.barThickness
-    implicitHeight: root.isHorizontal ? root.barThickness : Math.round(loader.implicitHeight * root.iconScale)
-    // Fading only once the ghost exists keeps the snapshot clean and means the icon
-    // never disappears before there is something under the pointer to replace it.
-    opacity: root.dragging && TrayDrag.ghost !== null ? 0.35 : 1
-
-    Behavior on opacity {
-        Anim {
-            type: Anim.DefaultEffects
-        }
-    }
-
-    // Each icon is lifted on its own, so it carries the gesture instead of leaving
-    // it to the wrapper the bar draws it in.
-    TrayDragGesture {
-        id: dragGesture
-
-        widgetId: root.entryId
-        enabled: root.draggable
-        ghostSource: loader
-    }
-
-    MouseArea {
-        id: area
-
-        anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-
-        onClicked: mouse => {
-            if (mouse.button === Qt.RightButton) {
-                root.openContextMenu();
-                return;
-            }
-
-            if (root.iconId === "notifications") {
-                // Hovering the bell may have opened the small notification popout
-                // already; leaving it open on top of the sidebar makes both panels
-                // jitter.
-                if (root.popouts)
-                    root.popouts.hasCurrent = false;
-
-                const vis = root.bar?.visibilities ?? Visibilities.getForActive();
-                vis.sidebar = !vis.sidebar;
-                return;
-            }
-
-            // Hover popouts are a convenience, not the only way in: a click opens
-            // the same popout when they are disabled.
-            root.openPopout();
-        }
-    }
-
-    Loader {
-        id: loader
-
-        anchors.centerIn: parent
-        scale: root.iconScale
-
-        sourceComponent: {
-            switch (root.iconId) {
-            case "lockStatus":
-                return lockstatusComp;
-            case "privacy":
-                return privacyComp;
-            case "audio":
-                return audioComp;
-            case "microphone":
-                return microphoneComp;
-            case "kbLayout":
-                return kblayoutComp;
-            case "network":
-                return networkComp;
-            case "ethernet":
-                return ethernetComp;
-            case "bluetooth":
-                return bluetoothComp;
-            case "battery":
-                return batteryComp;
-            case "peripheralBattery":
-                return peripheralBatteryComp;
-            case "nightlight":
-                return nightlightComp;
-            case "notifications":
-                return notificationsComp;
-            default:
-                return null;
-            }
+            return null;
         }
     }
 
@@ -498,24 +413,6 @@ Item {
                 return "notifications";
             }
             color: root.colour
-        }
-    }
-
-    Loader {
-        asynchronous: true
-        active: root.tooltip.length > 0
-        z: 10000
-        width: 0
-        height: 0
-
-        sourceComponent: Component {
-            Tooltip {
-                // The window is the whole screen, unlike the bar's clipped strip:
-                // a tooltip placed against it is not cut off by the bar.
-                parent: root.Window.contentItem
-                target: root
-                text: root.tooltip
-            }
         }
     }
 }

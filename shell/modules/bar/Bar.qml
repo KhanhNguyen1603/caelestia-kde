@@ -715,9 +715,9 @@ Item {
             id: trayDrag
 
             widgetId: wrapper.widgetId
-            // A status icon is lifted by the icon itself, so the wrapper that draws
-            // it stays out of the way.
-            enabled: wrapper.draggable && wrapper.kind !== "statusIcon"
+            // Widgets drawn as a bar icon lift themselves, so the wrapper that draws
+            // them stays out of the way; the rest are lifted whole.
+            enabled: wrapper.draggable && !BarWidgets.dragsItself(wrapper.kind)
         }
     }
 }

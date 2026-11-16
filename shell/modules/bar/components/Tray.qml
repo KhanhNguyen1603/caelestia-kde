@@ -51,14 +51,11 @@ Item {
     readonly property real arrowSize: root.showArrow && expandIcon.item ? (root.isHorizontal ? expandIcon.item.implicitWidth : expandIcon.item.implicitHeight) : 0
     readonly property real arrowGap: root.showArrow && expandIcon.item ? root.spacing : 0
 
-    // Hit test for the bar's hover routing: the positioner owns the layout, so it
-    // also owns which icon sits under a bar coordinate. `barItem` is the bar
-    // itself, because the tray may be nested inside the unified right-zone
-    // wrapper and its local coordinates are no longer the bar's.
     // The child of the row nearest the point, among the ones that can take the drop:
     // dropping between two icons still has somewhere to go.
-    function closestChild(repeater: var, barItem: var, x: real, y: real, accept: var): var {
-        const p = layout.mapFromItem(barItem, x, y);
+    function closestChild(repeater: var, x: real, y: real, accept: var): var {
+        const own = root.ownPoint(x, y);
+        const p = layout.mapFromItem(null, own.x, own.y);
         const along = root.isHorizontal ? p.x : p.y;
         let best = null;
         let bestDist = Infinity;
@@ -81,22 +78,17 @@ Item {
         return best;
     }
 
-    // A status icon and any other widget are ordered by different lists, so only a
-    // widget of the same sort can be the one a drag lands on.
-    function sameOrder(child: var, id: string): bool {
-        const childIsIcon = BarWidgets.statusIconId(child.id ?? "").length > 0;
-        const isIcon = BarWidgets.statusIconId(id).length > 0;
-        return childIsIcon === isIcon;
-    }
-
-    // Where the widget a drag carries would land, or null when nothing on the bar can
-    // take it.
+    // Where the widget a drag carries would land, or null when the bar holds nothing
+    // that can take it. Icons and other widgets share one order now, so either can be
+    // the one a drag lands on.
     function dropTarget(kind: string, id: string, x: real, y: real): var {
         if (kind === "icon")
-            return root.closestChild(items, null, x, y);
-        return root.closestChild(widgetItems, null, x, y, child => root.sameOrder(child, id));
+            return root.closestChild(items, x, y);
+        return root.closestChild(widgetItems, x, y);
     }
 
+    // Hit test for the bar's hover routing: the positioner owns the layout, so it also
+    // owns which icon sits under a bar coordinate.
     function widgetAt(barItem: var, x: real, y: real): var {
         const p = layout.mapFromItem(barItem, x, y);
         for (let i = 0; i < widgetItems.count; i++) {
@@ -164,9 +156,10 @@ Item {
     function overChevron(x: real, y: real): bool {
         if (!root.showArrow || !expandIcon.item)
             return false;
+        const own = root.ownPoint(x, y);
         const corner = expandIcon.mapToItem(null, 0, 0);
         const reach = root.spacing;
-        return x >= corner.x - reach && x <= corner.x + root.arrowSize + reach && y >= corner.y - reach && y <= corner.y + root.arrowSize + reach;
+        return own.x >= corner.x - reach && own.x <= corner.x + root.arrowSize + reach && own.y >= corner.y - reach && own.y <= corner.y + root.arrowSize + reach;
     }
 
     // A drag that starts in the box is lifted from the popout's window and released
@@ -183,8 +176,15 @@ Item {
     function trayDropAt(window: var, x: real, y: real): bool {
         if (!root.visible || !root.onDragScreen(window))
             return false;
-        const p = root.mapFromItem(null, x, y);
+        const own = root.ownPoint(x, y);
+        const p = root.mapFromItem(null, own.x, own.y);
         return p.x >= 0 && p.y >= 0 && p.x <= root.width && p.y <= root.height;
+    }
+
+    // A drop arrives in screen coordinates, because the box it may be heading for is a
+    // different window; the tray turns it into one of its own before using it.
+    function ownPoint(x: real, y: real): point {
+        return TrayDrag.toLocal(root.Window.window, x, y);
     }
 
     // Dropping on the chevron is the same move as dropping in the box, and dropping

@@ -16,6 +16,8 @@ Singleton {
     property string kind: ""
     property string key: ""
     property string widgetId: ""
+    // On the screen, not in any one window: the bar, the box and the popouts are
+    // separate surfaces, so a point in one is not a point in the others.
     property point pos: Qt.point(0, 0)
     property var window: null
 
@@ -54,6 +56,20 @@ Singleton {
     function move(position: point): void {
         if (root.active)
             root.pos = position;
+    }
+
+    // A drop is tracked on the screen: the bar, the box and the popouts are separate
+    // surfaces with their own origins, so a point in one is not a point in the others.
+    function toScreen(window: var, x: real, y: real): point {
+        if (!window)
+            return Qt.point(x, y);
+        return Qt.point(window.x + x, window.y + y);
+    }
+
+    function toLocal(window: var, x: real, y: real): point {
+        if (!window)
+            return Qt.point(x, y);
+        return Qt.point(x - window.x, y - window.y);
     }
 
     function finish(): void {

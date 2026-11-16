@@ -13,6 +13,8 @@ UPDATE_INDICATOR="$REPO_ROOT/shell/modules/bar/components/UpdateIndicator.qml"
 TRAY_OVERFLOW="$REPO_ROOT/shell/modules/bar/popouts/TrayOverflow.qml"
 POPOUTS="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
 STATUS_ICON="$REPO_ROOT/shell/modules/bar/components/StatusIcon.qml"
+BAR_ICON="$REPO_ROOT/shell/modules/bar/components/BarIcon.qml"
+KEEP_AWAKE="$REPO_ROOT/shell/modules/bar/components/KeepAwakeWidget.qml"
 GESTURE="$REPO_ROOT/shell/modules/bar/components/TrayDragGesture.qml"
 CONFIG="$REPO_ROOT/shell/plugin/src/Caelestia/Config/barconfig.hpp"
 EDITOR="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarComponents.qml"
@@ -156,12 +158,16 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "a tray icon lifts as an icon"
     assert_file_contains "$BAR" 'readonly property string widgetId: id' \
         "a dragged widget should name the entry a drop hides"
-    assert_file_contains "$STATUS_ICON" 'widgetId: root.entryId' \
-        "a status icon lifts on its own, by the entry it is drawn from"
-    assert_file_contains "$BAR" 'enabled: wrapper.draggable && wrapper.kind !== "statusIcon"' \
+    assert_file_contains "$BAR_ICON" 'widgetId: root.entryId' \
+        "an icon lifts on its own, by the entry it is drawn from"
+    assert_file_contains "$KEEP_AWAKE" 'BarIcon {' \
+        "the coffee cup is the same icon the status icons are"
+    assert_file_contains "$UPDATE_INDICATOR" 'BarIcon {' \
+        "and so is the updates indicator"
+    assert_file_contains "$BAR" 'enabled: wrapper.draggable && !BarWidgets.dragsItself(wrapper.kind)' \
         "the wrapper stays out of the way of an icon that lifts itself"
     assert_file_not_contains "$UPDATE_INDICATOR" 'TrayDrag' \
-        "the update indicator drags through its bar wrapper, not on its own"
+        "the update indicator drags through its own icon, not on its own again"
 }
 
 test_the_toggle_helper_keeps_the_widget_list_well_formed() {
@@ -416,7 +422,7 @@ EOF
 test_the_hidden_icons_box_is_icons_only() {
     assert_file_not_contains "$TRAY_OVERFLOW" "qsTr(" \
         "the box holds tiles, not copy"
-    assert_file_contains "$TRAY_OVERFLOW" 'delegate: root.popouts.trayWidgetDelegate' \
+    assert_file_contains "$TRAY_OVERFLOW" 'sourceComponent: root.popouts ? root.popouts.trayWidgetDelegate : null' \
         "the widgets in the box are the bar's own, so they stay live there"
     assert_file_contains "$TRAY_OVERFLOW" 'readonly property int maxRows: 4' \
         "the box fills at most four rows"
@@ -436,8 +442,8 @@ test_the_hidden_icons_box_is_icons_only() {
         "the bar is what hands that delegate over"
     assert_file_contains "$GESTURE" 'grabPermissions: PointerHandler.CanTakeOverFromAnything' \
         "a drag over a widget takes the gesture without stealing the click under it"
-    assert_file_contains "$GESTURE" 'TrayDrag.move(centroid.scenePosition)' \
-        "and reports where the pointer is so the drop can be resolved"
+    assert_file_contains "$GESTURE" 'TrayDrag.move(root.screenPoint(centroid.scenePosition))' \
+        "and reports where the pointer is on the screen, so the drop can be resolved"
 }
 
 test_the_chevron_sits_outside_the_icons_surface() {
