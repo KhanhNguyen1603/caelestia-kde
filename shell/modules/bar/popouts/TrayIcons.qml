@@ -241,8 +241,8 @@ ColumnLayout {
             onClicked: {
                 root.popouts.hasCurrent = false;
                 WindowFactory.create(null, {
-                    initialPageIdx: PageRegistry.indexForKey("panels"),
-                    initialSubPageIdx: PageDictionary.subPageIdxFor("panels/taskbar/BarTray.qml")
+                    initialPageIdx: "panels",
+                    initialSubPage: "barTray"
                 });
             }
         }

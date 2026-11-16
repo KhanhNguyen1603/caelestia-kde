@@ -14,11 +14,12 @@ BarIcon {
     id: root
 
     readonly property var status: UpdateStatus.describe(null, false)
-    readonly property int updatesPageIdx: PageRegistry.updatesPageIdx
 
     entryId: "updateIndicator"
     draggable: true
     tooltip: root.status.title
+    accessibleName: qsTr("Caelestia updates: %1").arg(root.status.title)
+    accessibleDescription: qsTr("Left-click to open the Updates page. Right-click for the icon's menu, where updates can be checked now")
 
     glyphComponent: Component {
         MaterialIcon {
@@ -27,9 +28,7 @@ BarIcon {
         }
     }
 
-    onActivated: WindowFactory.create(null, {
-        initialPageIdx: root.updatesPageIdx
-    })
+    onActivated: WindowFactory.create(null, { initialPageIdx: "updates", initialSubPage: "updates" })
     // The menu behind the icon: check for updates, open the page, hide the indicator.
     onContextMenuRequested: root.openPopout("updateIndicator")
 }

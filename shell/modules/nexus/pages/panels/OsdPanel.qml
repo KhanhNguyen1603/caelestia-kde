@@ -204,8 +204,16 @@ PageBase {
             text: qsTr("Edge Drawer (Mouse Trigger)")
         }
 
-        StepperRow {
+        ToggleRow {
             first: true
+            text: qsTr("Show on hover")
+            subtext: qsTr("Reveal the edge drawer when the cursor reaches the screen edge")
+            reset: ({ node: GlobalConfig.osd, setting: "showOnHover" })
+            checked: Config.osd.showOnHover
+            onToggled: GlobalConfig.osd.showOnHover = checked
+        }
+
+        StepperRow {
             label: qsTr("Depth")
             subtext: qsTr("Distance from the screen edge to trigger the drawer")
             reset: ({ node: GlobalConfig.osd, setting: "hoverThickness" })
@@ -213,6 +221,8 @@ PageBase {
             from: 1
             to: 100
             stepSize: 1
+            enabled: Config.osd.showOnHover
+            opacity: enabled ? 1 : 0.5
             onMoved: value => GlobalConfig.osd.hoverThickness = value
         }
 
@@ -225,6 +235,8 @@ PageBase {
             from: 10
             to: 100
             stepSize: 5
+            enabled: Config.osd.showOnHover
+            opacity: enabled ? 1 : 0.5
             onMoved: value => GlobalConfig.osd.hoverWidth = value
         }
     }

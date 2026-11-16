@@ -36,12 +36,14 @@ private:
     pw_main_loop* m_loop;
     pw_stream* m_stream;
     spa_source* m_timer;
+    spa_source* m_stopEvent;
     bool m_idle;
 
     std::stop_token m_token;
     AudioCollector* m_collector;
 
     static void handleTimeout(void* data, uint64_t expirations);
+    static void handleStop(void* data, uint64_t count);
     void streamStateChanged(pw_stream_state state);
     void processStream();
 

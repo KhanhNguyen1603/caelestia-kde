@@ -134,6 +134,10 @@ Singleton {
         return space < 0 ? "" : rest.slice(0, space);
     }
     function openLauncher(mode: string): void {
+        // A disabled launcher has nothing to show: opening it anyway would leave
+        // the drawers window grabbing input for a panel that is not there.
+        if (!GlobalConfig.launcher.enabled)
+            return;
         const v = launcherScreen ?? getForActive();
         if (!v)
             return;
@@ -160,7 +164,7 @@ Singleton {
         const v = getForActive();
         return v ? v[drawer] === true : false;
     }
-    function setDrawer(drawer: string, open: boolean): void {
+    function setDrawer(drawer: string, open: bool): void {
         if (drawer === "launcher") {
             if (open)
                 openLauncher("");
@@ -176,7 +180,7 @@ Singleton {
         if (v)
             v[drawer] = open;
     }
-    function setLauncherOwner(visibilities: DrawerVisibilities, open: boolean): void {
+    function setLauncherOwner(visibilities: DrawerVisibilities, open: bool): void {
         if (!open) {
             if (launcherScreen !== visibilities)
                 return;

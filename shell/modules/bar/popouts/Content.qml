@@ -81,9 +81,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Greeter settings")
-                subPageIdx: 8
+                subPage: "barGreeter"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
 
@@ -147,9 +147,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Clock settings")
-                subPageIdx: 11
+                subPage: "barClock"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
 
@@ -159,9 +159,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Launcher settings")
-                subPageIdx: 3
+                subPage: "launcher"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
 
@@ -171,9 +171,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Status icons settings")
-                subPageIdx: 10
+                subPage: "barStatusIcons"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
 
@@ -322,9 +322,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Workspaces settings")
-                subPageIdx: 7
+                subPage: "barWorkspaces"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
 
@@ -351,9 +351,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("GitHub settings")
-                subPageIdx: 13
+                subPage: "barGithub"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
 
@@ -363,9 +363,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Media settings")
-                subPageIdx: 19
+                subPage: "barMedia"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
 
@@ -375,9 +375,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Performance settings")
-                subPageIdx: 21
+                subPage: "barPerformance"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
         Popout {
@@ -386,9 +386,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Weather settings")
-                subPageIdx: 20
+                subPage: "barWeather"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
         Popout {
@@ -397,9 +397,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Screen Capture settings")
-                subPageIdx: 22
+                subPage: "barScreenCapture"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
         Popout {
@@ -408,9 +408,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Keep Awake settings")
-                subPageIdx: 23
+                subPage: "barKeepAwake"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
 
@@ -420,9 +420,9 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Dock settings")
-                subPageIdx: 12
+                subPage: "barDock"
                 secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
+                secondSubPage: "taskbarElements"
             }
         }
 
@@ -432,7 +432,7 @@ Item {
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Elements & Modules")
-                subPageIdx: 15
+                subPage: "taskbarElements"
             }
         }
 

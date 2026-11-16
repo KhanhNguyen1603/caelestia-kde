@@ -20,6 +20,11 @@ Item {
     property var popouts
     property bool draggable: false
     property string tooltip: ""
+    // What a screen reader hears for this icon. The name defaults to the tooltip, which
+    // is what a sighted user reads on hover; the description says what the buttons do
+    // when that is not obvious.
+    property string accessibleName: ""
+    property string accessibleDescription: ""
 
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
@@ -85,6 +90,9 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
+        Accessible.role: Accessible.Button
+        Accessible.name: root.accessibleName.length > 0 ? root.accessibleName : root.tooltip
+        Accessible.description: root.accessibleDescription
 
         onClicked: mouse => {
             if (mouse.button === Qt.RightButton)

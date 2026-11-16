@@ -379,7 +379,7 @@ Item {
         visible: root.isHorizontal && dropMarker.slot !== null
         width: Tokens.padding.extraSmall
         height: Math.round(root.barThickness * 0.6)
-        radius: width / 2
+        radius: Tokens.rounding.full
         color: Colours.palette.m3primary
         // In the gap before the icon, which is where the dragged one would be put: on
         // top of an icon it reads as a highlight rather than a place.
