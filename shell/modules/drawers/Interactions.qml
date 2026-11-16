@@ -46,7 +46,7 @@ CustomMouseArea {
         return false;
     }
     function inDockPanelArea(x: real, y: real): bool {
-        if (!dockPanel)
+        if (!dockPanel || !dockPanel.visible)
             return false;
         if (dockPanel.position === "left")
             return x < dockPanel.x + dockPanel.clampedThickness;
@@ -160,7 +160,7 @@ CustomMouseArea {
         if (grabActive || menuOpen) {
             let inside = false;
 
-            if (inBarArea(event.x, event.y) || inDockArea(event.x, event.y)) inside = true;
+            if (inBarArea(event.x, event.y) || inDockPanelArea(event.x, event.y)) inside = true;
             else if (visibilities.launcher && ((inBottomPanel(panels.launcher, event.x, event.y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, event.x, event.y)) || inLauncherAvatar(event.x, event.y))) inside = true;
             else if (visibilities.session && inRightPanel(panels.sessionWrapper, event.x, event.y)) inside = true;
             else if (visibilities.sidebar && inRightPanel(panels.sidebar, event.x, event.y)) inside = true;
