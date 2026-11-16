@@ -1419,6 +1419,13 @@ QtObject {
             subPage: "dockPanel"
         },
         {
+            label: qsTr("Reveal on mouse hover"),
+            description: qsTr("Show the auto-hidden dock when hovering over the screen edge"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
             label: qsTr("Hover reveal delay"),
             description: qsTr("Milliseconds to wait before revealing the hidden dock on mouse hover"),
             section: qsTr("Dock"),
@@ -1426,8 +1433,22 @@ QtObject {
             subPage: "dockPanel"
         },
         {
+            label: qsTr("Drag threshold"),
+            description: qsTr("Pixels dragged across the edge before the dock reveals or hides"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
             label: qsTr("Reserve screen space"),
             description: qsTr("Prevent maximized windows from covering the dock area (exclusive zone)"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Dock size"),
+            description: qsTr("Height or width dimension of the dock container"),
             section: qsTr("Dock"),
             pageIdx: 2,
             subPage: "dockPanel"

@@ -180,6 +180,16 @@ PageBase {
             onToggled: GlobalConfig.dockPanel.dodgeFocusedOnly = checked
         }
 
+        ToggleRow {
+            text: qsTr("Reveal on mouse hover")
+            subtext: qsTr("Show the auto-hidden dock when hovering over the screen edge")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "showOnHover" })
+            checked: Config.dockPanel.showOnHover
+            enabled: !Config.dockPanel.persistent
+            opacity: enabled ? 1.0 : 0.5
+            onToggled: GlobalConfig.dockPanel.showOnHover = checked
+        }
+
         StepperRow {
             label: qsTr("Hover reveal delay")
             subtext: qsTr("Milliseconds to wait before revealing the hidden dock on mouse hover")
@@ -188,9 +198,20 @@ PageBase {
             from: 0
             to: 1000
             stepSize: 50
-            enabled: !Config.dockPanel.persistent
+            enabled: !Config.dockPanel.persistent && Config.dockPanel.showOnHover
             opacity: enabled ? 1.0 : 0.5
             onMoved: v => GlobalConfig.dockPanel.autoHideDelay = v
+        }
+
+        StepperRow {
+            label: qsTr("Drag threshold")
+            subtext: qsTr("Pixels dragged across the edge before the dock reveals or hides")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "dragThreshold" })
+            value: Config.dockPanel.dragThreshold
+            from: 0
+            to: 100
+            stepSize: 5
+            onMoved: v => GlobalConfig.dockPanel.dragThreshold = v
         }
 
         ToggleRow {
@@ -208,6 +229,17 @@ PageBase {
 
         StepperRow {
             first: true
+            label: qsTr("Dock size")
+            subtext: qsTr("Height or width dimension of the dock container")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "size" })
+            value: Config.dockPanel.size
+            from: 32
+            to: 96
+            stepSize: 4
+            onMoved: v => GlobalConfig.dockPanel.size = v
+        }
+
+        StepperRow {
             label: qsTr("Icon size")
             subtext: qsTr("Size of application icons in the dock")
             reset: ({ node: GlobalConfig.dockPanel, setting: "iconSize" })
