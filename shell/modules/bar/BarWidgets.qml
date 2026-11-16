@@ -373,9 +373,6 @@ QtObject {
     // Moving something to the zone it belongs in is the same as not saying anything, so
     // the row goes: the place it holds in the bar is the configured one again, and a
     // drag is the only thing that writes a place down.
-    // Moving something to the zone it belongs in is the same as not saying anything, so
-    // the row goes: the place it holds in the bar is the configured one again, and a
-    // drag is the only thing that writes a place down.
     function setZone(node: var, id: string, zone: string): void {
         const entries = root.entriesOf(node);
         const fallback = root.widget(id)?.zone ?? "left";
@@ -383,9 +380,7 @@ QtObject {
         // A status icon is placed by the icons list unless a row says otherwise, so
         // sending one back to the bar removes the row and its configured place returns.
         if (root.statusIconId(id).length > 0 && zone === fallback) {
-            const rest = entries.filter(entry => entry.id !== id);
-            if (rest.length !== entries.length)
-                node.entries = rest;
+            root.clearRow(node, id);
             return;
         }
 
@@ -422,6 +417,15 @@ QtObject {
 
     function replaceAll(node: var, entries: var): void {
         node.entries = entries.slice();
+    }
+
+    // Dropping the row gives the widget back to whatever places it by default: the icons
+    // list for a status icon, the tray's own order for one of its icons.
+    function clearRow(node: var, id: string): void {
+        const entries = root.entriesOf(node);
+        const rest = entries.filter(entry => entry.id !== id);
+        if (rest.length !== entries.length)
+            node.entries = rest;
     }
 
     // Where a dragged widget lands: in the place of the widget it was dropped on. The

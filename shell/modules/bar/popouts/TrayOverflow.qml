@@ -108,6 +108,7 @@ Item {
             if (target?.id)
                 BarWidgets.moveBefore(GlobalConfig.bar, source.widgetId, target.id);
         } else if (source.kind === "icon") {
+            BarWidgets.clearRow(GlobalConfig.bar, TrayRegistry.rowOf(source.key));
             TrayRegistry.sendToBox(source.key);
             if (target?.key)
                 TrayRegistry.moveBefore(source.key, target.key);

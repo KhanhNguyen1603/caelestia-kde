@@ -71,11 +71,25 @@ Singleton {
     // the overflow panel. Without compact mode collapsed icons stay on the bar,
     // and only explicitly hidden icons move to the panel.
     readonly property var visibleItems: root.orderedItems(root.liveItems.filter(item => root.stateOfItem(item) === "visible"))
-    readonly property var overflowItems: root.orderedItems(root.liveItems.filter(item => GlobalConfig.bar.tray.compact ? root.stateOfItem(item) !== "visible" : root.stateOfItem(item) === "hidden"))
+    // An icon the bar gave a row to is drawn from that row, on the bar, so the panel's
+    // own list leaves it out: the row decides where the icon is, not the state lists.
+    readonly property var boxedItems: root.liveItems.filter(item => !root.rowedKeys[root.keyOfItem(item)])
+    readonly property var overflowItems: root.orderedItems(root.boxedItems.filter(item => GlobalConfig.bar.tray.compact ? root.stateOfItem(item) !== "visible" : root.stateOfItem(item) === "hidden"))
     readonly property var barItems: GlobalConfig.bar.tray.compact ? root.visibleItems : root.trayItems
     readonly property int overflowCount: root.overflowItems.length
 
     readonly property int collapsedCount: root.trayItems.filter(item => root.isCollapsed(item)).length
+
+    // The tray icons the bar's entry list holds a place for, keyed by the icon's key.
+    readonly property var rowedKeys: {
+        const keys = {};
+        for (const entry of GlobalConfig.bar.entries ?? []) {
+            const key = root.keyOfRow(entry.id ?? "");
+            if (key.length > 0)
+                keys[key] = true;
+        }
+        return keys;
+    }
 
     readonly property var configuredKeys: {
         const tray = GlobalConfig.bar.tray;

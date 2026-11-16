@@ -9,6 +9,7 @@ MIGRATIONS="$SERVICES/ConfigMigrations.qml"
 ICONS="$REPO_ROOT/shell/utils/Icons.qml"
 BAR="$REPO_ROOT/shell/modules/bar/Bar.qml"
 TRAY="$REPO_ROOT/shell/modules/bar/components/Tray.qml"
+BOX="$REPO_ROOT/shell/modules/bar/popouts/TrayOverflow.qml"
 CONTENT="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
 PAGE="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarTray.qml"
 LIST_EDITOR="$REPO_ROOT/shell/modules/nexus/common/ListEditor.qml"
@@ -95,6 +96,17 @@ test_a_single_identity_reads_icon_substitutions() {
     assert_file_contains "$MIGRATIONS" "function migrateTrayIcons(aliases: var): void" "the config rewrite maps ids to aliases"
     assert_file_contains "$MIGRATIONS" "sub.id = aliases[sub.id]" "icon substitutions are rewritten with the lists"
     assert_file_contains "$REGISTRY" "ConfigMigrations.migrateTrayIcons(aliases)" "the registry hands its aliases over"
+}
+
+test_an_icon_with_a_row_is_drawn_from_it_alone() {
+    assert_file_contains "$REGISTRY" "readonly property var rowedKeys" \
+        "the registry knows which icons the bar's entry list holds a place for"
+    assert_file_contains "$REGISTRY" "root.boxedItems.filter" \
+        "the panel's own list is worked out from the icons no row placed, so one icon cannot be drawn twice"
+    assert_file_contains "$BOX" "BarWidgets.clearRow(GlobalConfig.bar, TrayRegistry.rowOf(source.key))" \
+        "an icon dropped in the box gives up its row in the bar"
+    assert_file_contains "$TRAY" "BarWidgets.clearRow(GlobalConfig.bar, TrayRegistry.rowOf(source.key))" \
+        "dropping one on the chevron does the same"
 }
 
 test_config_is_the_only_store() {

@@ -257,7 +257,7 @@ globalThis.Privacy = { inUse: false };
 globalThis.Nmcli = { activeEthernet: false };
 globalThis.HyprSunset = { active: false };
 
-const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "trayEntry", "trayEntries", "viewEntries", "moveBefore", "rowsWith", "dragsItself"];
+const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "clearRow", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "trayEntry", "trayEntries", "viewEntries", "moveBefore", "rowsWith", "dragsItself"];
 Object.assign(root, new Function("root", names.map(extractFunction).join("\n") + "\nreturn {" + names.join(", ") + "};")(root));
 
 const eq = (actual, expected, msg) => {
@@ -418,6 +418,16 @@ eq(ids(root.systemTrayEntries(movedIcon)), ["tray:cachy-update", "statusIcon:aud
 const orphan = { entries: [{ id: "statusIcon:audio", enabled: true, zone: "tray" }] };
 eq(ids(root.viewEntries(orphan)), ["statusIcon:audio", "statusIcon:battery", "statusIcon:privacy"],
     "icon rows outlive the group row: the icons it left behind still belong to the bar");
+
+// A tray icon's row is its place on the bar, so dropping it in the box takes the row
+// with it: an icon with a row and an icon the tray places are never both drawn.
+const rowed = { entries: [{ id: "tray", enabled: true, zone: "right" }, { id: "tray:cachy-update", enabled: true, zone: "right" }, { id: "clock", enabled: true, zone: "right" }] };
+root.clearRow(rowed, "tray:cachy-update");
+eq(ids(rowed.entries), ["tray", "clock"], "the icon that left the bar gives up its row");
+eq(ids(root.viewEntries(rowed)), ["tray", "tray:cachy-update", "clock"],
+    "and it falls back to the place the tray's own order gives it");
+root.clearRow(rowed, "tray:cachy-update");
+eq(ids(rowed.entries), ["tray", "clock"], "clearing a row that is not there leaves the list alone");
 
 console.log("bar widget registry: all harness cases passed");
 EOF

@@ -192,8 +192,10 @@ Item {
             root.openOverflow();
             if (source.kind === "widget")
                 BarWidgets.setInTray(GlobalConfig.bar, source.widgetId);
-            else if (source.kind === "icon")
+            else if (source.kind === "icon") {
+                BarWidgets.clearRow(GlobalConfig.bar, TrayRegistry.rowOf(source.key));
                 TrayRegistry.sendToBox(source.key);
+            }
             return;
         }
 
