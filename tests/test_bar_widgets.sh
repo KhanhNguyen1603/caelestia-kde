@@ -172,6 +172,8 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "the wrapper stays out of the way of an icon that lifts itself"
     assert_file_not_contains "$UPDATE_INDICATOR" 'TrayDrag' \
         "the update indicator drags through its own icon, not on its own again"
+    assert_file_contains "$PLACEMENT" 'root.setPlacement(id, shown ? Placement.BAR : Placement.OFF, shown ? { zone: Placement.BAR_ZONE } : undefined);' \
+        "a switch that turns an icon on puts it on the bar, where it can be seen, and off takes it away"
     local writers
     writers="$(grep -rlE '\.entries = ' "$REPO_ROOT/shell" --include='*.qml' 2>/dev/null \
         | grep -v -E 'BarPlacements\.qml|Autostart\.qml|ContextMenuStore\.qml|ConfigMigrations\.qml' || true)"

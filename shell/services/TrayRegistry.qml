@@ -73,7 +73,7 @@ Singleton {
     readonly property var visibleItems: root.orderedItems(root.liveItems.filter(item => root.stateOfItem(item) === "visible"))
     // An icon the bar gave a row to is drawn from that row, on the bar, so the panel's
     // own list leaves it out: the row decides where the icon is, not the state lists.
-    readonly property var boxedItems: root.liveItems.filter(item => !root.rowedKeys[root.keyOfItem(item)])
+    readonly property var boxedItems: root.liveItems.filter(item => !root.keysOf(item).some(key => root.rowedKeys[key]))
     readonly property var overflowItems: root.orderedItems(root.boxedItems.filter(item => GlobalConfig.bar.tray.compact ? root.stateOfItem(item) !== "visible" : root.stateOfItem(item) === "hidden"))
     readonly property var barItems: GlobalConfig.bar.tray.compact ? root.visibleItems : root.trayItems
     readonly property int overflowCount: root.overflowItems.length
@@ -117,6 +117,22 @@ Singleton {
         return TrayIcons.keyOf(item.id, item.icon, root.procNames[TrayIcons.pidOf(item.id)] ?? "");
     }
 
+    // Every name one icon answers to. The process alias only exists once `ps` has said
+    // which app a notifier belongs to, so a setting written before that names the icon by
+    // its theme icon instead; the notifier id outlives neither. Readers and writers take
+    // any of them, which keeps a place from going stale when the alias arrives.
+    function keysOf(item: var): var {
+        const keys = [];
+        const push = key => {
+            if (key && !keys.includes(key))
+                keys.push(key);
+        };
+        push(root.keyOfItem(item));
+        push(TrayIcons.keyOf(item.id, item.icon, ""));
+        push(item.id);
+        return keys;
+    }
+
     function displayName(item: var): string {
         return TrayIcons.readableTitle(item.title) || TrayIcons.labelOf(root.keyOfItem(item)) || item.id;
     }
@@ -142,7 +158,15 @@ Singleton {
     }
 
     function stateOfItem(item: var): string {
-        return root.stateOf(root.keyOfItem(item));
+        for (const key of root.keysOf(item)) {
+            if (GlobalConfig.bar.tray.hiddenIcons.includes(key))
+                return "hidden";
+        }
+        for (const key of root.keysOf(item)) {
+            if (GlobalConfig.bar.tray.alwaysVisible.includes(key))
+                return "visible";
+        }
+        return "collapsed";
     }
 
     function isHidden(item: var): bool {
@@ -155,8 +179,12 @@ Singleton {
 
     function setState(key: string, state: string): void {
         const tray = GlobalConfig.bar.tray;
-        const visible = tray.alwaysVisible.filter(entry => entry !== key);
-        const hidden = tray.hiddenIcons.filter(entry => entry !== key);
+        // The lists may name this icon by an older alias of it: a state says where the
+        // icon is, so every name it had goes with it.
+        const item = root.itemOf(key);
+        const names = item ? root.keysOf(item) : [key];
+        const visible = tray.alwaysVisible.filter(entry => !names.includes(entry));
+        const hidden = tray.hiddenIcons.filter(entry => !names.includes(entry));
         const nextVisible = state === "visible" ? [...visible, key] : visible;
         const nextHidden = state === "hidden" ? [...hidden, key] : hidden;
         // A list that already says this is written anyway only to make the bar draw every
@@ -207,7 +235,21 @@ Singleton {
     }
 
     function itemOf(key: string): var {
-        return root.liveItems.find(item => root.keyOfItem(item) === key) ?? null;
+        return root.liveItems.find(item => root.keysOf(item).includes(key)) ?? null;
+    }
+
+    // The row this icon already holds, whichever alias it was written under, or the one a
+    // fresh drop should write: a drop must not leave a second row for one icon.
+    function rowFor(key: string): string {
+        const item = root.itemOf(key);
+        const names = item ? root.keysOf(item) : [key];
+        const entries = GlobalConfig.bar.entries ?? [];
+        for (const entry of entries) {
+            const rowKey = root.keyOfRow(entry.id ?? "");
+            if (rowKey.length > 0 && names.includes(rowKey))
+                return entry.id;
+        }
+        return root.rowOf(key);
     }
 
     function popoutName(key: string): string {

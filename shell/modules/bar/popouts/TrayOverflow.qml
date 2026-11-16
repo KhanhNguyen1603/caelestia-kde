@@ -103,7 +103,7 @@ Item {
         // The cell the pointer is on decides the place; the last cell is a place too,
         // so an icon dropped past the end simply lands last.
         const target = root.entryAt(x, y);
-        const id = source.kind === "icon" ? TrayRegistry.rowOf(source.key) : source.widgetId;
+        const id = source.kind === "icon" ? TrayRegistry.rowFor(source.key) : source.widgetId;
         BarPlacements.setPlacement(id, BarPlacements.trayZone, {
             beforeId: target?.id ?? "",
             beforeKey: target?.key ?? ""

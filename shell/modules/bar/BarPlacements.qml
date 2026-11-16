@@ -113,18 +113,18 @@ QtObject {
         }
     }
 
-    // A switch asks for this: shown, or gone. An icon the bar draws itself is shown on the
-    // bar; one of the tray's apps is shown in the tray's box, which is where it can be
-    // picked up and dragged anywhere else.
+    // A switch asks for this: shown, or gone. Shown means drawn on the bar, because a
+    // switch that puts an icon somewhere nobody can see it is not a switch anyone can
+    // read: the box is where a drag puts things, not where a switch does.
     function setShown(id: string, shown: bool): void {
         if ((root.placementOf(id) !== Placement.OFF) === shown)
             return;
-        root.setPlacement(id, shown ? (root.kindOf(id) === "trayItem" ? Placement.TRAY : Placement.BAR) : Placement.OFF);
+        root.setPlacement(id, shown ? Placement.BAR : Placement.OFF, shown ? { zone: Placement.BAR_ZONE } : undefined);
     }
 
     // A tray app's own state, which is what the tray draws from.
     function setTrayState(key: string, state: string): void {
-        root.setPlacement(TrayRegistry.rowOf(key), state === "hidden" ? Placement.OFF : state === "visible" ? Placement.BAR : Placement.TRAY);
+        root.setPlacement(TrayRegistry.rowFor(key), state === "hidden" ? Placement.OFF : state === "visible" ? Placement.BAR : Placement.TRAY);
     }
 
     // The one write path. `zone` and `beforeId` are for a drag, which decides a place as

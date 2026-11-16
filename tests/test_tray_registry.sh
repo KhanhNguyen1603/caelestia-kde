@@ -134,6 +134,21 @@ test_a_bar_from_before_the_tray_gets_it_back() {
         "and the migration runs when the shell starts"
 }
 
+test_an_icon_answers_to_every_name_it_has_had() {
+    assert_file_contains "$REGISTRY" "function keysOf(item: var): var" \
+        "an icon has one name per alias, because the process alias only arrives after ps has said whose icon it is"
+    assert_file_contains "$REGISTRY" 'push(TrayIcons.keyOf(item.id, item.icon, ""));' \
+        "the theme-icon alias is one of them, and it is what a setting written early holds"
+    assert_file_contains "$REGISTRY" "root.keysOf(item).some(key => root.rowedKeys[key])" \
+        "an icon with a row under any of its names is drawn from that row, so it cannot also wait in the box"
+    assert_file_contains "$REGISTRY" "root.liveItems.find(item => root.keysOf(item).includes(key)) ?? null" \
+        "and a stored name resolves to the icon it was written for, whichever alias it used"
+    assert_file_contains "$REGISTRY" "function rowFor(key: string): string" \
+        "a drop reuses the row the icon already holds instead of writing a second one"
+    assert_file_contains "$REGISTRY" "const names = item ? root.keysOf(item) : [key];" \
+        "and setting a state takes every name with it, so the lists cannot disagree about one icon"
+}
+
 test_an_icon_with_a_row_is_drawn_from_it_alone() {
     assert_file_contains "$REGISTRY" "readonly property var rowedKeys" \
         "the registry knows which icons the bar's entry list holds a place for"
