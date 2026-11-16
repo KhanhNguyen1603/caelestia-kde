@@ -121,6 +121,18 @@ Item {
         return root.isHorizontal ? root.mapToItem(null, root.width / 2, 0).x : root.mapToItem(null, 0, root.height / 2).y;
     }
 
+    // The box hangs from the chevron, and the chevron moves whenever an icon leaves the
+    // tray for the box and the bar makes room for one fewer. The tray is resized before
+    // the bar has moved it, so the chevron is read a pass later: mapping it now answers
+    // with the place it is about to leave.
+    function followBox(): void {
+        if (root.popouts && root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow")
+            Qt.callLater(() => {
+                if (root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow")
+                    root.popouts.currentCenter = root.anchor();
+            });
+    }
+
     // The box opens from the chevron and is centred on it, or on the tray when there
     // is no chevron yet. Opening it for the whole of a drag is what lets a tray icon
     // be dropped into it: there is nowhere else for the gesture to end.
@@ -230,6 +242,11 @@ Item {
 
     implicitWidth: isHorizontal ? nonAnimWidth : barThickness
     implicitHeight: isHorizontal ? barThickness : nonAnimHeight
+
+    onWidthChanged: root.followBox()
+    onHeightChanged: root.followBox()
+    onXChanged: root.followBox()
+    onYChanged: root.followBox()
 
     Component.onCompleted: TrayDrag.register(root)
 

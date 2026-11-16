@@ -168,6 +168,14 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "the coffee cup is the same icon the status icons are"
     assert_file_contains "$UPDATE_INDICATOR" 'BarIcon {' \
         "and so is the updates indicator"
+    assert_file_contains "$TRAY" 'function followBox(): void {' \
+        "the box is drawn from the chevron's place, so that place is read again when it moves"
+    assert_file_contains "$TRAY" 'if (root.popouts && root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow")' \
+        "and only while the box is the popout that is open"
+    assert_file_contains "$TRAY" 'onWidthChanged: root.followBox()' \
+        "an icon leaving the tray makes the bar room for one fewer, and the box moves with the chevron"
+    assert_file_contains "$TRAY" 'onXChanged: root.followBox()' \
+        "which moves along the bar as well as shrinking"
     assert_file_contains "$DELEGATE" 'enabled: wrapper.draggable && !BarWidgets.dragsItself(wrapper.kind)' \
         "the wrapper stays out of the way of an icon that lifts itself"
     assert_file_not_contains "$UPDATE_INDICATOR" 'TrayDrag' \
