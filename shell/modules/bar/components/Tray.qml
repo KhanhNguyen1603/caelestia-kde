@@ -80,11 +80,20 @@ Item {
 
     // Where the widget a drag carries would land, or null when the bar holds nothing
     // that can take it. Icons and other widgets share one order now, so either can be
-    // the one a drag lands on.
+    // the one a drag lands on; with none of that kind on the bar, the end of the row is
+    // where the icon joins it, so that is what the marker points at.
     function dropTarget(kind: string, id: string, x: real, y: real): var {
-        if (kind === "icon")
-            return root.closestChild(items, x, y);
-        return root.closestChild(widgetItems, x, y);
+        const own = kind === "icon" ? items : widgetItems;
+        const other = kind === "icon" ? widgetItems : items;
+        const cell = root.closestChild(own, x, y);
+        if (cell)
+            return cell;
+        for (let i = other.count - 1; i >= 0; i--) {
+            const last = other.itemAt(i);
+            if (last && last.visible)
+                return last;
+        }
+        return null;
     }
 
     // Hit test for the bar's hover routing: the positioner owns the layout, so it also
