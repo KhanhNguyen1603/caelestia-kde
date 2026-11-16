@@ -165,7 +165,7 @@ Item {
     width: clampedWidth
     height: clampedHeight
     clip: true
-    visible: isHorizontal ? height > Config.border.thickness : width > Config.border.thickness
+    visible: !visibilities.overview && (isHorizontal ? height > Math.max(Config.border.thickness, Config.border.minThickness) : width > Math.max(Config.border.thickness, Config.border.minThickness))
     implicitWidth: isHorizontal ? 0 : (fullscreen ? 0 : Config.border.thickness)
     implicitHeight: isHorizontal ? (fullscreen ? 0 : Config.border.thickness) : 0
 

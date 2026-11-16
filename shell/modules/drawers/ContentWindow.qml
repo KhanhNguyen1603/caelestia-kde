@@ -73,10 +73,10 @@ StyledWindow {
     readonly property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
     readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
     readonly property real borderLayoutThickness: hasFullscreen ? 0 : dynamicBorderThickness
-    readonly property real edgeThicknessLeft: (bar.position === "left" ? bar.implicitWidth : 0) + ((bar.position !== "left") ? root.borderThickness : 0)
-    readonly property real edgeThicknessRight: (bar.position === "right" ? bar.implicitWidth : 0) + ((bar.position !== "right") ? root.borderThickness : 0)
-    readonly property real edgeThicknessTop: (bar.position === "top" ? bar.implicitHeight : 0) + ((bar.position !== "top") ? root.borderThickness : 0)
-    readonly property real edgeThicknessBottom: (bar.position === "bottom" ? bar.implicitHeight : 0) + ((bar.position !== "bottom") ? root.borderThickness : 0)
+    readonly property real edgeThicknessLeft: Math.max(bar.position === "left" ? bar.implicitWidth : 0, root.borderThickness)
+    readonly property real edgeThicknessRight: Math.max(bar.position === "right" ? bar.implicitWidth : 0, root.borderThickness)
+    readonly property real edgeThicknessTop: Math.max(bar.position === "top" ? bar.implicitHeight : 0, root.borderThickness)
+    readonly property real edgeThicknessBottom: Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness)
     property color surfaceColour: Colours.tPalette.m3surface
     readonly property int dragMaskPadding: {
         if (focusGrabState.active || panels.popouts.isDetached)
@@ -388,8 +388,8 @@ StyledWindow {
             Config.screen: root.screen.name
         }
         BlobRect {
-            visible: bar.isIsland
-            group: bar.isIsland ? blobGroup : null
+            visible: bar.isIsland && !visibilities.overview
+            group: (bar.isIsland && !visibilities.overview) ? blobGroup : null
             x: bar.x
             y: bar.y
             implicitWidth: bar.width
@@ -398,8 +398,8 @@ StyledWindow {
             deformScale: (GlobalConfig.appearance.blurMask || !GlobalConfig.appearance.transparency.enabled) ? ((0.1 * Config.appearance.deformScale) / 10000) : 0
         }
         BlobRect {
-            visible: dockPanel.visible
-            group: blobGroup
+            visible: dockPanel.visible && !visibilities.overview
+            group: (!visibilities.overview && dockPanel.visible) ? blobGroup : null
             x: dockPanel.x
             y: dockPanel.y
             implicitWidth: dockPanel.width
