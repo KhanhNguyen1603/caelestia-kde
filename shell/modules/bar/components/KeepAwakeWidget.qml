@@ -16,9 +16,12 @@ BarIcon {
 
     entryId: "keepawake"
     draggable: true
-    tooltip: qsTr("Keep awake")
 
     visible: enabled && (!Config.bar.keepawake.autoHide || root.awake)
+    // The remaining time is what the chip under the icon used to say, said where a bar
+    // icon has room for it: the hover name. The menu behind the right button shows it
+    // too, for the times the icon is not hovered.
+    tooltip: root.awake ? `${qsTr("Keep awake")} (${IdleInhibitor.periodText})` : qsTr("Keep awake")
 
     glyphComponent: Component {
         MaterialIcon {
@@ -31,5 +34,7 @@ BarIcon {
     }
 
     onActivated: IdleInhibitor.setEnabled(!IdleInhibitor.enabled)
-    onContextMenuRequested: root.openPopout("keepawakecontext")
+    // The right button opens the menu dev added: it carries the expiry picker and the
+    // settings card, so one gesture reaches everything about the inhibitor.
+    onContextMenuRequested: root.openPopout("keepawakemenu")
 }

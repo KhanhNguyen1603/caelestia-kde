@@ -403,8 +403,25 @@ Item {
             }
         }
         Popout {
+            name: "keepawakemenu"
+            isContext: true
+            previewKey: "keepawake"
+            sourceComponent: KeepAwakeMenu {
+                popouts: root.popouts
+            }
+        }
+        Popout {
+            name: "keepawakeexpiry"
+            isContext: true
+            previewKey: "keepawake"
+            sourceComponent: KeepAwakeExpiry {
+                popouts: root.popouts
+            }
+        }
+        Popout {
             name: "keepawakecontext"
             isContext: true
+            previewKey: "keepawake"
             sourceComponent: BarComponentContext {
                 popouts: root.popouts
                 label: qsTr("Keep Awake settings")

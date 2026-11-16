@@ -827,8 +827,14 @@ that outlived a reboot would stop the machine from ever sleeping.
 ```bash
 caelestia shell idleInhibitor isEnabled    # what the shell currently believes
 caelestia shell idleInhibitor disable      # the normal way, writes the file
+caelestia shell idleInhibitor setFor 1800  # stay awake for half an hour, then let go
+caelestia shell idleInhibitor remaining    # seconds left, or -1 while it has no end
 rm -f "${XDG_RUNTIME_DIR:-/tmp/caelestia-$USER}/caelestia-keepawake.json"   # or forget it until the next restart
 ```
+
+The file stores the mode and the moment the hold ends, not the time left, so a hold set for an hour still
+has whatever was left of it after the shell restarts — it does not start over, and one whose moment passed
+while the shell was down comes back off.
 
 The inhibitor is a Wayland idle inhibitor, so it shows up in neither `systemd-inhibit --list` nor the power
 settings; only the shell knows about it.
