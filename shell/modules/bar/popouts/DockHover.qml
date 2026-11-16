@@ -143,7 +143,7 @@ StyledRect {
                         interval: 500
 
                         onTriggered: {
-                            if (cardHover.hovered && card.modelData?.address && Config.bar.dock.previewOnDesktop)
+                            if (cardHover.hovered && card.modelData?.address && (Config.dockPanel && Config.dockPanel.enabled ? Config.dockPanel.previewOnDesktop : Config.bar.dock.previewOnDesktop))
                                 Kwin.highlightWindow(card.modelData.address);
                         }
                     }

@@ -756,14 +756,14 @@ StyledWindow {
 
             x: {
                 if (dockPanel.position === "left") {
-                    return (bar.position === "left" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0);
+                    return (bar.position === "left" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Config.dockPanel.floatingMargin : 0);
                 } else if (dockPanel.position === "right") {
-                    return parent.width - width - ((bar.position === "right" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0));
+                    return parent.width - width - ((bar.position === "right" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Config.dockPanel.floatingMargin : 0));
                 } else {
                     if (Config.dockPanel.alignment === "start") {
-                        return (bar.position === "left" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0);
+                        return (bar.position === "left" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Config.dockPanel.floatingMargin : 0);
                     } else if (Config.dockPanel.alignment === "end") {
-                        return parent.width - width - ((bar.position === "right" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0));
+                        return parent.width - width - ((bar.position === "right" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Config.dockPanel.floatingMargin : 0));
                     } else {
                         return Math.round((parent.width - width) / 2);
                     }
@@ -772,14 +772,14 @@ StyledWindow {
 
             y: {
                 if (dockPanel.position === "top") {
-                    return (bar.position === "top" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0);
+                    return (bar.position === "top" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Config.dockPanel.floatingMargin : 0);
                 } else if (dockPanel.position === "bottom") {
-                    return parent.height - height - ((bar.position === "bottom" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0));
+                    return parent.height - height - ((bar.position === "bottom" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Config.dockPanel.floatingMargin : 0));
                 } else {
                     if (Config.dockPanel.alignment === "start") {
-                        return (bar.position === "top" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0);
+                        return (bar.position === "top" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Config.dockPanel.floatingMargin : 0);
                     } else if (Config.dockPanel.alignment === "end") {
-                        return parent.height - height - ((bar.position === "bottom" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0));
+                        return parent.height - height - ((bar.position === "bottom" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Config.dockPanel.floatingMargin : 0));
                     } else {
                         return Math.round((parent.height - height) / 2);
                     }
@@ -788,6 +788,7 @@ StyledWindow {
 
             screen: root.screen
             visibilities: visibilities
+            popouts: panels.popouts
             fullscreen: root.hasFullscreen
             Component.onCompleted: Visibilities.registerDockPanel(root.screen, this)
             Component.onDestruction: Visibilities.unregisterDockPanel(root.screen)

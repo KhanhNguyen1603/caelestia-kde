@@ -23,9 +23,16 @@ Singleton {
     readonly property int count: dockModel.count
     readonly property var activeTop: (Kwin.activeWindow && Kwin.activeWindow.address) ? Kwin.activeWindow : null
 
-    readonly property var effectivePinnedApps: GlobalConfig.bar.dock.pinnedApps || []
-    readonly property int effectiveGrouping: GlobalConfig.bar.dock.windowGrouping
-    readonly property bool effectiveCurrentDesktopOnly: Config.bar.dock.currentDesktopOnly
+    readonly property bool useDockPanel: Boolean(Config.dockPanel && Config.dockPanel.enabled)
+    readonly property var effectivePinnedApps: useDockPanel
+        ? (GlobalConfig.dockPanel.pinnedApps || [])
+        : (GlobalConfig.bar.dock.pinnedApps || [])
+    readonly property int effectiveGrouping: useDockPanel
+        ? Config.dockPanel.windowGrouping
+        : GlobalConfig.bar.dock.windowGrouping
+    readonly property bool effectiveCurrentDesktopOnly: useDockPanel
+        ? Config.dockPanel.currentDesktopOnly
+        : Config.bar.dock.currentDesktopOnly
 
     property var _pinnedCache: null
     property var _entryCache: ({})
@@ -349,7 +356,9 @@ Singleton {
             newArr.push(mData);
         }
 
-        const currentFavs = GlobalConfig.bar.dock.pinnedApps || [];
+        const currentFavs = root.useDockPanel
+            ? (GlobalConfig.dockPanel.pinnedApps || [])
+            : (GlobalConfig.bar.dock.pinnedApps || []);
         let changed = currentFavs.length !== newFavs.length;
         if (!changed) {
             for (let i = 0; i < newFavs.length; i++) {
@@ -361,7 +370,10 @@ Singleton {
         }
 
         if (changed) {
-            GlobalConfig.bar.dock.pinnedApps = newFavs;
+            if (root.useDockPanel)
+                GlobalConfig.dockPanel.pinnedApps = newFavs;
+            else
+                GlobalConfig.bar.dock.pinnedApps = newFavs;
         }
 
         root.modelDataArray = newArr;
@@ -374,16 +386,18 @@ Singleton {
     }
 
     function pinApp(id: string): void {
-        const current = [...(GlobalConfig.bar.dock.pinnedApps || [])];
+        const targetNode = root.useDockPanel ? GlobalConfig.dockPanel : GlobalConfig.bar.dock;
+        const current = [...(targetNode.pinnedApps || [])];
         if (!current.includes(id)) {
             current.push(id);
-            GlobalConfig.bar.dock.pinnedApps = current;
+            targetNode.pinnedApps = current;
         }
     }
 
     function unpinApp(id: string): void {
-        const current = (GlobalConfig.bar.dock.pinnedApps || []).filter(item => item !== id);
-        GlobalConfig.bar.dock.pinnedApps = current;
+        const targetNode = root.useDockPanel ? GlobalConfig.dockPanel : GlobalConfig.bar.dock;
+        const current = (targetNode.pinnedApps || []).filter(item => item !== id);
+        targetNode.pinnedApps = current;
     }
 
     function publishMinimizeGeometries(sourceItem: var, win: var, isHorizontal: bool, originX: real, originY: real, itemSize: real, spacing: real, span: real, scrolled: real, position: string): void {
@@ -440,11 +454,24 @@ Singleton {
 
     Connections {
         function onPinnedAppsChanged(): void {
-            root._pinnedCache = null;
-            root.scheduleRebuild();
+            if (!root.useDockPanel) {
+                root._pinnedCache = null;
+                root.scheduleRebuild();
+            }
         }
 
         target: GlobalConfig.bar.dock
+    }
+
+    Connections {
+        function onPinnedAppsChanged(): void {
+            if (root.useDockPanel) {
+                root._pinnedCache = null;
+                root.scheduleRebuild();
+            }
+        }
+
+        target: GlobalConfig.dockPanel
     }
 
     Connections {
@@ -471,14 +498,35 @@ Singleton {
 
     Connections {
         function onCurrentDesktopOnlyChanged(): void {
-            root.scheduleRebuild();
+            if (!root.useDockPanel)
+                root.scheduleRebuild();
         }
 
         function onWindowGroupingChanged(): void {
-            root.scheduleRebuild();
+            if (!root.useDockPanel)
+                root.scheduleRebuild();
         }
 
         target: Config.bar.dock
+    }
+
+    Connections {
+        function onCurrentDesktopOnlyChanged(): void {
+            if (root.useDockPanel)
+                root.scheduleRebuild();
+        }
+
+        function onWindowGroupingChanged(): void {
+            if (root.useDockPanel)
+                root.scheduleRebuild();
+        }
+
+        function onEnabledChanged(): void {
+            root._pinnedCache = null;
+            root.scheduleRebuild();
+        }
+
+        target: Config.dockPanel
     }
 
     Connections {
