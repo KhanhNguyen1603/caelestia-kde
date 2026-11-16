@@ -42,6 +42,8 @@ class DockConfig : public settings::ObjectNode {
     CONFIG_PROPERTY(bool, activeIndicators, true)
     CONFIG_PROPERTY(bool, showOnHover, true)
     CONFIG_PROPERTY(int, dragThreshold, 20)
+    CONFIG_PROPERTY(bool, fixedLength, false)
+    CONFIG_PROPERTY(int, length, 100)
     CONFIG_PROPERTY(QStringList, excludedScreens, QStringList())
 };
 

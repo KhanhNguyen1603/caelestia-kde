@@ -227,8 +227,29 @@ PageBase {
             text: qsTr("Dimensions & Sizing")
         }
 
-        StepperRow {
+        ToggleRow {
             first: true
+            text: qsTr("Fixed length")
+            subtext: qsTr("Set a fixed panel length instead of sizing automatically to content")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "fixedLength" })
+            checked: Config.dockPanel.fixedLength
+            onToggled: GlobalConfig.dockPanel.fixedLength = checked
+        }
+
+        StepperRow {
+            label: qsTr("Length percentage")
+            subtext: qsTr("Length of the dock as a percentage of the screen edge")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "length" })
+            value: Config.dockPanel.length
+            from: 5
+            to: 100
+            stepSize: 5
+            enabled: Config.dockPanel.fixedLength
+            opacity: enabled ? 1.0 : 0.5
+            onMoved: v => GlobalConfig.dockPanel.length = v
+        }
+
+        StepperRow {
             label: qsTr("Dock size")
             subtext: qsTr("Height or width dimension of the dock container")
             reset: ({ node: GlobalConfig.dockPanel, setting: "size" })

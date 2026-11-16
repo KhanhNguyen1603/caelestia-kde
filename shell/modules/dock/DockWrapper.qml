@@ -53,8 +53,10 @@ Item {
     property bool revealActive: false
     readonly property bool hovered: revealActive || dockHover.hovered
     readonly property bool isHorizontal: root.position === "top" || root.position === "bottom"
+    readonly property int fullLength: (isHorizontal ? screen.width : screen.height) - (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0)
     readonly property int defaultLength: Math.min(isHorizontal ? screen.width - 40 : screen.height - 40, Math.max(200, content.childrenRect.width > 0 ? content.childrenRect.width + padding * 2 : 400))
-    readonly property int clampedLength: defaultLength
+    readonly property int fixedLength: Math.round(fullLength * Math.max(0, Math.min(100, Config.dockPanel.length)) / 100)
+    readonly property int clampedLength: Config.dockPanel.fixedLength ? fixedLength : defaultLength
     readonly property int clampedThickness: Math.max(Config.border.minThickness, isHorizontal ? implicitHeight : implicitWidth)
     readonly property int clampedWidth: isHorizontal ? clampedLength : clampedThickness
     readonly property int clampedHeight: isHorizontal ? clampedThickness : clampedLength
