@@ -395,6 +395,10 @@ test_a_tray_icon_is_a_bar_icon() {
         "which is where the second action a tray app offers lives"
     assert_file_contains "$icon" 'onDropped: root.suppressClick = true' \
         "and the release that ends a drag is not read as a click on the icon"
+    assert_file_contains "$icon" 'readonly property real iconScale: 1.2 * root.barScale' \
+        "a bar made thinner shrinks its icons with it, instead of drawing them past its edge"
+    assert_file_contains "$TRAY_ITEM" 'Math.round(Tokens.font.icon.small.pointSize * 1.2)' \
+        "and an app's bitmap is asked for at the size it is drawn at, so it is not upscaled"
     for gone in 'StateLayer' 'QsMenuOpener' 'Tooltip' 'TrayDragGesture' 'ColouredIcon'; do
         if [[ "$gone" != 'QsMenuOpener' && "$gone" != 'ColouredIcon' ]]; then
             assert_file_not_contains "$TRAY_ITEM" "$gone {" \

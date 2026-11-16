@@ -47,8 +47,10 @@ BarIcon {
     }
 
     glyphComponent: Component {
+        // Asked for at the size it is drawn at: an app's icon is a bitmap, so a glyph
+        // smaller than the slot it fills is the one thing that would make it look blurry.
         ColouredIcon {
-            implicitSize: Tokens.font.icon.small.pointSize
+            implicitSize: Math.round(Tokens.font.icon.small.pointSize * 1.2)
             source: Icons.getTrayIcon(root.key, root.modelData?.icon ?? "")
             colour: Colours.palette.m3secondary
             layer.enabled: Config.bar.tray.recolour

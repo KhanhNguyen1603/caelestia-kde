@@ -34,10 +34,15 @@ Item {
     property bool suppressClick: false
 
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
-    readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
+    // The bar thins itself with a curve rather than in step with the number, and the icons
+    // have to follow it: a glyph drawn at its full size in a bar that was made shorter
+    // than it is gets cut off at both ends, which is what reads as fuzzy.
+    readonly property real rawScale: !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0
+    readonly property real barScale: root.rawScale < 1.0 ? Math.sqrt(Math.max(0.1, root.rawScale)) : root.rawScale
+    readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * root.barScale)
     // A bar icon is read at a glance, so its glyph is drawn a little larger than the
     // slot it asks for, and the slot grows with it.
-    readonly property real iconScale: 1.2
+    readonly property real iconScale: 1.2 * root.barScale
     readonly property bool dragging: dragGesture.active
     readonly property bool hovered: area.containsMouse && !(root.popouts?.hasCurrent ?? false)
     readonly property Item glyph: glyphLoader.item
