@@ -414,9 +414,9 @@ test_the_hidden_icons_box_is_icons_only() {
         "the widgets in the box are the bar's own, so they stay live there"
     assert_file_contains "$TRAY_OVERFLOW" 'readonly property int maxRows: 4' \
         "the box fills at most four rows"
-    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int columns: Math.max(1, Math.ceil(Math.sqrt(root.filled)), Math.ceil(root.filled / root.maxRows))' \
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int columns: Math.max(root.minColumns, Math.ceil(Math.sqrt(root.filled)), Math.ceil(root.filled / root.maxRows))' \
         "the grid is the squarest shape its icons fit, and a column wider once four rows are full"
-    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int rows: Math.max(1, Math.ceil(root.filled / root.columns))' \
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int rows: Math.max(root.minRows, Math.ceil(root.filled / root.columns))' \
         "with no rows reserved beyond the icons themselves"
     assert_file_contains "$TRAY_OVERFLOW" 'model: root.filled === 0 ? 1 : 0' \
         "a box with nothing in it still shows the one cell waiting to be filled"
@@ -458,6 +458,28 @@ test_the_tray_is_as_wide_as_its_icons_right_away() {
         "the width is counted from the row the icons are in"
     assert_file_contains "$TRAY" 'implicitWidth: isHorizontal ? nonAnimWidth : barThickness' \
         "and it is that count the surface is drawn at"
+}
+
+test_the_box_is_the_size_its_cells_are() {
+    assert_file_contains "$TRAY_OVERFLOW" 'implicitWidth: root.gridWidth' \
+        "the box is as wide as its cells, so nothing a cell holds can stretch the panel"
+    assert_file_contains "$TRAY_OVERFLOW" 'implicitHeight: root.gridHeight' \
+        "and as tall"
+    assert_file_not_contains "$TRAY_OVERFLOW" 'grid.implicitWidth' \
+        "measuring the grid instead is what let one wide widget open the box halfway across the screen"
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int minColumns: 3' \
+        "a box keeps room for a few icons before it holds any"
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property int minRows: 2' \
+        "in both directions, so one icon is not a hole the size of one icon"
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property real gap: Tokens.spacing.small * root.scaleOffset' \
+        "the cells are spaced to be read apart from each other"
+    assert_file_contains "$TRAY_OVERFLOW" 'readonly property real popoutMargin: Tokens.padding.medium' \
+        "and the panel is framed wider than its cells"
+    assert_file_contains "$TRAY_OVERFLOW" 'anchors.centerIn: parent
+                    visible: !widgetCell.isIcon' \
+        "a widget in a cell is centred in it"
+    assert_file_contains "$TRAY_OVERFLOW" 'scale: fit' \
+        "and a widget too wide for the cell is fitted into it rather than left to overflow"
 }
 
 test_the_chevron_sits_outside_the_icons_surface() {

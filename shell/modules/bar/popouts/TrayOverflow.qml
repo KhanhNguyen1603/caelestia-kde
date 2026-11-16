@@ -20,24 +20,27 @@ Item {
     property real scaleOffset: 1.0
     property real fontScale: 1.0
     property bool _isSidebarOpen: false
-    // The panel's own frame, tighter than a text popout's: the grid already spaces
-    // the glyphs.
-    readonly property real popoutMargin: Tokens.padding.small
+    // The panel's own frame, tighter than a text popout's but wide enough that the cells
+    // do not touch its edge.
+    readonly property real popoutMargin: Tokens.padding.medium
 
     readonly property var items: TrayRegistry.overflowItems
     // Every widget the box holds, in the order the bar gives them: status icons and the
     // rest are one sequence, so a drag can put any of them in any cell.
     readonly property var widgets: BarWidgets.overflowWidgets(GlobalConfig.bar)
 
-    // The grid is only as big as the icons in it: as square as it can be, never more
-    // than four rows, and a column wider once those are full.
+    // The grid is as square as the icons in it, never more than four rows, and a column
+    // wider once those are full. A box is a place to put things, so it keeps room for a
+    // few before it holds any: one icon should not leave a hole the size of one icon.
     readonly property int maxRows: 4
+    readonly property int minColumns: 3
+    readonly property int minRows: 2
     readonly property int filled: root.items.length + root.widgets.length
-    readonly property int columns: Math.max(1, Math.ceil(Math.sqrt(root.filled)), Math.ceil(root.filled / root.maxRows))
-    readonly property int rows: Math.max(1, Math.ceil(root.filled / root.columns))
+    readonly property int columns: Math.max(root.minColumns, Math.ceil(Math.sqrt(root.filled)), Math.ceil(root.filled / root.maxRows))
+    readonly property int rows: Math.max(root.minRows, Math.ceil(root.filled / root.columns))
 
-    readonly property real cell: 32 * root.scaleOffset * root.fontScale
-    readonly property real gap: Tokens.spacing.extraSmall * root.scaleOffset
+    readonly property real cell: 34 * root.scaleOffset * root.fontScale
+    readonly property real gap: Tokens.spacing.small * root.scaleOffset
     readonly property real gridWidth: root.columns * root.cell + (root.columns - 1) * root.gap
     readonly property real gridHeight: root.rows * root.cell + (root.rows - 1) * root.gap
     // The box leans in when a drag is over it, so it is obvious the icon will land
@@ -110,9 +113,11 @@ Item {
         });
     }
 
-    // The panel frames the grid; the box is exactly the cells it holds.
-    implicitWidth: Math.max(root.gridWidth, grid.implicitWidth)
-    implicitHeight: Math.max(root.gridHeight, grid.implicitHeight)
+    // The panel frames the grid; the box is exactly the cells it holds. Measuring the
+    // grid instead would let whatever a cell holds set the size, and one wide widget put
+    // in a cell would open the box halfway across the screen.
+    implicitWidth: root.gridWidth
+    implicitHeight: root.gridHeight
     width: implicitWidth
     height: implicitHeight
 
@@ -215,11 +220,17 @@ Item {
                     draggable: true
                 }
 
+                // A cell is one cell whatever it holds: a widget drawn wider than that
+                // is fitted into it, the way a thumbnail is, rather than being allowed
+                // to push the box open.
                 BarComponents.BarWidgetCell {
+                    readonly property real fit: Math.min(1, root.cell / Math.max(1, implicitWidth, implicitHeight))
+
                     anchors.centerIn: parent
                     visible: !widgetCell.isIcon
                     entry: widgetCell.modelData
                     popouts: root.popouts
+                    scale: fit
                 }
             }
         }
