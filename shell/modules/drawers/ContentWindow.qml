@@ -73,10 +73,10 @@ StyledWindow {
     readonly property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
     readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
     readonly property real borderLayoutThickness: hasFullscreen ? 0 : dynamicBorderThickness
-    readonly property real edgeThicknessLeft: Math.max(bar.position === "left" ? bar.implicitWidth : 0, dockPanel.position === "left" ? dockPanel.implicitWidth : 0, root.borderThickness)
-    readonly property real edgeThicknessRight: Math.max(bar.position === "right" ? bar.implicitWidth : 0, dockPanel.position === "right" ? dockPanel.implicitWidth : 0, root.borderThickness)
-    readonly property real edgeThicknessTop: Math.max(bar.position === "top" ? bar.implicitHeight : 0, dockPanel.position === "top" ? dockPanel.implicitHeight : 0, root.borderThickness)
-    readonly property real edgeThicknessBottom: Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, dockPanel.position === "bottom" ? dockPanel.implicitHeight : 0, root.borderThickness)
+    readonly property real edgeThicknessLeft: (bar.position === "left" ? bar.implicitWidth : 0) + (dockPanel.position === "left" ? dockPanel.implicitWidth : 0) + ((bar.position !== "left" && dockPanel.position !== "left") ? root.borderThickness : 0)
+    readonly property real edgeThicknessRight: (bar.position === "right" ? bar.implicitWidth : 0) + (dockPanel.position === "right" ? dockPanel.implicitWidth : 0) + ((bar.position !== "right" && dockPanel.position !== "right") ? root.borderThickness : 0)
+    readonly property real edgeThicknessTop: (bar.position === "top" ? bar.implicitHeight : 0) + (dockPanel.position === "top" ? dockPanel.implicitHeight : 0) + ((bar.position !== "top" && dockPanel.position !== "top") ? root.borderThickness : 0)
+    readonly property real edgeThicknessBottom: (bar.position === "bottom" ? bar.implicitHeight : 0) + (dockPanel.position === "bottom" ? dockPanel.implicitHeight : 0) + ((bar.position !== "bottom" && dockPanel.position !== "bottom") ? root.borderThickness : 0)
     property color surfaceColour: Colours.tPalette.m3surface
     readonly property int dragMaskPadding: {
         if (focusGrabState.active || panels.popouts.isDetached)
@@ -777,7 +777,7 @@ StyledWindow {
                         height: undefined
                         anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
                         anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                        anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.leftMargin: (bar.position === "left" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0)
                         anchors.rightMargin: 0
                     }
                 },
@@ -799,7 +799,7 @@ StyledWindow {
                         anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
                         anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
                         anchors.leftMargin: 0
-                        anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.rightMargin: (bar.position === "right" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0)
                     }
                 },
                 State {
@@ -819,7 +819,7 @@ StyledWindow {
                         height: dockPanel.implicitHeight
                         anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
                         anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                        anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.topMargin: (bar.position === "top" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0)
                         anchors.bottomMargin: 0
                     }
                 },
@@ -840,7 +840,7 @@ StyledWindow {
                         height: dockPanel.implicitHeight
                         anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
                         anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                        anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.bottomMargin: (bar.position === "bottom" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0)
                         anchors.topMargin: 0
                     }
                 }

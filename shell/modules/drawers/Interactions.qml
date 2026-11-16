@@ -49,13 +49,13 @@ CustomMouseArea {
         if (!dockPanel || !dockPanel.visible)
             return false;
         if (dockPanel.position === "left")
-            return x < dockPanel.x + dockPanel.clampedThickness;
+            return x >= dockPanel.x && x <= dockPanel.x + dockPanel.clampedThickness;
         if (dockPanel.position === "right")
-            return x > dockPanel.x + dockPanel.width - dockPanel.clampedThickness;
+            return x >= dockPanel.x + dockPanel.width - dockPanel.clampedThickness && x <= dockPanel.x + dockPanel.width;
         if (dockPanel.position === "top")
-            return y < dockPanel.y + dockPanel.clampedThickness;
+            return y >= dockPanel.y && y <= dockPanel.y + dockPanel.clampedThickness;
         if (dockPanel.position === "bottom")
-            return y > dockPanel.y + dockPanel.height - dockPanel.clampedThickness;
+            return y >= dockPanel.y + dockPanel.height - dockPanel.clampedThickness && y <= dockPanel.y + dockPanel.height;
         return false;
     }
     function spanBounds(near: real, far: real, span: real): point {
