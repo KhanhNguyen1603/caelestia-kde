@@ -59,19 +59,27 @@ CustomMouseArea {
 
         if (dockPanel.position === "bottom") {
             const barOffset = bar.position === "bottom" ? bar.implicitHeight : 0;
-            return y >= screen.height - barOffset - reach && y <= screen.height;
+            const inY = y >= screen.height - barOffset - reach && y <= screen.height;
+            const inX = x >= dockPanel.x && x <= dockPanel.x + dockPanel.width;
+            return inY && inX;
         }
         if (dockPanel.position === "top") {
             const barOffset = bar.position === "top" ? bar.implicitHeight : 0;
-            return y >= 0 && y <= barOffset + reach;
+            const inY = y >= 0 && y <= barOffset + reach;
+            const inX = x >= dockPanel.x && x <= dockPanel.x + dockPanel.width;
+            return inY && inX;
         }
         if (dockPanel.position === "left") {
             const barOffset = bar.position === "left" ? bar.implicitWidth : 0;
-            return x >= 0 && x <= barOffset + reach;
+            const inX = x >= 0 && x <= barOffset + reach;
+            const inY = y >= dockPanel.y && y <= dockPanel.y + dockPanel.height;
+            return inX && inY;
         }
         if (dockPanel.position === "right") {
             const barOffset = bar.position === "right" ? bar.implicitWidth : 0;
-            return x >= screen.width - barOffset - reach && x <= screen.width;
+            const inX = x >= screen.width - barOffset - reach && x <= screen.width;
+            const inY = y >= dockPanel.y && y <= dockPanel.y + dockPanel.height;
+            return inX && inY;
         }
         return false;
     }

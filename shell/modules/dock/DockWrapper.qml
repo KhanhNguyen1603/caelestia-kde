@@ -53,9 +53,11 @@ Item {
     property bool revealActive: false
     readonly property bool hovered: revealActive || dockHover.hovered
     readonly property bool isHorizontal: root.position === "top" || root.position === "bottom"
+    readonly property int defaultLength: Math.min(isHorizontal ? screen.width - 40 : screen.height - 40, Math.max(200, content.childrenRect.width > 0 ? content.childrenRect.width + padding * 2 : 400))
+    readonly property int clampedLength: defaultLength
     readonly property int clampedThickness: Math.max(Config.border.minThickness, isHorizontal ? implicitHeight : implicitWidth)
-    readonly property int clampedWidth: isHorizontal ? root.width : clampedThickness
-    readonly property int clampedHeight: isHorizontal ? clampedThickness : root.height
+    readonly property int clampedWidth: isHorizontal ? clampedLength : clampedThickness
+    readonly property int clampedHeight: isHorizontal ? clampedThickness : clampedLength
 
     onPointerInReachChanged: {
         if (pointerInReach) {
@@ -71,6 +73,8 @@ Item {
         }
     }
 
+    width: clampedWidth
+    height: clampedHeight
     clip: true
     visible: isHorizontal ? height > Config.border.thickness : width > Config.border.thickness
     implicitWidth: isHorizontal ? 0 : (fullscreen ? 0 : Config.border.thickness)

@@ -73,10 +73,10 @@ StyledWindow {
     readonly property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
     readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
     readonly property real borderLayoutThickness: hasFullscreen ? 0 : dynamicBorderThickness
-    readonly property real edgeThicknessLeft: (bar.position === "left" ? bar.implicitWidth : 0) + (dockPanel.position === "left" ? dockPanel.implicitWidth : 0) + ((bar.position !== "left" && dockPanel.position !== "left") ? root.borderThickness : 0)
-    readonly property real edgeThicknessRight: (bar.position === "right" ? bar.implicitWidth : 0) + (dockPanel.position === "right" ? dockPanel.implicitWidth : 0) + ((bar.position !== "right" && dockPanel.position !== "right") ? root.borderThickness : 0)
-    readonly property real edgeThicknessTop: (bar.position === "top" ? bar.implicitHeight : 0) + (dockPanel.position === "top" ? dockPanel.implicitHeight : 0) + ((bar.position !== "top" && dockPanel.position !== "top") ? root.borderThickness : 0)
-    readonly property real edgeThicknessBottom: (bar.position === "bottom" ? bar.implicitHeight : 0) + (dockPanel.position === "bottom" ? dockPanel.implicitHeight : 0) + ((bar.position !== "bottom" && dockPanel.position !== "bottom") ? root.borderThickness : 0)
+    readonly property real edgeThicknessLeft: (bar.position === "left" ? bar.implicitWidth : 0) + ((bar.position !== "left") ? root.borderThickness : 0)
+    readonly property real edgeThicknessRight: (bar.position === "right" ? bar.implicitWidth : 0) + ((bar.position !== "right") ? root.borderThickness : 0)
+    readonly property real edgeThicknessTop: (bar.position === "top" ? bar.implicitHeight : 0) + ((bar.position !== "top") ? root.borderThickness : 0)
+    readonly property real edgeThicknessBottom: (bar.position === "bottom" ? bar.implicitHeight : 0) + ((bar.position !== "bottom") ? root.borderThickness : 0)
     property color surfaceColour: Colours.tPalette.m3surface
     readonly property int dragMaskPadding: {
         if (focusGrabState.active || panels.popouts.isDetached)
@@ -398,8 +398,8 @@ StyledWindow {
             deformScale: (GlobalConfig.appearance.blurMask || !GlobalConfig.appearance.transparency.enabled) ? ((0.1 * Config.appearance.deformScale) / 10000) : 0
         }
         BlobRect {
-            visible: GlobalConfig.appearance.islands && dockPanel.visible
-            group: GlobalConfig.appearance.islands ? blobGroup : null
+            visible: dockPanel.visible
+            group: blobGroup
             x: dockPanel.x
             y: dockPanel.y
             implicitWidth: dockPanel.width
@@ -751,100 +751,46 @@ StyledWindow {
         DockWrapper {
             id: dockPanel
 
-            property string vAnchor: (dockPanel.position === "left" || dockPanel.position === "right") ? "both" : (dockPanel.position === "top" ? "top" : "bottom")
-            property string hAnchor: (dockPanel.position === "top" || dockPanel.position === "bottom") ? "both" : (dockPanel.position === "left" ? "left" : "right")
+            property string vAnchor: (dockPanel.position === "left" || dockPanel.position === "right") ? "none" : (dockPanel.position === "top" ? "top" : "bottom")
+            property string hAnchor: (dockPanel.position === "top" || dockPanel.position === "bottom") ? "none" : (dockPanel.position === "left" ? "left" : "right")
+
+            x: {
+                if (dockPanel.position === "left") {
+                    return (bar.position === "left" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0);
+                } else if (dockPanel.position === "right") {
+                    return parent.width - width - ((bar.position === "right" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0));
+                } else {
+                    if (Config.dockPanel.alignment === "start") {
+                        return (bar.position === "left" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0);
+                    } else if (Config.dockPanel.alignment === "end") {
+                        return parent.width - width - ((bar.position === "right" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0));
+                    } else {
+                        return Math.round((parent.width - width) / 2);
+                    }
+                }
+            }
+
+            y: {
+                if (dockPanel.position === "top") {
+                    return (bar.position === "top" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0);
+                } else if (dockPanel.position === "bottom") {
+                    return parent.height - height - ((bar.position === "bottom" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0));
+                } else {
+                    if (Config.dockPanel.alignment === "start") {
+                        return (bar.position === "top" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0);
+                    } else if (Config.dockPanel.alignment === "end") {
+                        return parent.height - height - ((bar.position === "bottom" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0));
+                    } else {
+                        return Math.round((parent.height - height) / 2);
+                    }
+                }
+            }
 
             screen: root.screen
             visibilities: visibilities
             fullscreen: root.hasFullscreen
             Component.onCompleted: Visibilities.registerDockPanel(root.screen, this)
             Component.onDestruction: Visibilities.unregisterDockPanel(root.screen)
-            states: [
-                State {
-                    name: "left"
-                    when: dockPanel.position === "left"
-
-                    AnchorChanges {
-                        target: dockPanel
-                        anchors.left: parent.left
-                        anchors.right: undefined
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                    }
-                    PropertyChanges {
-                        target: dockPanel
-                        width: dockPanel.implicitWidth
-                        height: undefined
-                        anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                        anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                        anchors.leftMargin: (bar.position === "left" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0)
-                        anchors.rightMargin: 0
-                    }
-                },
-                State {
-                    name: "right"
-                    when: dockPanel.position === "right"
-
-                    AnchorChanges {
-                        target: dockPanel
-                        anchors.left: undefined
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                    }
-                    PropertyChanges {
-                        target: dockPanel
-                        width: dockPanel.implicitWidth
-                        height: undefined
-                        anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                        anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                        anchors.leftMargin: 0
-                        anchors.rightMargin: (bar.position === "right" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0)
-                    }
-                },
-                State {
-                    name: "top"
-                    when: dockPanel.position === "top"
-
-                    AnchorChanges {
-                        target: dockPanel
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.bottom: undefined
-                    }
-                    PropertyChanges {
-                        target: dockPanel
-                        width: undefined
-                        height: dockPanel.implicitHeight
-                        anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                        anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                        anchors.topMargin: (bar.position === "top" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0)
-                        anchors.bottomMargin: 0
-                    }
-                },
-                State {
-                    name: "bottom"
-                    when: dockPanel.position === "bottom"
-
-                    AnchorChanges {
-                        target: dockPanel
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: undefined
-                        anchors.bottom: parent.bottom
-                    }
-                    PropertyChanges {
-                        target: dockPanel
-                        width: undefined
-                        height: dockPanel.implicitHeight
-                        anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                        anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                        anchors.bottomMargin: (bar.position === "bottom" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0)
-                        anchors.topMargin: 0
-                    }
-                }
-            ]
         }
         Connections {
             function onOpenDesktopContextMenu(x, y, screenName) {

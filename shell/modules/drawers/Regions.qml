@@ -16,10 +16,10 @@ Region {
     readonly property real clampedThickness: Config.border.clampedThickness
     readonly property real dockPanelThickness: dockPanel && !dockPanel.disabled ? (!Config.dockPanel.persistent ? Math.max(dockPanel.clampedThickness, edgeExtent(Config.dockPanel.dragThreshold)) : dockPanel.clampedThickness) : 0
     readonly property string dockPanelPosition: dockPanel ? dockPanel.position : Config.dockPanel.position
-    readonly property real barLeftWidth: (bar.position === "left" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "left" ? dockPanelThickness : 0)
-    readonly property real barRightWidth: (bar.position === "right" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "right" ? dockPanelThickness : 0)
-    readonly property real barTopHeight: (bar.position === "top" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "top" ? dockPanelThickness : 0)
-    readonly property real barBottomHeight: (bar.position === "bottom" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "bottom" ? dockPanelThickness : 0)
+    readonly property real barLeftWidth: bar.position === "left" ? bar.clampedThickness : clampedThickness
+    readonly property real barRightWidth: bar.position === "right" ? bar.clampedThickness : clampedThickness
+    readonly property real barTopHeight: bar.position === "top" ? bar.clampedThickness : clampedThickness
+    readonly property real barBottomHeight: bar.position === "bottom" ? bar.clampedThickness : clampedThickness
     // A closed panel's input region must be at least as deep as its hover trigger,
     // otherwise the pointer never reaches the area Interactions tests against.
 
@@ -82,10 +82,20 @@ Region {
         width: panel.width * (1 - root.panels.popoutsWrapper.offsetScale)
     }
     Region {
-        x: root.dockPanel ? root.dockPanel.x : 0
-        y: root.dockPanel ? root.dockPanel.y : 0
-        width: (root.dockPanel && root.dockPanel.visible) ? root.dockPanel.width : 0
-        height: (root.dockPanel && root.dockPanel.visible) ? root.dockPanel.height : 0
+        x: root.dockPanel ? (root.dockPanel.isHorizontal ? root.dockPanel.x : (root.dockPanel.position === "left" ? 0 : root.win.width - width)) : 0
+        y: root.dockPanel ? (root.dockPanel.isHorizontal ? (root.dockPanel.position === "top" ? 0 : root.win.height - height) : root.dockPanel.y) : 0
+        width: {
+            if (!root.dockPanel || root.dockPanel.disabled) return 0;
+            if (root.dockPanel.visible) return root.dockPanel.width;
+            if (root.dockPanel.isHorizontal) return root.dockPanel.clampedLength;
+            return root.Config.dockPanel.showOnHover ? root.edgeExtent(root.Config.dockPanel.dragThreshold) : 0;
+        }
+        height: {
+            if (!root.dockPanel || root.dockPanel.disabled) return 0;
+            if (root.dockPanel.visible) return root.dockPanel.height;
+            if (!root.dockPanel.isHorizontal) return root.dockPanel.clampedLength;
+            return root.Config.dockPanel.showOnHover ? root.edgeExtent(root.Config.dockPanel.dragThreshold) : 0;
+        }
         intersection: Intersection.Subtract
     }
     Region {
