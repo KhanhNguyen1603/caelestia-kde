@@ -525,7 +525,12 @@ StyledWindow {
             property real extraShift: panels.popouts.isDetached ? 0 : 0.2
             property bool connectedToSidebar: (bar.position === "top" || bar.position === "bottom") && panels.popouts.sidebarOpen && panels.popouts.implicitWidth <= Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) + 1 && !panels.popouts.isDockPopout
 
-            visible: panel.visible && !popoutBg.ownsSurface
+            // Hiding the plate is not enough to keep it out of the way: it is merged into
+            // the blob the panels share, and that shape is drawn whatever this item does.
+            readonly property bool shown: panel.visible && !popoutBg.ownsSurface
+
+            visible: popoutBg.shown
+            group: popoutBg.shown ? blobGroup : null
 
             panel: panels.popoutsWrapper
             deformAmount: connectedToSidebar ? 0.03 : (panels.popouts.isDetached ? 0.05 : panels.popouts.hasCurrent ? 0.15 : 0.1)

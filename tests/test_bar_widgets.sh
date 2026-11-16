@@ -490,7 +490,9 @@ test_the_box_is_the_size_its_cells_are() {
     local content_window="$REPO_ROOT/shell/modules/drawers/ContentWindow.qml"
     assert_file_contains "$content_window" 'readonly property bool ownsSurface: panels.popouts.currentOwnsSurface' \
         "the box is the one popout that opens without a panel behind it"
-    assert_file_contains "$content_window" 'visible: panel.visible && !popoutBg.ownsSurface' \
+    assert_file_contains "$content_window" 'group: popoutBg.shown ? blobGroup : null' \
+        "and is kept out of the blob the panels are merged into, which draws its shape whatever the plate does"
+    assert_file_contains "$content_window" 'visible: popoutBg.shown' \
         "so the shared popout plate stays down for it"
     assert_file_contains "$content_window" 'target: popoutBg.ownsSurface ? null : panels.popoutsWrapper' \
         "and nothing is blurred where that plate would have been, which showed as the box split across its middle"
