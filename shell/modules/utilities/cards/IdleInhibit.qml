@@ -56,13 +56,7 @@ StyledRect {
 
             StyledText {
                 Layout.fillWidth: true
-                text: {
-                    if (!IdleInhibitor.enabled)
-                        return qsTr("Normal power management");
-                    if (IdleInhibitor.expiresAt)
-                        return qsTr("Preventing sleep until %1").arg(Time.clockTime(IdleInhibitor.expiresAt));
-                    return qsTr("Preventing sleep mode");
-                }
+                text: IdleInhibitor.summaryText
                 color: Colours.palette.m3onSurfaceVariant
                 font: Tokens.font.body.small
                 elide: Text.ElideRight
@@ -101,7 +95,7 @@ StyledRect {
                 id: activeText
 
                 anchors.centerIn: parent
-                text: IdleInhibitor.expiresAt ? qsTr("Until %1").arg(Time.clockTime(IdleInhibitor.expiresAt)) : qsTr("Active since %1").arg(Time.clockTime(IdleInhibitor.enabledSince))
+                text: IdleInhibitor.periodText
                 color: Colours.palette.m3onPrimary
                 font: Tokens.font.body.builders.small.size(Math.round(Tokens.font.body.small.pointSize * 0.9)).build()
             }

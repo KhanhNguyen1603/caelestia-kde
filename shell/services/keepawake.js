@@ -41,12 +41,19 @@ function restoredUntil(stored, mode) {
     return isFinite(until) && until > 0 ? until : 0;
 }
 
-/// Remembered across restarts; a missing or unreadable value keeps the screen on, which is
-/// what the widget has always done.
-function restoredScreenOn(stored) {
-    return !(stored && stored.screenOn === false);
+/// The whole state a saved file describes, so the service holds no rules of its own about
+/// what an old or stale file means.
+function restore(stored, now) {
+    const mode = restoredMode(stored, now);
+    const since = new Date((stored && stored.since) ?? now);
+    return {
+        mode: mode,
+        // An unparsable timestamp falls back to now rather than throwing.
+        since: isNaN(since.getTime()) ? new Date(now) : since,
+        until: restoredUntil(stored, mode)
+    };
 }
 
-function serialize(mode, since, until, screenOn) {
-    return JSON.stringify({ mode: mode, since: since, until: until, screenOn: screenOn });
+function serialize(state) {
+    return JSON.stringify({ mode: state.mode, since: state.since.toISOString(), until: state.until });
 }

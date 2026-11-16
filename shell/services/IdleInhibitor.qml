@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import qs.services
 import qs.utils
 import "keepawake.js" as KeepAwake
 
@@ -26,7 +27,9 @@ Singleton {
     // the file cannot look like a toggle, and no reader can catch half of a change. The
     // functions below are the only way in: writing `enabled` directly would skip the file.
     // `until` is an epoch and 0 means "no end", so it survives a round trip as a number.
-    property var state: ({ mode: "off", since: new Date(), until: 0, screenOn: true })
+    property var state: ({ mode: KeepAwake.OFF, since: new Date(), until: 0 })
+    // What was last written, so a change that leaves the state alone does not touch the disk.
+    property string savedState: ""
 
     readonly property bool enabled: root.state.mode !== root.modeOff
     readonly property string mode: root.state.mode
@@ -34,25 +37,24 @@ Singleton {
     readonly property bool hasExpiry: root.state.until > 0
     /// When the hold lets go on its own, or null while it is indefinite.
     readonly property var expiresAt: root.hasExpiry ? new Date(root.state.until) : null
-    // The compositor's idle inhibitor keeps the display lit as well as the machine awake,
-    // so this is a remembered preference rather than a second, separate inhibit.
-    readonly property bool keepScreenOn: root.state.screenOn
+
+    /// How the current hold reads in the bar chip and in the utilities card. Owned here
+    /// because it is the same question in both places, and a service may carry its own
+    /// wording (`Timers` does).
+    readonly property string periodText: root.hasExpiry
+        ? qsTr("Until %1").arg(Time.clockTime(root.expiresAt))
+        : qsTr("Active since %1").arg(Time.clockTime(root.enabledSince))
+    /// The card's one-line description of what the inhibitor is doing.
+    readonly property string summaryText: !root.enabled
+        ? qsTr("Normal power management")
+        : root.hasExpiry
+            ? qsTr("Preventing sleep until %1").arg(Time.clockTime(root.expiresAt))
+            : qsTr("Preventing sleep mode")
 
     function setEnabled(value: bool): void {
-        if (value === root.enabled)
-            return;
-
-        if (value) {
-            root.keepAwakeIndefinitely();
-            return;
-        }
-
-        root.state = { mode: root.modeOff, since: root.state.since, until: 0, screenOn: root.state.screenOn };
-        root.save();
-    }
-
-    function keepAwakeIndefinitely(): void {
-        root.state = { mode: root.modeIndefinite, since: root.enabled ? root.state.since : new Date(), until: 0, screenOn: root.state.screenOn };
+        root.state = value
+            ? { mode: root.modeIndefinite, since: root.enabled ? root.state.since : new Date(), until: 0 }
+            : { mode: root.modeOff, since: root.state.since, until: 0 };
         root.save();
     }
 
@@ -63,40 +65,28 @@ Singleton {
 
     /// Keeps the machine awake until the given moment, picked by hand rather than counted.
     function keepAwakeUntil(when: date): void {
-        const until = when instanceof Date ? when.getTime() : NaN;
-        if (isNaN(until)) {
-            Logger.log("[IdleInhibitor] ignoring an unreadable expiry:", when);
-            return;
-        }
-
-        root.raise(root.modeUntil, until);
+        root.raise(root.modeUntil, when instanceof Date ? when.getTime() : NaN);
     }
 
     function raise(mode: string, until: real): void {
-        // A moment that has already passed is the same request as letting go now.
+        // A moment that has already passed is a request this cannot honour. Dropping a hold
+        // the caller did not ask to end would be a state change dressed up as a rejection.
         if (!(until > Date.now())) {
-            root.setEnabled(false);
+            Logger.log("[IdleInhibitor] ignoring an expiry that is not in the future:", until);
             return;
         }
 
-        root.state = { mode: mode, since: root.enabled ? root.state.since : new Date(), until: until, screenOn: root.state.screenOn };
-        root.save();
-    }
-
-    function setKeepScreenOn(value: bool): void {
-        if (value === root.state.screenOn)
-            return;
-
-        root.state = { mode: root.state.mode, since: root.state.since, until: root.state.until, screenOn: value };
+        root.state = { mode: mode, since: root.enabled ? root.state.since : new Date(), until: until };
         root.save();
     }
 
     function save(): void {
-        stateFile.setText(root.serialize(root.state));
-    }
+        const data = KeepAwake.serialize(root.state);
+        if (data === root.savedState)
+            return;
 
-    function serialize(state: var): string {
-        return KeepAwake.serialize(state.mode, state.since.toISOString(), state.until, state.screenOn);
+        root.savedState = data;
+        stateFile.setText(data);
     }
 
     function restore(text: string): void {
@@ -107,19 +97,13 @@ Singleton {
             Logger.log("[IdleInhibitor] keep-awake state is unreadable, starting with it off:", err);
         }
 
-        // An unparsable timestamp falls back to now rather than throwing.
-        const since = stored?.since ? new Date(stored.since) : new Date();
-        const mode = KeepAwake.restoredMode(stored, Date.now());
-        root.state = {
-            mode: mode,
-            since: isNaN(since.getTime()) ? new Date() : since,
-            until: KeepAwake.restoredUntil(stored, mode),
-            screenOn: KeepAwake.restoredScreenOn(stored)
-        };
+        root.state = KeepAwake.restore(stored, Date.now());
+        root.savedState = KeepAwake.serialize(root.state);
     }
 
-    // One ticker for the whole shell. A restarted shell still lets go on time, because the
-    // moment that was stored is read back rather than a countdown restarted.
+    // One ticker for the whole shell. Not a one-shot armed to the expiry: QML timers are
+    // monotonic, so a long sleep would fire one late, while comparing the wall clock again
+    // every second lets go within a second of the machine waking.
     Timer {
         interval: 1000
         repeat: true

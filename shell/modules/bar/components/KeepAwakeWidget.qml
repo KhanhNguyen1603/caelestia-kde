@@ -16,8 +16,8 @@ StyledRect {
 
     property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
 
-    implicitWidth: isHorizontal ? Tokens.sizes.bar.innerWidth : Tokens.sizes.bar.innerWidth
-    implicitHeight: isHorizontal ? Tokens.sizes.bar.innerWidth : Tokens.sizes.bar.innerWidth
+    implicitWidth: Tokens.sizes.bar.innerWidth
+    implicitHeight: Tokens.sizes.bar.innerWidth
 
     color: Qt.alpha(Colours.tPalette.m3surfaceContainer, 0)
     radius: Tokens.rounding.full
@@ -42,65 +42,50 @@ StyledRect {
         }
     }
 
-    Item {
-        id: content
+    MaterialIcon {
+        id: icon
 
         anchors.centerIn: parent
+        text: "coffee"
+        // No chip behind it: the glyph itself carries the state, filled while awake.
+        color: IdleInhibitor.enabled ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+        fill: IdleInhibitor.enabled ? 1 : 0
+        fontStyle: Tokens.font.icon.builders.medium.build()
+    }
 
-        width: root.isHorizontal ? Tokens.sizes.bar.innerWidth : Tokens.sizes.bar.innerWidth
-        height: root.isHorizontal ? Tokens.sizes.bar.innerWidth : Tokens.sizes.bar.innerWidth
+    Loader {
+        id: activeChip
 
-        MaterialIcon {
-            id: icon
+        sourceComponent: StyledRect {
+            implicitWidth: text.implicitWidth + Tokens.padding.medium * 2
+            implicitHeight: text.implicitHeight + Tokens.padding.small
 
-            anchors.centerIn: parent
-            text: "coffee"
-            // No chip behind it: the glyph itself carries the state, filled while awake.
-            color: IdleInhibitor.enabled ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-            fill: IdleInhibitor.enabled ? 1 : 0
-            fontStyle: Tokens.font.icon.builders.medium.build()
+            radius: Tokens.rounding.full
+            color: Colours.palette.m3primary
+
+            StyledText {
+                id: text
+
+                anchors.centerIn: parent
+                text: IdleInhibitor.periodText
+                color: Colours.palette.m3onPrimary
+                font: Tokens.font.body.builders.small.size(Math.round(Tokens.font.body.small.pointSize * 0.9)).build()
+            }
         }
 
-        Loader {
-            id: activeChip
+        active: IdleInhibitor.enabled && Config.bar.keepawake.showActiveChip
+        anchors.top: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin: IdleInhibitor.enabled ? Tokens.spacing.small : 0
+        opacity: IdleInhibitor.enabled ? 1 : 0
+        scale: IdleInhibitor.enabled ? 1 : 0.5
 
-            sourceComponent: StyledRect {
-                implicitWidth: text.implicitWidth + Tokens.padding.medium * 2
-                implicitHeight: text.implicitHeight + Tokens.padding.small
+        Behavior on opacity {
+            Anim { type: Anim.StandardSmall }
+        }
 
-                radius: Tokens.rounding.full
-                color: Colours.palette.m3primary
-
-                StyledText {
-                    id: text
-
-                    anchors.centerIn: parent
-                    text: {
-                        if (!IdleInhibitor.enabled)
-                            return qsTr("Inactive");
-                        if (IdleInhibitor.expiresAt)
-                            return qsTr("Until %1").arg(Time.clockTime(IdleInhibitor.expiresAt));
-                        return qsTr("Active since %1").arg(Time.clockTime(IdleInhibitor.enabledSince));
-                    }
-                    color: Colours.palette.m3onPrimary
-                    font: Tokens.font.body.builders.small.size(Math.round(Tokens.font.body.small.pointSize * 0.9)).build()
-                }
-            }
-
-            active: IdleInhibitor.enabled && Config.bar.keepawake.showActiveChip
-            anchors.top: parent.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.topMargin: IdleInhibitor.enabled ? Tokens.spacing.small : 0
-            opacity: IdleInhibitor.enabled ? 1 : 0
-            scale: IdleInhibitor.enabled ? 1 : 0.5
-
-            Behavior on opacity {
-                Anim { type: Anim.StandardSmall }
-            }
-
-            Behavior on scale {
-                Anim { type: Anim.StandardSmall }
-            }
+        Behavior on scale {
+            Anim { type: Anim.StandardSmall }
         }
     }
 }

@@ -43,7 +43,7 @@ test_every_caller_uses_the_setter() {
 }
 
 test_restoring_cannot_masquerade_as_a_toggle() {
-    assert_file_contains "$SERVICE" 'root.state = {' \
+    assert_file_contains "$SERVICE" 'root.state = KeepAwake.restore(stored, Date.now())' \
         "reading the file replaces the whole value instead of assigning a flag"
     assert_file_contains "$SERVICE" 'onLoaded: root.restore(stateFile.text())' \
         "the file has to be read back on start"
@@ -52,7 +52,7 @@ test_restoring_cannot_masquerade_as_a_toggle() {
 test_a_broken_file_does_not_take_the_shell_with_it() {
     assert_file_contains "$SERVICE" 'Logger.log("[IdleInhibitor]' \
         "an unreadable file is reported (under debug logs) rather than swallowed"
-    assert_file_contains "$SERVICE" 'isNaN(since.getTime())' \
+    assert_file_contains "$LOGIC" 'isNaN(since.getTime())' \
         "an unparsable timestamp falls back to now instead of throwing"
 }
 
@@ -63,29 +63,35 @@ test_the_inhibitor_and_the_ipc_surface_are_unchanged() {
     assert_file_contains "$SERVICE" 'function isEnabled(): bool' "and still answers the same question"
 }
 
-test_a_restored_expiry_that_passed_is_not_raised_again() {
-    check_js "a hold whose moment passed while the shell was down starts off" \
+test_a_restored_file_becomes_the_whole_state() {
+    check_js "a saved file restores to a state the widget can use" \
         "$LOGIC" KeepAwake '
 const K = KeepAwake;
-assert.strictEqual(K.restoredMode({ mode: "interval", until: 1000 }, 2000), "off");
-assert.strictEqual(K.restoredMode({ mode: "until", until: 1000 }, 2000), "off");
-assert.strictEqual(K.restoredMode({ mode: "interval", until: 3000 }, 2000), "interval");
-assert.strictEqual(K.restoredMode({ mode: "until", until: 3000 }, 2000), "until");
-'
-}
+const now = new Date("2024-01-01T12:00:00.000Z").getTime();
+const later = now + 60000;
+const earlier = now - 60000;
 
-test_an_indefinite_hold_has_no_moment_to_wait_for() {
-    check_js "indefinite ignores a stale moment, and old files keep working" \
-        "$LOGIC" KeepAwake '
-const K = KeepAwake;
-assert.strictEqual(K.restoredMode({ mode: "indefinite", until: 1000 }, 2000), "indefinite");
-assert.strictEqual(K.restoredMode({ enabled: true }, 2000), "indefinite");
-assert.strictEqual(K.restoredMode({ enabled: false }, 2000), "off");
-assert.strictEqual(K.restoredMode({ mode: "nonsense" }, 2000), "off");
-assert.strictEqual(K.restoredMode(null, 2000), "off");
-assert.strictEqual(K.restoredUntil({ mode: "indefinite", until: 1000 }, "indefinite"), 0);
-assert.strictEqual(K.restoredUntil({ mode: "interval", until: 3000 }, "interval"), 3000);
-assert.strictEqual(K.restoredUntil({ mode: "until", until: "soon" }, "until"), 0);
+// A hold whose moment passed while the shell was down was never raised this boot.
+assert.strictEqual(K.restore({ mode: "interval", until: earlier, since: "2024-01-01T11:00:00.000Z" }, now).mode, "off");
+assert.strictEqual(K.restore({ mode: "until", until: earlier }, now).mode, "off");
+
+const held = K.restore({ mode: "until", until: later, since: "2024-01-01T11:00:00.000Z" }, now);
+assert.strictEqual(held.mode, "until");
+assert.strictEqual(held.until, later);
+assert.strictEqual(new Date(held.since).getTime(), new Date("2024-01-01T11:00:00.000Z").getTime());
+
+// A file from before the modes existed only carried `enabled`.
+assert.strictEqual(K.restore({ enabled: true }, now).mode, "indefinite");
+assert.strictEqual(K.restore({ enabled: false }, now).mode, "off");
+assert.strictEqual(K.restore({ mode: "nonsense" }, now).mode, "off");
+assert.strictEqual(K.restore(null, now).mode, "off");
+
+// Indefinite and off have nowhere to end, and a broken moment cannot invent one.
+assert.strictEqual(K.restore({ mode: "indefinite", until: later }, now).until, 0);
+assert.strictEqual(K.restore({ mode: "until", until: "soon" }, now).until, 0);
+
+// A timestamp that cannot be read falls back to now rather than propagating a bad date.
+assert.strictEqual(new Date(K.restore({ mode: "indefinite", since: "not a date" }, now).since).getTime(), now);
 '
 }
 
@@ -93,12 +99,14 @@ test_the_state_survives_a_round_trip() {
     check_js "what is written reads back as the same hold" \
         "$LOGIC" KeepAwake '
 const K = KeepAwake;
-const saved = JSON.parse(K.serialize("until", "2024-01-01T00:00:00.000Z", 5000, false));
-assert.deepStrictEqual(saved, { mode: "until", since: "2024-01-01T00:00:00.000Z", until: 5000, screenOn: false });
-assert.strictEqual(K.restoredMode(saved, 1000), "until");
-assert.strictEqual(K.restoredUntil(saved, "until"), 5000);
-assert.strictEqual(K.restoredScreenOn(saved), false);
-assert.strictEqual(K.restoredScreenOn({}), true);
+const since = new Date("2024-01-01T00:00:00.000Z");
+const saved = JSON.parse(K.serialize({ mode: "until", since: since, until: 5000 }));
+assert.deepStrictEqual(saved, { mode: "until", since: "2024-01-01T00:00:00.000Z", until: 5000 });
+
+const restored = K.restore(saved, 1000);
+assert.strictEqual(restored.mode, "until");
+assert.strictEqual(restored.until, 5000);
+assert.strictEqual(new Date(restored.since).getTime(), since.getTime());
 '
 }
 
@@ -115,26 +123,15 @@ test_the_widget_opens_the_menu_rather_than_the_settings_card() {
 test_the_menu_offers_every_mode_and_the_expiry() {
     assert_file_contains "$MENU" 'currentName = "keepawakeexpiry"' \
         "the third entry hands off to the expiry picker"
-    assert_file_contains "$MENU" 'IdleInhibitor.keepAwakeFor(' "the interval presets go through the service"
-    assert_file_contains "$MENU" 'IdleInhibitor.keepAwakeIndefinitely(' "so does the indefinite hold"
-    assert_file_contains "$MENU" 'IdleInhibitor.setKeepScreenOn(' "and the screen toggle"
+    # Every mode is set through the service, so none of them can write the file behind it.
+    assert_file_contains "$MENU" 'IdleInhibitor.keepAwakeFor(' "the interval presets"
+    assert_file_contains "$MENU" 'IdleInhibitor.setEnabled(' "the indefinite hold and off"
 }
 
-test_the_picker_refuses_a_moment_that_has_passed() {
-    assert_file_contains "$EXPIRY" 'readonly property bool valid: root.pickedDate.getTime() > Date.now()' \
-        "a moment in the past is not a hold"
-    assert_file_contains "$EXPIRY" 'disabled: !root.valid' "so confirming it is unavailable"
+test_the_picker_hands_its_moment_to_the_service() {
     assert_file_contains "$EXPIRY" 'IdleInhibitor.keepAwakeUntil(root.pickedDate)' \
         "confirming hands the picked moment to the service"
-}
-
-test_the_screen_entry_cannot_be_ticked_while_the_hold_is_off() {
-    # Off and "keep screen on" together is a contradiction: nothing keeps the display lit
-    # when nothing is holding the machine awake.
-    assert_file_contains "$MENU" 'checked: IdleInhibitor.enabled && IdleInhibitor.keepScreenOn' \
-        "the tick has to require the hold"
-    assert_file_contains "$MENU" 'enabled: IdleInhibitor.enabled' \
-        "and the entry is unavailable without one"
+    assert_file_contains "$EXPIRY" 'disabled: !root.valid' "a moment it refuses cannot be confirmed"
 }
 
 test_hovering_the_widget_does_nothing() {

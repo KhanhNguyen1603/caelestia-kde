@@ -7,9 +7,9 @@ import qs.components
 import qs.components.controls
 import qs.services
 
-/// Picks the moment keep-awake gives up: the day comes off the month grid, the time off the
-/// two fields beside it. Confirming hands the moment to the service, which refuses one that
-/// has already passed.
+/// Picks the moment keep-awake gives up: the day off the month grid, the time off a slider a
+/// quarter of an hour at a time. Confirming hands the moment to the service, which refuses
+/// one that has already passed.
 ColumnLayout {
     id: root
 
@@ -20,23 +20,16 @@ ColumnLayout {
     property bool _isSidebarOpen: false
 
     property date viewDate: new Date()
-    /// An hour ahead, to the minute: confirming without touching anything should still do
-    /// something useful.
+    /// An hour ahead, to the quarter hour: confirming without touching anything should
+    /// still do something useful.
     property date pickedDate: {
         const when = new Date(Date.now() + 60 * 60 * 1000);
-        when.setSeconds(0, 0);
+        when.setMinutes(Math.ceil(when.getMinutes() / 15) * 15, 0, 0);
         return when;
     }
 
     readonly property bool valid: root.pickedDate.getTime() > Date.now()
-
-    function pad(value: int): string {
-        return String(value).padStart(2, "0");
-    }
-
-    function summary(): string {
-        return Qt.locale().toString(root.pickedDate, "ddd d MMM") + ", " + Time.clockTime(root.pickedDate);
-    }
+    readonly property int minuteOfDay: root.pickedDate.getHours() * 60 + root.pickedDate.getMinutes()
 
     function pick(date: date): void {
         const next = new Date(root.pickedDate.getTime());
@@ -47,12 +40,11 @@ ColumnLayout {
             root.viewDate = new Date(date.getFullYear(), date.getMonth(), 1);
     }
 
-    function setTime(hours: int, minutes: int): void {
-        if (isNaN(hours) || isNaN(minutes))
-            return;
-
+    function setMinuteOfDay(minutes: real): void {
+        // Quarters are what a hold is ever picked to: half an hour, an hour, a night.
+        const snapped = Math.min(24 * 60 - 15, Math.max(0, Math.round(minutes / 15) * 15));
         const next = new Date(root.pickedDate.getTime());
-        next.setHours(Math.max(0, Math.min(23, hours)), Math.max(0, Math.min(59, minutes)), 0, 0);
+        next.setHours(Math.floor(snapped / 60), snapped % 60, 0, 0);
         root.pickedDate = next;
     }
 
@@ -112,36 +104,38 @@ ColumnLayout {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.topMargin: Tokens.spacing.medium * root.scaleOffset
-                spacing: Tokens.spacing.small * root.scaleOffset
-
-                TimeField {
-                    value: root.pickedDate.getHours()
-                    maximum: 23
-                    onCommitted: value => root.setTime(value, root.pickedDate.getMinutes())
-                }
+                spacing: Tokens.spacing.medium * root.scaleOffset
 
                 StyledText {
                     Layout.alignment: Qt.AlignVCenter
-                    text: ":"
+                    text: qsTr("Time")
                     color: Colours.palette.m3onSurfaceVariant
                     font: Tokens.font.body.medium
                 }
 
-                TimeField {
-                    value: root.pickedDate.getMinutes()
-                    maximum: 59
-                    onCommitted: value => root.setTime(root.pickedDate.getHours(), value)
-                }
-
-                StyledText {
-                    Layout.alignment: Qt.AlignVCenter
+                CustomMouseArea {
                     Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignRight
-                    text: root.valid ? root.summary() : qsTr("That moment has already passed")
-                    color: root.valid ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3error
-                    font: Tokens.font.label.builders.small.size(Tokens.font.label.small.pointSize * root.fontScale).build()
-                    wrapMode: Text.WordWrap
+                    implicitHeight: Tokens.padding.medium * 3 * root.scaleOffset
+
+                    onWheel: event => root.setMinuteOfDay(root.minuteOfDay + (event.angleDelta.y > 0 ? 15 : -15))
+
+                    StyledSlider {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        implicitHeight: parent.implicitHeight
+
+                        value: root.minuteOfDay / (24 * 60)
+                        onInteraction: v => root.setMinuteOfDay(v * 24 * 60)
+                    }
                 }
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                text: root.valid ? Time.shortDateTime(root.pickedDate) : qsTr("That moment has already passed")
+                color: root.valid ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3error
+                font: Tokens.font.label.builders.small.size(Tokens.font.label.small.pointSize * root.fontScale).build()
             }
 
             RowLayout {
@@ -166,33 +160,6 @@ ColumnLayout {
                     onClicked: root.confirm()
                 }
             }
-        }
-    }
-
-    /// A two-digit hour or minute. The moment itself is the source of truth, so an edit that
-    /// does not survive clamping is put back as it was.
-    component TimeField: StyledTextField {
-        id: field
-
-        property int value
-        property int maximum: 59
-
-        signal committed(int value)
-
-        Layout.preferredWidth: 64 * root.scaleOffset
-        horizontalAlignment: TextInput.AlignHCenter
-        type: StyledTextField.Boxed
-        inputMethodHints: Qt.ImhDigitsOnly
-        validator: IntValidator {
-            bottom: 0
-            top: field.maximum
-        }
-
-        onValueChanged: field.text = root.pad(field.value)
-        Component.onCompleted: field.text = root.pad(field.value)
-        onEditingFinished: {
-            field.committed(parseInt(field.text, 10));
-            field.text = root.pad(field.value);
         }
     }
 }

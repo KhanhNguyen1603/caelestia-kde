@@ -29,10 +29,6 @@ ColumnLayout {
         root.popouts.hasCurrent = false;
     }
 
-    function expiryLabel(when: date): string {
-        return Qt.locale().toString(when, "d MMM") + " " + Time.clockTime(when);
-    }
-
     function pick(seconds: int): void {
         IdleInhibitor.keepAwakeFor(seconds);
         root.close();
@@ -84,7 +80,7 @@ ColumnLayout {
             MenuRow {
                 label: qsTr("Keep awake until expiration date and time")
                 checked: IdleInhibitor.mode === IdleInhibitor.modeUntil
-                hint: IdleInhibitor.mode === IdleInhibitor.modeUntil && IdleInhibitor.expiresAt ? root.expiryLabel(IdleInhibitor.expiresAt) : ""
+                hint: IdleInhibitor.mode === IdleInhibitor.modeUntil && IdleInhibitor.expiresAt ? Time.shortDateTime(IdleInhibitor.expiresAt) : ""
                 onActivated: root.popouts.currentName = "keepawakeexpiry"
             }
 
@@ -92,7 +88,7 @@ ColumnLayout {
                 label: qsTr("Keep awake indefinitely")
                 checked: IdleInhibitor.mode === IdleInhibitor.modeIndefinite
                 onActivated: {
-                    IdleInhibitor.keepAwakeIndefinitely();
+                    IdleInhibitor.setEnabled(true);
                     root.close();
                 }
             }
@@ -110,12 +106,12 @@ ColumnLayout {
 
             MenuRow {
                 label: qsTr("Keep screen on")
-                checked: IdleInhibitor.enabled && IdleInhibitor.keepScreenOn
-                // Nothing is holding the display lit while the hold is off, so ticking it
-                // then would be a contradiction rather than a setting. The entry stays put
-                // and greys out instead of vanishing, so the menu keeps its height.
-                enabled: IdleInhibitor.enabled
-                onActivated: IdleInhibitor.setKeepScreenOn(!IdleInhibitor.keepScreenOn)
+                // The compositor's idle inhibitor keeps the display lit as well as the
+                // machine awake, so this states what the hold does rather than offering a
+                // second thing to switch on — hence ticked and not selectable.
+                hint: qsTr("Included")
+                checked: true
+                enabled: false
             }
 
             Separator {}
@@ -176,7 +172,9 @@ ColumnLayout {
             anchors.leftMargin: (Tokens.padding.medium + (row.indented ? Tokens.padding.large : 0)) * root.scaleOffset
             anchors.rightMargin: Tokens.padding.medium * root.scaleOffset
             spacing: Tokens.spacing.small * root.scaleOffset
-            opacity: row.enabled ? 1 : 0.38
+            // A row that cannot be chosen still reads as a statement, so it is dimmed
+            // rather than faded out.
+            opacity: row.enabled ? 1 : 0.6
 
             MaterialIcon {
                 Layout.alignment: Qt.AlignVCenter
