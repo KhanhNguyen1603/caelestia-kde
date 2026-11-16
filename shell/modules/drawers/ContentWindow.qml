@@ -378,8 +378,8 @@ StyledWindow {
         BlobInvertedRect {
             anchors.fill: parent
             anchors.margins: -50
-            group: GlobalConfig.appearance.islands ? null : blobGroup
-            visible: !GlobalConfig.appearance.islands
+            group: bar.isIsland ? null : blobGroup
+            visible: !bar.isIsland
             radius: root.borderRounding
             borderLeft: root.edgeThicknessLeft - anchors.margins - root.sdfBorderOffset
             borderRight: root.edgeThicknessRight - anchors.margins - root.sdfBorderOffset
@@ -388,8 +388,8 @@ StyledWindow {
             Config.screen: root.screen.name
         }
         BlobRect {
-            visible: GlobalConfig.appearance.islands
-            group: GlobalConfig.appearance.islands ? blobGroup : null
+            visible: bar.isIsland
+            group: bar.isIsland ? blobGroup : null
             x: bar.x
             y: bar.y
             implicitWidth: bar.width
@@ -448,10 +448,10 @@ StyledWindow {
                 if (connectedToPopout) arr.push(popoutBg);
                 return arr;
             }
-            topLeftRadius: GlobalConfig.appearance.islands ? radius : ((bar.position === "top" && connectedToPopout) ? 0 : (bar.position === "bottom" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius))
-            topRightRadius: GlobalConfig.appearance.islands ? radius : ((bar.position === "top" && connectedToPopout) ? 0 : (bar.position === "bottom" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius))
-            bottomLeftRadius: GlobalConfig.appearance.islands ? radius : ((bar.position === "bottom" && connectedToPopout) ? 0 : (bar.position === "right" ? radius : Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius))
-            bottomRightRadius: GlobalConfig.appearance.islands ? radius : ((bar.position === "bottom" && connectedToPopout) ? 0 : (bar.position === "right" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius))
+            topLeftRadius: bar.isIsland ? radius : ((bar.position === "top" && connectedToPopout) ? 0 : (bar.position === "bottom" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius))
+            topRightRadius: bar.isIsland ? radius : ((bar.position === "top" && connectedToPopout) ? 0 : (bar.position === "bottom" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius))
+            bottomLeftRadius: bar.isIsland ? radius : ((bar.position === "bottom" && connectedToPopout) ? 0 : (bar.position === "right" ? radius : Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius))
+            bottomRightRadius: bar.isIsland ? radius : ((bar.position === "bottom" && connectedToPopout) ? 0 : (bar.position === "right" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius))
         }
         PanelBg {
             id: osdBg
@@ -478,10 +478,10 @@ StyledWindow {
             panel: panels.utilities
             deformAmount: panels.sidebar.visible ? 0.1 : 0.15
             exclude: panels.sidebar.offsetScale > 0.08 ? [] : [sidebarBg]
-            topLeftRadius: GlobalConfig.appearance.islands ? radius : (bar.position === "right" ? radius : (bar.position === "bottom" ? radius : Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius))
-            topRightRadius: GlobalConfig.appearance.islands ? radius : (bar.position === "right" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : (bar.position === "bottom" ? radius : Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius))
-            bottomLeftRadius: GlobalConfig.appearance.islands ? radius : (bar.position === "bottom" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius)
-            bottomRightRadius: GlobalConfig.appearance.islands ? radius : (bar.position === "bottom" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius)
+            topLeftRadius: bar.isIsland ? radius : (bar.position === "right" ? radius : (bar.position === "bottom" ? radius : Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius))
+            topRightRadius: bar.isIsland ? radius : (bar.position === "right" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : (bar.position === "bottom" ? radius : Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius))
+            bottomLeftRadius: bar.isIsland ? radius : (bar.position === "bottom" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius)
+            bottomRightRadius: bar.isIsland ? radius : (bar.position === "bottom" ? Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius : radius)
         }
         PanelBg {
             id: contextMenuBg
@@ -552,10 +552,10 @@ StyledWindow {
                     return panels.popouts.implicitWidth * (1 + extraShift);
                 return panels.popouts.implicitWidth;
             }
-            bottomLeftRadius: GlobalConfig.appearance.islands ? radius : ((bar.position === "top" && connectedToSidebar) ? 0 : radius)
-            bottomRightRadius: GlobalConfig.appearance.islands ? radius : ((bar.position === "top" && connectedToSidebar) ? 0 : radius)
-            topLeftRadius: GlobalConfig.appearance.islands ? radius : ((bar.position === "bottom" && connectedToSidebar) ? 0 : radius)
-            topRightRadius: GlobalConfig.appearance.islands ? radius : ((bar.position === "bottom" && connectedToSidebar) ? 0 : radius)
+            bottomLeftRadius: bar.isIsland ? radius : ((bar.position === "top" && connectedToSidebar) ? 0 : radius)
+            bottomRightRadius: bar.isIsland ? radius : ((bar.position === "top" && connectedToSidebar) ? 0 : radius)
+            topLeftRadius: bar.isIsland ? radius : ((bar.position === "bottom" && connectedToSidebar) ? 0 : radius)
+            topRightRadius: bar.isIsland ? radius : ((bar.position === "bottom" && connectedToSidebar) ? 0 : radius)
             y: {
                 const baseY = panels.popoutsWrapper.y + panels.popouts.y + panels.topMargin;
                 if (bar.position === "top")
@@ -621,9 +621,9 @@ StyledWindow {
                     target: bar
                     width: bar.implicitWidth
                     height: undefined
-                    anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                    anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                    anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                    anchors.topMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
+                    anchors.bottomMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
+                    anchors.leftMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
                     anchors.rightMargin: 0
                 }
             },
@@ -642,10 +642,10 @@ StyledWindow {
                     target: bar
                     width: bar.implicitWidth
                     height: undefined
-                    anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                    anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                    anchors.topMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
+                    anchors.bottomMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
                     anchors.leftMargin: 0
-                    anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                    anchors.rightMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
                 }
             },
             State {
@@ -663,9 +663,9 @@ StyledWindow {
                     target: bar
                     width: undefined
                     height: bar.implicitHeight
-                    anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                    anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                    anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                    anchors.leftMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
+                    anchors.rightMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
+                    anchors.topMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
                     anchors.bottomMargin: 0
                 }
             },
@@ -684,9 +684,9 @@ StyledWindow {
                     target: bar
                     width: undefined
                     height: bar.implicitHeight
-                    anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                    anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
-                    anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                    anchors.leftMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
+                    anchors.rightMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
+                    anchors.bottomMargin: bar.isIsland ? Tokens.spacing.extraLarge : 0
                     anchors.topMargin: 0
                 }
             }
@@ -756,14 +756,14 @@ StyledWindow {
 
             x: {
                 if (dockPanel.position === "left") {
-                    return (bar.position === "left" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0);
+                    return (bar.position === "left" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0);
                 } else if (dockPanel.position === "right") {
-                    return parent.width - width - ((bar.position === "right" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0));
+                    return parent.width - width - ((bar.position === "right" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0));
                 } else {
                     if (Config.dockPanel.alignment === "start") {
-                        return (bar.position === "left" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0);
+                        return (bar.position === "left" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0);
                     } else if (Config.dockPanel.alignment === "end") {
-                        return parent.width - width - ((bar.position === "right" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0));
+                        return parent.width - width - ((bar.position === "right" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0));
                     } else {
                         return Math.round((parent.width - width) / 2);
                     }
@@ -772,14 +772,14 @@ StyledWindow {
 
             y: {
                 if (dockPanel.position === "top") {
-                    return (bar.position === "top" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0);
+                    return (bar.position === "top" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0);
                 } else if (dockPanel.position === "bottom") {
-                    return parent.height - height - ((bar.position === "bottom" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0));
+                    return parent.height - height - ((bar.position === "bottom" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0));
                 } else {
                     if (Config.dockPanel.alignment === "start") {
-                        return (bar.position === "top" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0);
+                        return (bar.position === "top" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0);
                     } else if (Config.dockPanel.alignment === "end") {
-                        return parent.height - height - ((bar.position === "bottom" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0) : 0) + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0));
+                        return parent.height - height - ((bar.position === "bottom" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge : 0) : 0) + (dockPanel.isIsland ? Tokens.spacing.extraLarge : 0));
                     } else {
                         return Math.round((parent.height - height) / 2);
                     }
@@ -891,29 +891,29 @@ StyledWindow {
         Region {
             x: root.edgeThicknessLeft
             y: root.edgeThicknessTop
-            width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
-            height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             intersection: Intersection.Combine
         }
         Region {
             x: root.width - root.edgeThicknessRight - root.borderRounding
             y: root.edgeThicknessTop
-            width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
-            height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             intersection: Intersection.Combine
         }
         Region {
             x: root.edgeThicknessLeft
             y: root.height - root.edgeThicknessBottom - root.borderRounding
-            width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
-            height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             intersection: Intersection.Combine
         }
         Region {
             x: root.width - root.edgeThicknessRight - root.borderRounding
             y: root.height - root.edgeThicknessBottom - root.borderRounding
-            width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
-            height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             intersection: Intersection.Combine
         }
         // Cut 2px into the border at each corner so the arc's anti-aliased edge
@@ -928,33 +928,33 @@ StyledWindow {
             inRight: root.width - root.edgeThicknessRight - root.borderRounding
             inTop: root.edgeThicknessTop + root.borderRounding
             inBottom: root.height - root.edgeThicknessBottom - root.borderRounding
-            rTop: !GlobalConfig.appearance.islands ? root.borderRounding + 2 : 0
-            rBottom: !GlobalConfig.appearance.islands ? root.borderRounding + 2 : 0
-            rLeft: !GlobalConfig.appearance.islands ? root.borderRounding + 2 : 0
-            rRight: !GlobalConfig.appearance.islands ? root.borderRounding + 2 : 0
+            rTop: !bar.isIsland ? root.borderRounding + 2 : 0
+            rBottom: !bar.isIsland ? root.borderRounding + 2 : 0
+            rLeft: !bar.isIsland ? root.borderRounding + 2 : 0
+            rRight: !bar.isIsland ? root.borderRounding + 2 : 0
         }
         Region {
             x: 0; y: 0
-            width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? root.edgeThicknessLeft : 0
+            width: (!bar.isIsland && GlobalConfig.appearance.blur) ? root.edgeThicknessLeft : 0
             height: root.height
             intersection: Intersection.Combine
         }
         Region {
             x: root.width - root.edgeThicknessRight; y: 0
-            width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? root.edgeThicknessRight : 0
+            width: (!bar.isIsland && GlobalConfig.appearance.blur) ? root.edgeThicknessRight : 0
             height: root.height
             intersection: Intersection.Combine
         }
         Region {
             x: 0; y: 0
             width: root.width
-            height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? root.edgeThicknessTop : 0
+            height: (!bar.isIsland && GlobalConfig.appearance.blur) ? root.edgeThicknessTop : 0
             intersection: Intersection.Combine
         }
         Region {
             x: 0; y: root.height - root.edgeThicknessBottom
             width: root.width
-            height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? root.edgeThicknessBottom : 0
+            height: (!bar.isIsland && GlobalConfig.appearance.blur) ? root.edgeThicknessBottom : 0
             intersection: Intersection.Combine
         }
         BlurMask {

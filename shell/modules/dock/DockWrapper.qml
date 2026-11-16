@@ -19,6 +19,7 @@ Item {
     required property bool fullscreen
     readonly property bool disabled: !Config.dockPanel.enabled || Strings.testRegexList(Config.dockPanel.excludedScreens, screen.name)
     readonly property string position: Config.dockPanel.position
+    readonly property bool isIsland: Config.dockPanel.islands
     readonly property int padding: Math.max(Tokens.padding.small, Config.border.thickness)
     readonly property int contentWidth: Math.max(Config.dockPanel.size, Tokens.sizes.bar.innerWidth) + padding * 2
     readonly property bool dodgeEnabled: Config.dockPanel.dodgeWindows && !Config.dockPanel.persistent && !disabled
@@ -53,7 +54,7 @@ Item {
     property bool revealActive: false
     readonly property bool hovered: revealActive || dockHover.hovered
     readonly property bool isHorizontal: root.position === "top" || root.position === "bottom"
-    readonly property int fullLength: (isHorizontal ? screen.width : screen.height) - (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0)
+    readonly property int fullLength: (isHorizontal ? screen.width : screen.height) - (isIsland ? Tokens.spacing.extraLarge * 2 : 0)
     readonly property int defaultLength: Math.min(isHorizontal ? screen.width - 40 : screen.height - 40, Math.max(200, content.childrenRect.width > 0 ? content.childrenRect.width + padding * 2 : 400))
     readonly property int fixedLength: Math.round(fullLength * Math.max(0, Math.min(100, Config.dockPanel.length)) / 100)
     readonly property int clampedLength: Config.dockPanel.fixedLength ? fixedLength : defaultLength

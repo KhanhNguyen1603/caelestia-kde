@@ -17,6 +17,7 @@ class DockConfig : public settings::ObjectNode {
 
     CONFIG_PROPERTY(bool, enabled, false)
     CONFIG_PROPERTY(bool, persistent, true)
+    CONFIG_PROPERTY(bool, islands, false)
     CONFIG_PROPERTY(bool, dodgeWindows, false)
     CONFIG_PROPERTY(bool, dodgeFocusedOnly, false)
     CONFIG_PROPERTY(int, autoHideDelay, 300)

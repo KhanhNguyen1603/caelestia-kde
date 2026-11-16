@@ -226,15 +226,6 @@ PageBase {
                 Layout.fillWidth: true
             }
             ToggleRow {
-                reset: ({ node: GlobalConfig.appearance, setting: "islands" })
-                text: qsTr("Islands")
-                subtext: qsTr("Everything appears as its own floating widget (Very Experimental)")
-                checked: GlobalConfig.appearance.islands
-                onToggled: GlobalConfig.appearance.islands = checked
-                Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
-                Layout.fillWidth: true
-            }
-            ToggleRow {
                 reset: ({ node: GlobalConfig.appearance.transparency, setting: "enabled" })
                 text: qsTr("Transparency")
                 subtext: qsTr("Enable transparency across the shell")

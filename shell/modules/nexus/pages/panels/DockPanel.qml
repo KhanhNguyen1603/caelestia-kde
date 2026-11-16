@@ -229,6 +229,14 @@ PageBase {
 
         ToggleRow {
             first: true
+            text: qsTr("Island mode")
+            subtext: qsTr("Detach the dock from screen edges into a floating island pill")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "islands" })
+            checked: Config.dockPanel.islands
+            onToggled: GlobalConfig.dockPanel.islands = checked
+        }
+
+        ToggleRow {
             text: qsTr("Fixed length")
             subtext: qsTr("Set a fixed panel length instead of sizing automatically to content")
             reset: ({ node: GlobalConfig.dockPanel, setting: "fixedLength" })

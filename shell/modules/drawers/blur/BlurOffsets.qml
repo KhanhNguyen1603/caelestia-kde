@@ -53,7 +53,7 @@ Item {
     property real bW: (isActive && useMasks) ? Math.max(0, tW * tScale * dm11 - sLeft * dm11 - sRight * dm11) : 0
     property real bH: (isActive && useMasks) ? Math.max(0, tH * tScale * dm22 - sTop * dm22 - sBottom * dm22) : 0
     property real r: (isActive && useMasks) ? Math.min(bW / 2, Math.min(bH / 2, root.radius * animScale * tScale)) : 0
-    property bool isIsland: GlobalConfig.appearance.islands
+    property bool isIsland: (target && target["isIsland"] !== undefined) ? target["isIsland"] : false
     property real rTop: (!isIsland && (vAnchor === "top" || vAnchor === "both")) ? 0 : r
     property real rBottom: (!isIsland && (vAnchor === "bottom" || vAnchor === "both")) ? 0 : r
     property real rLeft: (!isIsland && (hAnchor === "left" || hAnchor === "both")) ? 0 : r

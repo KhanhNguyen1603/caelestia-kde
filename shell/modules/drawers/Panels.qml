@@ -123,14 +123,14 @@ Item {
     }
 
     anchors.fill: parent
-    anchors.leftMargin: (bar.position === "left" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
-        + (dockPanel && dockPanel.position === "left" ? dockPanel.implicitWidth : 0)
-    anchors.rightMargin: (bar.position === "right" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
-        + (dockPanel && dockPanel.position === "right" ? dockPanel.implicitWidth : 0)
-    anchors.topMargin: (bar.position === "top" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
-        + (dockPanel && dockPanel.position === "top" ? dockPanel.implicitHeight : 0)
-    anchors.bottomMargin: (bar.position === "bottom" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
-        + (dockPanel && dockPanel.position === "bottom" ? dockPanel.implicitHeight : 0)
+    anchors.leftMargin: (bar.position === "left" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness)
+        + (dockPanel && dockPanel.position === "left" ? dockPanel.implicitWidth + (dockPanel.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : 0)
+    anchors.rightMargin: (bar.position === "right" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness)
+        + (dockPanel && dockPanel.position === "right" ? dockPanel.implicitWidth + (dockPanel.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : 0)
+    anchors.topMargin: (bar.position === "top" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness)
+        + (dockPanel && dockPanel.position === "top" ? dockPanel.implicitHeight + (dockPanel.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : 0)
+    anchors.bottomMargin: (bar.position === "bottom" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness)
+        + (dockPanel && dockPanel.position === "bottom" ? dockPanel.implicitHeight + (dockPanel.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : 0)
 
     states: [
         State {
