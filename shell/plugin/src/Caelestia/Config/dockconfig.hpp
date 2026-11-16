@@ -17,7 +17,7 @@ class DockConfig : public settings::ObjectNode {
 
     CONFIG_PROPERTY(bool, enabled, false)
     CONFIG_PROPERTY(bool, persistent, true)
-    CONFIG_PROPERTY(bool, dodgeWindows, true)
+    CONFIG_PROPERTY(bool, dodgeWindows, false)
     CONFIG_PROPERTY(bool, dodgeFocusedOnly, false)
     CONFIG_PROPERTY(int, autoHideDelay, 300)
     CONFIG_PROPERTY(QString, position, u"bottom"_s)
@@ -38,7 +38,7 @@ class DockConfig : public settings::ObjectNode {
     CONFIG_ENUM_PROPERTY(DockWindowGrouping, windowGrouping, DockWindowGrouping::Combined)
     CONFIG_PROPERTY(bool, previewOnDesktop, true)
     CONFIG_GLOBAL_PROPERTY(QStringList, pinnedApps, QStringList({ u"firefox"_s, u"org.kde.dolphin"_s }))
-    CONFIG_PROPERTY(bool, reserveSpace, false)
+    CONFIG_PROPERTY(bool, reserveSpace, true)
     CONFIG_PROPERTY(bool, activeIndicators, true)
     CONFIG_PROPERTY(bool, showOnHover, true)
     CONFIG_PROPERTY(int, dragThreshold, 20)

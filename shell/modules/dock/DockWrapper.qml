@@ -46,7 +46,7 @@ Item {
     }
 
     readonly property bool keptOpen: Config.dock.persistent && !dodging
-    readonly property int exclusiveZone: !disabled && !dodgeEnabled && (Config.dock.reserveSpace || (Config.dock.persistent && !Config.dock.dodgeWindows) || visibilities.dock) ? contentWidth : Config.border.thickness
+    readonly property int exclusiveZone: Config.dock.reserveSpace && !disabled && !dodgeEnabled && (Config.dock.persistent || visibilities.dock) ? contentWidth : Config.border.thickness
     readonly property int visualThickness: !disabled && (Config.dock.persistent || visibilities.dock) ? contentWidth : Config.border.thickness
     readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dock || hovered)
     property bool pointerInReach: false
