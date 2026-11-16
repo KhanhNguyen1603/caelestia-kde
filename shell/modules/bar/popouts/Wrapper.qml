@@ -36,6 +36,9 @@ Item {
     readonly property bool isDockPopout: currentName === "dockhover" || currentName === "greeter" || currentName === "activewindow" || currentName === "github" || currentIsContext
     property alias currentName: popoutState.currentName
     property alias hasCurrent: popoutState.hasCurrent
+    // Whether the hidden-icons box was pinned open, so the bar and the overlay agree
+    // that it is not to be closed by the pointer moving away.
+    property alias trayPinned: popoutState.trayPinned
     property alias dockModel: popoutState.dockModel
     property alias tasksModel: popoutState.tasksModel
     // The bar hands its widget delegate to the hidden-icons box, so the widgets a

@@ -130,11 +130,20 @@ Item {
         root.popouts.hasCurrent = true;
     }
 
+    // The arrow is the box's handle: it opens the box and leaves it open, so the icons
+    // can be picked from without the pointer having to stay on them. Clicking it again
+    // — or clicking anywhere else — closes it.
     function toggleOverflow(): void {
-        if (root.popouts && root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow")
+        if (!root.popouts)
+            return;
+
+        if (root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow") {
             root.popouts.hasCurrent = false;
-        else
-            root.openOverflow();
+            return;
+        }
+
+        root.openOverflow();
+        root.popouts.trayPinned = true;
     }
 
     function overChevron(x: real, y: real): bool {

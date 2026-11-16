@@ -82,8 +82,12 @@ Item {
     }
 
     function closeTray(): void {
-        if (popouts.currentName === "trayOverflow")
-            popouts.hasCurrent = false;
+        if (popouts.currentName !== "trayOverflow")
+            return;
+        // A box the user opened stays until they dismiss it.
+        if (popouts.trayPinned)
+            return;
+        popouts.hasCurrent = false;
     }
 
     // Icons tell you what they are on hover, and that is all: the panel behind one of
@@ -104,6 +108,11 @@ Item {
         // A context menu stays open while the pointer moves over the bar, so
         // the hover routing below must not take it over or close it.
         if (popouts.isContextPopout)
+            return;
+
+        // A box the user opened is theirs to dismiss: hovering the bar must not swap
+        // it for another panel or take it away.
+        if (popouts.trayPinned && popouts.hasCurrent)
             return;
 
         // Dragging a widget between the tray and its overflow panel must not let
@@ -333,6 +342,18 @@ Item {
 
         interval: 400
         onTriggered: root.closeTray()
+    }
+
+    Connections {
+        // The box goes when a window takes the focus: that is the click that landed
+        // somewhere else. Opening the box leaves no window focused, so an empty one is
+        // not a dismissal.
+        function onActiveWindowChanged(): void {
+            if (popouts.trayPinned && Kwin.activeWindow?.class)
+                popouts.hasCurrent = false;
+        }
+
+        target: Kwin
     }
 
     GridLayout {
