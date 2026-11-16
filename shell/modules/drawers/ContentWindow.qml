@@ -29,7 +29,7 @@ StyledWindow {
     property real blurOffsetRight: 0
     property alias overviewAnimConfig: animConfig
     readonly property alias bar: bar
-    readonly property alias dock: dock
+    readonly property alias dockPanel: dockPanel
     readonly property alias interactionWrapper: interactions
     readonly property alias visibilities: visibilities
     // The per-screen state object the drawers share. The dashboard's tab and the
@@ -73,10 +73,10 @@ StyledWindow {
     readonly property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
     readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
     readonly property real borderLayoutThickness: hasFullscreen ? 0 : dynamicBorderThickness
-    readonly property real edgeThicknessLeft: Math.max(bar.position === "left" ? bar.implicitWidth : 0, dock.position === "left" ? dock.implicitWidth : 0, root.borderThickness)
-    readonly property real edgeThicknessRight: Math.max(bar.position === "right" ? bar.implicitWidth : 0, dock.position === "right" ? dock.implicitWidth : 0, root.borderThickness)
-    readonly property real edgeThicknessTop: Math.max(bar.position === "top" ? bar.implicitHeight : 0, dock.position === "top" ? dock.implicitHeight : 0, root.borderThickness)
-    readonly property real edgeThicknessBottom: Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, dock.position === "bottom" ? dock.implicitHeight : 0, root.borderThickness)
+    readonly property real edgeThicknessLeft: Math.max(bar.position === "left" ? bar.implicitWidth : 0, dockPanel.position === "left" ? dockPanel.implicitWidth : 0, root.borderThickness)
+    readonly property real edgeThicknessRight: Math.max(bar.position === "right" ? bar.implicitWidth : 0, dockPanel.position === "right" ? dockPanel.implicitWidth : 0, root.borderThickness)
+    readonly property real edgeThicknessTop: Math.max(bar.position === "top" ? bar.implicitHeight : 0, dockPanel.position === "top" ? dockPanel.implicitHeight : 0, root.borderThickness)
+    readonly property real edgeThicknessBottom: Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, dockPanel.position === "bottom" ? dockPanel.implicitHeight : 0, root.borderThickness)
     property color surfaceColour: Colours.tPalette.m3surface
     readonly property int dragMaskPadding: {
         if (focusGrabState.active || panels.popouts.isDetached)
@@ -175,7 +175,7 @@ StyledWindow {
         id: regions
 
         bar: bar
-        dock: dock
+        dockPanel: dockPanel
         panels: panels
         win: root
     }
@@ -398,12 +398,12 @@ StyledWindow {
             deformScale: (GlobalConfig.appearance.blurMask || !GlobalConfig.appearance.transparency.enabled) ? ((0.1 * Config.appearance.deformScale) / 10000) : 0
         }
         BlobRect {
-            visible: GlobalConfig.appearance.islands && dock.visible
+            visible: GlobalConfig.appearance.islands && dockPanel.visible
             group: GlobalConfig.appearance.islands ? blobGroup : null
-            x: dock.x
-            y: dock.y
-            implicitWidth: dock.width
-            implicitHeight: dock.height
+            x: dockPanel.x
+            y: dockPanel.y
+            implicitWidth: dockPanel.width
+            implicitHeight: dockPanel.height
             radius: Tokens.rounding.extraLarge
             deformScale: (GlobalConfig.appearance.blurMask || !GlobalConfig.appearance.transparency.enabled) ? ((0.1 * Config.appearance.deformScale) / 10000) : 0
         }
@@ -600,7 +600,7 @@ StyledWindow {
         dismissLauncher: root.foreignLauncherOpen
         panels: panels
         bar: bar
-        dock: dock
+        dockPanel: dockPanel
         borderThickness: root.borderLayoutThickness
         fullscreen: root.hasFullscreen
         capturesDismissClick: root.capturesOverlayInput
@@ -704,7 +704,7 @@ StyledWindow {
             screenState: root.screenState
             visibilities: visibilities
             bar: bar
-            dock: dock
+            dockPanel: dockPanel
             borderThickness: root.borderThickness
             overviewBorderThickness: root.overviewBorderThickness
             overviewAnimConfig: root.overviewAnimConfig
@@ -749,34 +749,31 @@ StyledWindow {
             Component.onCompleted: Visibilities.registerBar(root.screen, this)
         }
         DockWrapper {
-            id: dock
+            id: dockPanel
 
-            property string vAnchor: (dock.position === "left" || dock.position === "right") ? "both" : (dock.position === "top" ? "top" : "bottom")
-            property string hAnchor: (dock.position === "top" || dock.position === "bottom") ? "both" : (dock.position === "left" ? "left" : "right")
+            property string vAnchor: (dockPanel.position === "left" || dockPanel.position === "right") ? "both" : (dockPanel.position === "top" ? "top" : "bottom")
+            property string hAnchor: (dockPanel.position === "top" || dockPanel.position === "bottom") ? "both" : (dockPanel.position === "left" ? "left" : "right")
 
             screen: root.screen
             visibilities: visibilities
             fullscreen: root.hasFullscreen
-            Component.onCompleted: {
-                console.log("[dock-debug] ContentWindow dock completed, registering dock for screen:", root.screen?.name, "dock:", this);
-                Visibilities.registerDock(root.screen, this);
-            }
-            Component.onDestruction: Visibilities.unregisterDock(root.screen)
+            Component.onCompleted: Visibilities.registerDockPanel(root.screen, this)
+            Component.onDestruction: Visibilities.unregisterDockPanel(root.screen)
             states: [
                 State {
                     name: "left"
-                    when: dock.position === "left"
+                    when: dockPanel.position === "left"
 
                     AnchorChanges {
-                        target: dock
+                        target: dockPanel
                         anchors.left: parent.left
                         anchors.right: undefined
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                     }
                     PropertyChanges {
-                        target: dock
-                        width: dock.implicitWidth
+                        target: dockPanel
+                        width: dockPanel.implicitWidth
                         height: undefined
                         anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
                         anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
@@ -786,18 +783,18 @@ StyledWindow {
                 },
                 State {
                     name: "right"
-                    when: dock.position === "right"
+                    when: dockPanel.position === "right"
 
                     AnchorChanges {
-                        target: dock
+                        target: dockPanel
                         anchors.left: undefined
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                     }
                     PropertyChanges {
-                        target: dock
-                        width: dock.implicitWidth
+                        target: dockPanel
+                        width: dockPanel.implicitWidth
                         height: undefined
                         anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
                         anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
@@ -807,19 +804,19 @@ StyledWindow {
                 },
                 State {
                     name: "top"
-                    when: dock.position === "top"
+                    when: dockPanel.position === "top"
 
                     AnchorChanges {
-                        target: dock
+                        target: dockPanel
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.bottom: undefined
                     }
                     PropertyChanges {
-                        target: dock
+                        target: dockPanel
                         width: undefined
-                        height: dock.implicitHeight
+                        height: dockPanel.implicitHeight
                         anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
                         anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
                         anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
@@ -828,19 +825,19 @@ StyledWindow {
                 },
                 State {
                     name: "bottom"
-                    when: dock.position === "bottom"
+                    when: dockPanel.position === "bottom"
 
                     AnchorChanges {
-                        target: dock
+                        target: dockPanel
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: undefined
                         anchors.bottom: parent.bottom
                     }
                     PropertyChanges {
-                        target: dock
+                        target: dockPanel
                         width: undefined
-                        height: dock.implicitHeight
+                        height: dockPanel.implicitHeight
                         anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
                         anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
                         anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
@@ -1025,14 +1022,14 @@ StyledWindow {
             hAnchor: bar.hAnchor
         }
         BlurMask {
-            target: dock
+            target: dockPanel
             contentItem: root.contentItem
             blurOffsetTop: root.blurOffsetTop
             blurOffsetBottom: root.blurOffsetBottom
             blurOffsetLeft: root.blurOffsetLeft
             blurOffsetRight: root.blurOffsetRight
-            vAnchor: dock.vAnchor
-            hAnchor: dock.hAnchor
+            vAnchor: dockPanel.vAnchor
+            hAnchor: dockPanel.hAnchor
         }
         BlurMask {
             target: panels.sidebar

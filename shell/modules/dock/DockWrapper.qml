@@ -46,9 +46,9 @@ Item {
     }
 
     readonly property bool keptOpen: Config.dock.persistent && !dodging
-    readonly property int exclusiveZone: Config.dock.reserveSpace && !disabled && !dodgeEnabled && (Config.dock.persistent || visibilities.dock) ? contentWidth : Config.border.thickness
-    readonly property int visualThickness: !disabled && (Config.dock.persistent || visibilities.dock) ? contentWidth : Config.border.thickness
-    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dock || hovered)
+    readonly property int exclusiveZone: Config.dock.reserveSpace && !disabled && !dodgeEnabled && (Config.dock.persistent || visibilities.dockPanel) ? contentWidth : Config.border.thickness
+    readonly property int visualThickness: !disabled && (Config.dock.persistent || visibilities.dockPanel) ? contentWidth : Config.border.thickness
+    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dockPanel || hovered)
     property bool pointerInReach: false
     readonly property bool hovered: dockHover.hovered || pointerInReach
     readonly property bool isHorizontal: root.position === "top" || root.position === "bottom"
@@ -60,10 +60,6 @@ Item {
     visible: isHorizontal ? height > Config.border.thickness : width > Config.border.thickness
     implicitWidth: isHorizontal ? 0 : (fullscreen ? 0 : Config.border.thickness)
     implicitHeight: isHorizontal ? (fullscreen ? 0 : Config.border.thickness) : 0
-    onExclusiveZoneChanged: console.log("[dock-debug] DockWrapper exclusiveZone changed to:", exclusiveZone)
-    onShouldBeVisibleChanged: console.log("[dock-debug] DockWrapper shouldBeVisible changed to:", shouldBeVisible, "implicitHeight:", implicitHeight, "implicitWidth:", implicitWidth)
-
-    Component.onCompleted: console.log("[dock-debug] DockWrapper completed for screen:", screen?.name, "disabled:", disabled, "dodgeEnabled:", dodgeEnabled, "exclusiveZone:", exclusiveZone, "contentWidth:", contentWidth, "position:", position, "shouldBeVisible:", shouldBeVisible)
 
     states: State {
         name: "visible"

@@ -17,7 +17,7 @@ CustomMouseArea {
     required property DrawerVisibilities visibilities
     required property Panels panels
     required property Bar.BarWrapper bar
-    required property var dock
+    required property var dockPanel
     required property real borderThickness
     required property bool fullscreen
     // A context menu on another screen still needs its dismiss click.
@@ -45,17 +45,17 @@ CustomMouseArea {
             return y > bar.y + bar.height - bar.clampedThickness;
         return false;
     }
-    function inDockArea(x: real, y: real): bool {
-        if (!dock)
+    function inDockPanelArea(x: real, y: real): bool {
+        if (!dockPanel)
             return false;
-        if (dock.position === "left")
-            return x < dock.x + dock.clampedThickness;
-        if (dock.position === "right")
-            return x > dock.x + dock.width - dock.clampedThickness;
-        if (dock.position === "top")
-            return y < dock.y + dock.clampedThickness;
-        if (dock.position === "bottom")
-            return y > dock.y + dock.height - dock.clampedThickness;
+        if (dockPanel.position === "left")
+            return x < dockPanel.x + dockPanel.clampedThickness;
+        if (dockPanel.position === "right")
+            return x > dockPanel.x + dockPanel.width - dockPanel.clampedThickness;
+        if (dockPanel.position === "top")
+            return y < dockPanel.y + dockPanel.clampedThickness;
+        if (dockPanel.position === "bottom")
+            return y > dockPanel.y + dockPanel.height - dockPanel.clampedThickness;
         return false;
     }
     function spanBounds(near: real, far: real, span: real): point {
@@ -212,8 +212,8 @@ CustomMouseArea {
         if (!visibilities.bar && Config.bar.showOnHover)
             bar.pointerInReach = inBarArea(x, y);
 
-        if (dock && !visibilities.dock && Config.dock.showOnHover)
-            dock.pointerInReach = inDockArea(x, y);
+        if (dockPanel && !visibilities.dockPanel && Config.dock.showOnHover)
+            dockPanel.pointerInReach = inDockPanelArea(x, y);
 
         if (pressed && inBarArea(dragStart.x, dragStart.y)) {
             if (bar.position === "left") {
@@ -239,27 +239,27 @@ CustomMouseArea {
             }
         }
 
-        if (dock && pressed && inDockArea(dragStart.x, dragStart.y)) {
-            if (dock.position === "left") {
+        if (dockPanel && pressed && inDockPanelArea(dragStart.x, dragStart.y)) {
+            if (dockPanel.position === "left") {
                 if (dragX > Config.dock.dragThreshold)
-                    visibilities.dock = true;
+                    visibilities.dockPanel = true;
                 else if (dragX < -Config.dock.dragThreshold)
-                    visibilities.dock = false;
-            } else if (dock.position === "right") {
+                    visibilities.dockPanel = false;
+            } else if (dockPanel.position === "right") {
                 if (dragX < -Config.dock.dragThreshold)
-                    visibilities.dock = true;
+                    visibilities.dockPanel = true;
                 else if (dragX > Config.dock.dragThreshold)
-                    visibilities.dock = false;
-            } else if (dock.position === "top") {
+                    visibilities.dockPanel = false;
+            } else if (dockPanel.position === "top") {
                 if (dragY > Config.dock.dragThreshold)
-                    visibilities.dock = true;
+                    visibilities.dockPanel = true;
                 else if (dragY < -Config.dock.dragThreshold)
-                    visibilities.dock = false;
-            } else if (dock.position === "bottom") {
+                    visibilities.dockPanel = false;
+            } else if (dockPanel.position === "bottom") {
                 if (dragY < -Config.dock.dragThreshold)
-                    visibilities.dock = true;
+                    visibilities.dockPanel = true;
                 else if (dragY > Config.dock.dragThreshold)
-                    visibilities.dock = false;
+                    visibilities.dockPanel = false;
             }
         }
 
@@ -417,8 +417,6 @@ CustomMouseArea {
             }
         }
     }
-
-    Component.onCompleted: console.log("[dock-debug] Interactions completed, dock:", dock)
 
     Timer {
         id: popoutHideTimer

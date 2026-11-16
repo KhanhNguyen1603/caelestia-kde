@@ -9,17 +9,17 @@ Region {
     id: root
 
     required property Bar.BarWrapper bar
-    required property var dock
+    required property var dockPanel
     required property Panels panels
     required property var win
     readonly property real borderThickness: Config.border.thickness
     readonly property real clampedThickness: Config.border.clampedThickness
-    readonly property real dockThickness: dock ? dock.clampedThickness : 0
-    readonly property string dockPosition: dock ? dock.position : Config.dock.position
-    readonly property real barLeftWidth: (bar.position === "left" ? bar.clampedThickness : clampedThickness) + (dockPosition === "left" ? dockThickness : 0)
-    readonly property real barRightWidth: (bar.position === "right" ? bar.clampedThickness : clampedThickness) + (dockPosition === "right" ? dockThickness : 0)
-    readonly property real barTopHeight: (bar.position === "top" ? bar.clampedThickness : clampedThickness) + (dockPosition === "top" ? dockThickness : 0)
-    readonly property real barBottomHeight: (bar.position === "bottom" ? bar.clampedThickness : clampedThickness) + (dockPosition === "bottom" ? dockThickness : 0)
+    readonly property real dockPanelThickness: dockPanel ? dockPanel.clampedThickness : 0
+    readonly property string dockPanelPosition: dockPanel ? dockPanel.position : Config.dock.position
+    readonly property real barLeftWidth: (bar.position === "left" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "left" ? dockPanelThickness : 0)
+    readonly property real barRightWidth: (bar.position === "right" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "right" ? dockPanelThickness : 0)
+    readonly property real barTopHeight: (bar.position === "top" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "top" ? dockPanelThickness : 0)
+    readonly property real barBottomHeight: (bar.position === "bottom" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "bottom" ? dockPanelThickness : 0)
     // A closed panel's input region must be at least as deep as its hover trigger,
     // otherwise the pointer never reaches the area Interactions tests against.
 
@@ -32,8 +32,6 @@ Region {
     width: win.width - barLeftWidth - barRightWidth - win.dragMaskPadding * 2
     height: win.height - barTopHeight - barBottomHeight - win.dragMaskPadding * 2
     intersection: Intersection.Xor
-
-    Component.onCompleted: console.log("[dock-debug] Regions completed, dock:", dock, "dockThickness:", dockThickness)
 
     R {
         panel: root.panels.dashboard

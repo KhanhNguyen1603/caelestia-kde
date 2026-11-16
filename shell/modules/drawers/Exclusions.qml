@@ -13,7 +13,7 @@ Scope {
 
     required property ShellScreen screen
     required property Bar.BarWrapper bar
-    required property var dock
+    required property var dockPanel
     required property DrawerVisibilities visibilities
 
     // A pinned sidebar reserves its width so maximised windows sit beside it
@@ -27,19 +27,19 @@ Scope {
     // comes from the bar, which has the screen's tokens.
     property real sidebarWidth
 
-    readonly property int dockThickness: root.dock ? root.dock.exclusiveZone : 0
-    readonly property string dockPosition: root.dock ? root.dock.position : Config.dock.position
+    readonly property int dockPanelThickness: root.dockPanel ? root.dockPanel.exclusiveZone : 0
+    readonly property string dockPanelPosition: root.dockPanel ? root.dockPanel.position : Config.dock.position
 
     readonly property int leftExclusion: (root.bar.position === "left" ? root.bar.exclusiveZone : Config.border.thickness)
         + (root.reserveSidebar && root.bar.position === "right" ? root.sidebarWidth : 0)
-        + (dockPosition === "left" ? dockThickness : 0)
+        + (dockPanelPosition === "left" ? dockPanelThickness : 0)
     readonly property int topExclusion: (root.bar.position === "top" ? root.bar.exclusiveZone : Config.border.thickness)
-        + (dockPosition === "top" ? dockThickness : 0)
+        + (dockPanelPosition === "top" ? dockPanelThickness : 0)
     readonly property int rightExclusion: (root.bar.position === "right" ? root.bar.exclusiveZone : Config.border.thickness)
         + (root.reserveSidebar && root.bar.position !== "right" ? root.sidebarWidth : 0)
-        + (dockPosition === "right" ? dockThickness : 0)
+        + (dockPanelPosition === "right" ? dockPanelThickness : 0)
     readonly property int bottomExclusion: (root.bar.position === "bottom" ? root.bar.exclusiveZone : Config.border.thickness)
-        + (dockPosition === "bottom" ? dockThickness : 0)
+        + (dockPanelPosition === "bottom" ? dockPanelThickness : 0)
 
     readonly property real usableWidth: Math.max(100, root.screen.width - leftExclusion - rightExclusion)
     readonly property real usableHeight: Math.max(100, root.screen.height - topExclusion - bottomExclusion)
@@ -51,11 +51,9 @@ Scope {
     onBottomExclusionChanged: Visibilities.notifyExclusionBoundsChanged(root.screen)
     onUsableWidthChanged: Visibilities.notifyExclusionBoundsChanged(root.screen)
     onUsableHeightChanged: Visibilities.notifyExclusionBoundsChanged(root.screen)
-    onDockThicknessChanged: console.log("[dock-debug] Exclusions dockThickness changed to:", root.dockThickness, "bottomExclusion:", root.bottomExclusion)
 
     Component.onCompleted: {
         Visibilities.registerExclusions(root.screen, root);
-        console.log("[dock-debug] Exclusions completed for screen:", root.screen.name, "dock:", root.dock, "dockThickness:", root.dockThickness, "bottomExclusion:", root.bottomExclusion, "position:", root.dockPosition);
     }
 
     Binding on sidebarWidth {
