@@ -25,7 +25,25 @@ setup_env() {
 
     stub_bin "$BIN" quickshell 'exit 0'
     stub_bin "$BIN" ps 'printf " %s\n" "${CAELESTIA_STUB_CPU:-0.5}"'
+    # The stub plays the shell: it prints the log a real launch would have written, and -
+    # unless the case asks it not to - rewrites a bar saved before the unified tray the
+    # way ConfigMigrations does. That is the one thing the smoke script reads back out of
+    # the config, so a stub that skipped it would only prove the check runs.
     stub_bin "$BIN" dbus-run-session 'trap "exit 0" TERM
+config="$XDG_CONFIG_HOME/caelestia/shell.json"
+if [[ -z "${CAELESTIA_STUB_NO_MIGRATE:-}" && -f "$config" ]]; then
+    python3 - "$config" <<PY
+import json
+import sys
+
+path = sys.argv[1]
+data = json.load(open(path))
+entries = data["bar"]["entries"]
+if not any(entry.get("id") == "tray" for entry in entries):
+    entries[4:4] = [{"id": "tray", "enabled": True, "zone": "right"}]
+    json.dump(data, open(path, "w"), indent=4)
+PY
+fi
 cat "$CAELESTIA_STUB_LOG"
 while :; do sleep 1; done'
 
@@ -130,6 +148,17 @@ test_a_missing_marker_fails_the_run_and_keeps_the_report() {
     # uploaded diagnostics cannot be read back.
     python3 -c 'import json,sys; json.load(open(sys.argv[1], encoding="utf-8"))' "$LAST_OUT"
     assert_status 0 "$?" "an interrupted run should still emit valid JSON"
+}
+
+test_a_bar_saved_before_the_tray_fails_the_run_when_it_is_not_migrated() {
+    setup_env
+    CAELESTIA_STUB_LOG="$DIR/markers.log" CAELESTIA_STUB_CPU=0.5 CAELESTIA_STUB_NO_MIGRATE=1 \
+        PATH="$BIN:$PATH" bash "$SMOKE" --install-root "$INSTALL_ROOT" \
+        --runs 1 --timeout 20 --log-dir "$DIR/logs-nomigrate" \
+        >"$DIR/nomigrate.json" 2>"$DIR/nomigrate.err"
+    assert_status 1 "$?" "a bar from before the unified tray has to come back with its tray row"
+    assert_contains "$(cat "$DIR/nomigrate.err")" "without one" \
+        "and the failure has to name what is missing"
 }
 
 test_more_than_one_leftover_window_fails() {

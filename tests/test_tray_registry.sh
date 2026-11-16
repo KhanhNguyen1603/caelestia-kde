@@ -121,6 +121,19 @@ test_a_single_identity_reads_icon_substitutions() {
     assert_file_contains "$REGISTRY" "ConfigMigrations.migrateTrayIcons(aliases)" "the registry hands its aliases over"
 }
 
+test_a_bar_from_before_the_tray_gets_it_back() {
+    assert_file_contains "$MIGRATIONS" "function migrateBarEntries(): void" \
+        "an installed bar that predates the unified tray is migrated rather than left without one"
+    assert_file_contains "$MIGRATIONS" 'if (!bar.isOverride("entries"))' \
+        "only a list the user actually saved is rewritten"
+    assert_file_contains "$MIGRATIONS" 'entries.some(entry => entry.id === "tray")' \
+        "a row that says the tray is off is the user's answer, so only its absence is taken as an older bar"
+    assert_file_contains "$MIGRATIONS" 'next.splice(at, 0, { id: "tray", enabled: true, zone: "right" })' \
+        "the row goes back among the neighbours the schema declares it with"
+    assert_file_contains "$MIGRATIONS" "root.migrateBarEntries();" \
+        "and the migration runs when the shell starts"
+}
+
 test_an_icon_with_a_row_is_drawn_from_it_alone() {
     assert_file_contains "$REGISTRY" "readonly property var rowedKeys" \
         "the registry knows which icons the bar's entry list holds a place for"

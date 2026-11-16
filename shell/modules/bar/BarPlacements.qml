@@ -4,7 +4,7 @@ import QtQuick
 import Caelestia.Config
 import qs.services
 import qs.modules.bar
-import "../services/trayplacement.js" as Placement
+import "../../services/trayplacement.js" as Placement
 
 // The one place an icon's place is written. Every switch, drag and settings page asks for
 // a place here rather than editing the config itself, so the rules live in
