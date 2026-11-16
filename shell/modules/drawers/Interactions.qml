@@ -212,7 +212,7 @@ CustomMouseArea {
         if (!visibilities.bar && Config.bar.showOnHover)
             bar.pointerInReach = inBarArea(x, y);
 
-        if (dockPanel && !visibilities.dockPanel && Config.dock.showOnHover)
+        if (dockPanel && !visibilities.dockPanel && Config.dockPanel.showOnHover)
             dockPanel.pointerInReach = inDockPanelArea(x, y);
 
         if (pressed && inBarArea(dragStart.x, dragStart.y)) {
@@ -241,24 +241,24 @@ CustomMouseArea {
 
         if (dockPanel && pressed && inDockPanelArea(dragStart.x, dragStart.y)) {
             if (dockPanel.position === "left") {
-                if (dragX > Config.dock.dragThreshold)
+                if (dragX > Config.dockPanel.dragThreshold)
                     visibilities.dockPanel = true;
-                else if (dragX < -Config.dock.dragThreshold)
+                else if (dragX < -Config.dockPanel.dragThreshold)
                     visibilities.dockPanel = false;
             } else if (dockPanel.position === "right") {
-                if (dragX < -Config.dock.dragThreshold)
+                if (dragX < -Config.dockPanel.dragThreshold)
                     visibilities.dockPanel = true;
-                else if (dragX > Config.dock.dragThreshold)
+                else if (dragX > Config.dockPanel.dragThreshold)
                     visibilities.dockPanel = false;
             } else if (dockPanel.position === "top") {
-                if (dragY > Config.dock.dragThreshold)
+                if (dragY > Config.dockPanel.dragThreshold)
                     visibilities.dockPanel = true;
-                else if (dragY < -Config.dock.dragThreshold)
+                else if (dragY < -Config.dockPanel.dragThreshold)
                     visibilities.dockPanel = false;
             } else if (dockPanel.position === "bottom") {
-                if (dragY < -Config.dock.dragThreshold)
+                if (dragY < -Config.dockPanel.dragThreshold)
                     visibilities.dockPanel = true;
-                else if (dragY > Config.dock.dragThreshold)
+                else if (dragY > Config.dockPanel.dragThreshold)
                     visibilities.dockPanel = false;
             }
         }

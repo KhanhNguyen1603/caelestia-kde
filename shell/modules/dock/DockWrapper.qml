@@ -17,11 +17,11 @@ Item {
     Config.screen: screen.name
     required property DrawerVisibilities visibilities
     required property bool fullscreen
-    readonly property bool disabled: !Config.dock.enabled || Strings.testRegexList(Config.dock.excludedScreens, screen.name)
-    readonly property string position: Config.dock.position
+    readonly property bool disabled: !Config.dockPanel.enabled || Strings.testRegexList(Config.dockPanel.excludedScreens, screen.name)
+    readonly property string position: Config.dockPanel.position
     readonly property int padding: Math.max(Tokens.padding.small, Config.border.thickness)
-    readonly property int contentWidth: Math.max(Config.dock.size, Tokens.sizes.bar.innerWidth) + padding * 2
-    readonly property bool dodgeEnabled: Config.dock.dodgeWindows && Config.dock.persistent && !disabled
+    readonly property int contentWidth: Math.max(Config.dockPanel.size, Tokens.sizes.bar.innerWidth) + padding * 2
+    readonly property bool dodgeEnabled: Config.dockPanel.dodgeWindows && Config.dockPanel.persistent && !disabled
     readonly property rect dodgeRect: {
         const ox = screen.x ?? 0;
         const oy = screen.y ?? 0;
@@ -42,12 +42,12 @@ Item {
         void _dodgeWatchActiveWindow;
         void _dodgeWatchActiveId;
         void _dodgeWatchActiveByOutput;
-        return dodgeEnabled && Kwin.hasWindowOverlapping(screen.name, dodgeRect.x, dodgeRect.y, dodgeRect.width, dodgeRect.height, Config.dock.dodgeFocusedOnly);
+        return dodgeEnabled && Kwin.hasWindowOverlapping(screen.name, dodgeRect.x, dodgeRect.y, dodgeRect.width, dodgeRect.height, Config.dockPanel.dodgeFocusedOnly);
     }
 
-    readonly property bool keptOpen: Config.dock.persistent && !dodging
-    readonly property int exclusiveZone: Config.dock.reserveSpace && !disabled && !dodgeEnabled && (Config.dock.persistent || visibilities.dockPanel) ? contentWidth : Config.border.thickness
-    readonly property int visualThickness: !disabled && (Config.dock.persistent || visibilities.dockPanel) ? contentWidth : Config.border.thickness
+    readonly property bool keptOpen: Config.dockPanel.persistent && !dodging
+    readonly property int exclusiveZone: Config.dockPanel.reserveSpace && !disabled && !dodgeEnabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? contentWidth : Config.border.thickness
+    readonly property int visualThickness: !disabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? contentWidth : Config.border.thickness
     readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dockPanel || hovered)
     property bool pointerInReach: false
     readonly property bool hovered: dockHover.hovered || pointerInReach

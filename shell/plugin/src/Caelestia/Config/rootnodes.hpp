@@ -43,7 +43,7 @@ class ConfigRoot : public settings::RootNode {
     CONFIG_SUBOBJECT(BarConfig, bar)
     CONFIG_SUBOBJECT(BorderConfig, border)
     CONFIG_SUBOBJECT(DashboardConfig, dashboard)
-    CONFIG_SUBOBJECT(DockConfig, dock)
+    CONFIG_SUBOBJECT(DockConfig, dockPanel)
     CONFIG_SUBOBJECT(LauncherConfig, launcher)
     CONFIG_SUBOBJECT(LockConfig, lock)
     CONFIG_SUBOBJECT(NexusConfig, nexus)

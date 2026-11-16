@@ -15,7 +15,7 @@ Region {
     readonly property real borderThickness: Config.border.thickness
     readonly property real clampedThickness: Config.border.clampedThickness
     readonly property real dockPanelThickness: dockPanel ? dockPanel.clampedThickness : 0
-    readonly property string dockPanelPosition: dockPanel ? dockPanel.position : Config.dock.position
+    readonly property string dockPanelPosition: dockPanel ? dockPanel.position : Config.dockPanel.position
     readonly property real barLeftWidth: (bar.position === "left" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "left" ? dockPanelThickness : 0)
     readonly property real barRightWidth: (bar.position === "right" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "right" ? dockPanelThickness : 0)
     readonly property real barTopHeight: (bar.position === "top" ? bar.clampedThickness : clampedThickness) + (dockPanelPosition === "top" ? dockPanelThickness : 0)

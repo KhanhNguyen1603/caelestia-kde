@@ -28,7 +28,7 @@ Scope {
     property real sidebarWidth
 
     readonly property int dockPanelThickness: root.dockPanel ? root.dockPanel.exclusiveZone : 0
-    readonly property string dockPanelPosition: root.dockPanel ? root.dockPanel.position : Config.dock.position
+    readonly property string dockPanelPosition: root.dockPanel ? root.dockPanel.position : Config.dockPanel.position
 
     readonly property int leftExclusion: (root.bar.position === "left" ? root.bar.exclusiveZone : Config.border.thickness)
         + (root.reserveSidebar && root.bar.position === "right" ? root.sidebarWidth : 0)

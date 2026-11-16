@@ -245,7 +245,7 @@ QtObject {
                 key: "dockPanel"
                 label: qsTr("Dock")
                 icon: "dock_to_bottom"
-                status: Config.dock.enabled ? (Config.dock.persistent ? qsTr("Always visible") : qsTr("Auto-hide")) : qsTr("Disabled")
+                status: Config.dockPanel.enabled ? (Config.dockPanel.persistent ? qsTr("Always visible") : qsTr("Auto-hide")) : qsTr("Disabled")
                 description: qsTr("Independent floating pill dock, magnification, intellihide, and pinned apps")
                 keywords: ["dock", "floating dock", "magnification", "intellihide", "pinned", "pill"]
                 component: Component { DockPanel {} }

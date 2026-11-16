@@ -106,9 +106,9 @@ PageBase {
             last: true
             text: qsTr("Enable floating dock")
             subtext: qsTr("Show a standalone floating dock on your screen")
-            reset: ({ node: GlobalConfig.dock, setting: "enabled" })
-            checked: Config.dock.enabled
-            onToggled: GlobalConfig.dock.enabled = checked
+            reset: ({ node: GlobalConfig.dockPanel, setting: "enabled" })
+            checked: Config.dockPanel.enabled
+            onToggled: GlobalConfig.dockPanel.enabled = checked
         }
 
         SectionHeader {
@@ -122,13 +122,13 @@ PageBase {
             menuItems: root.positionItems
             active: {
                 for (let i = 0; i < root.positionItems.length; i++) {
-                    if (root.positionItems[i].value === Config.dock.position)
+                    if (root.positionItems[i].value === Config.dockPanel.position)
                         return root.positionItems[i];
                 }
                 return root.positionItems[0];
             }
             fallbackIcon: "dock_to_bottom"
-            onSelected: item => GlobalConfig.dock.position = item.value
+            onSelected: item => GlobalConfig.dockPanel.position = item.value
         }
 
         SelectRow {
@@ -138,13 +138,13 @@ PageBase {
             menuItems: root.alignmentItems
             active: {
                 for (let i = 0; i < root.alignmentItems.length; i++) {
-                    if (root.alignmentItems[i].value === Config.dock.alignment)
+                    if (root.alignmentItems[i].value === Config.dockPanel.alignment)
                         return root.alignmentItems[i];
                 }
                 return root.alignmentItems[0];
             }
             fallbackIcon: "align_horizontal_center"
-            onSelected: item => GlobalConfig.dock.alignment = item.value
+            onSelected: item => GlobalConfig.dockPanel.alignment = item.value
         }
 
         SectionHeader {
@@ -155,51 +155,51 @@ PageBase {
             first: true
             text: qsTr("Always visible")
             subtext: qsTr("Keep the dock visible on screen at all times instead of auto-hiding")
-            reset: ({ node: GlobalConfig.dock, setting: "persistent" })
-            checked: Config.dock.persistent
-            onToggled: GlobalConfig.dock.persistent = checked
+            reset: ({ node: GlobalConfig.dockPanel, setting: "persistent" })
+            checked: Config.dockPanel.persistent
+            onToggled: GlobalConfig.dockPanel.persistent = checked
         }
 
         ToggleRow {
             text: qsTr("Intelligent auto-hide (Intellihide)")
             subtext: qsTr("Only hide the dock when an open window overlaps its area")
-            reset: ({ node: GlobalConfig.dock, setting: "dodgeWindows" })
-            checked: Config.dock.dodgeWindows
-            enabled: Config.dock.persistent
+            reset: ({ node: GlobalConfig.dockPanel, setting: "dodgeWindows" })
+            checked: Config.dockPanel.dodgeWindows
+            enabled: Config.dockPanel.persistent
             opacity: enabled ? 1.0 : 0.5
-            onToggled: GlobalConfig.dock.dodgeWindows = checked
+            onToggled: GlobalConfig.dockPanel.dodgeWindows = checked
         }
 
         ToggleRow {
             text: qsTr("Dodge focused window only")
             subtext: qsTr("Only hide when the active, focused window intersects with the dock")
-            reset: ({ node: GlobalConfig.dock, setting: "dodgeFocusedOnly" })
-            checked: Config.dock.dodgeFocusedOnly
-            enabled: Config.dock.persistent && Config.dock.dodgeWindows
+            reset: ({ node: GlobalConfig.dockPanel, setting: "dodgeFocusedOnly" })
+            checked: Config.dockPanel.dodgeFocusedOnly
+            enabled: Config.dockPanel.persistent && Config.dockPanel.dodgeWindows
             opacity: enabled ? 1.0 : 0.5
-            onToggled: GlobalConfig.dock.dodgeFocusedOnly = checked
+            onToggled: GlobalConfig.dockPanel.dodgeFocusedOnly = checked
         }
 
         StepperRow {
             label: qsTr("Hover reveal delay")
             subtext: qsTr("Milliseconds to wait before revealing the hidden dock on mouse hover")
-            reset: ({ node: GlobalConfig.dock, setting: "autoHideDelay" })
-            value: Config.dock.autoHideDelay
+            reset: ({ node: GlobalConfig.dockPanel, setting: "autoHideDelay" })
+            value: Config.dockPanel.autoHideDelay
             from: 0
             to: 1000
             stepSize: 50
-            enabled: !Config.dock.persistent
+            enabled: !Config.dockPanel.persistent
             opacity: enabled ? 1.0 : 0.5
-            onMoved: v => GlobalConfig.dock.autoHideDelay = v
+            onMoved: v => GlobalConfig.dockPanel.autoHideDelay = v
         }
 
         ToggleRow {
             last: true
             text: qsTr("Reserve screen space")
             subtext: qsTr("Prevent maximized windows from covering the dock area (exclusive zone)")
-            reset: ({ node: GlobalConfig.dock, setting: "reserveSpace" })
-            checked: Config.dock.reserveSpace
-            onToggled: GlobalConfig.dock.reserveSpace = checked
+            reset: ({ node: GlobalConfig.dockPanel, setting: "reserveSpace" })
+            checked: Config.dockPanel.reserveSpace
+            onToggled: GlobalConfig.dockPanel.reserveSpace = checked
         }
 
         SectionHeader {
@@ -210,46 +210,46 @@ PageBase {
             first: true
             label: qsTr("Icon size")
             subtext: qsTr("Size of application icons in the dock")
-            reset: ({ node: GlobalConfig.dock, setting: "iconSize" })
-            value: Config.dock.iconSize
+            reset: ({ node: GlobalConfig.dockPanel, setting: "iconSize" })
+            value: Config.dockPanel.iconSize
             from: 24
             to: 72
             stepSize: 4
-            onMoved: v => GlobalConfig.dock.iconSize = v
+            onMoved: v => GlobalConfig.dockPanel.iconSize = v
         }
 
         StepperRow {
             label: qsTr("Floating distance")
             subtext: qsTr("Margin separating the dock pill from the screen boundary")
-            reset: ({ node: GlobalConfig.dock, setting: "floatingMargin" })
-            value: Config.dock.floatingMargin
+            reset: ({ node: GlobalConfig.dockPanel, setting: "floatingMargin" })
+            value: Config.dockPanel.floatingMargin
             from: 0
             to: 48
             stepSize: 2
-            onMoved: v => GlobalConfig.dock.floatingMargin = v
+            onMoved: v => GlobalConfig.dockPanel.floatingMargin = v
         }
 
         StepperRow {
             label: qsTr("Inner padding")
             subtext: qsTr("Padding around icons inside the dock container")
-            reset: ({ node: GlobalConfig.dock, setting: "padding" })
-            value: Config.dock.padding
+            reset: ({ node: GlobalConfig.dockPanel, setting: "padding" })
+            value: Config.dockPanel.padding
             from: 4
             to: 32
             stepSize: 2
-            onMoved: v => GlobalConfig.dock.padding = v
+            onMoved: v => GlobalConfig.dockPanel.padding = v
         }
 
         StepperRow {
             last: true
             label: qsTr("Item spacing")
             subtext: qsTr("Distance between adjacent icons")
-            reset: ({ node: GlobalConfig.dock, setting: "spacing" })
-            value: Config.dock.spacing
+            reset: ({ node: GlobalConfig.dockPanel, setting: "spacing" })
+            value: Config.dockPanel.spacing
             from: 2
             to: 24
             stepSize: 2
-            onMoved: v => GlobalConfig.dock.spacing = v
+            onMoved: v => GlobalConfig.dockPanel.spacing = v
         }
 
         SectionHeader {
@@ -260,31 +260,31 @@ PageBase {
             first: true
             text: qsTr("Icon magnification on hover")
             subtext: qsTr("Smoothly magnify icons and their neighbours under the mouse pointer")
-            reset: ({ node: GlobalConfig.dock, setting: "magnification" })
-            checked: Config.dock.magnification
-            onToggled: GlobalConfig.dock.magnification = checked
+            reset: ({ node: GlobalConfig.dockPanel, setting: "magnification" })
+            checked: Config.dockPanel.magnification
+            onToggled: GlobalConfig.dockPanel.magnification = checked
         }
 
         StepperRow {
             label: qsTr("Maximum magnification")
             subtext: qsTr("Peak scale multiplier for hovered dock icons")
-            reset: ({ node: GlobalConfig.dock, setting: "maxMagnification" })
-            value: Config.dock.maxMagnification
+            reset: ({ node: GlobalConfig.dockPanel, setting: "maxMagnification" })
+            value: Config.dockPanel.maxMagnification
             from: 1.1
             to: 1.8
             stepSize: 0.05
-            enabled: Config.dock.magnification
+            enabled: Config.dockPanel.magnification
             opacity: enabled ? 1.0 : 0.5
-            onMoved: v => GlobalConfig.dock.maxMagnification = v
+            onMoved: v => GlobalConfig.dockPanel.maxMagnification = v
         }
 
         SliderRow {
             label: qsTr("Background opacity")
             subtext: qsTr("Translucency of the frosted glass dock pill")
-            valueLabel: Math.round(Config.dock.backgroundOpacity * 100) + "%"
-            value: Config.dock.backgroundOpacity
-            reset: ({ node: GlobalConfig.dock, setting: "backgroundOpacity" })
-            onMoved: v => GlobalConfig.dock.backgroundOpacity = Math.round(v * 100) / 100
+            valueLabel: Math.round(Config.dockPanel.backgroundOpacity * 100) + "%"
+            value: Config.dockPanel.backgroundOpacity
+            reset: ({ node: GlobalConfig.dockPanel, setting: "backgroundOpacity" })
+            onMoved: v => GlobalConfig.dockPanel.backgroundOpacity = Math.round(v * 100) / 100
         }
 
         SelectRow {
@@ -293,46 +293,46 @@ PageBase {
             menuItems: root.indicatorStyleItems
             active: {
                 for (let i = 0; i < root.indicatorStyleItems.length; i++) {
-                    if (root.indicatorStyleItems[i].value === Config.dock.indicatorStyle)
+                    if (root.indicatorStyleItems[i].value === Config.dockPanel.indicatorStyle)
                         return root.indicatorStyleItems[i];
                 }
                 return root.indicatorStyleItems[0];
             }
             fallbackIcon: "more_horiz"
-            onSelected: item => GlobalConfig.dock.indicatorStyle = item.value
+            onSelected: item => GlobalConfig.dockPanel.indicatorStyle = item.value
         }
 
         ToggleRow {
             text: qsTr("Show running indicators")
             subtext: qsTr("Display pips or bars below running applications")
-            reset: ({ node: GlobalConfig.dock, setting: "activeIndicators" })
-            checked: Config.dock.activeIndicators
-            onToggled: GlobalConfig.dock.activeIndicators = checked
+            reset: ({ node: GlobalConfig.dockPanel, setting: "activeIndicators" })
+            checked: Config.dockPanel.activeIndicators
+            onToggled: GlobalConfig.dockPanel.activeIndicators = checked
         }
 
         ToggleRow {
             text: qsTr("Show unread badges")
             subtext: qsTr("Display notification count, progress, and urgency badges on app icons")
-            reset: ({ node: GlobalConfig.dock, setting: "showBadges" })
-            checked: Config.dock.showBadges
-            onToggled: GlobalConfig.dock.showBadges = checked
+            reset: ({ node: GlobalConfig.dockPanel, setting: "showBadges" })
+            checked: Config.dockPanel.showBadges
+            onToggled: GlobalConfig.dockPanel.showBadges = checked
         }
 
         ToggleRow {
             text: qsTr("Show app launcher icon")
             subtext: qsTr("Display an application launcher button directly on the dock")
-            reset: ({ node: GlobalConfig.dock, setting: "showLauncherIcon" })
-            checked: Config.dock.showLauncherIcon
-            onToggled: GlobalConfig.dock.showLauncherIcon = checked
+            reset: ({ node: GlobalConfig.dockPanel, setting: "showLauncherIcon" })
+            checked: Config.dockPanel.showLauncherIcon
+            onToggled: GlobalConfig.dockPanel.showLauncherIcon = checked
         }
 
         ToggleRow {
             last: true
             text: qsTr("Recolor icons")
             subtext: qsTr("Apply system theme palette colors to monochrome and app icons")
-            reset: ({ node: GlobalConfig.dock, setting: "recolourIcons" })
-            checked: Config.dock.recolourIcons
-            onToggled: GlobalConfig.dock.recolourIcons = checked
+            reset: ({ node: GlobalConfig.dockPanel, setting: "recolourIcons" })
+            checked: Config.dockPanel.recolourIcons
+            onToggled: GlobalConfig.dockPanel.recolourIcons = checked
         }
 
         SectionHeader {
@@ -343,27 +343,27 @@ PageBase {
             first: true
             label: qsTr("Window grouping")
             subtext: qsTr("How multiple windows of the same app share a dock icon")
-            active: Config.dock.windowGrouping === DockWindowGrouping.Ungrouped ? root.windowGroupingItems[2] : Config.dock.windowGrouping === DockWindowGrouping.PinnedFirst ? root.windowGroupingItems[1] : root.windowGroupingItems[0]
+            active: Config.dockPanel.windowGrouping === DockWindowGrouping.Ungrouped ? root.windowGroupingItems[2] : Config.dockPanel.windowGrouping === DockWindowGrouping.PinnedFirst ? root.windowGroupingItems[1] : root.windowGroupingItems[0]
             menuItems: root.windowGroupingItems
             fallbackIcon: "grid_view"
-            onSelected: item => GlobalConfig.dock.windowGrouping = item.value
+            onSelected: item => GlobalConfig.dockPanel.windowGrouping = item.value
         }
 
         ToggleRow {
             text: qsTr("Filter by current desktop")
             subtext: qsTr("Only show applications and windows belonging to the active virtual workspace")
-            reset: ({ node: GlobalConfig.dock, setting: "currentDesktopOnly" })
-            checked: Config.dock.currentDesktopOnly
-            onToggled: GlobalConfig.dock.currentDesktopOnly = checked
+            reset: ({ node: GlobalConfig.dockPanel, setting: "currentDesktopOnly" })
+            checked: Config.dockPanel.currentDesktopOnly
+            onToggled: GlobalConfig.dockPanel.currentDesktopOnly = checked
         }
 
         ToggleRow {
             last: true
             text: qsTr("Preview window on desktop")
             subtext: qsTr("Highlight and show the window itself on the workspace while hovering over dock previews")
-            reset: ({ node: GlobalConfig.dock, setting: "previewOnDesktop" })
-            checked: Config.dock.previewOnDesktop
-            onToggled: GlobalConfig.dock.previewOnDesktop = checked
+            reset: ({ node: GlobalConfig.dockPanel, setting: "previewOnDesktop" })
+            checked: Config.dockPanel.previewOnDesktop
+            onToggled: GlobalConfig.dockPanel.previewOnDesktop = checked
         }
     }
 }
