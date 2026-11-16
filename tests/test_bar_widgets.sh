@@ -58,9 +58,10 @@ assert_matched_something() {
 test_the_registry_and_the_bar_draw_the_same_widgets() {
     local registry drawn
     # The status icons group is drawn as one widget per icon, so the chooser answers
-    # to the kind its entries carry rather than to the group id itself.
+    # to the kind its entries carry rather than to the group id itself. The tray's own
+    # icons are rows of the same list now, drawn by the kind a tray row carries.
     registry="$(registry_ids | sed 's/^statusIcons$/statusIcon/' | sort)"
-    drawn="$(bar_choice_ids)"
+    drawn="$(bar_choice_ids | grep -v '^trayItem$')"
 
     assert_matched_something "no widgets are declared in BarWidgets.qml" "$registry"
     assert_matched_something "no widgets are drawn by Bar.qml" "$drawn"
@@ -242,11 +243,21 @@ globalThis.Config = {
     }
 };
 globalThis.Kwin = { capsLock: false, numLock: false, kbLayout: "" };
+// The tray's own icons hold rows in the bar's list, so the registry is stood up here
+// with one icon on the bar.
+globalThis.TrayRegistry = {
+    rowPrefix: "tray:",
+    barItems: [{ id: "1-cachy", icon: "cachy-update" }],
+    rowOf: key => "tray:" + key,
+    keyOfRow: id => id.startsWith("tray:") ? id.substring(5) : "",
+    keyOfItem: item => item.icon ?? "",
+    itemOf: () => null
+};
 globalThis.Privacy = { inUse: false };
 globalThis.Nmcli = { activeEthernet: false };
 globalThis.HyprSunset = { active: false };
 
-const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "viewEntries"];
+const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "trayEntry", "trayEntries", "viewEntries", "moveBefore", "rowsWith", "dragsItself"];
 Object.assign(root, new Function("root", names.map(extractFunction).join("\n") + "\nreturn {" + names.join(", ") + "};")(root));
 
 const eq = (actual, expected, msg) => {
@@ -279,7 +290,7 @@ eq(ids(root.rightLayoutEntries({ entries: defaults })), ["tray", "clock", "power
 eq(root.rightLayoutEntries({ entries: defaults })[0].systemTray, true, "the synthetic tray is marked as the tray container");
 eq(root.systemTrayEntries({ entries: defaults }).every(entry => entry.systemTray === false && entry.zone === "right"), true,
     "the widgets inside the tray carry the roles the bar delegate requires");
-eq(ids(root.systemTrayEntries({ entries: defaults })), ["updateIndicator"], "the tray owns the right widgets but not the power button or the clock");
+eq(ids(root.systemTrayEntries({ entries: defaults })), ["tray:cachy-update", "updateIndicator"], "the tray owns its own icons and the right widgets, but not the power button or the clock");
 eq(root.systemTrayShowsIcons({ entries: defaults }), true, "the tray entry supplies the system tray icons");
 eq(ids(root.rightLayoutEntries({ entries: defaults.filter(entry => entry.id === "clock") })), ["clock"],
     "a clock on its own stays outside a tray");
@@ -357,7 +368,7 @@ root.setOnBar(moved, "updateIndicator");
 eq(moved.entries.find(entry => entry.id === "updateIndicator").zone, "right",
     "dragging it back puts it in the tray's zone again");
 eq(root.isEnabled(moved, "updateIndicator"), true, "switched on, because the drag asked to see it");
-eq(ids(root.systemTrayEntries(moved)), ["updateIndicator"], "and the tray draws it again");
+eq(ids(root.systemTrayEntries(moved)), ["tray:cachy-update", "updateIndicator"], "and the tray draws it again");
 
 const woken = { entries: [{ id: "updateIndicator", enabled: false, zone: "tray" }] };
 root.setOnBar(woken, "updateIndicator");
@@ -371,17 +382,17 @@ const groups = [
     { id: "statusIcons", enabled: true, zone: "right" },
     { id: "clock", enabled: true, zone: "right" }
 ];
-eq(ids(root.viewEntries({ entries: groups })), ["tray", "statusIcon:audio", "statusIcon:battery", "statusIcon:privacy", "clock"],
-    "the group is expanded in place: one entry per icon, in the configured order, with the switched-off one left out");
+eq(ids(root.viewEntries({ entries: groups })), ["tray", "tray:cachy-update", "statusIcon:audio", "statusIcon:battery", "statusIcon:privacy", "clock"],
+    "the groups are expanded in place: the tray lays out its own icons and the status group one entry per icon, in the configured order, with the switched-off one left out");
 eq(root.viewEntries({ entries: groups }).filter(entry => entry.kind === "statusIcon").every(entry => entry.draggable === true), true,
     "and each icon is draggable on its own");
-eq(ids(root.systemTrayEntries({ entries: groups })), ["statusIcon:audio", "statusIcon:battery", "statusIcon:privacy"],
+eq(ids(root.systemTrayEntries({ entries: groups })), ["tray:cachy-update", "statusIcon:audio", "statusIcon:battery", "statusIcon:privacy"],
     "the tray draws each icon separately, so each can be lifted off the bar");
 eq(root.rightLayoutEntries({ entries: groups }).length, 2, "one tray and one clock: the icons are drawn inside the tray");
 
 globalThis.Privacy.inUse = false;
 eq(root.statusIconActive("privacy"), false, "an icon that has nothing to say is not drawn");
-eq(ids(root.viewEntries({ entries: groups })), ["tray", "statusIcon:audio", "statusIcon:battery", "clock"],
+eq(ids(root.viewEntries({ entries: groups })), ["tray", "tray:cachy-update", "statusIcon:audio", "statusIcon:battery", "clock"],
     "so the row it would have taken closes up");
 globalThis.Privacy.inUse = true;
 
@@ -391,7 +402,7 @@ eq(movedIcon.entries.find(entry => entry.id === "statusIcon:battery").zone, "tra
     "dropping one icon in the box moves that icon and only that icon");
 eq(ids(root.viewEntries(movedIcon)).filter(id => id === "statusIcon:battery"), ["statusIcon:battery"],
     "the expansion reads the override, so the icon is still drawn once");
-eq(ids(root.zoneEntries(root.viewEntries(movedIcon), "right")), ["tray", "statusIcon:audio", "statusIcon:privacy", "clock"],
+eq(ids(root.zoneEntries(root.viewEntries(movedIcon), "right")), ["tray", "tray:cachy-update", "statusIcon:audio", "statusIcon:privacy", "clock"],
     "and the bar no longer draws it");
 eq(root.overflowWidgets(movedIcon).map(entry => entry.id), ["statusIcon:battery"],
     "the box is where it went");
@@ -401,7 +412,7 @@ eq(ids(movedIcon.entries), ["tray", "statusIcons", "clock", "statusIcon:battery"
 
 root.setOnBar(movedIcon, "statusIcon:battery");
 eq(root.zoneFor(movedIcon, "statusIcon:battery"), "right", "dragging it back returns it to the tray");
-eq(ids(root.systemTrayEntries(movedIcon)), ["statusIcon:audio", "statusIcon:battery", "statusIcon:privacy"],
+eq(ids(root.systemTrayEntries(movedIcon)), ["tray:cachy-update", "statusIcon:audio", "statusIcon:battery", "statusIcon:privacy"],
     "in the place the configured order gives it");
 
 const orphan = { entries: [{ id: "statusIcon:audio", enabled: true, zone: "tray" }] };

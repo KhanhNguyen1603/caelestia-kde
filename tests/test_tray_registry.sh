@@ -68,7 +68,7 @@ test_the_bar_and_the_popout_read_one_list() {
     assert_file_contains "$REGISTRY" "readonly property var trayItems" "the registry publishes the bar's icons"
     assert_file_contains "$REGISTRY" "readonly property var barItems" "the registry publishes the list the bar actually draws"
     assert_file_contains "$REGISTRY" "readonly property var overflowItems" "the registry publishes the overflow list"
-    assert_file_contains "$TRAY" "TrayRegistry.barItems" "the bar reads the list it is meant to draw"
+    assert_file_contains "$REPO_ROOT/shell/modules/bar/BarWidgets.qml" "TrayRegistry.barItems" "the bar reads the list it is meant to draw"
     assert_file_contains "$CONTENT" "TrayRegistry.trayItems" "the tray popout reads the bar's icons"
     assert_file_not_contains "$CONTENT" "SystemTray.items.values.filter" "the popout must not re-derive which icons exist"
     assert_file_not_contains "$BAR" "tray.layout.childAt" "the bar must not reach into the tray's layout"

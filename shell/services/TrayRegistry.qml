@@ -24,6 +24,10 @@ Singleton {
 
     readonly property string popoutPrefix: "traymenu"
 
+    // A tray icon can be dragged in among the bar's own icons, so on the bar it holds a
+    // row in the same list they use. The row names the icon by its stable key.
+    readonly property string rowPrefix: "tray:"
+
     // Pids of the running notifiers, so an alias can name the app rather than the
     // process that happens to host its icon.
     property var procNames: ({})
@@ -184,6 +188,18 @@ Singleton {
         const at = order.indexOf(beforeKey);
         order.splice(at < 0 ? order.length : at, 0, key);
         tray.order = order;
+    }
+
+    function rowOf(key: string): string {
+        return root.rowPrefix + key;
+    }
+
+    function keyOfRow(id: string): string {
+        return id.startsWith(root.rowPrefix) ? id.substring(root.rowPrefix.length) : "";
+    }
+
+    function itemOf(key: string): var {
+        return root.liveItems.find(item => root.keyOfItem(item) === key) ?? null;
     }
 
     function popoutName(key: string): string {

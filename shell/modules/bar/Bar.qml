@@ -500,6 +500,21 @@ Item {
                 }
             }
             DelegateChoice {
+                roleValue: "trayItem"
+                delegate: WrappedLoader {
+                    id: trayItemLoader
+
+                    readonly property string trayKey: TrayRegistry.keyOfRow(trayItemLoader.id)
+
+                    sourceComponent: TrayItem {
+                        modelData: TrayRegistry.itemOf(trayItemLoader.trayKey)
+                        popouts: root.popouts
+                        isHorizontal: root.isHorizontal
+                        draggable: true
+                    }
+                }
+            }
+            DelegateChoice {
                 roleValue: "statusIcon"
                 delegate: WrappedLoader {
                     id: statusLoader

@@ -11,7 +11,6 @@ Item {
     id: root
 
     readonly property alias layout: layout
-    readonly property alias items: items
     readonly property alias expandIcon: expandIcon
 
     readonly property int padding: root.hasBackground ? Tokens.padding.medium : Tokens.padding.extraSmall
@@ -78,22 +77,10 @@ Item {
         return best;
     }
 
-    // Where the widget a drag carries would land, or null when the bar holds nothing
-    // that can take it. Icons and other widgets share one order now, so either can be
-    // the one a drag lands on; with none of that kind on the bar, the end of the row is
-    // where the icon joins it, so that is what the marker points at.
+    // Where the widget a drag carries would land, or null when the row is empty: the
+    // tray's icons and the bar's own share one row now, so any cell can take a drop.
     function dropTarget(kind: string, id: string, x: real, y: real): var {
-        const own = kind === "icon" ? items : widgetItems;
-        const other = kind === "icon" ? widgetItems : items;
-        const cell = root.closestChild(own, x, y);
-        if (cell)
-            return cell;
-        for (let i = other.count - 1; i >= 0; i--) {
-            const last = other.itemAt(i);
-            if (last && last.visible)
-                return last;
-        }
-        return null;
+        return root.closestChild(widgetItems, x, y);
     }
 
     // Hit test for the bar's hover routing: the positioner owns the layout, so it also
@@ -102,18 +89,6 @@ Item {
         const p = layout.mapFromItem(barItem, x, y);
         for (let i = 0; i < widgetItems.count; i++) {
             const child = widgetItems.itemAt(i);
-            if (!child || !child.visible)
-                continue;
-            if (p.x >= child.x && p.x <= child.x + child.width && p.y >= child.y && p.y <= child.y + child.height)
-                return child;
-        }
-        return null;
-    }
-
-    function itemAt(barItem: var, x: real, y: real): TrayItem {
-        const p = layout.mapFromItem(barItem, x, y);
-        for (let i = 0; i < items.count; i++) {
-            const child = items.itemAt(i) as TrayItem;
             if (!child || !child.visible)
                 continue;
             if (p.x >= child.x && p.x <= child.x + child.width && p.y >= child.y && p.y <= child.y + child.height)
@@ -214,8 +189,9 @@ Item {
         }
 
         // Scene coordinates: `dropTarget` maps from the item it is given, and the drop
-        // arrives in the window's space. The nearest icon or widget takes the drop, so
-        // landing between two of them still moves something.
+        // arrives in the window's space. The nearest cell takes the drop, so landing
+        // between two icons still moves something. A tray icon now holds a row like any
+        // other, so it is moved the same way.
         const target = root.dropTarget(source.kind, source.kind === "icon" ? source.key : source.widgetId, x, y);
         if (source.kind === "widget") {
             BarWidgets.setOnBar(GlobalConfig.bar, source.widgetId);
@@ -223,8 +199,8 @@ Item {
                 BarWidgets.moveBefore(GlobalConfig.bar, source.widgetId, target.id);
         } else if (source.kind === "icon") {
             TrayRegistry.sendToBar(source.key);
-            if (target)
-                TrayRegistry.moveBefore(source.key, target.key);
+            if (target && target.id)
+                BarWidgets.moveBefore(GlobalConfig.bar, TrayRegistry.rowOf(source.key), target.id);
         }
     }
 
@@ -310,7 +286,7 @@ Item {
     StyledRect {
         id: surface
 
-        readonly property bool filled: root.hasBackground && (items.count > 0 || widgetItems.count > 0)
+        readonly property bool filled: root.hasBackground && widgetItems.count > 0
 
         x: root.isHorizontal ? root.arrowSize + root.arrowGap : 0
         y: root.isHorizontal ? 0 : root.arrowSize + root.arrowGap
@@ -370,20 +346,6 @@ Item {
             }
 
             Repeater {
-                id: items
-
-                model: ScriptModel {
-                    values: root.showTrayIcons ? TrayRegistry.barItems : []
-                }
-
-                TrayItem {
-                    popouts: root.popouts
-                    isHorizontal: root.isHorizontal
-                    draggable: true
-                }
-            }
-
-            Repeater {
                 id: widgetItems
 
                 model: root.widgetEntries
@@ -404,7 +366,9 @@ Item {
         height: Math.round(root.barThickness * 0.6)
         radius: width / 2
         color: Colours.palette.m3primary
-        x: dropMarker.slot ? Math.round(dropMarker.slot.mapToItem(root, dropMarker.slot.width / 2, 0).x - width / 2) : 0
+        // In the gap before the icon, which is where the dragged one would be put: on
+        // top of an icon it reads as a highlight rather than a place.
+        x: dropMarker.slot ? Math.round(dropMarker.slot.mapToItem(root, 0, 0).x - root.spacing / 2 - width / 2) : 0
         y: Math.round((root.height - height) / 2)
     }
 

@@ -136,9 +136,36 @@ QtObject {
         return entries;
     }
 
-    // What the bar draws: the configured entries with the status-icons group expanded
-    // into the icons it holds. Only the readers expand; the writers below stay on
-    // `entriesOf`, so writing a zone back never turns the expansion into config.
+    // The bar's own rows for the tray's icons: each is the place one icon holds among
+    // the bar's icons, so a drag can put an app next to the battery or the cup.
+    function trayEntry(key: string, row: var): var {
+        return {
+            id: TrayRegistry.rowOf(key),
+            kind: "trayItem",
+            key: key,
+            enabled: row.enabled !== false,
+            zone: row.zone ?? "right",
+            systemTray: false,
+            draggable: true
+        };
+    }
+
+    // The tray's icons that have no row of their own yet, in the tray's own order.
+    function trayEntries(placed: var): var {
+        const entries = [];
+        for (const item of TrayRegistry.barItems) {
+            const key = TrayRegistry.keyOfItem(item);
+            if (placed[key])
+                continue;
+            entries.push(root.trayEntry(key, {}));
+        }
+        return entries;
+    }
+
+    // What the bar draws: the configured entries with the tray's own rows and the
+    // status-icons group expanded into the icons they hold. Only the readers expand;
+    // the writers below stay on `entriesOf`, so writing a zone back never turns the
+    // expansion into config.
     function viewEntries(node: var): var {
         const raw = root.entriesOf(node);
         const icons = Config.bar.statusIcons.values ?? [];
@@ -147,14 +174,18 @@ QtObject {
         const ownRows = {};
         for (const entry of raw) {
             const iconId = root.statusIconId(entry.id);
+            const trayKey = TrayRegistry.keyOfRow(entry.id);
             if (iconId.length > 0)
                 ownRows[iconId] = true;
+            else if (trayKey.length > 0)
+                ownRows[trayKey] = true;
         }
 
         let anchored = false;
         const entries = [];
         for (const entry of raw) {
             const iconId = root.statusIconId(entry.id);
+            const trayKey = TrayRegistry.keyOfRow(entry.id);
             if (iconId.length > 0) {
                 const icon = icons.find(icon => icon.id === iconId);
                 if (icon && icon.enabled && root.statusIconActive(iconId)) {
@@ -169,6 +200,16 @@ QtObject {
                 }
                 continue;
             }
+            if (trayKey.length > 0) {
+                if (TrayRegistry.itemOf(trayKey))
+                    entries.push(root.trayEntry(trayKey, entry));
+                continue;
+            }
+            if (entry.id === "tray") {
+                entries.push(entry);
+                entries.push(...root.trayEntries(ownRows));
+                continue;
+            }
             if (entry.id === "statusIcons") {
                 entries.push(...root.statusIconEntries(node, ownRows));
                 anchored = true;
@@ -176,8 +217,8 @@ QtObject {
             }
             entries.push(entry);
         }
-        // An icon row outlives the group row it was dragged out of, so icons sent
-        // somewhere keep belonging there even without their anchor.
+        // A row outlives the group it was dragged out of, so icons sent somewhere keep
+        // belonging there even without their anchor.
         if (!anchored && raw.some(entry => root.statusIconId(entry.id).length > 0))
             entries.push(...root.statusIconEntries(node, ownRows));
         return entries;
@@ -202,13 +243,13 @@ QtObject {
     }
 
     function isKnown(id: string): bool {
-        return root.widget(id) !== null;
+        return root.widget(id) !== null || TrayRegistry.keyOfRow(id).length > 0;
     }
 
     // Widgets the bar draws as one of its icons carry their own drag, so the wrapper
     // around them must not add a second gesture.
     function dragsItself(kind: string): bool {
-        return kind === "statusIcon" || kind === "keepawake" || kind === "updateIndicator";
+        return kind === "statusIcon" || kind === "trayItem" || kind === "keepawake" || kind === "updateIndicator";
     }
 
     function entriesOf(node: var): var {
@@ -384,53 +425,56 @@ QtObject {
     }
 
     // Where a dragged widget lands: in the place of the widget it was dropped on. The
-    // order of the bar is the order of `entries`, so a status icon that only exists in
-    // the icons list gets a row of its own first — that is what lets an icon and any
-    // other widget trade places instead of each kind only moving among its own.
+    // order of the bar is the order of `entries`, so anything that only exists in a group
+    // — a status icon, a tray icon — gets a row of its own first; that is what lets them
+    // trade places with the rest instead of each kind only moving among its own.
     function moveBefore(node: var, id: string, beforeId: string): void {
         if (id === beforeId)
             return;
 
-        root.ensureRow(node, id);
-        root.ensureRow(node, beforeId);
+        // Built up in memory, so the row a group only implies is already there when the
+        // move is worked out.
+        let rows = root.rowsWith(node, id);
+        rows = root.rowsWith({
+            entries: rows
+        }, beforeId);
 
-        const entries = root.entriesOf(node);
-        const at = entries.findIndex(entry => entry.id === id);
+        const at = rows.findIndex(entry => entry.id === id);
         if (at < 0)
             return;
-        const moving = entries[at];
-        const rest = entries.slice();
+        const moving = rows[at];
+        const rest = rows.slice();
         rest.splice(at, 1);
         const target = rest.findIndex(entry => entry.id === beforeId);
         rest.splice(target < 0 ? rest.length : target, 0, moving);
         node.entries = rest;
     }
 
-    // A status icon is declared by the icons list and drawn where the group's anchor row
-    // is, so it has no row of its own until something is dropped beside it.
-    function ensureRow(node: var, id: string): void {
+    // The entries with a row for `id` in them. An icon is declared by the icons list and
+    // a tray icon by the tray, so neither has a row of its own until one is needed.
+    function rowsWith(node: var, id: string): var {
         const entries = root.entriesOf(node);
         if (entries.some(entry => entry.id === id))
-            return;
+            return entries;
 
         const next = entries.slice();
-        if (root.statusIconId(id).length === 0) {
-            next.push({
+        if (root.statusIconId(id).length > 0) {
+            const anchorAt = next.findIndex(entry => entry.id === "statusIcons");
+            next.splice(anchorAt < 0 ? next.length : anchorAt, 0, {
                 id: id,
                 enabled: true,
-                zone: root.widget(id)?.zone ?? "right"
+                zone: anchorAt >= 0 ? (next[anchorAt].zone ?? "right") : (root.widget(id)?.zone ?? "right")
             });
-            node.entries = next;
-            return;
+            return next;
         }
 
-        const anchorAt = next.findIndex(entry => entry.id === "statusIcons");
-        next.splice(anchorAt < 0 ? next.length : anchorAt, 0, {
+        const trayAt = TrayRegistry.keyOfRow(id).length > 0 ? next.findIndex(entry => entry.id === "tray") : -1;
+        next.splice(trayAt < 0 ? next.length : trayAt, 0, {
             id: id,
             enabled: true,
-            zone: anchorAt >= 0 ? (next[anchorAt].zone ?? "right") : (root.widget(id)?.zone ?? "right")
+            zone: root.widget(id)?.zone ?? "right"
         });
-        node.entries = next;
+        return next;
     }
 
     function resetToDefaults(node: var): void {
