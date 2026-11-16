@@ -173,9 +173,10 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
     assert_file_not_contains "$UPDATE_INDICATOR" 'TrayDrag' \
         "the update indicator drags through its own icon, not on its own again"
     local writers
-    writers="$(grep -rlE '\.entries = ' "$REPO_ROOT/shell" --include='*.qml' 2>/dev/null | grep -v 'BarPlacements.qml' | grep -v 'Autostart.qml' | grep -v 'ContextMenuStore.qml' || true)"
+    writers="$(grep -rlE '\.entries = ' "$REPO_ROOT/shell" --include='*.qml' 2>/dev/null \
+        | grep -v -E 'BarPlacements\.qml|Autostart\.qml|ContextMenuStore\.qml|ConfigMigrations\.qml' || true)"
     assert_eq "" "$writers" \
-        "one writer owns the bar's entry list: every switch, drag and settings page asks it"
+        "the placement writer owns the bar's entry list; the only other file that rewrites a saved one is the migration"
 }
 
 test_the_placement_model_says_where_an_icon_is() {
