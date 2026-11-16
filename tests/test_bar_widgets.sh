@@ -152,6 +152,10 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "the tray has to resolve what a drag leaves on it"
     assert_file_contains "$TRAY" 'BarPlacements.setPlacement(id, "bar"' \
         "dropping an icon on the icons puts it back on the bar"
+    assert_file_not_contains "$TRAY" 'overChevron' \
+        "a drop on the chevron is a drop on the tray, so a tray emptied into the box can still take one back"
+    assert_file_contains "$TRAY" 'return root.nearTray(x, y)' \
+        "and a drop half a bar away from an empty tray still belongs to it"
     assert_file_contains "$GESTURE" 'TrayDrag.begin(root.kind, root.key, root.widgetId, root.item.Window.window)' \
         "one gesture lifts whatever it is put on and says what it lifted"
     assert_file_contains "$GESTURE" 'TrayDrag.finish()' \

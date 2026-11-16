@@ -156,8 +156,8 @@ test_an_icon_with_a_row_is_drawn_from_it_alone() {
         "the panel's own list is worked out from the icons no row placed, so one icon cannot be drawn twice"
     assert_file_contains "$BOX" "BarPlacements.setPlacement(id, BarPlacements.trayZone" \
         "an icon dropped in the box gives up its row in the bar"
-    assert_file_contains "$TRAY" "BarPlacements.setPlacement(TrayRegistry.rowOf(source.key), BarPlacements.trayZone)" \
-        "dropping one on the chevron does the same"
+    assert_file_not_contains "$TRAY" "BarPlacements.trayZone" \
+        "and the tray never hides one: an empty tray still has to take an icon back"
 }
 
 test_every_icon_is_placed_from_one_list() {

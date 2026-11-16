@@ -172,13 +172,14 @@ Item {
         root.popouts.staysOpen = true;
     }
 
-    function overChevron(x: real, y: real): bool {
-        if (!root.showArrow || !expandIcon.item)
-            return false;
+    // Whether a drop is near enough the tray to belong to it. An empty tray is a chevron
+    // and a little padding, which is a small thing to aim at, so a drop half a bar away
+    // from it still counts: there is nowhere else on the bar for one of these to land.
+    function nearTray(x: real, y: real): bool {
         const own = root.ownPoint(x, y);
-        const corner = expandIcon.mapToItem(null, 0, 0);
-        const reach = root.spacing;
-        return own.x >= corner.x - reach && own.x <= corner.x + root.arrowSize + reach && own.y >= corner.y - reach && own.y <= corner.y + root.arrowSize + reach;
+        const p = root.mapFromItem(null, own.x, own.y);
+        const reach = Math.round(root.barThickness * 0.5);
+        return p.x >= -reach && p.y >= -reach && p.x <= root.width + reach && p.y <= root.height + reach;
     }
 
     // A drag that starts in the box is lifted from the popout's window and released
@@ -195,9 +196,7 @@ Item {
     function trayDropAt(window: var, x: real, y: real): bool {
         if (!root.visible || !root.onDragScreen(window))
             return false;
-        const own = root.ownPoint(x, y);
-        const p = root.mapFromItem(null, own.x, own.y);
-        return p.x >= 0 && p.y >= 0 && p.x <= root.width && p.y <= root.height;
+        return root.nearTray(x, y);
     }
 
     // A drop arrives in screen coordinates, because the box it may be heading for is a
@@ -206,22 +205,13 @@ Item {
         return TrayDrag.toLocal(root.Window.window, x, y);
     }
 
-    // Dropping on the chevron is the same move as dropping in the box, and dropping
-    // on the icons puts the icon or the widget back on the bar, in the place of the
-    // one it landed on.
+    // Dropping on the tray puts the icon or the widget back on the bar, in the place of
+    // the one it landed on. Hiding something is the box's job, and the box is open for
+    // the whole drag: making the chevron send a drop to the box would leave an empty
+    // tray with nowhere to drop one back onto.
     function trayDrop(source: var, x: real, y: real): void {
         if (!source)
             return;
-
-        const toBox = root.overChevron(x, y);
-        if (toBox) {
-            root.openOverflow();
-            if (source.kind === "widget")
-                BarPlacements.setPlacement(source.widgetId, BarPlacements.trayZone);
-            else if (source.kind === "icon")
-                BarPlacements.setPlacement(TrayRegistry.rowOf(source.key), BarPlacements.trayZone);
-            return;
-        }
 
         // Scene coordinates: `dropTarget` maps from the item it is given, and the drop
         // arrives in the window's space. The nearest cell takes the drop, so landing
