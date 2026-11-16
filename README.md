@@ -45,7 +45,7 @@ You can also choose *Uninstall* from the installer TUI, or run the script from t
 checkout directly:
 
 ```bash
-bash ./uninstall.sh
+bash ./uninstall.sh      # or: bash install.sh --uninstall
 ```
 
 A packaged install has no script to run: the row names the package manager's command
