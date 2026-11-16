@@ -47,9 +47,9 @@ unset CDPATH
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
 if [ -f "$SCRIPT_DIR/scripts/setup.sh" ]; then
     if [ ! -t 0 ] && [ -c /dev/tty ]; then
-        exec bash "$SCRIPT_DIR/scripts/setup.sh" </dev/tty
+        exec bash "$SCRIPT_DIR/scripts/setup.sh" "$@" </dev/tty
     fi
-    exec bash "$SCRIPT_DIR/scripts/setup.sh"
+    exec bash "$SCRIPT_DIR/scripts/setup.sh" "$@"
 fi
 
 if [ -d "$DEST/.git" ]; then
@@ -64,7 +64,7 @@ else
 fi
 
 if [ ! -t 0 ] && [ -c /dev/tty ]; then
-    exec bash "$DEST/scripts/setup.sh" </dev/tty
+    exec bash "$DEST/scripts/setup.sh" "$@" </dev/tty
 fi
-exec bash "$DEST/scripts/setup.sh"
+exec bash "$DEST/scripts/setup.sh" "$@"
 }
