@@ -418,8 +418,8 @@ test_the_hidden_icons_box_is_icons_only() {
         "the grid is the squarest shape its icons fit, and a column wider once four rows are full"
     assert_file_contains "$TRAY_OVERFLOW" 'readonly property int rows: Math.max(root.minRows, Math.ceil(root.filled / root.columns))' \
         "with no rows reserved beyond the icons themselves"
-    assert_file_contains "$TRAY_OVERFLOW" 'model: root.filled === 0 ? 1 : 0' \
-        "a box with nothing in it still shows the one cell waiting to be filled"
+    assert_file_not_contains "$TRAY_OVERFLOW" 'root.filled === 0 ? 1 : 0' \
+        "a box with nothing in it is only the room it keeps: a stand-in cell reads as something to press"
     assert_file_contains "$TRAY_OVERFLOW" 'BarComponents.StatusIcon' \
         "a status icon in the box is a cell the box sizes, not a widget that sizes itself"
     assert_file_not_contains "$TRAY_OVERFLOW" 'RowLayout' \

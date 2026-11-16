@@ -235,17 +235,7 @@ Item {
             }
         }
 
-        // An empty box still opens from the chevron, and a blank panel reads as a
-        // mistake: one faint cell stands in for the icons that will fill it.
-        Repeater {
-            model: root.filled === 0 ? 1 : 0
-
-            delegate: StyledRect {
-                implicitWidth: root.cell
-                implicitHeight: root.cell
-                radius: Tokens.rounding.medium * root.scaleOffset
-                color: Qt.alpha(Colours.palette.m3onSurface, 0.06)
-            }
-        }
+        // An empty box is just the room it keeps: a cell standing in for the icons that
+        // will fill it reads as something to press, and there is nothing there to press.
     }
 }
