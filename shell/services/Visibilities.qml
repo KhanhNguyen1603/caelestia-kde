@@ -103,6 +103,7 @@ Singleton {
         bars = new Map(bars);
     }
     function registerDock(screen: ShellScreen, dock: var): void {
+        console.log("[dock-debug] Visibilities.registerDock for screen:", screen?.name, "dock:", dock);
         docks.set(screen.name, dock);
         docks = new Map(docks);
     }

@@ -25,6 +25,7 @@ Item {
     required property ScreenState screenState
     required property DrawerVisibilities visibilities
     required property Bar.BarWrapper bar
+    required property var dock
     required property real borderThickness
     required property real overviewBorderThickness
     property var overviewAnimConfig
@@ -123,9 +124,16 @@ Item {
 
     anchors.fill: parent
     anchors.leftMargin: (bar.position === "left" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
+        + (dock && dock.position === "left" ? dock.implicitWidth : 0)
     anchors.rightMargin: (bar.position === "right" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
+        + (dock && dock.position === "right" ? dock.implicitWidth : 0)
     anchors.topMargin: (bar.position === "top" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
+        + (dock && dock.position === "top" ? dock.implicitHeight : 0)
     anchors.bottomMargin: (bar.position === "bottom" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
+        + (dock && dock.position === "bottom" ? dock.implicitHeight : 0)
+
+    Component.onCompleted: console.log("[dock-debug] Panels completed, dock:", dock)
+
     states: [
         State {
             name: "right"

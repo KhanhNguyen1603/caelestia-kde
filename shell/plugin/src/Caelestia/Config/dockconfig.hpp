@@ -22,6 +22,7 @@ class DockConfig : public settings::ObjectNode {
     CONFIG_PROPERTY(int, autoHideDelay, 300)
     CONFIG_PROPERTY(QString, position, u"bottom"_s)
     CONFIG_PROPERTY(QString, alignment, u"center"_s)
+    CONFIG_PROPERTY(int, size, 56)
     CONFIG_PROPERTY(int, iconSize, 48)
     CONFIG_PROPERTY(int, floatingMargin, 12)
     CONFIG_PROPERTY(int, padding, 10)
@@ -39,6 +40,9 @@ class DockConfig : public settings::ObjectNode {
     CONFIG_GLOBAL_PROPERTY(QStringList, pinnedApps, QStringList({ u"firefox"_s, u"org.kde.dolphin"_s }))
     CONFIG_PROPERTY(bool, reserveSpace, false)
     CONFIG_PROPERTY(bool, activeIndicators, true)
+    CONFIG_PROPERTY(bool, showOnHover, true)
+    CONFIG_PROPERTY(int, dragThreshold, 20)
+    CONFIG_PROPERTY(QStringList, excludedScreens, QStringList())
 };
 
 } // namespace caelestia::config

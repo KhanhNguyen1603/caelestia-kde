@@ -16,6 +16,7 @@ import qs.services
 import qs.utils
 import qs.modules.background
 import qs.modules.bar
+import qs.modules.dock
 import qs.modules.overview as Overview
 import qs.modules.background.desktopicons
 
@@ -28,6 +29,7 @@ StyledWindow {
     property real blurOffsetRight: 0
     property alias overviewAnimConfig: animConfig
     readonly property alias bar: bar
+    readonly property alias dock: dock
     readonly property alias interactionWrapper: interactions
     readonly property alias visibilities: visibilities
     // The per-screen state object the drawers share. The dashboard's tab and the
@@ -71,6 +73,10 @@ StyledWindow {
     readonly property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
     readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
     readonly property real borderLayoutThickness: hasFullscreen ? 0 : dynamicBorderThickness
+    readonly property real edgeThicknessLeft: Math.max(bar.position === "left" ? bar.implicitWidth : 0, dock.position === "left" ? dock.implicitWidth : 0, root.borderThickness)
+    readonly property real edgeThicknessRight: Math.max(bar.position === "right" ? bar.implicitWidth : 0, dock.position === "right" ? dock.implicitWidth : 0, root.borderThickness)
+    readonly property real edgeThicknessTop: Math.max(bar.position === "top" ? bar.implicitHeight : 0, dock.position === "top" ? dock.implicitHeight : 0, root.borderThickness)
+    readonly property real edgeThicknessBottom: Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, dock.position === "bottom" ? dock.implicitHeight : 0, root.borderThickness)
     property color surfaceColour: Colours.tPalette.m3surface
     readonly property int dragMaskPadding: {
         if (focusGrabState.active || panels.popouts.isDetached)
@@ -169,6 +175,7 @@ StyledWindow {
         id: regions
 
         bar: bar
+        dock: dock
         panels: panels
         win: root
     }
@@ -321,10 +328,10 @@ StyledWindow {
                 anchors.margins: -50
                 group: overviewBlurMask
                 radius: root.borderRounding
-                borderLeft: Math.max(bar.position === "left" ? bar.implicitWidth : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
-                borderRight: Math.max(bar.position === "right" ? bar.implicitWidth : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
-                borderTop: Math.max(bar.position === "top" ? bar.implicitHeight : 0, root.borderThickness) - root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
-                borderBottom: Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness) + root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
+                borderLeft: root.edgeThicknessLeft - anchors.margins - root.sdfBorderOffset
+                borderRight: root.edgeThicknessRight - anchors.margins - root.sdfBorderOffset
+                borderTop: root.edgeThicknessTop - root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
+                borderBottom: root.edgeThicknessBottom + root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
                 Config.screen: root.screen.name
             }
         }
@@ -374,10 +381,10 @@ StyledWindow {
             group: GlobalConfig.appearance.islands ? null : blobGroup
             visible: !GlobalConfig.appearance.islands
             radius: root.borderRounding
-            borderLeft: Math.max(bar.position === "left" ? bar.implicitWidth : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
-            borderRight: Math.max(bar.position === "right" ? bar.implicitWidth : 0, root.borderThickness) - anchors.margins - root.sdfBorderOffset
-            borderTop: Math.max(bar.position === "top" ? bar.implicitHeight : 0, root.borderThickness) - root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
-            borderBottom: Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness) + root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
+            borderLeft: root.edgeThicknessLeft - anchors.margins - root.sdfBorderOffset
+            borderRight: root.edgeThicknessRight - anchors.margins - root.sdfBorderOffset
+            borderTop: root.edgeThicknessTop - root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
+            borderBottom: root.edgeThicknessBottom + root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
             Config.screen: root.screen.name
         }
         BlobRect {
@@ -387,6 +394,16 @@ StyledWindow {
             y: bar.y
             implicitWidth: bar.width
             implicitHeight: bar.height
+            radius: Tokens.rounding.extraLarge
+            deformScale: (GlobalConfig.appearance.blurMask || !GlobalConfig.appearance.transparency.enabled) ? ((0.1 * Config.appearance.deformScale) / 10000) : 0
+        }
+        BlobRect {
+            visible: GlobalConfig.appearance.islands && dock.visible
+            group: GlobalConfig.appearance.islands ? blobGroup : null
+            x: dock.x
+            y: dock.y
+            implicitWidth: dock.width
+            implicitHeight: dock.height
             radius: Tokens.rounding.extraLarge
             deformScale: (GlobalConfig.appearance.blurMask || !GlobalConfig.appearance.transparency.enabled) ? ((0.1 * Config.appearance.deformScale) / 10000) : 0
         }
@@ -583,6 +600,7 @@ StyledWindow {
         dismissLauncher: root.foreignLauncherOpen
         panels: panels
         bar: bar
+        dock: dock
         borderThickness: root.borderLayoutThickness
         fullscreen: root.hasFullscreen
         capturesDismissClick: root.capturesOverlayInput
@@ -686,6 +704,7 @@ StyledWindow {
             screenState: root.screenState
             visibilities: visibilities
             bar: bar
+            dock: dock
             borderThickness: root.borderThickness
             overviewBorderThickness: root.overviewBorderThickness
             overviewAnimConfig: root.overviewAnimConfig
@@ -728,6 +747,107 @@ StyledWindow {
             popouts: panels.popouts
             fullscreen: root.hasFullscreen
             Component.onCompleted: Visibilities.registerBar(root.screen, this)
+        }
+        DockWrapper {
+            id: dock
+
+            property string vAnchor: (dock.position === "left" || dock.position === "right") ? "both" : (dock.position === "top" ? "top" : "bottom")
+            property string hAnchor: (dock.position === "top" || dock.position === "bottom") ? "both" : (dock.position === "left" ? "left" : "right")
+
+            screen: root.screen
+            visibilities: visibilities
+            fullscreen: root.hasFullscreen
+            Component.onCompleted: {
+                console.log("[dock-debug] ContentWindow dock completed, registering dock for screen:", root.screen?.name, "dock:", this);
+                Visibilities.registerDock(root.screen, this);
+            }
+            Component.onDestruction: Visibilities.unregisterDock(root.screen)
+            states: [
+                State {
+                    name: "left"
+                    when: dock.position === "left"
+
+                    AnchorChanges {
+                        target: dock
+                        anchors.left: parent.left
+                        anchors.right: undefined
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                    }
+                    PropertyChanges {
+                        target: dock
+                        width: dock.implicitWidth
+                        height: undefined
+                        anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.rightMargin: 0
+                    }
+                },
+                State {
+                    name: "right"
+                    when: dock.position === "right"
+
+                    AnchorChanges {
+                        target: dock
+                        anchors.left: undefined
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                    }
+                    PropertyChanges {
+                        target: dock
+                        width: dock.implicitWidth
+                        height: undefined
+                        anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.leftMargin: 0
+                        anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                    }
+                },
+                State {
+                    name: "top"
+                    when: dock.position === "top"
+
+                    AnchorChanges {
+                        target: dock
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.bottom: undefined
+                    }
+                    PropertyChanges {
+                        target: dock
+                        width: undefined
+                        height: dock.implicitHeight
+                        anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.topMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.bottomMargin: 0
+                    }
+                },
+                State {
+                    name: "bottom"
+                    when: dock.position === "bottom"
+
+                    AnchorChanges {
+                        target: dock
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: undefined
+                        anchors.bottom: parent.bottom
+                    }
+                    PropertyChanges {
+                        target: dock
+                        width: undefined
+                        height: dock.implicitHeight
+                        anchors.leftMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.bottomMargin: GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0
+                        anchors.topMargin: 0
+                    }
+                }
+            ]
         }
         Connections {
             function onOpenDesktopContextMenu(x, y, screenName) {
@@ -826,29 +946,29 @@ StyledWindow {
     BackgroundEffect.blurRegion: Region {
         Region { x: -10; y: -10; width: 1; height: 1 }
         Region {
-            x: Math.max(bar.position === "left" ? bar.implicitWidth : 0, root.borderThickness)
-            y: Math.max(bar.position === "top" ? bar.implicitHeight : 0, root.borderThickness)
+            x: root.edgeThicknessLeft
+            y: root.edgeThicknessTop
             width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             intersection: Intersection.Combine
         }
         Region {
-            x: root.width - Math.max(bar.position === "right" ? bar.implicitWidth : 0, root.borderThickness) - root.borderRounding
-            y: Math.max(bar.position === "top" ? bar.implicitHeight : 0, root.borderThickness)
+            x: root.width - root.edgeThicknessRight - root.borderRounding
+            y: root.edgeThicknessTop
             width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             intersection: Intersection.Combine
         }
         Region {
-            x: Math.max(bar.position === "left" ? bar.implicitWidth : 0, root.borderThickness)
-            y: root.height - Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness) - root.borderRounding
+            x: root.edgeThicknessLeft
+            y: root.height - root.edgeThicknessBottom - root.borderRounding
             width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             intersection: Intersection.Combine
         }
         Region {
-            x: root.width - Math.max(bar.position === "right" ? bar.implicitWidth : 0, root.borderThickness) - root.borderRounding
-            y: root.height - Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness) - root.borderRounding
+            x: root.width - root.edgeThicknessRight - root.borderRounding
+            y: root.height - root.edgeThicknessBottom - root.borderRounding
             width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
             intersection: Intersection.Combine
@@ -861,10 +981,10 @@ StyledWindow {
             vAnchor: "none"
             hAnchor: "none"
             blurQuality: borderBlurSettings.blurQuality
-            inLeft: Math.max(bar.position === "left" ? bar.implicitWidth : 0, root.borderThickness) + root.borderRounding
-            inRight: root.width - Math.max(bar.position === "right" ? bar.implicitWidth : 0, root.borderThickness) - root.borderRounding
-            inTop: Math.max(bar.position === "top" ? bar.implicitHeight : 0, root.borderThickness) + root.borderRounding
-            inBottom: root.height - Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness) - root.borderRounding
+            inLeft: root.edgeThicknessLeft + root.borderRounding
+            inRight: root.width - root.edgeThicknessRight - root.borderRounding
+            inTop: root.edgeThicknessTop + root.borderRounding
+            inBottom: root.height - root.edgeThicknessBottom - root.borderRounding
             rTop: !GlobalConfig.appearance.islands ? root.borderRounding + 2 : 0
             rBottom: !GlobalConfig.appearance.islands ? root.borderRounding + 2 : 0
             rLeft: !GlobalConfig.appearance.islands ? root.borderRounding + 2 : 0
@@ -872,26 +992,26 @@ StyledWindow {
         }
         Region {
             x: 0; y: 0
-            width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? Math.max(bar.position === "left" ? bar.implicitWidth : 0, root.borderThickness) : 0
+            width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? root.edgeThicknessLeft : 0
             height: root.height
             intersection: Intersection.Combine
         }
         Region {
-            x: root.width - Math.max(bar.position === "right" ? bar.implicitWidth : 0, root.borderThickness); y: 0
-            width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? Math.max(bar.position === "right" ? bar.implicitWidth : 0, root.borderThickness) : 0
+            x: root.width - root.edgeThicknessRight; y: 0
+            width: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? root.edgeThicknessRight : 0
             height: root.height
             intersection: Intersection.Combine
         }
         Region {
             x: 0; y: 0
             width: root.width
-            height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? Math.max(bar.position === "top" ? bar.implicitHeight : 0, root.borderThickness) : 0
+            height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? root.edgeThicknessTop : 0
             intersection: Intersection.Combine
         }
         Region {
-            x: 0; y: root.height - Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness)
+            x: 0; y: root.height - root.edgeThicknessBottom
             width: root.width
-            height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? Math.max(bar.position === "bottom" ? bar.implicitHeight : 0, root.borderThickness) : 0
+            height: (!GlobalConfig.appearance.islands && GlobalConfig.appearance.blur) ? root.edgeThicknessBottom : 0
             intersection: Intersection.Combine
         }
         BlurMask {
@@ -903,6 +1023,16 @@ StyledWindow {
             blurOffsetRight: root.blurOffsetRight
             vAnchor: bar.vAnchor
             hAnchor: bar.hAnchor
+        }
+        BlurMask {
+            target: dock
+            contentItem: root.contentItem
+            blurOffsetTop: root.blurOffsetTop
+            blurOffsetBottom: root.blurOffsetBottom
+            blurOffsetLeft: root.blurOffsetLeft
+            blurOffsetRight: root.blurOffsetRight
+            vAnchor: dock.vAnchor
+            hAnchor: dock.hAnchor
         }
         BlurMask {
             target: panels.sidebar
