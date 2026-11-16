@@ -161,6 +161,12 @@ Singleton {
         const hidden = tray.hiddenIcons.filter(entry => entry !== key);
         tray.alwaysVisible = state === "visible" ? [...visible, key] : visible;
         tray.hiddenIcons = state === "hidden" ? [...hidden, key] : hidden;
+        // A row that says the icon is off is the older answer, and a state set here is
+        // the newer one: the row goes so the state is what decides again.
+        const entries = GlobalConfig.bar.entries ?? [];
+        const off = entries.filter(entry => entry.id === root.rowOf(key) && entry.enabled === false);
+        if (off.length > 0)
+            GlobalConfig.bar.entries = entries.filter(entry => !off.includes(entry));
     }
 
     // Moving an icon off the bar takes a different state depending on compact mode:

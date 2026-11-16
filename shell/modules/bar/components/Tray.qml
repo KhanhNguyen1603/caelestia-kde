@@ -130,6 +130,16 @@ Item {
         root.popouts.hasCurrent = true;
     }
 
+    // The panel that says where each icon goes: the tray's own gesture, on the arrow or
+    // anywhere the icons are not, opens it instead of a jump into the settings window.
+    function openIcons(): void {
+        if (!root.popouts)
+            return;
+        root.popouts.currentName = "trayicons";
+        root.popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
+        root.popouts.hasCurrent = true;
+    }
+
     // The arrow is the box's handle: it opens the box and leaves it open, so the icons
     // can be picked from without the pointer having to stay on them. Clicking it again
     // — or clicking anywhere else — closes it.
@@ -279,6 +289,12 @@ Item {
                 onTapped: root.toggleOverflow()
             }
 
+            TapHandler {
+                acceptedButtons: Qt.RightButton
+                cursorShape: Qt.PointingHandCursor
+                onTapped: root.openIcons()
+            }
+
             MaterialIcon {
                 id: arrowIcon
 
@@ -318,9 +334,9 @@ Item {
             onClicked: mouse => {
                 if (!root.popouts)
                     return;
-                root.popouts.currentName = "traycontext";
-                root.popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
-                root.popouts.hasCurrent = true;
+                // The tray's own gesture is where the icons are chosen from: one list of
+                // every icon with the three places beside it.
+                root.openIcons();
                 mouse.accepted = true;
             }
         }

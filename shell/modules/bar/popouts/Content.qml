@@ -337,14 +337,11 @@ Item {
         }
 
         Popout {
-            name: "traycontext"
+            name: "trayicons"
+            previewKey: "tray"
             isContext: true
-            sourceComponent: BarComponentContext {
+            sourceComponent: TrayIcons {
                 popouts: root.popouts
-                label: qsTr("Tray settings")
-                subPageIdx: 9
-                secondLabel: qsTr("Elements & Modules")
-                secondSubPageIdx: 15
             }
         }
 

@@ -223,6 +223,7 @@ root.byId = (() => {
     return byId;
 })();
 root.ids = root.widgets.map(widget => widget.id);
+root.allWidgets = root.widgets;
 root.overflowZone = "tray";
 root.overflowCache = {};
 root.statusIconPrefix = "statusIcon:";
@@ -232,6 +233,7 @@ root.statusIconPrefix = "statusIcon:";
 globalThis.Config = {
     bar: {
         status: { showWifi: true },
+        tray: { compact: false },
         statusIcons: {
             values: [
                 { id: "audio", enabled: true },
@@ -242,12 +244,27 @@ globalThis.Config = {
         }
     }
 };
+globalThis.GlobalConfig = {
+    bar: {
+        tray: { compact: false },
+        statusIcons: {
+            at: index => Config.bar.statusIcons.values[index]
+        }
+    }
+};
 globalThis.Kwin = { capsLock: false, numLock: false, kbLayout: "" };
 // The tray's own icons hold rows in the bar's list, so the registry is stood up here
 // with one icon on the bar.
 globalThis.TrayRegistry = {
     rowPrefix: "tray:",
     barItems: [{ id: "1-cachy", icon: "cachy-update" }],
+    entries: [{ key: "cachy-update", title: "CachyOS", icon: "cachy-update", running: true }],
+    state: "collapsed",
+    calls: [],
+    stateOf: () => TrayRegistry.state,
+    sendToBox: key => TrayRegistry.calls.push(["box", key]),
+    sendToBar: key => TrayRegistry.calls.push(["bar", key]),
+    setState: (key, state) => TrayRegistry.calls.push(["state", key, state]),
     rowOf: key => "tray:" + key,
     keyOfRow: id => id.startsWith("tray:") ? id.substring(5) : "",
     keyOfItem: item => item.icon ?? "",
@@ -257,7 +274,7 @@ globalThis.Privacy = { inUse: false };
 globalThis.Nmcli = { activeEthernet: false };
 globalThis.HyprSunset = { active: false };
 
-const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "clearRow", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "trayEntry", "trayEntries", "viewEntries", "moveBefore", "rowsWith", "dragsItself"];
+const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "clearRow", "placementRows", "setShown", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "trayEntry", "trayEntries", "viewEntries", "moveBefore", "rowsWith", "dragsItself"];
 Object.assign(root, new Function("root", names.map(extractFunction).join("\n") + "\nreturn {" + names.join(", ") + "};")(root));
 
 const eq = (actual, expected, msg) => {
@@ -428,6 +445,55 @@ eq(ids(root.viewEntries(rowed)), ["tray", "tray:cachy-update", "clock"],
     "and it falls back to the place the tray's own order gives it");
 root.clearRow(rowed, "tray:cachy-update");
 eq(ids(rowed.entries), ["tray", "clock"], "clearing a row that is not there leaves the list alone");
+
+// The panel that offers the switch reads one list, whatever kind of icon it is.
+const placementList = { entries: [{ id: "tray", enabled: true, zone: "right" }, { id: "clock", enabled: true, zone: "right" }] };
+const placements = root.placementRows(placementList);
+eq(placements.map(row => [row.id, row.place]), [
+    ["tray:cachy-update", "bar"],
+    ["updateIndicator", "bar"],
+    ["keepawake", "bar"],
+    ["statusIcon:audio", "bar"],
+    ["statusIcon:battery", "bar"],
+    ["statusIcon:privacy", "bar"],
+    ["statusIcon:nightlight", "off"]
+], "every icon the bar can draw is listed once, with the place it is in, the tray's apps first");
+
+root.setShown(placementList, placements[0], false);
+eq(root.placementRows(placementList)[0].place, "off", "an icon switched off is off");
+eq(ids(root.zoneEntries(root.viewEntries(placementList), "right")).includes("tray:cachy-update"), false, "and the bar stops drawing it");
+eq(root.overflowWidgets(placementList).some(entry => entry.id === "tray:cachy-update"), false, "without the box taking it either");
+eq(TrayRegistry.calls, [["state", "cachy-update", "hidden"]], "the tray is told it is hidden, so its own page agrees");
+
+root.setShown(placementList, placements[1], false);
+eq(root.placementRows(placementList)[1].place, "off", "a widget switched off is off");
+eq(ids(root.zoneEntries(root.viewEntries(placementList), "right")).includes("updateIndicator"), false, "the bar stops drawing it");
+eq(root.overflowWidgets(placementList).some(entry => entry.id === "updateIndicator"), false, "and the box does not take it");
+
+root.setShown(placementList, root.placementRows(placementList)[3], false);
+eq(root.placementRows(placementList)[3].place, "off", "a status icon switched off is off");
+eq(root.overflowWidgets(placementList).some(entry => entry.id === "statusIcon:audio"), false, "and nothing draws it");
+root.setShown(placementList, root.placementRows(placementList)[3], true);
+eq(root.placementRows(placementList)[3].place, "bar", "switching it back on returns it to the bar");
+
+// A row left behind by an earlier place does not keep an icon the icons list switched off.
+const staleRow = { entries: [{ id: "statusIcon:battery", enabled: true, zone: "right" }, { id: "tray", enabled: true, zone: "right" }] };
+root.setShown(staleRow, root.placementRows(staleRow).find(row => row.id === "statusIcon:battery"), false);
+eq(root.placementRows(staleRow).find(row => row.id === "statusIcon:battery").place, "off", "the icons list decides whether the icon is there at all");
+eq(staleRow.entries.find(entry => entry.id === "statusIcon:battery").enabled, false, "and the row follows it");
+
+// A tray app switched on is shown by the tray, so switching one on lands it in the box.
+const offApp = { entries: [{ id: "tray:cachy-update", enabled: true, zone: "right" }, { id: "tray", enabled: true, zone: "right" }] };
+TrayRegistry.calls = [];
+root.setShown(offApp, root.placementRows(offApp).find(row => row.kind === "trayItem"), false);
+eq(TrayRegistry.calls, [["state", "cachy-update", "hidden"]], "an app switched off is hidden by the tray, and says so");
+eq(offApp.entries.find(entry => entry.id === "tray:cachy-update").enabled, false, "with a row that keeps it out of the bar");
+eq(offApp.entries.find(entry => entry.id === "tray:cachy-update").zone, "right", "in the place it held");
+
+TrayRegistry.calls = [];
+root.setShown(offApp, root.placementRows(offApp).find(row => row.kind === "trayItem"), true);
+eq(TrayRegistry.calls, [["box", "cachy-update"]], "switching it on asks the tray for the box");
+eq(ids(offApp.entries).includes("tray:cachy-update"), false, "and takes the row away, so the tray's own list decides again");
 
 console.log("bar widget registry: all harness cases passed");
 EOF

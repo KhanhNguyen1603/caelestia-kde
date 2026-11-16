@@ -10,6 +10,9 @@ ICONS="$REPO_ROOT/shell/utils/Icons.qml"
 BAR="$REPO_ROOT/shell/modules/bar/Bar.qml"
 TRAY="$REPO_ROOT/shell/modules/bar/components/Tray.qml"
 BOX="$REPO_ROOT/shell/modules/bar/popouts/TrayOverflow.qml"
+ICONS_PANEL="$REPO_ROOT/shell/modules/bar/popouts/TrayIcons.qml"
+WIDGETS="$REPO_ROOT/shell/modules/bar/BarWidgets.qml"
+STATUS_PAGE="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarStatusIcons.qml"
 CONTENT="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
 PAGE="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarTray.qml"
 LIST_EDITOR="$REPO_ROOT/shell/modules/nexus/common/ListEditor.qml"
@@ -107,6 +110,23 @@ test_an_icon_with_a_row_is_drawn_from_it_alone() {
         "an icon dropped in the box gives up its row in the bar"
     assert_file_contains "$TRAY" "BarWidgets.clearRow(GlobalConfig.bar, TrayRegistry.rowOf(source.key))" \
         "dropping one on the chevron does the same"
+}
+
+test_every_icon_is_placed_from_one_list() {
+    assert_file_contains "$CONTENT" 'name: "trayicons"' "the bar has one panel for choosing what shows"
+    assert_file_contains "$CONTENT" "sourceComponent: TrayIcons {" "drawn by the panel that holds the switch"
+    assert_file_contains "$TRAY" 'root.popouts.currentName = "trayicons"' \
+        "and the tray's own gesture opens it, rather than a page of settings"
+    assert_file_contains "$WIDGETS" "function placementRows(node: var): var" \
+        "one list names every icon with the place it is in"
+    assert_file_contains "$WIDGETS" "function setShown(node: var, row: var, shown: bool): void" \
+        "and one switch turns each of them on and off"
+    assert_file_contains "$ICONS_PANEL" "StyledSwitch {" "the list is a switch per icon, not a row of places"
+    assert_file_contains "$ICONS_PANEL" "BarWidgets.setShown(GlobalConfig.bar, row, shown)" \
+        "a switch writes whether the icon shows and nothing else"
+    assert_file_not_contains "$ICONS_PANEL" 'qsTr("Off")' "there is no per-icon place to choose"
+    assert_file_not_contains "$STATUS_PAGE" "lockStatus: qsTr(" \
+        "the status icons are named once, by the map the panel reads too"
 }
 
 test_config_is_the_only_store() {
