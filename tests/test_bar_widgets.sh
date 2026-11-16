@@ -158,7 +158,7 @@ test_the_tray_arrow_opens_a_hidden_icons_panel() {
         "and letting go decides where it lands"
     assert_file_contains "$GESTURE" 'grabToImage(result => TrayDrag.setGhost' \
         "the gesture carries a snapshot of the item it lifted"
-    assert_file_contains "$TRAY_ITEM" 'kind: "icon"' \
+    assert_file_contains "$TRAY_ITEM" 'dragKind: "icon"' \
         "a tray icon lifts as an icon"
     assert_file_contains "$DELEGATE" 'readonly property string widgetId: id' \
         "a dragged widget should name the entry a drop hides"
@@ -381,6 +381,26 @@ assert.equal(Placement.insertIndex([{ id: "tray" }], "statusIcon:battery", widge
     "an icon from a group goes where the group is");
 assert.equal(Placement.insertIndex([{ id: "clock" }], "tray:cachy-update", widgets, "tray"), 1);
 '
+}
+
+test_a_tray_icon_is_a_bar_icon() {
+    local icon="$REPO_ROOT/shell/modules/bar/components/BarIcon.qml"
+    assert_file_matches "$TRAY_ITEM" '^BarIcon \{' \
+        "a tray icon is the bar's own icon, not a second kind that only looks like one"
+    assert_file_contains "$TRAY_ITEM" 'glyphComponent: Component {' \
+        "the app supplies the glyph; the slot, the name, the drag and the buttons are the icon's"
+    assert_file_contains "$TRAY_ITEM" 'dragKind: "icon"' \
+        "and it says a drag of it carries a tray icon"
+    assert_file_contains "$icon" 'signal middleActivated()' \
+        "which is where the second action a tray app offers lives"
+    assert_file_contains "$icon" 'onDropped: root.suppressClick = true' \
+        "and the release that ends a drag is not read as a click on the icon"
+    for gone in 'StateLayer' 'QsMenuOpener' 'Tooltip' 'TrayDragGesture' 'ColouredIcon'; do
+        if [[ "$gone" != 'QsMenuOpener' && "$gone" != 'ColouredIcon' ]]; then
+            assert_file_not_contains "$TRAY_ITEM" "$gone {" \
+                "the icon draws its own $gone, so the tray item must not draw a second one"
+        fi
+    done
 }
 
 test_the_hidden_icons_box_is_icons_only() {

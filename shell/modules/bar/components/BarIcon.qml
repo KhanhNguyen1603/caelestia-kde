@@ -19,12 +19,19 @@ Item {
     required property Component glyphComponent
     property var popouts
     property bool draggable: false
+    // What a drag of this icon carries: the bar's widgets are moved by id, the tray's
+    // icons by their stable key, and the drop reads which of the two it is holding.
+    property string dragKind: "widget"
+    property string dragKey: ""
     property string tooltip: ""
     // What a screen reader hears for this icon. The name defaults to the tooltip, which
     // is what a sighted user reads on hover; the description says what the buttons do
     // when that is not obvious.
     property string accessibleName: ""
     property string accessibleDescription: ""
+    // The release that ends a drag lands on the icon the drag started from, which Qt
+    // reports as a click. It is not one: it is the end of the gesture.
+    property bool suppressClick: false
 
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
@@ -35,8 +42,10 @@ Item {
     readonly property bool hovered: area.containsMouse && !(root.popouts?.hasCurrent ?? false)
     readonly property Item glyph: glyphLoader.item
 
-    // A left click does what the widget does; a right click asks for its menu.
+    // A left click does what the widget does; a right click asks for its menu, and a
+    // middle click does whatever the widget offers beside that (an app's second action).
     signal activated()
+    signal middleActivated()
     signal contextMenuRequested()
 
     // The menu a widget opens sits above the icon it belongs to.
@@ -70,9 +79,13 @@ Item {
     TrayDragGesture {
         id: dragGesture
 
+        kind: root.dragKind
+        key: root.dragKey
         widgetId: root.entryId
         enabled: root.draggable
         ghostSource: glyphLoader
+
+        onDropped: root.suppressClick = true
     }
 
     Loader {
@@ -87,15 +100,23 @@ Item {
         id: area
 
         anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         Accessible.role: Accessible.Button
         Accessible.name: root.accessibleName.length > 0 ? root.accessibleName : root.tooltip
         Accessible.description: root.accessibleDescription
 
+        onPressed: root.suppressClick = false
+
         onClicked: mouse => {
-            if (mouse.button === Qt.RightButton)
+            if (root.suppressClick) {
+                root.suppressClick = false;
+                return;
+            }
+            if (mouse.button === Qt.MiddleButton)
+                root.middleActivated();
+            else if (mouse.button === Qt.RightButton)
                 root.contextMenuRequested();
             else
                 root.activated();

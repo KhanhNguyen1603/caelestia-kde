@@ -96,8 +96,6 @@ DelegateChooser {
             sourceComponent: TrayItem {
                 modelData: TrayRegistry.itemOf(trayItemLoader.trayKey)
                 popouts: root.popouts
-                isHorizontal: root.bar ? root.bar.isHorizontal : true
-                draggable: true
             }
         }
     }

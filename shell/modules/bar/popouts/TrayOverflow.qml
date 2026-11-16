@@ -178,8 +178,6 @@ Item {
                     anchors.centerIn: parent
                     modelData: tile.modelData
                     popouts: root.popouts
-                    isHorizontal: true
-                    draggable: true
                 }
             }
         }
