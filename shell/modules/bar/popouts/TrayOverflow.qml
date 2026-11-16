@@ -20,8 +20,9 @@ Item {
     property real scaleOffset: 1.0
     property real fontScale: 1.0
     property bool _isSidebarOpen: false
-    // The box draws no plate of its own, so its frame is only the room the glyphs need
-    // to not sit under the pointer's edge.
+    // The box is its own surface, the same wash the tray's pill is drawn in, so it reads
+    // as one panel whether it hangs over the bar or past it. Its frame is only the room
+    // the glyphs need to not sit under the pointer's edge.
     readonly property real popoutMargin: Tokens.padding.small
 
     readonly property var items: TrayRegistry.overflowItems
@@ -135,6 +136,16 @@ Item {
         Anim {
             type: Anim.DefaultSpatial
         }
+    }
+
+    // The surface reaches past the grid by the frame, so the panel and the glyphs are one
+    // shape instead of a wash that stops short of its own edge.
+    StyledRect {
+        anchors.fill: parent
+        anchors.margins: -root.popoutMargin
+        z: -1
+        radius: Tokens.rounding.large * root.scaleOffset
+        color: Colours.tPalette.m3surfaceContainer
     }
 
     Grid {

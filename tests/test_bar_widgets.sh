@@ -480,6 +480,10 @@ test_the_box_is_the_size_its_cells_are() {
         "the box is the one popout that opens without a panel behind it"
     assert_file_contains "$content_window" 'visible: panel.visible && !popoutBg.boxOpen' \
         "so the shared popout plate stays down for it"
+    assert_file_contains "$TRAY_OVERFLOW" 'color: Colours.tPalette.m3surfaceContainer' \
+        "and the box carries its own wash, the one the tray's pill is drawn in"
+    assert_file_contains "$TRAY_OVERFLOW" 'anchors.margins: -root.popoutMargin' \
+        "reaching past the grid by its frame, so the panel and the glyphs are one shape"
     assert_file_contains "$TRAY_OVERFLOW" 'anchors.centerIn: parent
                     visible: !widgetCell.isIcon' \
         "a widget in a cell is centred in it"
