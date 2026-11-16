@@ -234,6 +234,7 @@ globalThis.Config = {
     bar: {
         status: { showWifi: true },
         tray: { compact: false },
+        keepawake: { autoHide: false },
         statusIcons: {
             values: [
                 { id: "audio", enabled: true },
@@ -242,8 +243,10 @@ globalThis.Config = {
                 { id: "nightlight", enabled: false }
             ]
         }
-    }
+    },
+    general: { checkUpdates: true }
 };
+globalThis.IdleInhibitor = { enabled: false };
 globalThis.GlobalConfig = {
     bar: {
         tray: { compact: false },
@@ -274,7 +277,7 @@ globalThis.Privacy = { inUse: false };
 globalThis.Nmcli = { activeEthernet: false };
 globalThis.HyprSunset = { active: false };
 
-const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "clearRow", "placementRows", "setShown", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "trayEntry", "trayEntries", "viewEntries", "moveBefore", "rowsWith", "dragsItself"];
+const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "clearRow", "placementRows", "widgetSaysSomething", "setShown", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "trayEntry", "trayEntries", "viewEntries", "moveBefore", "rowsWith", "dragsItself"];
 Object.assign(root, new Function("root", names.map(extractFunction).join("\n") + "\nreturn {" + names.join(", ") + "};")(root));
 
 const eq = (actual, expected, msg) => {
@@ -492,8 +495,21 @@ eq(offApp.entries.find(entry => entry.id === "tray:cachy-update").zone, "right",
 
 TrayRegistry.calls = [];
 root.setShown(offApp, root.placementRows(offApp).find(row => row.kind === "trayItem"), true);
-eq(TrayRegistry.calls, [["box", "cachy-update"]], "switching it on asks the tray for the box");
+eq(TrayRegistry.calls, [["bar", "cachy-update"]], "switching it on asks the tray for the bar");
 eq(ids(offApp.entries).includes("tray:cachy-update"), false, "and takes the row away, so the tray's own list decides again");
+
+// An icon with nothing to say right now is still listed, and marked as quiet.
+const quiet = root.placementRows(placementList).find(row => row.id === "statusIcon:nightlight");
+eq(quiet.active, false, "a switched-off status icon is not available either");
+eq(root.placementRows(placementList).find(row => row.id === "statusIcon:battery").active, true, "one that is on says so");
+
+// The box leaves out an icon with nothing to say rather than holding a blank cell.
+const boxed = { entries: [{ id: "tray", enabled: true, zone: "right" }, { id: "updateIndicator", enabled: true, zone: "tray" }, { id: "keeping", enabled: true, zone: "tray" }] };
+eq(ids(root.overflowWidgets(boxed)), ["updateIndicator"], "a widget in the box is one cell");
+Config.general.checkUpdates = false;
+eq(ids(root.overflowWidgets(boxed)), [], "and no cell once updates are off");
+eq(root.placementRows(boxed).find(row => row.id === "updateIndicator").active, false, "the list says it has nothing to show");
+Config.general.checkUpdates = true;
 
 console.log("bar widget registry: all harness cases passed");
 EOF

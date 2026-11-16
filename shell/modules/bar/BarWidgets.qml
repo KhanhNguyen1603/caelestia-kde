@@ -312,7 +312,7 @@ QtObject {
         const cache = root.overflowCache;
         let index = 0;
         for (const entry of root.viewEntries(node)) {
-            if (entry.enabled === false || entry.zone !== root.overflowZone || !root.isKnown(entry.id) || entry.id === "tray")
+            if (entry.enabled === false || entry.zone !== root.overflowZone || !root.isKnown(entry.id) || entry.id === "tray" || !root.widgetSaysSomething(entry.id))
                 continue;
             const kind = entry.kind ?? entry.id;
             const reused = cache[entry.id];
@@ -428,10 +428,11 @@ QtObject {
             node.entries = rest;
     }
 
-    // Every icon the bar can show, with the place it is in. The bar's status icons, the
-    // icons beside them and the tray's own apps are one list here, because choosing
-    // where an icon goes is one decision whatever kind of icon it is. The tray's apps
-    // come first: they are the ones that come and go.
+    // Every icon the bar can show, with the place it is in and whether it has anything to
+    // say right now: the bar's status icons, the icons beside them and the tray's own
+    // apps are one list here, because choosing where an icon goes is one decision
+    // whatever kind of icon it is. The tray's apps come first: they are the ones that
+    // come and go.
     function placementRows(node: var): var {
         const entries = root.entriesOf(node);
         const rowOf = id => entries.find(entry => entry.id === id) ?? null;
@@ -457,14 +458,14 @@ QtObject {
                 continue;
             const state = TrayRegistry.stateOf(item.key);
             const fallback = state === "hidden" ? "off" : state === "visible" || !compact ? "bar" : "tray";
-            rows.push({ kind: "trayItem", id: id, key: item.key, place: placeOf(row, fallback) });
+            rows.push({ kind: "trayItem", id: id, key: item.key, place: placeOf(row, fallback), active: item.running !== false });
         }
 
         for (const widget of root.allWidgets) {
             const id = widget.id;
             if (!root.dragsItself(id) || id === "statusIcon" || id === "trayItem")
                 continue;
-            rows.push({ kind: id, id: id, key: "", place: placeOf(rowOf(id), "bar") });
+            rows.push({ kind: id, id: id, key: "", place: placeOf(rowOf(id), "bar"), active: root.widgetSaysSomething(id) });
         }
 
         for (const icon of Config.bar.statusIcons.values ?? []) {
@@ -472,14 +473,27 @@ QtObject {
             // The icons list decides whether the icon exists at all; a row only says
             // where it goes, so a row left over from a switch that was turned off
             // cannot keep the icon in the list as shown.
-            rows.push({ kind: "statusIcon", id: id, key: "", place: icon.enabled ? placeOf(rowOf(id), "bar") : "off" });
+            rows.push({ kind: "statusIcon", id: id, key: "", place: icon.enabled ? placeOf(rowOf(id), "bar") : "off", active: root.statusIconActive(icon.id) });
         }
         return rows;
     }
 
-    // Whether an icon is shown at all. Where it shows is the row's business: a tray app
-    // switched on with no place of its own lands in the box, and from there it is
-    // dragged wherever it should be.
+    // An icon with nothing to say right now is still the user's to switch on: it appears
+    // when it has something to say, and the list says so in the meantime.
+    function widgetSaysSomething(id: string): bool {
+        switch (id) {
+        case "updateIndicator":
+            return Config.general.checkUpdates !== false;
+        case "keepawake":
+            return !Config.bar.keepawake.autoHide || IdleInhibitor.enabled;
+        default:
+            return true;
+        }
+    }
+
+    // Whether an icon is shown at all. Where it shows is the row's business: one switched
+    // on with no place of its own lands in the tray, and dragging it from there is what
+    // moves it onto the bar's other icons or into the box.
     function setShown(node: var, row: var, shown: bool): void {
         // Switching an icon to what it already is writes nothing, so a click that lands
         // on the state it is in leaves the config alone.
@@ -504,12 +518,11 @@ QtObject {
         const existing = entries.find(entry => entry.id === row.id) ?? null;
 
         if (row.kind === "trayItem") {
-            // A switched-on app is shown by the tray's own state, which is the list the
-            // box reads. Any row that said otherwise (a place on the bar, or an earlier
-            // off) goes, so switching one on always lands it in the box.
+            // A tray app is shown by its own state, which is the list the tray draws. A
+            // row that said it was off goes, so the state decides again.
             if (shown) {
                 root.clearRow(node, row.id);
-                TrayRegistry.sendToBox(row.key);
+                TrayRegistry.sendToBar(row.key);
                 return;
             }
             // Off is a row that says so, and that is what keeps the app out of the bar
@@ -517,7 +530,9 @@ QtObject {
             TrayRegistry.setState(row.key, "hidden");
         }
 
-        const zone = existing?.zone ?? (row.kind === "trayItem" ? root.overflowZone : (root.widget(row.id)?.zone ?? "right"));
+        // The row keeps a place the icon already holds, so switching one off and on does
+        // not move it away from where the user put it.
+        const zone = existing?.zone ?? "right";
         const placed = {
             id: row.id,
             enabled: shown,

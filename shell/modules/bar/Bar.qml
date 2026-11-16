@@ -327,14 +327,21 @@ Item {
 
     clip: true
 
-    // The hidden-icons box draws the widgets the user dragged out of the tray with
-    // the same delegate the bar uses, so they are live there rather than a stale
-    // copy of an icon. A binding rather than an assignment: the box may be built
-    // before the bar is.
+    // The hidden-icons box draws the widgets it holds with the same delegate the bar uses,
+    // so they are live there rather than a stale copy of an icon. The chooser picks on an
+    // entry's `kind`, and a loader hands it no entry at all, so the box is given a host
+    // that puts the entry through a one-row model first.
+    // A binding rather than an assignment: the box may be built before the bar is.
     Binding {
         target: root.popouts
         property: "trayWidgetDelegate"
-        value: barDelegate
+        value: boxedEntryComponent
+    }
+
+    Component {
+        id: boxedEntryComponent
+
+        BoxedEntry {}
     }
 
     Timer {
@@ -754,6 +761,28 @@ Item {
             // Widgets drawn as a bar icon lift themselves, so the wrapper that draws
             // them stays out of the way; the rest are lifted whole.
             enabled: wrapper.draggable && !BarWidgets.dragsItself(wrapper.kind)
+        }
+    }
+
+    // The box hands the bar's delegate one entry at a time: the chooser picks on `kind`,
+    // which only a model provides, so the entry goes through a one-row model here.
+    component BoxedEntry: Item {
+        id: host
+
+        property var entry: null
+
+        // The chooser's item, which the repeater parents here rather than to itself, so
+        // the host takes the size of the icon that came back.
+        readonly property var child: inner.count > 0 ? inner.itemAt(0) : null
+
+        implicitWidth: host.child ? host.child.implicitWidth : 0
+        implicitHeight: host.child ? host.child.implicitHeight : 0
+
+        Repeater {
+            id: inner
+
+            model: host.entry ? [host.entry] : []
+            delegate: barDelegate
         }
     }
 }

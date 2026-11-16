@@ -213,9 +213,9 @@ Item {
                 readonly property string widgetId: widgetCell.modelData.id
                 readonly property bool isIcon: widgetCell.modelData.kind === "statusIcon"
 
-                // A widget the bar hides — the updates arrow with updates switched off —
-                // takes no cell: an invisible slot would leave a hole in the grid.
-                visible: widgetCell.isIcon || (widgetLoader.item ? widgetLoader.item.visible : false)
+                // A cell is always a cell: the grid is the icons it holds, and an entry
+                // that has nothing to say is left out of the list rather than drawn as a
+                // hole.
                 implicitWidth: root.cell
                 implicitHeight: root.cell
 
@@ -235,6 +235,9 @@ Item {
                     anchors.centerIn: parent
                     active: !widgetCell.isIcon
                     sourceComponent: root.popouts ? root.popouts.trayWidgetDelegate : null
+                    // The host draws one entry and picks the widget from what the entry
+                    // says, so it is handed the entry it stands for.
+                    onLoaded: widgetLoader.item.entry = widgetCell.modelData
                 }
             }
         }

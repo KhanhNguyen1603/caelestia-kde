@@ -126,6 +126,7 @@ ColumnLayout {
                     Item {
                         implicitWidth: root.rowHeight * 0.7
                         implicitHeight: root.rowHeight * 0.7
+                        opacity: rowItem.modelData.active ? 1 : 0.5
 
                         MaterialIcon {
                             anchors.fill: parent
@@ -147,7 +148,10 @@ ColumnLayout {
                     StyledText {
                         Layout.fillWidth: true
                         text: root.nameOf(rowItem.modelData)
-                        color: rowItem.modelData.kind === "trayItem" && root.trayItems[rowItem.modelData.key]?.running === false ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
+                        // An icon with nothing to say is dimmed rather than taken away:
+                        // it is still the user's to switch on, and it appears when it
+                        // has something to say.
+                        color: rowItem.modelData.active ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
                         elide: Text.ElideRight
                         font: Tokens.font.body.small
                     }
