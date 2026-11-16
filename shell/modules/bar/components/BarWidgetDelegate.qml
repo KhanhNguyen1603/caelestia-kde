@@ -8,6 +8,8 @@ import Caelestia.Services
 import qs.services
 import qs.modules.bar
 import qs.modules.bar.components
+import qs.modules.bar.components.performance
+import qs.modules.bar.components.workspaces
 
 // One entry of the bar, drawn as whatever kind it says it is. The bar draws them in its
 // zones and the tray's box draws the ones it holds, so both read the same list of kinds
