@@ -45,6 +45,10 @@ Item {
         return arrowSize + arrowGap + layout.implicitWidth + padding * 2;
     }
 
+    // The surface is exactly the size its icons need, and it is that size as soon as they
+    // are: an animation here would run behind the bar's own layout, which reflows in a
+    // frame, and the icons would read as landing late.
+
     // The chevron sits on the bar, outside the surface the icons share, and is the
     // only thing that makes the surface start further in.
     readonly property real arrowSize: root.showArrow && expandIcon.item ? (root.isHorizontal ? expandIcon.item.implicitWidth : expandIcon.item.implicitHeight) : 0
@@ -384,21 +388,5 @@ Item {
         // top of an icon it reads as a highlight rather than a place.
         x: dropMarker.slot ? Math.round(dropMarker.slot.mapToItem(root, 0, 0).x - root.spacing / 2 - width / 2) : 0
         y: Math.round((root.height - height) / 2)
-    }
-
-    Behavior on implicitHeight {
-        enabled: !isHorizontal
-
-        Anim {
-            type: Anim.DefaultSpatial
-        }
-    }
-
-    Behavior on implicitWidth {
-        enabled: isHorizontal
-
-        Anim {
-            type: Anim.DefaultSpatial
-        }
     }
 }

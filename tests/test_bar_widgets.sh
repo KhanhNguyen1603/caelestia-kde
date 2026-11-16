@@ -449,6 +449,17 @@ test_a_move_lands_without_redrawing_the_row() {
         "because placing and moving are one statement"
 }
 
+test_the_tray_is_as_wide_as_its_icons_right_away() {
+    for axis in implicitWidth implicitHeight; do
+        assert_file_not_contains "$TRAY" "Behavior on $axis" \
+            "the surface takes the size its icons need at once, rather than springing after the bar has already reflowed"
+    done
+    assert_file_contains "$TRAY" 'readonly property real nonAnimWidth: {' \
+        "the width is counted from the row the icons are in"
+    assert_file_contains "$TRAY" 'implicitWidth: isHorizontal ? nonAnimWidth : barThickness' \
+        "and it is that count the surface is drawn at"
+}
+
 test_the_chevron_sits_outside_the_icons_surface() {
     assert_file_contains "$TRAY" 'id: surface' \
         "the icons share one surface, and the chevron is not in it"
