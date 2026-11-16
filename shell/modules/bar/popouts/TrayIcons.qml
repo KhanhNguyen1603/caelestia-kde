@@ -53,17 +53,57 @@ ColumnLayout {
         return item ? Icons.getTrayIcon(item.key, item.icon) : "";
     }
 
-    function isShown(row: var): bool {
-        return row.place !== "off";
+    // The rows live in a list model that is updated in place. Handing the view a new
+    // array instead would throw every row away on any change the config makes, and a
+    // switch drawn from nothing animates on its way to where it already was.
+    function syncRows(): void {
+        const rows = root.rows;
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const fields = {
+                kind: row.kind,
+                rowId: row.id,
+                key: row.key ?? "",
+                place: row.place,
+                active: row.active,
+                label: root.nameOf(row),
+                glyph: root.glyphOf(row),
+                picture: root.pictureOf(row)
+            };
+            const shown = i < rowModel.count ? rowModel.get(i) : null;
+            if (!shown || shown.rowId !== fields.rowId || shown.kind !== fields.kind) {
+                if (shown)
+                    rowModel.set(i, fields);
+                else
+                    rowModel.append(fields);
+                continue;
+            }
+            for (const name in fields) {
+                if (shown[name] !== fields[name])
+                    rowModel.setProperty(i, name, fields[name]);
+            }
+        }
+        while (rowModel.count > rows.length)
+            rowModel.remove(rowModel.count - 1);
     }
 
     function setShown(row: var, shown: bool): void {
         BarWidgets.setShown(GlobalConfig.bar, row, shown);
     }
 
+    onRowsChanged: root.syncRows()
+
+    // Wide enough for an app's own title next to its switch: eliding "cachy update
+    // updates available" to "cachy update upd…" says nothing.
     width: Math.max(360 * root.scaleOffset, root._isSidebarOpen ? (Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) * root.scaleOffset) - Tokens.padding.extraLargeIncreased : 0)
     implicitWidth: width
     spacing: Tokens.spacing.medium * root.scaleOffset
+
+    Component.onCompleted: root.syncRows()
+
+    ListModel {
+        id: rowModel
+    }
 
     StyledRect {
         Layout.fillWidth: true
@@ -92,7 +132,7 @@ ColumnLayout {
                 id: list
 
                 readonly property int visibleRows: 10
-                readonly property real wantedHeight: Math.max(0, Math.min(root.rows.length, list.visibleRows) * (root.rowHeight + list.spacing) - list.spacing)
+                readonly property real wantedHeight: Math.max(0, Math.min(rowModel.count, list.visibleRows) * (root.rowHeight + list.spacing) - list.spacing)
 
                 Layout.fillWidth: true
                 // As tall as the icons it holds, up to ten whole rows: half a row at the
@@ -102,7 +142,7 @@ ColumnLayout {
                 Layout.maximumHeight: list.wantedHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
-                model: root.rows
+                model: rowModel
                 spacing: Tokens.spacing.extraSmall * root.scaleOffset
 
                 StyledScrollBar.vertical: StyledScrollBar {
@@ -112,33 +152,35 @@ ColumnLayout {
                 delegate: RowLayout {
                     id: rowItem
 
-                    required property var modelData
+                    required property string kind
+                    required property string rowId
+                    required property string key
+                    required property string place
+                    required property bool active
+                    required property string label
+                    required property string glyph
+                    required property string picture
 
                     width: list.width
                     height: root.rowHeight
                     spacing: Tokens.spacing.small * root.scaleOffset
 
-                    // The switch is set from the icon's own state and not bound to it: a
-                    // click moves the switch first, and the answer that comes back is
-                    // what leaves it where it belongs.
-                    onModelDataChanged: showSwitch.checked = root.isShown(rowItem.modelData)
-
                     Item {
                         implicitWidth: root.rowHeight * 0.7
                         implicitHeight: root.rowHeight * 0.7
-                        opacity: rowItem.modelData.active ? 1 : 0.5
+                        opacity: rowItem.active ? 1 : 0.5
 
                         MaterialIcon {
                             anchors.fill: parent
-                            visible: rowItem.modelData.kind !== "trayItem"
-                            text: root.glyphOf(rowItem.modelData)
+                            visible: rowItem.kind !== "trayItem"
+                            text: rowItem.glyph
                             color: Colours.palette.m3onSurfaceVariant
                         }
 
                         Image {
                             anchors.fill: parent
-                            visible: rowItem.modelData.kind === "trayItem"
-                            source: root.pictureOf(rowItem.modelData)
+                            visible: rowItem.kind === "trayItem"
+                            source: rowItem.picture
                             sourceSize.width: width * 2
                             sourceSize.height: height * 2
                             fillMode: Image.PreserveAspectFit
@@ -147,11 +189,11 @@ ColumnLayout {
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: root.nameOf(rowItem.modelData)
+                        text: rowItem.label
                         // An icon with nothing to say is dimmed rather than taken away:
                         // it is still the user's to switch on, and it appears when it
                         // has something to say.
-                        color: rowItem.modelData.active ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                        color: rowItem.active ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
                         elide: Text.ElideRight
                         font: Tokens.font.body.small
                     }
@@ -160,18 +202,23 @@ ColumnLayout {
                         id: showSwitch
 
                         Layout.alignment: Qt.AlignVCenter
-                        Component.onCompleted: showSwitch.checked = root.isShown(rowItem.modelData)
-                        onToggled: {
-                            if (root.isShown(rowItem.modelData) !== showSwitch.checked)
-                                root.setShown(rowItem.modelData, showSwitch.checked);
-                        }
+                        // Bound, so a switch is drawn where the icon is before anything
+                        // can animate: a click breaks the binding, and the row it writes
+                        // is where the answer comes back.
+                        checked: rowItem.place !== "off"
+                        onToggled: root.setShown({
+                            "kind": rowItem.kind,
+                            "id": rowItem.rowId,
+                            "key": rowItem.key,
+                            "place": rowItem.place
+                        }, showSwitch.checked)
                     }
                 }
             }
 
             StyledText {
                 Layout.fillWidth: true
-                visible: root.rows.length === 0
+                visible: rowModel.count === 0
                 text: qsTr("Nothing to place yet")
                 color: Colours.palette.m3onSurfaceVariant
                 font: Tokens.font.label.small

@@ -118,9 +118,7 @@ Singleton {
     }
 
     function displayName(item: var): string {
-        if (item.title && item.title !== item.id && !/^\d+-\d+$/.test(item.title))
-            return item.title;
-        return TrayIcons.labelOf(root.keyOfItem(item)) || item.id;
+        return TrayIcons.readableTitle(item.title) || TrayIcons.labelOf(root.keyOfItem(item)) || item.id;
     }
 
     function fallbackIcon(key: string): string {
@@ -159,8 +157,14 @@ Singleton {
         const tray = GlobalConfig.bar.tray;
         const visible = tray.alwaysVisible.filter(entry => entry !== key);
         const hidden = tray.hiddenIcons.filter(entry => entry !== key);
-        tray.alwaysVisible = state === "visible" ? [...visible, key] : visible;
-        tray.hiddenIcons = state === "hidden" ? [...hidden, key] : hidden;
+        const nextVisible = state === "visible" ? [...visible, key] : visible;
+        const nextHidden = state === "hidden" ? [...hidden, key] : hidden;
+        // A list that already says this is written anyway only to make the bar draw every
+        // icon it holds again, which is what a slow-feeling toggle is made of.
+        if (!TrayIcons.sameList(nextVisible, tray.alwaysVisible))
+            tray.alwaysVisible = nextVisible;
+        if (!TrayIcons.sameList(nextHidden, tray.hiddenIcons))
+            tray.hiddenIcons = nextHidden;
         // A row that says the icon is off is the older answer, and a state set here is
         // the newer one: the row goes so the state is what decides again.
         const entries = GlobalConfig.bar.entries ?? [];
