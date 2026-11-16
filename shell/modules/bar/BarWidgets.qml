@@ -351,6 +351,11 @@ QtObject {
     function setEnabled(node: var, id: string, enabled: bool): void {
         const entries = root.entriesOf(node);
         const zone = root.widget(id)?.zone ?? "left";
+        const row = entries.find(entry => entry.id === id) ?? null;
+        // A row that already says this is written anyway only to make the bar draw every
+        // widget it holds again.
+        if (row && row.enabled === enabled)
+            return;
         const next = [];
         let found = false;
 
@@ -376,6 +381,7 @@ QtObject {
     function setZone(node: var, id: string, zone: string): void {
         const entries = root.entriesOf(node);
         const fallback = root.widget(id)?.zone ?? "left";
+        const row = entries.find(entry => entry.id === id) ?? null;
 
         // A status icon is placed by the icons list unless a row says otherwise, so
         // sending one back to the bar removes the row and its configured place returns.
@@ -383,6 +389,10 @@ QtObject {
             root.clearRow(node, id);
             return;
         }
+
+        // Saying what is already true writes nothing: every write redraws the bar.
+        if (row ? (row.zone ?? fallback) === zone : zone === fallback)
+            return;
 
         const next = [];
         let found = false;
@@ -410,9 +420,21 @@ QtObject {
         root.setZone(node, id, root.overflowZone);
     }
 
-    function setOnBar(node: var, id: string): void {
-        root.setEnabled(node, id, true);
-        root.setZone(node, id, "right");
+    function setOnBar(node: var, id: string, beforeId: string): void {
+        const before = beforeId ?? "";
+
+        // A status icon is placed by the icons list, so a drop that only says "on the
+        // bar" takes the row the icon left behind when it went into the box: with no
+        // target there is no place of its own to hold on to.
+        if (before.length === 0 && root.statusIconId(id).length > 0 && (root.widget(id)?.zone ?? "left") === "right") {
+            root.clearRow(node, id);
+            return;
+        }
+
+        root.placeBefore(node, id, before, {
+            enabled: true,
+            zone: "right"
+        });
     }
 
     function replaceAll(node: var, entries: var): void {
@@ -554,24 +576,44 @@ QtObject {
     // — a status icon, a tray icon — gets a row of its own first; that is what lets them
     // trade places with the rest instead of each kind only moving among its own.
     function moveBefore(node: var, id: string, beforeId: string): void {
-        if (id === beforeId)
+        root.placeBefore(node, id, beforeId, null);
+    }
+
+    // The rows with one moved in front of another, written once. `place`, when it is
+    // given, is what the moving row says afterwards: a widget dropped on the bar is
+    // shown there whatever it said before. One write is what a drop should cost, because
+    // every write makes the bar draw all of its widgets again.
+    function placeBefore(node: var, id: string, beforeId: string, place: var): void {
+        const before = beforeId ?? "";
+        if (id === before)
             return;
 
         // Built up in memory, so the row a group only implies is already there when the
         // move is worked out.
         let rows = root.rowsWith(node, id);
-        rows = root.rowsWith({
-            entries: rows
-        }, beforeId);
+        if (before.length > 0)
+            rows = root.rowsWith({ entries: rows }, before);
 
         const at = rows.findIndex(entry => entry.id === id);
         if (at < 0)
             return;
-        const moving = rows[at];
+
+        const moving = place ? Object.assign({}, rows[at], place) : rows[at];
         const rest = rows.slice();
         rest.splice(at, 1);
-        const target = rest.findIndex(entry => entry.id === beforeId);
-        rest.splice(target < 0 ? rest.length : target, 0, moving);
+        if (before.length === 0) {
+            rest.splice(at, 0, moving);
+        } else {
+            const target = rest.findIndex(entry => entry.id === before);
+            rest.splice(target < 0 ? rest.length : target, 0, moving);
+        }
+
+        // A drop that leaves every row where it already is writes nothing.
+        const current = root.entriesOf(node);
+        const unchanged = current.length === rest.length && rest.every((entry, index) => entry.id === current[index].id && entry.enabled === current[index].enabled && entry.zone === current[index].zone);
+        if (unchanged)
+            return;
+
         node.entries = rest;
     }
 

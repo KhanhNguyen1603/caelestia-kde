@@ -149,17 +149,10 @@ Item {
         verticalItemAlignment: Grid.AlignVCenter
         scale: root.targeted ? 1.06 : 1
 
-        // Cells take their places rather than appearing where they end up, so a box
-        // that grows reads as snapping to the next column.
-        add: Transition {
-            Anim {
-                properties: "scale"
-                from: 0
-                to: 1
-                easing: Tokens.anim.standardDecel
-            }
-        }
-
+        // Cells take their places rather than appearing where they end up, so a box that
+        // grows reads as snapping to the next column. Cells are added again whenever the
+        // list is rebuilt, so adding does not animate: a moved icon would otherwise look
+        // like every icon in the box vanishing and coming back.
         move: Transition {
             Anim {
                 properties: "x,y"

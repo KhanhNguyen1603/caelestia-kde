@@ -215,9 +215,7 @@ Item {
         // other, so it is moved the same way.
         const target = root.dropTarget(source.kind, source.kind === "icon" ? source.key : source.widgetId, x, y);
         if (source.kind === "widget") {
-            BarWidgets.setOnBar(GlobalConfig.bar, source.widgetId);
-            if (target && target.id)
-                BarWidgets.moveBefore(GlobalConfig.bar, source.widgetId, target.id);
+            BarWidgets.setOnBar(GlobalConfig.bar, source.widgetId, target?.id ?? "");
         } else if (source.kind === "icon") {
             TrayRegistry.sendToBar(source.key);
             if (target && target.id)
@@ -352,21 +350,11 @@ Item {
 
             spacing: Tokens.spacing.small
 
-            add: Transition {
-                Anim {
-                    properties: "scale"
-                    from: 0
-                    to: 1
-                    easing: Tokens.anim.standardDecel
-                }
-            }
-
+            // A row is rebuilt from the bar's entry list whenever that list is written,
+            // and every icon in it is added again. A scale-in on each of them makes one
+            // icon moving look like the whole tray emptying and refilling, so adding is
+            // silent and only what actually moves animates.
             move: Transition {
-                Anim {
-                    properties: "scale"
-                    to: 1
-                    easing: Tokens.anim.standardDecel
-                }
                 Anim {
                     properties: "x,y"
                 }

@@ -277,7 +277,7 @@ globalThis.Privacy = { inUse: false };
 globalThis.Nmcli = { activeEthernet: false };
 globalThis.HyprSunset = { active: false };
 
-const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "clearRow", "placementRows", "widgetSaysSomething", "setShown", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "trayEntry", "trayEntries", "viewEntries", "moveBefore", "rowsWith", "dragsItself"];
+const names = ["widget", "isKnown", "entriesOf", "zoneEntries", "normalizedEntries", "normalizedZoneEntries", "rightLayoutEntries", "systemTrayEntries", "systemTrayShowsIcons", "overflowWidgets", "isEnabled", "zoneFor", "setEnabled", "setZone", "setInTray", "setOnBar", "replaceAll", "clearRow", "placementRows", "widgetSaysSomething", "setShown", "indexFor", "statusIconId", "statusIconActive", "statusIconEntries", "trayEntry", "trayEntries", "viewEntries", "moveBefore", "placeBefore", "rowsWith", "dragsItself"];
 Object.assign(root, new Function("root", names.map(extractFunction).join("\n") + "\nreturn {" + names.join(", ") + "};")(root));
 
 const eq = (actual, expected, msg) => {
@@ -511,6 +511,28 @@ eq(ids(root.overflowWidgets(boxed)), [], "and no cell once updates are off");
 eq(root.placementRows(boxed).find(row => row.id === "updateIndicator").active, false, "the list says it has nothing to show");
 Config.general.checkUpdates = true;
 
+// A drop that leaves the rows where they already are writes nothing: the write is what
+// makes the bar draw all of its widgets again, and the tray redraw them from nothing.
+const settled = { entries: [{ id: "tray", enabled: true, zone: "right" }, { id: "clock", enabled: true, zone: "right" }] };
+const handedOn = settled.entries;
+root.moveBefore(settled, "tray", "clock");
+eq(settled.entries === handedOn, true, "a move onto the icon it is already in front of leaves the list alone");
+root.setEnabled(settled, "clock", true);
+root.setZone(settled, "clock", "right");
+eq(settled.entries === handedOn, true, "and so does saying what a row already says");
+root.moveBefore(settled, "clock", "tray");
+eq(settled.entries === handedOn, false, "a move that changes the order writes it once");
+eq(ids(settled.entries), ["clock", "tray"], "with the dropped icon in front of the one it landed on");
+
+// A widget dropped on the bar is placed and switched on in the same write.
+const dropped = { entries: [{ id: "tray", enabled: true, zone: "right" }, { id: "updateIndicator", enabled: false, zone: "tray" }, { id: "clock", enabled: true, zone: "right" }] };
+const beforeDrop = dropped.entries;
+root.setOnBar(dropped, "updateIndicator", "clock");
+eq(dropped.entries === beforeDrop, false, "a drop writes the list once");
+eq(ids(dropped.entries), ["tray", "updateIndicator", "clock"], "in the place it was dropped");
+eq(root.isEnabled(dropped, "updateIndicator"), true, "switched on, in the same write");
+eq(dropped.entries.find(entry => entry.id === "updateIndicator").zone, "right", "and in the tray's zone");
+
 console.log("bar widget registry: all harness cases passed");
 EOF
 
@@ -547,6 +569,19 @@ test_the_hidden_icons_box_is_icons_only() {
         "a drag over a widget takes the gesture without stealing the click under it"
     assert_file_contains "$GESTURE" 'TrayDrag.move(root.screenPoint(centroid.scenePosition))' \
         "and reports where the pointer is on the screen, so the drop can be resolved"
+}
+
+test_a_move_lands_without_redrawing_the_row() {
+    assert_file_not_contains "$TRAY" 'from: 0' \
+        "one icon moving must not scale every icon in the tray in from nothing"
+    assert_file_not_contains "$TRAY" 'properties: "scale"' \
+        "the tray's icons keep their size: the row is rebuilt when the bar's list is written, not moved"
+    assert_file_not_contains "$TRAY_OVERFLOW" 'from: 0' \
+        "and the box's cells are not scaled in either"
+    assert_file_contains "$TRAY" 'BarWidgets.setOnBar(GlobalConfig.bar, source.widgetId, target?.id ?? "")' \
+        "a widget dropped on the bar is placed and moved in one write"
+    assert_file_contains "$REGISTRY" "function placeBefore(node: var, id: string, beforeId: string, place: var): void" \
+        "because placing and moving are one statement"
 }
 
 test_the_chevron_sits_outside_the_icons_surface() {
