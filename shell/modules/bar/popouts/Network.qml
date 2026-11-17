@@ -225,10 +225,11 @@ ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: Tokens.padding.small * root.scaleOffset
                         spacing: Tokens.spacing.extraSmall * root.scaleOffset
+                        // The chevron below carries its own press area, and it can only sit above
+                        // the row's press area if the column it belongs to does.
+                        z: 1
 
                         RowLayout {
-                            id: networkRow
-
                             Layout.fillWidth: true
                             spacing: Tokens.spacing.small * root.scaleOffset
 
@@ -255,25 +256,37 @@ ColumnLayout {
                             }
 
                             RowLayout {
-                                id: trailingIcons
+                                spacing: Tokens.spacing.small * root.scaleOffset
 
-                                spacing: 0
-
-                                // The connected row keeps its tick and gains a chevron beside it: the
-                                // tick is the confirmation, the chevron the way in to the details, and
-                                // spending the tick on the chevron took the confirmation away.
-                                MaterialIcon {
+                                // The chevron keeps its own press area: a ripple stretched across
+                                // the tick beside it grew from the middle of the pair instead of
+                                // from the arrow the press was actually about.
+                                Item {
                                     visible: networkItem.disclosable
-                                    text: "expand_more"
-                                    rotation: networkItem.disclosed ? 180 : 0
-                                    color: Colours.palette.m3primary
-                                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
-                                    opacity: networkItem.loading ? 0 : 1
+                                    Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
+                                    Layout.preferredHeight: width
 
-                                    Behavior on rotation {
-                                        Anim {
-                                            type: Anim.StandardSmall
+                                    MaterialIcon {
+                                        anchors.centerIn: parent
+                                        text: "expand_more"
+                                        rotation: networkItem.disclosed ? 180 : 0
+                                        color: Colours.palette.m3primary
+                                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+                                        opacity: networkItem.loading ? 0 : 1
+
+                                        Behavior on rotation {
+                                            Anim {
+                                                type: Anim.StandardSmall
+                                            }
                                         }
+                                    }
+
+                                    StateLayer {
+                                        anchors.fill: parent
+                                        radius: Tokens.rounding.full
+                                        showHoverBackground: false
+                                        disabled: networkItem.loading
+                                        onClicked: root.detailsOpen = !root.detailsOpen
                                     }
                                 }
 
@@ -331,29 +344,6 @@ ColumnLayout {
                                     }
                                 }
                             }
-                        }
-                    }
-
-                    // Above the row's own press area, so tapping the chevron discloses the details
-                    // instead of disconnecting the network it describes.
-                    Item {
-                        id: detailsToggle
-
-                        visible: networkItem.disclosable
-                        anchors.right: parent.right
-                        anchors.rightMargin: Tokens.padding.small * root.scaleOffset
-                        // The row is the first thing in the column, so the column's top is its top.
-                        anchors.top: networkColumn.top
-                        width: trailingIcons.implicitWidth
-                        height: Math.max(networkRow.implicitHeight, width)
-                        z: 1
-
-                        StateLayer {
-                            anchors.fill: parent
-                            radius: Tokens.rounding.full
-                            showHoverBackground: false
-                            disabled: networkItem.loading
-                            onClicked: root.detailsOpen = !root.detailsOpen
                         }
                     }
 
