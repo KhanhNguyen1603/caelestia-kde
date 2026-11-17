@@ -269,8 +269,29 @@ DelegateChooser {
         delegate: WrappedLoader {
             source: BarWidgetRegistry.widget(id)?.componentUrl ?? ""
 
-            onItemChanged: root.bar.applyWidgetContext(item)
+            onItemChanged: {
+                if (root.bar)
+                    root.bar.applyWidgetContext(item);
+                else
+                    root.applyBoxContext(item);
+            }
         }
+    }
+
+    // The tray's box draws plugin widgets with no bar behind them, so only the values the
+    // box can still answer are filled in. Leaving them unset left the widget drawing with
+    // no popouts and no visibilities at all.
+    function applyBoxContext(widget: var): void {
+        if (!widget)
+            return;
+
+        const context = {
+            popouts: root.popouts,
+            visibilities: Visibilities.getForActive()
+        };
+        for (const name in context)
+            if (widget.hasOwnProperty(name))
+                widget[name] = context[name];
     }
 
     // A widget the registry names draws itself once the loader has it, so the entry the

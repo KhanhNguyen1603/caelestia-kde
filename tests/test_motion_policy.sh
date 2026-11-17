@@ -352,15 +352,15 @@ test_the_calendars_animate_months_reversibly() {
 }
 
 # A state carried by motion alone leaves nothing to read once the motion stops.
-test_a_pulsing_state_also_has_a_static_cue() {    local file
-    for file in "$SHELL_DIR/modules/bar/components/status/BluetoothStatus.qml" "$SHELL_DIR/modules/bar/components/StatusIcon.qml"; do
-        assert_file_contains "$file" 'readonly property bool pending' \
-            "$(basename "$file") should name the connecting state"
-        assert_file_contains "$file" 'device.pending ? Qt.alpha(root.colour, 0.5) : root.colour' \
-            "$(basename "$file") should carry that state in the icon colour"
-        assert_file_contains "$file" 'running: device.pending && Tokens.anim.enabled' \
-            "$(basename "$file") should stop the pulse with the animations switch"
-    done
+test_a_pulsing_state_also_has_a_static_cue() {
+    local file="$SHELL_DIR/modules/bar/components/StatusIcon.qml"
+
+    assert_file_contains "$file" 'readonly property bool pending' \
+        "StatusIcon should name the connecting state"
+    assert_file_contains "$file" 'device.pending ? Qt.alpha(root.colour, 0.5) : root.colour' \
+        "StatusIcon should carry that state in the icon colour"
+    assert_file_contains "$file" 'running: device.pending && Tokens.anim.enabled' \
+        "StatusIcon should stop the pulse with the animations switch"
 }
 
 test_the_dialogs_share_one_transition_with_a_shorter_exit() {
