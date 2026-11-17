@@ -385,10 +385,23 @@ Singleton {
         root.modelDataMap = map;
     }
 
+    function isPinned(id: string): bool {
+        if (!id) return false;
+        const current = root.effectivePinnedApps || [];
+        for (let i = 0; i < current.length; i++) {
+            const item = current[i];
+            if (item === id) return true;
+            if (Strings.testRegex(item, id)) return true;
+            if (id.endsWith(".desktop") && Strings.testRegex(item, id.replace(".desktop", ""))) return true;
+            if (item.endsWith(".desktop") && Strings.testRegex(id, item.replace(".desktop", ""))) return true;
+        }
+        return false;
+    }
+
     function pinApp(id: string): void {
         const targetNode = root.useDockPanel ? GlobalConfig.dockPanel : GlobalConfig.bar.dock;
         const current = [...(targetNode.pinnedApps || [])];
-        if (!current.includes(id)) {
+        if (!root.isPinned(id)) {
             current.push(id);
             targetNode.pinnedApps = current;
         }
