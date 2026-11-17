@@ -254,7 +254,7 @@ StyledRect {
                 text: root.modelData?.appName ?? ""
                 font: appName.font
                 elide: Text.ElideRight
-                elideWidth: expandBtn.x - time.width - timeSep.width - summary.x - root.Tokens.spacing.small * 3
+                elideWidth: closeBtn.x - time.width - timeSep.width - summary.x - root.Tokens.spacing.small * 3
             }
 
             StyledText {
@@ -308,7 +308,7 @@ StyledRect {
                 text: root.modelData?.summaryPlain ?? ""
                 font: summary.font
                 elide: Text.ElideRight
-                elideWidth: expandBtn.x - time.width - timeSep.width - summary.x - root.Tokens.spacing.small * 3
+                elideWidth: closeBtn.x - time.width - timeSep.width - summary.x - root.Tokens.spacing.small * 3
             }
 
             StyledText {
@@ -351,38 +351,32 @@ StyledRect {
                 font: Tokens.font.body.small
             }
 
+            // Dismissing is the one thing worth reaching from a toast that has not been opened,
+            // so the close sits in the corner the eye lands on rather than behind an expansion.
             Item {
-                id: expandBtn
+                id: closeBtn
 
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.topMargin: -Tokens.padding.extraSmall
 
-                implicitWidth: expandIcon.implicitHeight
-                implicitHeight: expandIcon.implicitHeight
+                implicitWidth: closeIcon.implicitHeight
+                implicitHeight: closeIcon.implicitHeight
 
                 StateLayer {
                     radius: Tokens.rounding.full
                     color: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                    onClicked: root.expanded = !root.expanded
+                    Accessible.name: qsTr("Dismiss notification")
+                    Accessible.role: Accessible.Button
+                    onClicked: root.modelData?.close()
                 }
 
                 MaterialIcon {
-                    id: expandIcon
+                    id: closeIcon
 
                     anchors.centerIn: parent
-                    anchors.verticalCenterOffset: root.expanded ? -1 : 1
-                    text: "expand_more"
+                    text: "close"
                     fontStyle: Tokens.font.icon.medium
-                    rotation: root.expanded ? 180 : 0
-
-                    Behavior on anchors.verticalCenterOffset {
-                        Anim {}
-                    }
-
-                    Behavior on rotation {
-                        Anim {}
-                    }
                 }
             }
 
@@ -407,6 +401,39 @@ StyledRect {
                 Behavior on opacity {
                     Anim {
                         type: Anim.DefaultEffects
+                    }
+                }
+            }
+
+            // The chevron lives at the end of the line it reveals instead of opposite the
+            // header it does not touch, so the direction of the expansion matches the control.
+            Item {
+                id: expandBtn
+
+                anchors.right: parent.right
+                anchors.verticalCenter: bodyPreview.verticalCenter
+
+                implicitWidth: expandIcon.implicitHeight
+                implicitHeight: expandIcon.implicitHeight
+
+                StateLayer {
+                    radius: Tokens.rounding.full
+                    color: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                    Accessible.name: root.expanded ? qsTr("Show less") : qsTr("Show more")
+                    Accessible.role: Accessible.Button
+                    onClicked: root.expanded = !root.expanded
+                }
+
+                MaterialIcon {
+                    id: expandIcon
+
+                    anchors.centerIn: parent
+                    text: "expand_more"
+                    fontStyle: Tokens.font.icon.medium
+                    rotation: root.expanded ? 180 : 0
+
+                    Behavior on rotation {
+                        Anim {}
                     }
                 }
             }
@@ -501,17 +528,6 @@ StyledRect {
                         onClicked: root.modelData?.appName && Notifs.muteApp(root.modelData.appName)
                         label.animate: true
                         Accessible.name: qsTr("Turn off notifications from %1").arg(root.modelData?.appName ?? "")
-                    }
-
-                    IconButton {
-                        isRound: true
-                        shapeMorph: true
-                        fillWidth: (root.modelData?.actions.length ?? 0) === 0
-                        inactiveColour: root.isCritical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
-                        inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
-                        icon: "close"
-                        padding: Tokens.padding.extraSmall
-                        onClicked: root.modelData?.close()
                     }
 
                     IconButton {
