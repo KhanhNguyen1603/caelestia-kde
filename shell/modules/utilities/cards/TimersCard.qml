@@ -151,9 +151,6 @@ StyledRect {
                 text: root.mode === "idle" ? qsTr("--:--") : Timers.formatted(root.active)
                 color: root.mode === "rang" ? Colours.palette.m3error : (root.mode === "idle" ? Colours.palette.m3outlineVariant : (root.mode === "paused" ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3primary))
                 font: Tokens.font.headline.small
-                font.features: ({
-                        "tnum": 1
-                    })
             }
         }
 
@@ -279,9 +276,6 @@ StyledRect {
                 text: Timers.formatted(row.timer)
                 color: row.paused ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
                 font: Tokens.font.title.small
-                font.features: ({
-                        "tnum": 1
-                    })
             }
 
             StyledText {
