@@ -87,6 +87,24 @@ PageBase {
         }
     ]
 
+    readonly property list<MenuItem> labelModeItems: [
+        MenuItem {
+            property string value: "none"
+
+            text: qsTr("None")
+        },
+        MenuItem {
+            property string value: "name"
+
+            text: qsTr("Application name")
+        },
+        MenuItem {
+            property string value: "title"
+
+            text: qsTr("Window title")
+        }
+    ]
+
     title: qsTr("Dock")
     isSubPage: true
 
@@ -419,12 +437,78 @@ PageBase {
         }
 
         ToggleRow {
-            last: true
             text: qsTr("Recolor icons")
             subtext: qsTr("Apply system theme palette colors to monochrome and app icons")
             reset: ({ node: GlobalConfig.dockPanel, setting: "recolourIcons" })
             checked: Config.dockPanel.recolourIcons
             onToggled: GlobalConfig.dockPanel.recolourIcons = checked
+        }
+
+        SectionHeader {
+            text: qsTr("Labels")
+        }
+
+        SelectRow {
+            first: true
+            label: qsTr("Show labels")
+            subtext: qsTr("Display text label next to each dock application icon")
+            menuItems: root.labelModeItems
+            active: {
+                for (let i = 0; i < root.labelModeItems.length; i++) {
+                    if (root.labelModeItems[i].value === Config.dockPanel.labelMode)
+                        return root.labelModeItems[i];
+                }
+                return root.labelModeItems[0];
+            }
+            fallbackIcon: "label"
+            onSelected: item => GlobalConfig.dockPanel.labelMode = item.value
+        }
+
+        StepperRow {
+            visible: Config.dockPanel.labelMode !== "none"
+            label: qsTr("Label size")
+            subtext: qsTr("Font size in pixels for application labels")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "labelSize" })
+            value: Config.dockPanel.labelSize
+            from: 8
+            to: 32
+            stepSize: 1
+            onMoved: v => GlobalConfig.dockPanel.labelSize = Math.round(v)
+        }
+
+        ToggleRow {
+            enabled: Config.dockPanel.labelMode !== "none"
+            opacity: enabled ? 1.0 : 0.5
+            text: qsTr("Fixed label width")
+            subtext: qsTr("Use a uniform fixed width instead of adapting to text length")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "fixedLabelWidth" })
+            checked: Config.dockPanel.fixedLabelWidth
+            onToggled: GlobalConfig.dockPanel.fixedLabelWidth = checked
+        }
+
+        StepperRow {
+            visible: Config.dockPanel.labelMode !== "none" && Config.dockPanel.fixedLabelWidth
+            label: qsTr("Label width")
+            subtext: qsTr("Fixed width in pixels for application labels")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "labelWidth" })
+            value: Config.dockPanel.labelWidth
+            from: 40
+            to: 300
+            stepSize: 10
+            onMoved: v => GlobalConfig.dockPanel.labelWidth = Math.round(v)
+        }
+
+        StepperRow {
+            last: true
+            visible: Config.dockPanel.labelMode !== "none" && !Config.dockPanel.fixedLabelWidth
+            label: qsTr("Maximum label width")
+            subtext: qsTr("Maximum width cap in pixels before truncating with ellipsis")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "maxLabelWidth" })
+            value: Config.dockPanel.maxLabelWidth
+            from: 40
+            to: 400
+            stepSize: 10
+            onMoved: v => GlobalConfig.dockPanel.maxLabelWidth = Math.round(v)
         }
     }
 }

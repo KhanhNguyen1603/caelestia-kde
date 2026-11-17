@@ -33,12 +33,56 @@ Item {
     property var popouts: null
     property var listView: null
 
+    property string labelMode: Config.dockPanel.labelMode
+    property bool fixedLabelWidth: Config.dockPanel.fixedLabelWidth
+    property int labelWidth: Config.dockPanel.labelWidth
+    property int maxLabelWidth: Config.dockPanel.maxLabelWidth
+    property int labelSize: Config.dockPanel.labelSize
+
+    readonly property string labelText: {
+        if (!root.modelData || root.labelMode === "none")
+            return "";
+        if (root.labelMode === "title") {
+            const tops = root.modelData.toplevels ?? [];
+            if (tops.length > 0) {
+                for (let i = 0; i < tops.length; i++) {
+                    if (tops[i].focused && tops[i].title)
+                        return tops[i].title;
+                }
+                if (tops[0] && tops[0].title)
+                    return tops[0].title;
+            }
+            return root.modelData.entry?.name || root.modelData.appClass || "";
+        }
+        if (root.labelMode === "name") {
+            return root.modelData.entry?.name || root.modelData.appClass || "";
+        }
+        return "";
+    }
+    readonly property bool hasLabel: root.labelText.length > 0
+    readonly property real calculatedLabelWidth: {
+        if (!root.hasLabel)
+            return 0;
+        if (root.fixedLabelWidth)
+            return Math.max(20, root.labelWidth);
+        return Math.min(Math.max(20, root.maxLabelWidth), Math.ceil(labelMetrics.width));
+    }
+
     signal activateRequested()
 
-    width: root.itemSize
+    width: (root.isHorizontal && root.hasLabel)
+        ? (root.itemSize + Tokens.spacing.small + root.calculatedLabelWidth + Tokens.padding.small)
+        : root.itemSize
     height: root.itemSize
     implicitWidth: root.width
     implicitHeight: root.height
+
+    TextMetrics {
+        id: labelMetrics
+
+        font: labelTextItem.font
+        text: root.labelText
+    }
 
     DropArea {
         anchors.fill: parent
@@ -213,45 +257,68 @@ Item {
             }
         }
 
-        CachingIconImage {
-            id: icon
+        Item {
+            id: iconContainer
 
-            anchors.centerIn: parent
-            implicitSize: root.iconSize
-            width: root.iconSize
-            height: root.iconSize
-            source: root.modelData ? WinIcons.sourceFor(root.modelData.entry, root.modelData.appClass, root.modelData.iconName, root.modelData.pid ?? 0) : ""
-            visible: !root.recolourIcons
+            width: root.itemSize
+            height: root.height
+            anchors.left: parent.left
+            anchors.top: parent.top
 
-            SequentialAnimation {
-                id: bounceAnim
+            CachingIconImage {
+                id: icon
 
-                NumberAnimation {
-                    target: delegateItem
-                    property: "scale"
-                    to: 0.94
-                    duration: Tokens.anim.durations.expressiveFastSpatial
-                    easing: Tokens.anim.expressiveFastSpatial
+                anchors.centerIn: parent
+                implicitSize: root.iconSize
+                width: root.iconSize
+                height: root.iconSize
+                source: root.modelData ? WinIcons.sourceFor(root.modelData.entry, root.modelData.appClass, root.modelData.iconName, root.modelData.pid ?? 0) : ""
+                visible: !root.recolourIcons
+
+                SequentialAnimation {
+                    id: bounceAnim
+
+                    NumberAnimation {
+                        target: delegateItem
+                        property: "scale"
+                        to: 0.94
+                        duration: Tokens.anim.durations.expressiveFastSpatial
+                        easing: Tokens.anim.expressiveFastSpatial
+                    }
+                    NumberAnimation {
+                        target: delegateItem
+                        property: "scale"
+                        to: 1
+                        duration: Tokens.anim.durations.expressiveFastSpatial
+                        easing: Tokens.anim.expressiveFastSpatial
+                    }
                 }
-                NumberAnimation {
-                    target: delegateItem
-                    property: "scale"
-                    to: 1
-                    duration: Tokens.anim.durations.expressiveFastSpatial
-                    easing: Tokens.anim.expressiveFastSpatial
-                }
+            }
+
+            ColouredIcon {
+                anchors.centerIn: parent
+                implicitSize: root.iconSize
+                width: root.iconSize
+                height: root.iconSize
+                source: visible ? icon.source : ""
+                colour: Colours.palette.m3secondary
+                layer.enabled: visible
+                visible: root.recolourIcons
             }
         }
 
-        ColouredIcon {
-            anchors.centerIn: parent
-            implicitSize: root.iconSize
-            width: root.iconSize
-            height: root.iconSize
-            source: visible ? icon.source : ""
-            colour: Colours.palette.m3secondary
-            layer.enabled: visible
-            visible: root.recolourIcons
+        Text {
+            id: labelTextItem
+
+            visible: root.hasLabel && root.isHorizontal
+            anchors.left: iconContainer.right
+            anchors.leftMargin: Tokens.spacing.small
+            anchors.verticalCenter: parent.verticalCenter
+            width: root.calculatedLabelWidth
+            text: root.labelText
+            elide: Text.ElideRight
+            color: delegateItem.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurface
+            font: Tokens.font.label.builders.medium.size(Math.max(6, root.labelSize)).build()
         }
 
         Loader {
@@ -302,7 +369,7 @@ Item {
             visible: root.showBadges && (delegateItem.badge?.progressVisible ?? false)
             anchors.top: icon.bottom
             anchors.topMargin: 1
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.horizontalCenter: iconContainer.horizontalCenter
             width: root.iconSize
             height: 3
             radius: Tokens.rounding.full
@@ -325,9 +392,10 @@ Item {
                 top: root.position === "top" ? parent.top : undefined
                 left: root.position === "left" ? parent.left : undefined
                 right: root.position === "right" ? parent.right : undefined
-                horizontalCenter: root.isHorizontal ? parent.horizontalCenter : undefined
+                horizontalCenter: (root.isHorizontal && !root.hasLabel) ? parent.horizontalCenter : undefined
                 verticalCenter: !root.isHorizontal ? parent.verticalCenter : undefined
             }
+            x: (root.isHorizontal && root.hasLabel) ? Math.round((root.itemSize - width) / 2) : 0
             height: root.isHorizontal ? 4 : undefined
             width: !root.isHorizontal ? 4 : undefined
 

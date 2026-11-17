@@ -45,6 +45,11 @@ class DockConfig : public settings::ObjectNode {
     CONFIG_PROPERTY(int, dragThreshold, 20)
     CONFIG_PROPERTY(bool, fixedLength, false)
     CONFIG_PROPERTY(int, length, 100)
+    CONFIG_PROPERTY(QString, labelMode, u"none"_s)
+    CONFIG_PROPERTY(bool, fixedLabelWidth, false)
+    CONFIG_PROPERTY(int, labelWidth, 120)
+    CONFIG_PROPERTY(int, maxLabelWidth, 180)
+    CONFIG_PROPERTY(int, labelSize, 12)
     CONFIG_PROPERTY(QStringList, excludedScreens, QStringList())
 };
 

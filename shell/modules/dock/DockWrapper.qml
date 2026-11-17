@@ -34,7 +34,14 @@ Item {
     readonly property real itemSize: Math.max(16, Math.max(Config.dockPanel.size, root.iconSize))
     readonly property bool hasLauncher: Config.dockPanel.showLauncherIcon
     readonly property int itemCount: DockManager.count + (hasLauncher ? 1 : 0)
-    readonly property real computedContentSpan: itemCount > 0 ? (itemCount * root.itemSize + (itemCount - 1) * root.spacing) : 0
+    readonly property real computedContentSpan: {
+        if (itemCount <= 0)
+            return 0;
+        const listSpan = listView ? (root.isHorizontal ? listView.contentWidth : listView.contentHeight) : 0;
+        if (listSpan > 0)
+            return listSpan + (root.hasLauncher ? (root.itemSize + root.spacing) : 0);
+        return itemCount * root.itemSize + (itemCount - 1) * root.spacing;
+    }
     readonly property int contentThickness: Math.max(root.itemSize, Tokens.sizes.bar.innerWidth) + root.padding * 2
     readonly property bool dodgeEnabled: Config.dockPanel.dodgeWindows && !Config.dockPanel.persistent && !disabled
     readonly property rect dodgeRect: {
@@ -474,6 +481,11 @@ Item {
             sourcePanel: "dockPanel"
             popouts: root.popouts
             listView: listView
+            labelMode: Config.dockPanel.labelMode
+            fixedLabelWidth: Config.dockPanel.fixedLabelWidth
+            labelWidth: Config.dockPanel.labelWidth
+            maxLabelWidth: Config.dockPanel.maxLabelWidth
+            labelSize: Config.dockPanel.labelSize
             magnificationScale: {
                 if (!Config.dockPanel.magnification || !dockHoverTracker.hovered)
                     return 1.0;
