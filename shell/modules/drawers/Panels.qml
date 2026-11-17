@@ -298,6 +298,8 @@ Item {
         property string vAnchor: "top"
         property string hAnchor: "center"
 
+        screen: root.screen
+        panels: root
         screenState: root.screenState
         visibilities: root.visibilities
         anchors.horizontalCenter: parent.horizontalCenter

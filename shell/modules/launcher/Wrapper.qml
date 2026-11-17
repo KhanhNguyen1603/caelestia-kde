@@ -28,6 +28,18 @@ Item {
     readonly property bool avatarVisible: root.visible && (content.item?.showAvatar ?? false)
     readonly property int avatarSize: content.item?.avatarSize ?? 0
 
+    readonly property bool hasBarBottom: Config.bar.position === "bottom" && Config.bar.enabled
+    readonly property bool hasDockBottom: Config.dockPanel.position === "bottom" && Config.dockPanel.enabled && (panels?.dockPanel?.visible ?? false)
+    readonly property bool hasEdgePanelBottom: hasBarBottom || hasDockBottom
+
+    readonly property var activeEdgePanel: hasDockBottom ? panels.dockPanel : (hasBarBottom ? panels.bar : null)
+    readonly property real edgePanelWidth: activeEdgePanel?.width ?? screen.width
+    readonly property real edgePanelCenterX: activeEdgePanel ? (activeEdgePanel.x + activeEdgePanel.width / 2) : (screen.width / 2)
+    readonly property real screenCenterX: screen.width / 2
+
+    readonly property bool isLampActive: hasEdgePanelBottom && (edgePanelWidth < implicitWidth)
+    readonly property real lampScaleX: (isLampActive && implicitWidth > 0) ? (width / implicitWidth) : 1
+
     signal closed()
 
     onOffsetScaleChanged: {
@@ -42,10 +54,12 @@ Item {
     }
     // Keep the clip while the panel slides away, but not while it is open: the
     // profile picture deliberately overhangs the top edge of the card.
-    clip: Config.bar.position === "bottom" && !root.avatarVisible
+    clip: hasEdgePanelBottom && !root.avatarVisible
     visible: offsetScale < 1
-    anchors.bottomMargin: (Config.bar.position === "bottom" ? 0 : -implicitHeight - 5) * offsetScale
-    height: Config.bar.position === "bottom" ? implicitHeight * (1 - offsetScale) : implicitHeight
+    anchors.bottomMargin: (hasEdgePanelBottom ? 0 : -implicitHeight - 5) * offsetScale
+    anchors.horizontalCenterOffset: isLampActive ? ((edgePanelCenterX - screenCenterX) * offsetScale) : 0
+    width: isLampActive ? (implicitWidth - (implicitWidth - edgePanelWidth) * offsetScale) : implicitWidth
+    height: hasEdgePanelBottom ? implicitHeight * (1 - offsetScale) : implicitHeight
     implicitHeight: content.implicitHeight
     implicitWidth: content.implicitWidth || 630
     opacity: 1 - offsetScale
@@ -77,6 +91,10 @@ Item {
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
         active: root.shouldBeActive || root.visible || root.keepAlive
+        transform: Scale {
+            xScale: root.lampScaleX
+            origin.x: (content.width || root.implicitWidth) / 2
+        }
         sourceComponent: Component {
             Content {
                 visibilities: root.visibilities

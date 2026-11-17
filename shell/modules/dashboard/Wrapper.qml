@@ -16,6 +16,8 @@ Item {
     // state, not this widget's: that is where upstream keeps them, and it is what
     // makes both survive the dashboard closing and a shell reload.
     required property ScreenState screenState
+    property ShellScreen screen: null
+    property var panels: null
     readonly property FileDialog facePicker: FileDialog {
         title: qsTr("Select a profile picture")
         filterLabel: qsTr("Image files")
@@ -32,10 +34,25 @@ Item {
     property real offsetScale: shouldBeActive ? 0 : 1
     property bool keepAlive: false
 
-    clip: Config.bar.position === "top"
+    readonly property bool hasBarTop: Config.bar.position === "top" && Config.bar.enabled
+    readonly property bool hasDockTop: Config.dockPanel.position === "top" && Config.dockPanel.enabled && (panels?.dockPanel?.visible ?? false)
+    readonly property bool hasEdgePanelTop: hasBarTop || hasDockTop
+
+    readonly property var activeEdgePanel: hasDockTop ? panels?.dockPanel : (hasBarTop ? panels?.bar : null)
+    readonly property real screenWidth: screen?.width ?? (parent?.width ?? 1920)
+    readonly property real screenCenterX: screenWidth / 2
+    readonly property real edgePanelWidth: activeEdgePanel?.width ?? screenWidth
+    readonly property real edgePanelCenterX: activeEdgePanel ? (activeEdgePanel.x + activeEdgePanel.width / 2) : screenCenterX
+
+    readonly property bool isLampActive: hasEdgePanelTop && (edgePanelWidth < implicitWidth)
+    readonly property real lampScaleX: (isLampActive && implicitWidth > 0) ? (width / implicitWidth) : 1
+
+    clip: hasEdgePanelTop
     visible: offsetScale < 1
-    anchors.topMargin: (Config.bar.position === "top" ? 0 : -implicitHeight - 5) * offsetScale
-    height: Config.bar.position === "top" ? implicitHeight * (1 - offsetScale) : implicitHeight
+    anchors.topMargin: (hasEdgePanelTop ? 0 : -implicitHeight - 5) * offsetScale
+    anchors.horizontalCenterOffset: isLampActive ? ((edgePanelCenterX - screenCenterX) * offsetScale) : 0
+    width: isLampActive ? (implicitWidth - (implicitWidth - edgePanelWidth) * offsetScale) : implicitWidth
+    height: hasEdgePanelTop ? implicitHeight * (1 - offsetScale) : implicitHeight
     implicitHeight: content.implicitHeight
     implicitWidth: content.implicitWidth || 854
     opacity: 1 - offsetScale
@@ -56,6 +73,10 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         active: root.shouldBeActive || root.visible || root.keepAlive
+        transform: Scale {
+            xScale: root.lampScaleX
+            origin.x: (content.width || root.implicitWidth) / 2
+        }
         sourceComponent: Content {
             visibilities: root.visibilities
             screenState: root.screenState
