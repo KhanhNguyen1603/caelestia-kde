@@ -37,6 +37,10 @@ QtObject {
     // Staying open belongs to the popout itself: once it closes, or another one takes its
     // place, there is nothing left to keep open.
     onHasCurrentChanged: {
+        // A bar panel opening takes the screen from whatever transient surface was over it,
+        // and the launcher is the one that used to be left half covered.
+        if (hasCurrent)
+            Visibilities.closeTransients("popouts");
         if (!hasCurrent)
             root.staysOpen = false;
     }

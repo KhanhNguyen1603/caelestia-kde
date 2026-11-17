@@ -180,6 +180,7 @@ Singleton {
         if (v)
             v[drawer] = open;
     }
+
     function setLauncherOwner(visibilities: DrawerVisibilities, open: bool): void {
         if (!open) {
             if (launcherScreen !== visibilities)
@@ -223,6 +224,29 @@ Singleton {
     function showAppWindows(names: var): void {
         overviewAppFilter = (names || []).filter(name => typeof name === "string" && name.length > 0);
         setOverview(true);
+    }
+    /// Only one transient surface at a time. The launcher, the drawers, the session dialog,
+    /// the overview and the bar's panels all draw in the same part of the screen, so two of
+    /// them open at once means one hides the other. Whichever opens last takes the screen;
+    /// the callers name themselves in `except`. The sidebar, the notification stack, the OSD
+    /// and the toasts are deliberately absent — they sit beside a surface, not over it.
+    function closeTransients(except: string): void {
+        for (const vis of screens.values()) {
+            if (except !== "launcher")
+                vis.launcher = false;
+            if (except !== "dashboard")
+                vis.dashboard = false;
+            if (except !== "utilities")
+                vis.utilities = false;
+            if (except !== "session")
+                vis.session = false;
+        }
+        if (except !== "overview")
+            setOverview(false);
+        if (except !== "popouts") {
+            for (const bar of bars.values())
+                bar?.popouts?.close();
+        }
     }
     function closeContextPopouts(): void {
         for (const bar of bars.values())

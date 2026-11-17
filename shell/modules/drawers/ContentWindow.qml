@@ -132,6 +132,38 @@ StyledWindow {
     FocusReturn {
         active: root.wantsKeyboard
     }
+    // The transient surfaces are exclusive (see Visibilities.closeTransients). Watching the
+    // flags here catches every way they can be opened, including the drag gestures in
+    // Interactions and anything a plugin sets: whichever became true last takes the screen
+    // and the others close instead of being stacked over each other.
+    Connections {
+        function onLauncherChanged(): void {
+            if (root.visibilities.launcher)
+                Visibilities.closeTransients("launcher");
+        }
+
+        function onDashboardChanged(): void {
+            if (root.visibilities.dashboard)
+                Visibilities.closeTransients("dashboard");
+        }
+
+        function onUtilitiesChanged(): void {
+            if (root.visibilities.utilities)
+                Visibilities.closeTransients("utilities");
+        }
+
+        function onSessionChanged(): void {
+            if (root.visibilities.session)
+                Visibilities.closeTransients("session");
+        }
+
+        function onOverviewChanged(): void {
+            if (root.visibilities.overview)
+                Visibilities.closeTransients("overview");
+        }
+
+        target: root.visibilities
+    }
 
     Overview.Anim {
         id: animConfig
