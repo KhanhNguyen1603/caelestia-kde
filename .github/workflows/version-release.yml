@@ -176,7 +176,7 @@ jobs:
       - name: Install Shell Build Dependencies
         run: |
           set -euo pipefail
-          pacman -Syu --noconfirm --needed git github-cli cmake ninja meson autoconf-archive \
+          pacman -Syu --noconfirm --needed git github-cli cmake ninja meson autoconf-archive jq \
             qt6-base qt6-declarative qt6-shadertools qt6-wayland qt6-tools \
             kwindowsystem kguiaddons kglobalaccel kconfig networkmanager-qt pulseaudio-qt \
             libqalculate pipewire libpipewire aubio lm_sensors extra-cmake-modules \

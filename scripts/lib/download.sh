@@ -72,13 +72,45 @@ unverified_download_allowed() {
     [[ "${CAELESTIA_ALLOW_UNVERIFIED_DOWNLOAD:-0}" == "1" ]]
 }
 
+# The sha256 GitHub reports for one asset of a release, resolved from the URL that names it.
+#
+# A tag that is republished - a continuous build, or one this project republishes under the
+# same asset name - cannot have its digest written down here, so the release the asset lives
+# in is asked for the digest of that asset. Prints nothing when the API cannot answer, which
+# leaves the caller on the sidecar-then-refuse path; a release nobody can vouch for is still
+# the user's decision to make.
+release_digest_for_url() {
+    local url="$1" owner project tag name rest release_json digest curl jq
+
+    case "$url" in
+        https://github.com/*/releases/download/*/*) ;;
+        *) return 0 ;;
+    esac
+
+    curl="$(system_tool curl)"
+    jq="$(system_tool jq)"
+    [[ -n "$curl" && -n "$jq" ]] || return 0
+
+    IFS=/ read -r owner project _ _ tag rest <<< "${url#https://github.com/}"
+    name="${rest##*/}"
+
+    release_json="$("$curl" -fsSL "https://api.github.com/repos/${owner}/${project}/releases/tags/${tag}" 2>/dev/null || true)"
+    [[ -n "$release_json" ]] || return 0
+
+    digest="$(printf '%s' "$release_json" | "$jq" -r --arg name "$name" '
+        first(.assets[] | select(.name == $name)) | .digest // ""
+    ' 2>/dev/null || true)"
+    printf '%s\n' "$digest"
+}
+
 # Fetches "$1" into "$2" and decides whether those bytes may be used. Returns 0 when they
 # may, and 1 - having said why - when they may not.
 #
 # This is the one place that answers "may this be installed". `$3` is the digest the
-# release reported for the asset, when its resolver had one; without it the `.sha256`
-# sidecar beside the URL is tried instead. `$4` names the action for the messages, because
-# an archive is unpacked and a package is installed.
+# release reported for the asset, when its resolver had one; without it the release the URL
+# names is asked for one, and the `.sha256` sidecar beside the URL is tried when even that
+# answers nothing. `$4` names the action for the messages, because an archive is unpacked
+# and a package is installed.
 #
 # Every caller used to spell this out, which meant one policy written five times and four
 # chances to forget a change. The rule is short enough to state once: the bytes have to
@@ -91,6 +123,8 @@ fetch_verified_asset() { # url dest [digest] [verb]
         err "Failed to download $url."
         return 1
     fi
+
+    [[ -n "$digest" ]] || digest="$(release_digest_for_url "$url")"
 
     asset_matches_digest "$dest" "$digest" || status=$?
     if [[ "$status" -eq 2 ]]; then
