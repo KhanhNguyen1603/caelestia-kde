@@ -106,8 +106,8 @@ ShellRoot {
 
     IpcHandler {
         function lock(): void {
-            Quickshell.execDetached(["loginctl", "lock-session"]);
             Audio.playLock();
+            LockFrost.frost(() => Quickshell.execDetached(["loginctl", "lock-session"]));
         }
 
         function unlock(): void {
@@ -119,6 +119,7 @@ ShellRoot {
 
     Shortcuts {}
     ScreenCorners {}
+    LockFrost {}
 
     Timer {
         id: deferredStartup
