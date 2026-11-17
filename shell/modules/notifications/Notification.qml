@@ -46,9 +46,16 @@ StyledRect {
         Toaster.toast(qsTr("Notifications off"), qsTr("%1 will stay quiet until you turn it back on").arg(root.modelData.appName), "notifications_off");
     }
 
-    color: root.isCritical ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
+    // Opaque rather than the translucent palette variant: a see-through card lets the backdrop
+    // bleed into its rounded corners, which reads as a blurred edge no amount of antialiasing
+    // fixes. A toast sits over whatever happens to be behind it, so it should not be porous.
+    color: root.isCritical ? Colours.palette.m3secondaryContainer : Colours.palette.m3surfaceContainer
     radius: Tokens.rounding.large
     implicitHeight: inner.implicitHeight
+    // A rounded rectangle draws a hard-edged arc unless this is set, and a 16px corner over a
+    // wallpaper is exactly where the stairsteps show. No layer here: a layered card is
+    // rasterised into its own texture, which softens every edge instead of smoothing the arc.
+    antialiasing: true
 
     // Assistive technology reads the toast as a message, not as an unlabelled panel.
     Accessible.role: Accessible.AlertMessage

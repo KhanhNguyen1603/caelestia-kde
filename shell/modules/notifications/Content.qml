@@ -208,29 +208,19 @@ Item {
             }
         }
 
-        // The shadow has to be behind the clip rather than inside the card: the clip is what
-        // hides the card as it swipes away, and it would take the shadow with it.
-        Elevation {
-            x: clip.x + notif.x
-            y: clip.y + notif.y
-            z: -1
-            width: notif.width
-            height: notif.height
-            radius: notif.radius
-            opacity: notif.opacity
-            level: 3
-        }
-
-        ClippingRectangle {
+        // No cast shadow: the shell's other floating surfaces are flat against the wallpaper, and
+        // a RectangularShadow here read as a black border around the card.
+        // A plain clip, not a ClippingRectangle: the latter renders its child through a shader
+        // to cut a rounded region, and the card already draws its own corners. That extra
+        // surface was resampling the whole card, which is what softened every edge.
+        Item {
             id: clip
 
             anchors.top: parent.top
             anchors.topMargin: wrapper.idx === 0 ? 0 : Tokens.spacing.medium
-
-            color: "transparent"
-            radius: notif.radius
             implicitWidth: notif.implicitWidth
             implicitHeight: notif.implicitHeight
+            clip: true
 
             Notification {
                 id: notif
