@@ -464,35 +464,26 @@ StyledRect {
 
             // The chevron lives at the end of the line it reveals instead of opposite the
             // header it does not touch, so the direction of the expansion matches the control.
-            Item {
+            // Same IconButton as the corner controls, so both share the right edge.
+            IconButton {
                 id: expandBtn
 
                 visible: root.expanded || root.disclosable
                 anchors.right: parent.right
                 anchors.verticalCenter: bodyPreview.verticalCenter
 
-                implicitWidth: expandIcon.implicitHeight
-                implicitHeight: expandIcon.implicitHeight
+                type: IconButton.Text
+                isRound: true
+                icon: "expand_more"
+                padding: Tokens.padding.extraSmall
+                rotation: root.expanded ? 180 : 0
+                inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                accessibleName: root.expanded ? qsTr("Show less") : qsTr("Show more")
+                onClicked: root.expanded = !root.expanded
+                onActiveFocusChanged: root.holdOpen(activeFocus)
 
-                StateLayer {
-                    radius: Tokens.rounding.full
-                    color: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                    Accessible.name: root.expanded ? qsTr("Show less") : qsTr("Show more")
-                    Accessible.role: Accessible.Button
-                    onClicked: root.expanded = !root.expanded
-                }
-
-                MaterialIcon {
-                    id: expandIcon
-
-                    anchors.centerIn: parent
-                    text: "expand_more"
-                    fontStyle: Tokens.font.icon.medium
-                    rotation: root.expanded ? 180 : 0
-
-                    Behavior on rotation {
-                        Anim {}
-                    }
+                Behavior on rotation {
+                    Anim {}
                 }
             }
 
