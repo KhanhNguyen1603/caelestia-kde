@@ -21,12 +21,11 @@ StyledRect {
     readonly property bool isLow: root.urgency === NotificationUrgency.Low
     readonly property bool hasImage: (modelData?.image.length ?? 0) > 0
     readonly property bool hasAppIcon: (modelData?.appIcon.length ?? 0) > 0
-    readonly property int nonAnimHeight: summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + appName.height + body.height + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
+    readonly property int nonAnimHeight: appName.height + summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + body.height + actions.height + actions.anchors.topMargin : Tokens.spacing.extraSmall + bodyPreview.height) + inner.anchors.margins * 2
     property bool expanded: Config.notifs.openExpanded
 
     color: root.isCritical ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.large
-
     implicitHeight: inner.implicitHeight
 
     x: implicitWidth
@@ -40,6 +39,15 @@ StyledRect {
         Anim {
             easing: Tokens.anim.emphasizedDecel
         }
+    }
+
+    // The card floats over the wallpaper, so it has to cast something: without a shadow the
+    // stack reads as a row of rectangles painted on the desktop rather than a notification.
+    Elevation {
+        anchors.fill: parent
+        radius: parent.radius
+        z: -1
+        level: 2
     }
 
     MouseArea {
@@ -120,7 +128,7 @@ StyledRect {
                 visible: root.hasImage || root.hasAppIcon
 
                 sourceComponent: StyledClippingRect {
-                    radius: Tokens.rounding.full
+                    radius: Tokens.rounding.small
                     color: root.isCritical ? Colours.palette.m3error : root.isLow ? Colours.layer(Colours.palette.m3surfaceContainerHighest, 2) : Colours.palette.m3secondaryContainer
                     implicitWidth: TokenConfig.sizes.notifs.image
                     implicitHeight: TokenConfig.sizes.notifs.image
@@ -238,14 +246,6 @@ StyledRect {
                 maximumLineCount: 1
                 color: Colours.palette.m3onSurfaceVariant
                 font: Tokens.font.label.medium
-
-                opacity: root.expanded ? 1 : 0
-
-                Behavior on opacity {
-                    Anim {
-                        type: Anim.DefaultEffects
-                    }
-                }
             }
 
             TextMetrics {
@@ -254,19 +254,25 @@ StyledRect {
                 text: root.modelData?.appName ?? ""
                 font: appName.font
                 elide: Text.ElideRight
-                elideWidth: closeBtn.x - time.width - timeSep.width - summary.x - root.Tokens.spacing.small * 3
+                elideWidth: closeBtn.x - time.width - timeSep.width - appName.x - root.Tokens.spacing.small * 3
             }
 
             StyledText {
                 id: summary
 
-                anchors.top: parent.top
-                anchors.left: image.right
-                anchors.leftMargin: Tokens.spacing.medium
+                anchors.top: appName.bottom
+                anchors.topMargin: root.Tokens.spacing.extraSmall
+                anchors.left: appName.left
+                anchors.right: closeBtn.left
+                anchors.rightMargin: root.Tokens.spacing.small
 
                 animate: true
-                text: summaryMetrics.elidedText
-                maximumLineCount: 1
+                text: root.modelData?.summaryPlain ?? ""
+                textFormat: Text.PlainText
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                maximumLineCount: 2
+                elide: Text.ElideRight
+                font.weight: Font.DemiBold
                 height: implicitHeight
 
                 states: State {
@@ -275,14 +281,8 @@ StyledRect {
 
                     PropertyChanges {
                         summary.maximumLineCount: undefined
-                        summary.anchors.topMargin: root.Tokens.spacing.extraSmall
                         bodyPreview.anchors.topMargin: root.Tokens.spacing.extraSmall
                         body.anchors.topMargin: root.Tokens.spacing.extraSmall
-                    }
-
-                    AnchorChanges {
-                        target: summary
-                        anchors.top: appName.bottom
                     }
                 }
 
@@ -294,7 +294,6 @@ StyledRect {
                     Anim {
                         property: "topMargin"
                     }
-                    AnchorAnim {}
                 }
 
                 Behavior on height {
@@ -302,39 +301,16 @@ StyledRect {
                 }
             }
 
-            TextMetrics {
-                id: summaryMetrics
-
-                text: root.modelData?.summaryPlain ?? ""
-                font: summary.font
-                elide: Text.ElideRight
-                elideWidth: closeBtn.x - time.width - timeSep.width - summary.x - root.Tokens.spacing.small * 3
-            }
-
             StyledText {
                 id: timeSep
 
                 anchors.top: parent.top
-                anchors.left: summary.right
+                anchors.left: appName.right
                 anchors.leftMargin: Tokens.spacing.small
 
                 text: "•"
                 color: Colours.palette.m3onSurfaceVariant
                 font: Tokens.font.body.small
-
-                states: State {
-                    name: "expanded"
-                    when: root.expanded
-
-                    AnchorChanges {
-                        target: timeSep
-                        anchors.left: appName.right
-                    }
-                }
-
-                transitions: Transition {
-                    AnchorAnim {}
-                }
             }
 
             StyledText {

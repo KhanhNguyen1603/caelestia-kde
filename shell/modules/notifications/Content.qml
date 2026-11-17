@@ -18,6 +18,11 @@ Item {
     property real room: Number.POSITIVE_INFINITY
     readonly property int padding: Tokens.padding.large
     readonly property int clampedPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
+    /// Room for the shadow each card casts. The stack clips every card so a swipe reads as
+    /// leaving the stack, which would otherwise clip the shadow away with it.
+    readonly property int elevationMargin: Tokens.padding.medium
+    /// The card itself, once the shadow gutters and the stack padding are taken out.
+    readonly property int cardWidth: root.implicitWidth - root.padding - root.clampedPadding - root.elevationMargin * 2
 
     /// Nothing to show: the stack is not there at all, rather than a strip of padding.
     readonly property bool empty: list.count === 0
@@ -146,7 +151,7 @@ Item {
 
         required property NotifData modelData
         required property int index
-        readonly property alias nonAnimHeight: notif.nonAnimHeight
+        readonly property real nonAnimHeight: notif.nonAnimHeight + root.elevationMargin * 2
         property int idx
 
         onIndexChanged: {
@@ -154,8 +159,8 @@ Item {
                 idx = index;
         }
 
-        implicitWidth: notif.implicitWidth
-        implicitHeight: notif.implicitHeight + (idx === 0 ? 0 : Tokens.spacing.medium)
+        implicitWidth: notif.implicitWidth + root.elevationMargin * 2
+        implicitHeight: notif.implicitHeight + root.elevationMargin * 2 + (idx === 0 ? 0 : Tokens.spacing.medium)
 
         ListView.onRemove: removeAnim.start()
 
@@ -197,8 +202,9 @@ Item {
         }
 
         ClippingRectangle {
-            anchors.top: parent.top
-            anchors.topMargin: wrapper.idx === 0 ? 0 : Tokens.spacing.medium
+            anchors.fill: parent
+            anchors.margins: root.elevationMargin
+            anchors.topMargin: root.elevationMargin + (wrapper.idx === 0 ? 0 : Tokens.spacing.medium)
 
             color: "transparent"
             radius: notif.radius
@@ -209,7 +215,7 @@ Item {
                 id: notif
 
                 modelData: wrapper.modelData
-                implicitWidth: root.implicitWidth - root.padding - root.clampedPadding
+                implicitWidth: root.cardWidth
             }
         }
     }
