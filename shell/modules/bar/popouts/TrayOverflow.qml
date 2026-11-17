@@ -29,6 +29,12 @@ Item {
     readonly property bool popoutOwnSurface: true
 
     readonly property var items: TrayRegistry.overflowItems
+    // The icon under the pointer and what it is called. The box is a popout of its own,
+    // and a tooltip is a window: one opened over a box this small takes the hover away
+    // from the icon it was describing, so the name and the icon take turns appearing for
+    // as long as the pointer rests. The box draws the name instead, on the icon itself.
+    property Item hoveredItem: null
+    property string hoveredLabel: ""
     // Every widget the box holds, in the order the bar gives them: status icons and the
     // rest are one sequence, so a drag can put any of them in any cell.
     readonly property var widgets: BarWidgets.overflowWidgets(GlobalConfig.bar)
@@ -117,6 +123,16 @@ Item {
         });
     }
 
+    function setHoveredIcon(icon: var, hovered: bool): void {
+        if (hovered) {
+            root.hoveredItem = icon;
+            root.hoveredLabel = icon.tooltip;
+        } else if (root.hoveredItem === icon) {
+            root.hoveredItem = null;
+            root.hoveredLabel = "";
+        }
+    }
+
     // The panel frames the grid; the box is exactly the cells it holds. Measuring the
     // grid instead would let whatever a cell holds set the size, and one wide widget put
     // in a cell would open the box halfway across the screen.
@@ -198,7 +214,8 @@ Item {
                     modelData: tile.modelData
                     popouts: root.popouts
                     insidePopout: true
-                    tooltipParent: root
+
+                    onHoveredChanged: root.setHoveredIcon(this, hovered)
                 }
             }
         }
@@ -235,7 +252,8 @@ Item {
                     popouts: root.popouts
                     draggable: true
                     insidePopout: true
-                    tooltipParent: root
+
+                    onHoveredChanged: root.setHoveredIcon(this, hovered)
                 }
 
                 // A cell is one cell whatever it holds: a widget drawn wider than that
@@ -255,5 +273,39 @@ Item {
 
         // An empty box is just the room it keeps: a cell standing in for the icons that
         // will fill it reads as something to press, and there is nothing there to press.
+    }
+
+    // What the pointer is over, in words, on the icon it is over. It is drawn rather than
+    // floated: see hoveredItem. Clamped inside the box, because the box is a surface and
+    // its content is cut to it.
+    StyledRect {
+        id: nameTag
+
+        readonly property var origin: root.hoveredItem ? root.mapFromItem(root.hoveredItem, 0, 0) : null
+
+        z: 10
+        visible: root.hoveredLabel.length > 0 && root.hoveredItem !== null
+        implicitWidth: nameText.implicitWidth + Tokens.padding.medium * 2
+        implicitHeight: nameText.implicitHeight + Tokens.padding.small * 2
+        x: nameTag.origin ? Math.min(Math.max(nameTag.origin.x + (root.hoveredItem.width - nameTag.width) / 2, Tokens.padding.small), Math.max(Tokens.padding.small, root.width - nameTag.width - Tokens.padding.small)) : 0
+        y: {
+            if (!nameTag.origin)
+                return 0;
+            const above = nameTag.origin.y - nameTag.height - Tokens.spacing.extraSmall;
+            const below = nameTag.origin.y + root.hoveredItem.height + Tokens.spacing.extraSmall;
+            const wanted = above >= Tokens.padding.small ? above : below;
+            return Math.min(Math.max(wanted, Tokens.padding.small), Math.max(Tokens.padding.small, root.height - nameTag.height - Tokens.padding.small));
+        }
+        radius: Tokens.rounding.medium
+        color: Colours.palette.m3surfaceContainerHighest
+
+        StyledText {
+            id: nameText
+
+            anchors.centerIn: parent
+            text: root.hoveredLabel
+            color: Colours.palette.m3onSurface
+            font: Tokens.font.label.small
+        }
     }
 }

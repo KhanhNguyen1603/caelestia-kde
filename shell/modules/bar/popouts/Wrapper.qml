@@ -29,6 +29,10 @@ Item {
     readonly property bool currentIsContext: (content.item as Content)?.currentIsContext ?? false
     // A popout that draws its own surface asks the drawer for nothing behind it.
     readonly property bool currentOwnsSurface: (content.item as Content)?.currentOwnsSurface ?? false
+    // An open popout sits where a name drawn over a bar icon would land, so the names stay
+    // back while one is open. The tray's box draws its own surface and hangs clear of the
+    // bar, so it is no reason to keep them back.
+    readonly property bool blocksHoverNames: hasCurrent && !currentOwnsSurface
     readonly property bool isContextPopout: hasCurrent && currentIsContext
     // Popouts excluded from pushing the notification column / sidebar out of the
     // way (Panels.qml) and from visually merging with the sidebar (ContentWindow.qml):

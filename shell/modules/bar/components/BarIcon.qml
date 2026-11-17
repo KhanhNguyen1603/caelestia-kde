@@ -33,13 +33,9 @@ Item {
     // reports as a click. It is not one: it is the end of the gesture.
     property bool suppressClick: false
     // An icon the tray's box draws is inside a popout, so the popout being open is not a
-    // reason to keep its name back.
+    // reason to keep its name back. The box shows that name itself: a tooltip is a window,
+    // and one opened over a box this small takes the hover away from the icon under it.
     property bool insidePopout: false
-    // Where the name hangs. The bar maps into the window and is drawn there; a popout is
-    // drawn where its plate is, not where its items say they are, so a tooltip placed
-    // against the window would land somewhere else entirely. The box hands itself over
-    // instead, and the name lands on the icon under the pointer.
-    property Item tooltipParent: null
 
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
     // The bar thins itself with a curve rather than in step with the number, and the icons
@@ -52,7 +48,7 @@ Item {
     // slot it asks for, and the slot grows with it.
     readonly property real iconScale: 1.2 * root.barScale
     readonly property bool dragging: dragGesture.active
-    readonly property bool hovered: area.containsMouse && (root.insidePopout || !(root.popouts?.hasCurrent ?? false))
+    readonly property bool hovered: area.containsMouse && (root.insidePopout || !(root.popouts?.blocksHoverNames ?? false))
     readonly property Item glyph: glyphLoader.item
 
     // A left click does what the widget does; a right click asks for its menu, and a
@@ -138,7 +134,7 @@ Item {
 
     Loader {
         asynchronous: true
-        active: root.tooltip.length > 0
+        active: root.tooltip.length > 0 && !root.insidePopout
         z: 10000
         width: 0
         height: 0
@@ -146,8 +142,8 @@ Item {
         sourceComponent: Component {
             Tooltip {
                 // The window is the whole screen, unlike the bar's clipped strip:
-                // a tooltip placed against it sits by the pointer wherever the icon is.
-                parent: root.tooltipParent ?? root.Window.contentItem
+                // a tooltip placed against it is not cut off by the bar.
+                parent: root.Window.contentItem
                 target: root
                 text: root.tooltip
             }
