@@ -106,8 +106,21 @@ ColumnLayout {
         font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
     }
 
-    Repeater {
+    // The list is capped at four and a half rows. A popout that grew with every visible access
+    // point pushed the rescan button and the VPN section off the panel; the half row is what
+    // says there is more below, and the list scrolls to reach it.
+    ListView {
+        id: networkList
+
+        readonly property real rowHeight: count > 1 ? (contentHeight - spacing * (count - 1)) / count : contentHeight
+
         visible: root.view === "wireless"
+        Layout.fillWidth: true
+        clip: true
+        interactive: contentHeight > height
+        boundsBehavior: Flickable.StopAtBounds
+        spacing: Tokens.spacing.extraSmall * root.scaleOffset
+        implicitHeight: count > 1 ? Math.min(contentHeight, rowHeight * 4.5 + spacing * 4) : contentHeight
         model: ScriptModel {
             values: [...Nmcli.networks].sort((a, b) => {
                 if (a.active !== b.active)
@@ -116,17 +129,19 @@ ColumnLayout {
             })
         }
 
-        StyledRect {
+        StyledScrollBar.vertical: StyledScrollBar {
+            flickable: networkList
+        }
+
+        delegate: StyledRect {
             id: networkItem
 
             required property Nmcli.AccessPoint modelData
             readonly property bool isConnecting: Nmcli.connectingSsid === modelData?.ssid
             readonly property bool loading: networkItem.isConnecting
 
-            Layout.fillWidth: true
-            Layout.preferredWidth: 0
+            width: ListView.view.width
             implicitHeight: networkRow.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
-            visible: root.view === "wireless"
             radius: Tokens.rounding.small * root.scaleOffset
             color: networkItem.modelData?.active ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
 
