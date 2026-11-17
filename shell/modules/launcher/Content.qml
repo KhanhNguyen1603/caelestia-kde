@@ -27,6 +27,13 @@ Item {
     readonly property int rounding: Tokens.rounding.extraLarge
     readonly property bool isClipboardMode: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}clipboard `)
     readonly property int footerSpacing: Tokens.spacing.small
+
+    // The modern header greets with the login name, capitalised so it reads
+    // like a name instead of a shell variable.
+    readonly property string userName: {
+        const user = Quickshell.env("USER") || qsTr("there");
+        return user.charAt(0).toUpperCase() + user.slice(1);
+    }
     // The profile picture hangs off the top edge of the card, so only its lower
     // half takes room inside the panel. The drawers window paints the circle
     // above the launcher and joins it to the card through the blob group.
@@ -99,7 +106,8 @@ Item {
     Item {
         id: avatar
 
-        property int ring: Math.max(6, Math.round(root.avatarSize * 0.08))
+        // No card sits behind the avatar, so the picture fills the circle.
+        property int ring: 2
 
         visible: root.modernStyle
         anchors.horizontalCenter: parent.horizontalCenter
@@ -233,6 +241,20 @@ Item {
                 }
             }
         }
+    }
+
+    StyledText {
+        id: greeting
+
+        visible: root.modernStyle
+        anchors.left: parent.left
+        // Line the greeting up with the category labels: the browser adds its
+        // own padding and each button insets its content by the medium padding.
+        anchors.leftMargin: root.padding * 2 + Tokens.padding.medium
+        anchors.verticalCenter: headerActions.verticalCenter
+        text: qsTr("Hola, %1").arg(root.userName)
+        font: Tokens.font.title.builders.medium.weight(Font.DemiBold).build()
+        color: Colours.palette.m3onSurfaceVariant
     }
 
     Row {
