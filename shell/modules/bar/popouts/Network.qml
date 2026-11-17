@@ -20,6 +20,9 @@ ColumnLayout {
     // The connected row carries its own details, so whether they are open is the popout's
     // state rather than the row's: the row is rebuilt whenever the scan reorders the list.
     property bool detailsOpen: false
+    // The VPN profiles are a header button's business now, so whether they are showing is
+    // remembered here for the same reason.
+    property bool vpnOpen: false
     property bool _isSidebarOpen: false
 
     readonly property var activeDeviceDetails: root.view === "wireless" ? Nmcli.wirelessDeviceDetails : Nmcli.ethernetDeviceDetails
@@ -89,6 +92,22 @@ ColumnLayout {
             text: qsTr("%1 devices").arg(Nmcli.ethernetDevices.length)
             color: Colours.palette.m3onSurfaceVariant
             font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+        }
+
+        // The profiles are a header button rather than a section: a section spent a row
+        // whether or not it was open, and the list only matters while someone is picking one.
+        IconButton {
+            visible: root.view === "wireless" && Nmcli.vpnConnections.length > 0
+            icon: "vpn_key"
+            font: Tokens.font.icon.medium
+            type: IconButton.Tonal
+            isRound: true
+            isToggle: true
+            checked: root.vpnOpen
+            accessibleName: qsTr("Show VPN profiles")
+            inactiveColour: Colours.tPalette.m3surfaceContainerHigh
+            inactiveOnColour: Colours.palette.m3onSurfaceVariant
+            onClicked: root.vpnOpen = !root.vpnOpen
         }
 
         // Rescanning is a small, repeatable action that belongs beside the settings that own
@@ -235,23 +254,19 @@ ColumnLayout {
                         font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
                     }
 
-                    Item {
-                        Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
-                        Layout.preferredHeight: width
+                    RowLayout {
+                        id: trailingIcons
 
-                        CircularIndicator {
-                            anchors.fill: parent
-                            running: networkItem.loading
-                        }
+                        spacing: 0
 
-                        // The connected row trades its tick for a chevron: it is the only row
-                        // with anything to disclose, and the disclosure replaces the section
-                        // this popout used to spend a row on.
+                        // The connected row keeps its tick and gains a chevron beside it: the
+                        // tick is the confirmation, the chevron the way in to the details, and
+                        // spending the tick on the chevron took the confirmation away.
                         MaterialIcon {
-                            anchors.centerIn: parent
-                            text: networkItem.disclosable ? "expand_more" : "radio_button_unchecked"
+                            visible: networkItem.disclosable
+                            text: "expand_more"
                             rotation: networkItem.disclosed ? 180 : 0
-                            color: networkItem.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                            color: Colours.palette.m3primary
                             fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
                             opacity: networkItem.loading ? 0 : 1
 
@@ -259,6 +274,24 @@ ColumnLayout {
                                 Anim {
                                     type: Anim.StandardSmall
                                 }
+                            }
+                        }
+
+                        Item {
+                            Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
+                            Layout.preferredHeight: width
+
+                            CircularIndicator {
+                                anchors.fill: parent
+                                running: networkItem.loading
+                            }
+
+                            MaterialIcon {
+                                anchors.centerIn: parent
+                                text: networkItem.active ? "check_circle" : "radio_button_unchecked"
+                                color: networkItem.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                                fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+                                opacity: networkItem.loading ? 0 : 1
                             }
                         }
                     }
@@ -311,7 +344,7 @@ ColumnLayout {
                 anchors.rightMargin: Tokens.padding.small * root.scaleOffset
                 // The row is the first thing in the column, so the column's top is its top.
                 anchors.top: networkColumn.top
-                width: Math.round(Tokens.font.icon.medium.pointSize * 2 * root.scaleOffset)
+                width: trailingIcons.implicitWidth
                 height: Math.max(networkRow.implicitHeight, width)
                 z: 1
 
@@ -352,143 +385,126 @@ ColumnLayout {
         }
     }
 
-    PopoutSection {
+    // The profiles hang under the button that opens them and cost nothing while it is
+    // shut, which is what the section they used to live in could not say.
+    ListView {
+        id: vpnList
+
+        visible: root.view === "wireless" && root.vpnOpen
+        model: Nmcli.vpnConnections
         Layout.fillWidth: true
-        Layout.topMargin: Tokens.padding.small * root.scaleOffset
-        scaleOffset: root.scaleOffset
-        fontScale: root.fontScale
-        title: qsTr("VPN")
-        summary: qsTr("%1 profiles").arg(Nmcli.vpnConnections.length)
-        expanded: false
+        Layout.leftMargin: Tokens.padding.extraSmall * root.scaleOffset
+        Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
+        clip: true
+        interactive: contentHeight > height
+        boundsBehavior: Flickable.StopAtBounds
+        spacing: Tokens.spacing.extraSmall * root.scaleOffset
+        implicitHeight: visible ? Math.min(contentHeight, Tokens.sizes.bar.networkVpnListMaxHeight * root.scaleOffset) : 0
 
-        ListView {
-            id: vpnList
+        StyledScrollBar.vertical: StyledScrollBar {
+            flickable: vpnList
+        }
 
-            model: Nmcli.vpnConnections
-
-            Layout.fillWidth: true
-            Layout.leftMargin: Tokens.padding.extraSmall * root.scaleOffset
-            Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
-
-            clip: true
-            interactive: Nmcli.vpnConnections.length > 1
-            boundsBehavior: Flickable.StopAtBounds
-            spacing: Tokens.spacing.extraSmall * root.scaleOffset
-            implicitHeight: Math.min(contentHeight, Tokens.sizes.bar.networkVpnListMaxHeight * root.scaleOffset)
-
-            StyledScrollBar.vertical: StyledScrollBar {
-                flickable: vpnList
+        add: Transition {
+            Anim {
+                property: "opacity"
+                from: 0
+                to: 1
+                type: Anim.FastEffects
             }
-
-            add: Transition {
-                Anim {
-                    property: "opacity"
-                    from: 0
-                    to: 1
-                    type: Anim.FastEffects
-                }
-                Anim {
-                    property: "y"
-                    type: Anim.FastSpatial
-                }
+            Anim {
+                property: "y"
+                type: Anim.FastSpatial
             }
-            remove: Transition {
-                Anim {
-                    property: "opacity"
-                    to: 0
-                    type: Anim.FastEffects
-                }
+        }
+        remove: Transition {
+            Anim {
+                property: "opacity"
+                to: 0
+                type: Anim.FastEffects
             }
-            move: Transition {
-                Anim {
-                    property: "y"
-                    type: Anim.FastSpatial
-                }
+        }
+        move: Transition {
+            Anim {
+                property: "y"
+                type: Anim.FastSpatial
             }
-            displaced: Transition {
-                Anim {
-                    property: "y"
-                    type: Anim.FastSpatial
-                }
-            }
-
-            delegate: StyledRect {
-                id: vpnItem
-
-                required property var modelData
-                readonly property bool loading: Nmcli.vpnPendingConnection === modelData?.name
-
-                width: ListView.view.width
-                implicitHeight: vpnRow.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
-                radius: Tokens.rounding.small * root.scaleOffset
-                color: vpnItem.modelData?.connected ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
-
-                RowLayout {
-                    id: vpnRow
-
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: Tokens.padding.medium * root.scaleOffset
-                    anchors.rightMargin: Tokens.padding.medium * root.scaleOffset
-                    spacing: Tokens.spacing.small * root.scaleOffset
-
-                    MaterialIcon {
-                        text: "vpn_key"
-                        color: vpnItem.modelData?.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
-                    }
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 0
-                        elide: Text.ElideRight
-                        text: vpnItem.modelData?.name ?? ""
-                        color: vpnItem.modelData?.connected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
-                        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
-                    }
-
-                    Item {
-                        Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
-                        Layout.preferredHeight: width
-
-                        CircularIndicator {
-                            anchors.fill: parent
-                            running: vpnItem.loading
-                        }
-
-                        MaterialIcon {
-                            anchors.centerIn: parent
-                            text: vpnItem.modelData?.connected ? "check_circle" : "radio_button_unchecked"
-                            color: vpnItem.modelData?.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-                            fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
-                            opacity: vpnItem.loading ? 0 : 1
-                        }
-                    }
-                }
-
-                StateLayer {
-                    anchors.fill: parent
-                    radius: vpnItem.radius
-                    disabled: vpnItem.loading
-
-                    onClicked: {
-                        if (vpnItem.modelData?.connected) {
-                            Nmcli.disconnectVpn(vpnItem.modelData.name, () => {});
-                        } else if (vpnItem.modelData?.name) {
-                            Nmcli.connectVpn(vpnItem.modelData.name, () => {});
-                        }
-                    }
-                }
+        }
+        displaced: Transition {
+            Anim {
+                property: "y"
+                type: Anim.FastSpatial
             }
         }
 
-        StyledText {
-            visible: Nmcli.vpnConnections.length === 0
-            Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
-            text: qsTr("No VPN profiles found")
-            color: Colours.palette.m3onSurfaceVariant
-            font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+        delegate: StyledRect {
+            id: vpnItem
+
+            required property var modelData
+            readonly property bool loading: Nmcli.vpnPendingConnection === modelData?.name
+
+            width: ListView.view.width
+            implicitHeight: vpnRow.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
+            radius: Tokens.rounding.small * root.scaleOffset
+            color: vpnItem.modelData?.connected ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+
+            RowLayout {
+                id: vpnRow
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: Tokens.padding.medium * root.scaleOffset
+                anchors.rightMargin: Tokens.padding.medium * root.scaleOffset
+                spacing: Tokens.spacing.small * root.scaleOffset
+
+                MaterialIcon {
+                    text: "vpn_key"
+                    color: vpnItem.modelData?.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+                    elide: Text.ElideRight
+                    text: vpnItem.modelData?.name ?? ""
+                    color: vpnItem.modelData?.connected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+                }
+
+                Item {
+                    Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
+                    Layout.preferredHeight: width
+
+                    CircularIndicator {
+                        anchors.fill: parent
+                        running: vpnItem.loading
+                    }
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: vpnItem.modelData?.connected ? "check_circle" : "radio_button_unchecked"
+                        color: vpnItem.modelData?.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+                        opacity: vpnItem.loading ? 0 : 1
+                    }
+                }
+            }
+
+            StateLayer {
+                anchors.fill: parent
+                radius: vpnItem.radius
+                disabled: vpnItem.loading
+
+                onClicked: {
+                    if (vpnItem.modelData?.connected) {
+                        Nmcli.disconnectVpn(vpnItem.modelData.name, () => {});
+                    } else if (vpnItem.modelData?.name) {
+                        Nmcli.connectVpn(vpnItem.modelData.name, () => {});
+                    }
+                }
+            }
         }
     }
 
