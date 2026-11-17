@@ -10,6 +10,34 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
+    readonly property list<MenuItem> launchingStyleItems: [
+        MenuItem {
+            property string value: "circle"
+
+            text: qsTr("Circular Spinner")
+        },
+        MenuItem {
+            property string value: "bounce"
+
+            text: qsTr("macOS Elastic Bounce")
+        },
+        MenuItem {
+            property string value: "pulse"
+
+            text: qsTr("Breathing Glow / Aura")
+        },
+        MenuItem {
+            property string value: "orbit"
+
+            text: qsTr("Orbiting Satellite")
+        },
+        MenuItem {
+            property string value: "dots"
+
+            text: qsTr("Pulsing Wave Dots")
+        }
+    ]
+
     readonly property list<MenuItem> windowGroupingItems: [
         MenuItem {
             property int value: DockWindowGrouping.Combined
@@ -88,6 +116,22 @@ PageBase {
             reset: ({ node: GlobalConfig.bar.dock, setting: "currentDesktopOnly" })
             checked: Config.bar.dock.currentDesktopOnly
             onToggled: GlobalConfig.bar.dock.currentDesktopOnly = checked
+        }
+
+        SelectRow {
+            Layout.fillWidth: true
+            label: qsTr("Launch animation style")
+            subtext: qsTr("Animation or indicator style when an application is launching")
+            menuItems: root.launchingStyleItems
+            active: {
+                for (let i = 0; i < root.launchingStyleItems.length; i++) {
+                    if (root.launchingStyleItems[i].value === (Config.bar.dock.launchingStyle || "circle"))
+                        return root.launchingStyleItems[i];
+                }
+                return root.launchingStyleItems[0];
+            }
+            fallbackIcon: "motion_photos_on"
+            onSelected: item => GlobalConfig.bar.dock.launchingStyle = item.value
         }
 
         SelectRow {

@@ -13,6 +13,7 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.components.images
+import qs.components.widgets
 import qs.services
 import qs.utils
 
@@ -540,39 +541,62 @@ Item {
                         }
                     }
 
-                    CachingIconImage {
-                        id: icon
+                    Item {
+                        id: iconContainer
 
                         anchors.centerIn: parent
-                        implicitSize: root.iconSize
-                        source: modelData ? WinIcons.sourceFor(modelData.entry, modelData.appClass, modelData.iconName, modelData.pid ?? 0) : ""
-                        visible: !(Config.bar.dock.recolourIcons ?? false)
+                        width: root.iconSize
+                        height: root.iconSize
+                        transform: [
+                            Translate {
+                                x: launchIndicator.bounceOffsetX
+                                y: launchIndicator.bounceOffsetY
+                            },
+                            Scale {
+                                origin.x: iconContainer.width / 2
+                                origin.y: Config.bar.position === "top" ? 0 : iconContainer.height
+                                xScale: launchIndicator.bounceScaleX
+                                yScale: launchIndicator.bounceScaleY
+                            }
+                        ]
 
-                        SequentialAnimation {
-                            id: bounceAnim
+                        CachingIconImage {
+                            id: icon
 
-                            NumberAnimation { target: delegateItem; property: "scale"; to: 0.96; duration: Tokens.anim.durations.expressiveFastSpatial; easing: Tokens.anim.expressiveFastSpatial }
-                            NumberAnimation { target: delegateItem; property: "scale"; to: 1; duration: Tokens.anim.durations.expressiveFastSpatial; easing: Tokens.anim.expressiveFastSpatial }
+                            anchors.fill: parent
+                            implicitSize: root.iconSize
+                            source: modelData ? WinIcons.sourceFor(modelData.entry, modelData.appClass, modelData.iconName, modelData.pid ?? 0) : ""
+                            visible: !(Config.bar.dock.recolourIcons ?? false)
+
+                            SequentialAnimation {
+                                id: bounceAnim
+
+                                NumberAnimation { target: delegateItem; property: "scale"; to: 0.96; duration: Tokens.anim.durations.expressiveFastSpatial; easing: Tokens.anim.expressiveFastSpatial }
+                                NumberAnimation { target: delegateItem; property: "scale"; to: 1; duration: Tokens.anim.durations.expressiveFastSpatial; easing: Tokens.anim.expressiveFastSpatial }
+                            }
+                        }
+
+                        ColouredIcon {
+                            anchors.fill: parent
+                            implicitSize: root.iconSize
+                            // hidden unless recolouring: skip the second decode and the colour analysis
+                            source: visible ? icon.source : ""
+                            colour: Colours.palette.m3secondary
+                            layer.enabled: visible
+                            visible: Config.bar.dock.recolourIcons ?? false
                         }
                     }
 
-                    ColouredIcon {
-                        anchors.centerIn: parent
-                        implicitSize: root.iconSize
-                        // hidden unless recolouring: skip the second decode and the colour analysis
-                        source: visible ? icon.source : ""
-                        colour: Colours.palette.m3secondary
-                        layer.enabled: visible
-                        visible: Config.bar.dock.recolourIcons ?? false
-                    }
+                    DockLaunchIndicator {
+                        id: launchIndicator
 
-                    Loader {
-                        anchors.fill: icon
-                        active: modelData ? (DockManager.launchingApps[modelData.appClass || modelData.id] || false) : false
-                        sourceComponent: CircularIndicator {
-                            running: true
-                            strokeWidth: 2
-                        }
+                        anchors.centerIn: iconContainer
+                        width: root.iconSize
+                        height: root.iconSize
+                        isLaunching: modelData ? Boolean(DockManager.launchingApps[modelData.appClass || modelData.id]) : false
+                        style: Config.bar.dock.launchingStyle ?? "circle"
+                        position: Config.bar.position
+                        currentScale: 1.0
                     }
 
                     StyledRect {
@@ -587,8 +611,8 @@ Item {
                         radius: Tokens.rounding.full
                         width: asDot ? dotSize : Math.max(badgeHeight, badgeLabel.implicitWidth + Tokens.padding.extraSmall)
                         height: asDot ? dotSize : badgeHeight
-                        anchors.right: icon.right
-                        anchors.top: icon.top
+                        anchors.right: iconContainer.right
+                        anchors.top: iconContainer.top
                         anchors.rightMargin: -Math.round(height * 0.25)
                         anchors.topMargin: -Math.round(height * 0.25)
 
@@ -614,7 +638,7 @@ Item {
                         id: progressBar
 
                         visible: delegateItem.badge?.progressVisible ?? false
-                        anchors.top: icon.bottom
+                        anchors.top: iconContainer.bottom
                         anchors.topMargin: 1
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: root.iconSize

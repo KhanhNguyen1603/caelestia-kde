@@ -32,6 +32,7 @@ class DockConfig : public settings::ObjectNode {
     CONFIG_PROPERTY(qreal, maxMagnification, 1.35)
     CONFIG_PROPERTY(qreal, backgroundOpacity, 0.85)
     CONFIG_PROPERTY(QString, indicatorStyle, u"pill"_s)
+    CONFIG_PROPERTY(QString, launchingStyle, u"circle"_s)
     CONFIG_PROPERTY(bool, recolourIcons, false)
     CONFIG_PROPERTY(bool, showBadges, true)
     CONFIG_PROPERTY(bool, showLauncherIcon, true)

@@ -33,6 +33,9 @@ Item {
     property var popouts: null
     property var listView: null
 
+    property string launchingStyle: Config.dockPanel.launchingStyle ?? "circle"
+    readonly property bool isLaunching: root.modelData ? Boolean(DockManager.launchingApps[root.modelData.appClass || root.modelData.id]) : false
+
     property string labelMode: Config.dockPanel.labelMode
     property bool fixedLabelWidth: Config.dockPanel.fixedLabelWidth
     property int labelWidth: Config.dockPanel.labelWidth
@@ -275,6 +278,18 @@ Item {
             height: Math.round(root.itemSize * root.currentScale)
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
+            transform: [
+                Translate {
+                    x: launchIndicator.bounceOffsetX
+                    y: launchIndicator.bounceOffsetY
+                },
+                Scale {
+                    origin.x: iconContainer.width / 2
+                    origin.y: root.position === "top" ? 0 : iconContainer.height
+                    xScale: launchIndicator.bounceScaleX
+                    yScale: launchIndicator.bounceScaleY
+                }
+            ]
 
             CachingIconImage {
                 id: icon
@@ -332,13 +347,16 @@ Item {
             font: Tokens.font.label.builders.medium.size(Math.max(6, Math.round(root.labelSize * root.currentScale))).build()
         }
 
-        Loader {
-            anchors.fill: icon
-            active: root.modelData ? (DockManager.launchingApps[root.modelData.appClass || root.modelData.id] || false) : false
-            sourceComponent: CircularIndicator {
-                running: true
-                strokeWidth: 2
-            }
+        DockLaunchIndicator {
+            id: launchIndicator
+
+            anchors.centerIn: iconContainer
+            width: Math.round(root.iconSize * root.currentScale)
+            height: Math.round(root.iconSize * root.currentScale)
+            isLaunching: root.isLaunching
+            style: root.launchingStyle
+            position: root.position
+            currentScale: root.currentScale
         }
 
         StyledRect {
@@ -353,10 +371,10 @@ Item {
             radius: Tokens.rounding.full
             width: asDot ? dotSize : Math.max(badgeHeight, badgeLabel.implicitWidth + Tokens.padding.extraSmall)
             height: asDot ? dotSize : badgeHeight
-            anchors.right: icon.right
-            anchors.top: icon.top
-            anchors.rightMargin: -Math.round(height * 0.25)
-            anchors.topMargin: -Math.round(height * 0.25)
+            anchors.right: iconContainer.right
+            anchors.top: iconContainer.top
+            anchors.rightMargin: Math.round((iconContainer.width - root.iconSize * root.currentScale) / 2) - Math.round(height * 0.25)
+            anchors.topMargin: Math.round((iconContainer.height - root.iconSize * root.currentScale) / 2) - Math.round(height * 0.25)
 
             Text {
                 id: badgeLabel
@@ -378,7 +396,7 @@ Item {
             id: progressBar
 
             visible: root.showBadges && (delegateItem.badge?.progressVisible ?? false)
-            anchors.top: icon.bottom
+            anchors.top: iconContainer.bottom
             anchors.topMargin: Math.max(1, Math.round(1 * root.currentScale))
             anchors.horizontalCenter: iconContainer.horizontalCenter
             width: Math.round(root.iconSize * root.currentScale)

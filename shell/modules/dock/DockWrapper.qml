@@ -169,7 +169,7 @@ Item {
                 revealActive = true;
         } else {
             revealDelayTimer.stop();
-            if (revealActive && !dockHover.hovered)
+            if (revealActive && !dockHoverTracker.hovered)
                 unhoverTimer.restart();
         }
     }

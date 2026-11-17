@@ -151,6 +151,7 @@ class BarDock : public settings::ObjectNode {
 
     CONFIG_PROPERTY(bool, monitorCenter, true)
     CONFIG_PROPERTY(bool, recolourIcons, false)
+    CONFIG_PROPERTY(QString, launchingStyle, u"circle"_s)
     CONFIG_PROPERTY(bool, showBadges, true)
     CONFIG_PROPERTY(int, iconSize, 32)
     CONFIG_PROPERTY(bool, currentDesktopOnly, false)
