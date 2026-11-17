@@ -11,22 +11,24 @@ import qs.modules.bar.components
 import qs.modules.bar.components.performance
 import qs.modules.bar.components.workspaces
 
-// One entry of the bar, drawn as whatever kind it says it is. The bar draws them in its
-// zones and the tray's box draws the ones it holds, so both read the same list of kinds
-// instead of the box keeping a copy of one.
-//
-// The chooser picks on `kind`, which is the widget id for everything the registry
-// declares and its own name for entries that stand for one item of a group, like a single
-// status icon. `bar` is null in the box, which draws the entries it holds without one:
-// what a widget asks the bar for then falls back to what the layout can answer alone.
 DelegateChooser {
     id: root
 
-    // The bar this entry is drawn for, when there is one, and the popout state every icon
-    // opens its panel through. The tray's box draws entries of its own with no bar behind
-    // them, and its widgets still have a panel to open.
     property var bar: null
     property var popouts: bar ? bar.popouts : null
+
+    function applyBoxContext(widget: var): void {
+        if (!widget)
+            return;
+
+        const context = {
+            popouts: root.popouts,
+            visibilities: Visibilities.getForActive()
+        };
+        for (const name in context)
+            if (widget.hasOwnProperty(name))
+                widget[name] = context[name];
+    }
 
     role: "kind"
 
@@ -276,22 +278,6 @@ DelegateChooser {
                     root.applyBoxContext(item);
             }
         }
-    }
-
-    // The tray's box draws plugin widgets with no bar behind them, so only the values the
-    // box can still answer are filled in. Leaving them unset left the widget drawing with
-    // no popouts and no visibilities at all.
-    function applyBoxContext(widget: var): void {
-        if (!widget)
-            return;
-
-        const context = {
-            popouts: root.popouts,
-            visibilities: Visibilities.getForActive()
-        };
-        for (const name in context)
-            if (widget.hasOwnProperty(name))
-                widget[name] = context[name];
     }
 
     // A widget the registry names draws itself once the loader has it, so the entry the
