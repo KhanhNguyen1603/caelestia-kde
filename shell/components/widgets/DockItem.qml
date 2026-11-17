@@ -29,6 +29,7 @@ Item {
     property string position: "bottom"
     property bool isHorizontal: root.position === "top" || root.position === "bottom"
     property real magnificationScale: 1.0
+    property string sourcePanel: "dockPanel"
     property var popouts: null
     property var listView: null
 
@@ -149,6 +150,7 @@ Item {
             onEntered: {
                 if (!root.popouts) return;
                 if (root.popouts.hasCurrent && root.popouts.currentName === "dockcontext") return;
+                root.popouts.sourcePanel = root.sourcePanel;
                 root.popouts.currentName = "dockhover";
                 root.popouts.currentCenter = root.isHorizontal
                     ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x
@@ -185,6 +187,7 @@ Item {
                     }
                     root.activateRequested();
                 } else if (mouse.button === Qt.RightButton && root.popouts) {
+                    root.popouts.sourcePanel = root.sourcePanel;
                     root.popouts.currentName = "dockcontext";
                     root.popouts.currentCenter = root.isHorizontal
                         ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x

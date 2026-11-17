@@ -141,6 +141,7 @@ Item {
                 ? container.mapToItem(null, padding + centerOffset, 0).x
                 : container.mapToItem(null, 0, padding + centerOffset).y;
 
+            bar.popouts.sourcePanel = "bar";
             bar.popouts.currentCenter = absoluteCenter;
             bar.popouts.dockModel = DockManager.modelDataArray[index];
             bar.popouts.hasCurrent = true;
@@ -262,6 +263,7 @@ Item {
                 const popouts = root.bar?.popouts;
                 if (!popouts)
                     return;
+                popouts.sourcePanel = "bar";
                 popouts.currentName = "dockbgcontext";
                 popouts.currentCenter = bar.isHorizontal ? container.mapToItem(null, container.width / 2, 0).x : (container.mapToItem(null, 0, container.height / 2).y ?? 0);
                 popouts.hasCurrent = true;
@@ -481,6 +483,7 @@ Item {
 
                         onEntered: {
                             if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
+                            bar.popouts.sourcePanel = "bar";
                             bar.popouts.currentName = "dockhover";
                             bar.popouts.currentCenter = bar.isHorizontal ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
                             bar.popouts.dockModel = modelData;
@@ -513,6 +516,7 @@ Item {
 
                                 DockManager.activateEntry(modelData);
                             } else if (mouse.button === Qt.RightButton) {
+                                bar.popouts.sourcePanel = "bar";
                                 bar.popouts.currentName = "dockcontext";
                                 bar.popouts.currentCenter = bar.isHorizontal ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
                                 bar.popouts.dockModel = modelData;

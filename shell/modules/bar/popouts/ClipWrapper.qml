@@ -14,15 +14,25 @@ Item {
     required property ShellScreen screen
     Config.screen: screen.name
     required property var bar
+    property var dockPanel: null
     required property real borderThickness
     required property DrawerVisibilities visibilities
 
     readonly property alias content: content
+    readonly property var activePanel: {
+        if (content.sourcePanel === "dockPanel")
+            return (root.dockPanel && !root.dockPanel.disabled) ? root.dockPanel : root.bar;
+        if (content.sourcePanel === "bar")
+            return root.bar;
+        if (content.isDockPanelPopout && root.dockPanel && !root.dockPanel.disabled)
+            return root.dockPanel;
+        return root.bar;
+    }
     // Set while the popout is open over the notification stack. Panel backgrounds
     // are shared blobs drawn below every panel's content, so the popout gets an
     // opaque fill of its own to keep the notifications' text from showing through.
     property bool backed: false
-    readonly property bool isHorizontal: bar.isHorizontal
+    readonly property bool isHorizontal: activePanel.isHorizontal
     readonly property bool hovered: popoutsHover.hovered
     property real offsetScale: content.isDetached || content.hasCurrent ? 0 : 1
     // Where x is heading; x itself animates towards it.
@@ -30,19 +40,19 @@ Item {
         if (content.isDetached)
             return (parent.width - content.nonAnimWidth) / 2;
         if (isHorizontal) {
-            if (content.sidebarOpen && !content.isDockPopout)
+            if (activePanel === bar && content.sidebarOpen && !content.isDockPopout)
                 return parent.width - content.nonAnimWidth;
 
             // An item left of the open sidebar gets its popout kept clear of it, so
             // the sidebar doesn't have to be pushed out of the way.
-            const right = root.visibilities.sidebar && !content.underSidebar ? parent.width - Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) - Tokens.spacing.extraLarge : parent.width;
+            const right = (activePanel === bar && root.visibilities.sidebar && !content.underSidebar) ? parent.width - Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) - Tokens.spacing.extraLarge : parent.width;
             const off = content.currentCenter - parent.leftMargin - content.nonAnimWidth / 2;
             const diff = right - Math.floor(off + content.nonAnimWidth);
             if (diff < 0)
                 return Math.max(off + diff, 0);
             return Math.max(off, 0);
         }
-        if (bar.position === "right")
+        if (activePanel.position === "right")
             return parent.width - implicitWidth;
         return 0;
     }
@@ -58,7 +68,7 @@ Item {
         if (content.isDetached)
             return (parent.height - content.nonAnimHeight) / 2;
         if (isHorizontal) {
-            if (bar.position === "bottom")
+            if (activePanel.position === "bottom")
                 return parent.height - implicitHeight;
             return 0;
         }
@@ -68,6 +78,11 @@ Item {
         if (diff < 0)
             return off + diff;
         return Math.max(off, 0);
+    }
+
+    onOffsetScaleChanged: {
+        if (offsetScale >= 1 && !content.hasCurrent)
+            content.sourcePanel = "";
     }
 
     Behavior on offsetScale {
@@ -119,17 +134,18 @@ Item {
         screen: root.screen
         offsetScale: root.offsetScale
         visibilities: root.visibilities
-        underSidebar: !root.isHorizontal || content.currentCenter - root.parent.leftMargin >= root.parent.width - Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width)
+        isPanelHorizontal: root.isHorizontal
+        underSidebar: root.activePanel === root.bar && (!root.isHorizontal || content.currentCenter - root.parent.leftMargin >= root.parent.width - Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width))
 
-        anchors.leftMargin: bar.position === "left" ? (-implicitWidth - 5) * root.offsetScale : 0
-        anchors.rightMargin: bar.position === "right" ? (-implicitWidth - 5) * root.offsetScale : 0
-        anchors.topMargin: bar.position === "top" ? (-implicitHeight - 5) * root.offsetScale : 0
-        anchors.bottomMargin: bar.position === "bottom" ? (-implicitHeight - 5) * root.offsetScale : 0
+        anchors.leftMargin: root.activePanel.position === "left" ? (-implicitWidth - 5) * root.offsetScale : 0
+        anchors.rightMargin: root.activePanel.position === "right" ? (-implicitWidth - 5) * root.offsetScale : 0
+        anchors.topMargin: root.activePanel.position === "top" ? (-implicitHeight - 5) * root.offsetScale : 0
+        anchors.bottomMargin: root.activePanel.position === "bottom" ? (-implicitHeight - 5) * root.offsetScale : 0
 
         states: [
             State {
                 name: "left"
-                when: bar.position === "left"
+                when: root.activePanel.position === "left"
 
                 AnchorChanges {
                     target: content
@@ -143,7 +159,7 @@ Item {
             },
             State {
                 name: "right"
-                when: bar.position === "right"
+                when: root.activePanel.position === "right"
 
                 AnchorChanges {
                     target: content
@@ -157,7 +173,7 @@ Item {
             },
             State {
                 name: "top"
-                when: bar.position === "top"
+                when: root.activePanel.position === "top"
 
                 AnchorChanges {
                     target: content
@@ -171,7 +187,7 @@ Item {
             },
             State {
                 name: "bottom"
-                when: bar.position === "bottom"
+                when: root.activePanel.position === "bottom"
 
                 AnchorChanges {
                     target: content

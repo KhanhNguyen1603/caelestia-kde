@@ -306,12 +306,13 @@ Item {
     BarPopouts.ClipWrapper {
         id: popoutsWrapper
 
-        property string vAnchor: (bar.position === "top" || bar.position === "bottom") ? bar.position : "none"
-        property string hAnchor: (bar.position === "left" || bar.position === "right") ? bar.position : "none"
+        property string vAnchor: (activePanel.position === "top" || activePanel.position === "bottom") ? activePanel.position : "none"
+        property string hAnchor: (activePanel.position === "left" || activePanel.position === "right") ? activePanel.position : "none"
 
         backed: root.popoutCoversNotifications
         screen: root.screen
         bar: root.bar
+        dockPanel: root.dockPanel
         borderThickness: root.borderThickness
         visibilities: root.visibilities
     }

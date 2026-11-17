@@ -63,7 +63,8 @@ Item {
     readonly property bool keptOpen: (Config.dockPanel.persistent || dodgeEnabled) && !dodging
     readonly property int exclusiveZone: Config.dockPanel.reserveSpace && !disabled && !dodgeEnabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? contentThickness : Config.border.thickness
     readonly property int visualThickness: !disabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? contentThickness : Config.border.thickness
-    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dockPanel || hovered)
+    readonly property bool popoutActiveOnDock: Boolean(popouts && (popouts.hasCurrent || popouts.offsetScale < 0.99) && (popouts.sourcePanel === "dockPanel" || (popouts.sourcePanel === "" && popouts.isDockPanelPopout)))
+    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dockPanel || hovered || popoutActiveOnDock)
     property bool pointerInReach: false
     property bool revealActive: false
     readonly property bool hovered: revealActive || dockHover.hovered
@@ -222,10 +223,11 @@ Item {
                 onClicked: mouse => {
                     if (!root.popouts)
                         return;
+                    root.popouts.sourcePanel = "dockPanel";
                     root.popouts.currentName = "dockbgcontext";
                     root.popouts.currentCenter = root.isHorizontal
-                        ? container.mapToItem(null, container.width / 2, 0).x
-                        : (container.mapToItem(null, 0, container.height / 2).y ?? 0);
+                        ? container.mapToItem(null, mouse.x, 0).x
+                        : (container.mapToItem(null, 0, mouse.y).y ?? 0);
                     root.popouts.hasCurrent = true;
                     mouse.accepted = true;
                 }
@@ -268,6 +270,7 @@ Item {
                                 if (root.popouts.hasCurrent && root.popouts.currentName === "osiconcontext") {
                                     root.popouts.hasCurrent = false;
                                 } else {
+                                    root.popouts.sourcePanel = "dockPanel";
                                     root.popouts.currentName = "osiconcontext";
                                     root.popouts.currentCenter = root.isHorizontal
                                         ? launcherButton.mapToItem(null, launcherButton.width / 2, 0).x
@@ -468,6 +471,7 @@ Item {
             indicatorStyle: Config.dockPanel.indicatorStyle
             position: root.position
             isHorizontal: root.isHorizontal
+            sourcePanel: "dockPanel"
             popouts: root.popouts
             listView: listView
             magnificationScale: {

@@ -105,21 +105,23 @@ CustomMouseArea {
     function inLeftPanel(panel: Item, x: real, y: real): bool {
         const panelWidth = panel.content ? panel.content.nonAnimWidth : panel.width;
         const panelHeight = panel.content ? panel.content.nonAnimHeight : panel.height;
+        const panelPos = (panel === panels.popoutsWrapper && panel.activePanel) ? panel.activePanel.position : bar.position;
 
-        if (bar.position === "left")
-            return x < panels.leftMargin + panel.x + panelWidth && withinPanelHeight(panel, x, y);
-        if (bar.position === "right")
-            return x > screen.width - panels.rightMargin - panelWidth && withinPanelHeight(panel, x, y);
-        if (bar.position === "top")
+        if (panelPos === "left")
+            return x < panels.leftMargin + panel.x + panelWidth && (withinPanelHeight(panel, x, y) || abovePopoutItem(panel, y));
+        if (panelPos === "right")
+            return x > screen.width - panels.rightMargin - panelWidth && (withinPanelHeight(panel, x, y) || abovePopoutItem(panel, y));
+        if (panelPos === "top")
             return y < panels.topMargin + panel.y + panelHeight && (withinPanelWidth(panel, x, y) || abovePopoutItem(panel, x));
-        if (bar.position === "bottom")
+        if (panelPos === "bottom")
             return y > screen.height - panels.bottomMargin - panelHeight && (withinPanelWidth(panel, x, y) || abovePopoutItem(panel, x));
         return false;
     }
     // Next to the open sidebar a popout doesn't always cover the bar item that
     // opened it; keep the strip straight above the item so it can be reached.
-    function abovePopoutItem(panel: Item, x: real): bool {
-        return panel === panels.popoutsWrapper && !popouts.isDetached && Math.abs(x - popouts.currentCenter) <= Surface.panelRounding;
+    function abovePopoutItem(panel: Item, coord: real): bool {
+        const threshold = Math.max(Surface.panelRounding, (dockPanel ? dockPanel.itemSize / 2 : 24));
+        return panel === panels.popoutsWrapper && !popouts.isDetached && Math.abs(coord - popouts.currentCenter) <= threshold;
     }
     function inRightPanel(panel: Item, x: real, y: real, edge = 0, span = 100): bool {
         const onLeft = bar.position === "right";
@@ -216,6 +218,10 @@ CustomMouseArea {
 
             if (Config.utilities.showOnHover && !utilitiesShortcutActive)
                 visibilities.utilities = false;
+
+            const isDockPopout = popouts.sourcePanel === "dockPanel" || popouts.isDockPanelPopout;
+            if (isDockPopout && (dockPanel?.hovered || inDockPanelArea(root.mouseX, root.mouseY)))
+                return;
 
             if (!popoutHideTimer.running)
                 popoutHideTimer.start();
@@ -374,12 +380,21 @@ CustomMouseArea {
                 visibilities.dashboard = false;
         }
 
-        if (inBarArea(x, y)) {
-            bar.checkPopout(isBarHorizontal ? x : y);
+        const isDockPopout = popouts.sourcePanel === "dockPanel" || popouts.isDockPanelPopout;
+        const inCallingPanel = isDockPopout ? inDockPanelArea(x, y) : inBarArea(x, y);
+
+        if (inCallingPanel) {
+            if (!isDockPopout) {
+                bar.checkPopout(isBarHorizontal ? x : y);
+            }
             popoutHideTimer.stop();
         } else {
-            bar.resetHover();
-            if ((!TrayRegistry.isTrayPopout(popouts.currentName) || (Config.bar.popouts.tray && ((popouts.current as StackView)?.depth ?? 0) <= 1)) && !inLeftPanel(panels.popoutsWrapper, x, y)) {
+            if (!isDockPopout) {
+                bar.resetHover();
+            }
+            if ((!TrayRegistry.isTrayPopout(popouts.currentName) || (Config.bar.popouts.tray && ((popouts.current as StackView)?.depth ?? 0) <= 1))
+                && !inLeftPanel(panels.popoutsWrapper, x, y)
+                && !(isDockPopout && (dockPanel?.hovered || inDockPanelArea(x, y)))) {
                 if (!popoutHideTimer.running) popoutHideTimer.start();
             } else {
                 popoutHideTimer.stop();
@@ -453,6 +468,9 @@ CustomMouseArea {
         onTriggered: {
             if (popouts.isContextPopout || panels.popoutsWrapper.hovered)
                 return;
+            const isDockPopout = popouts.sourcePanel === "dockPanel" || popouts.isDockPanelPopout;
+            if (isDockPopout && (dockPanel?.hovered || inDockPanelArea(root.mouseX, root.mouseY)))
+                return;
             if (!TrayRegistry.isTrayPopout(popouts.currentName) || ((popouts.current as StackView)?.depth ?? 0) <= 1) {
                 popouts.hasCurrent = false;
                 bar.closeTray();
@@ -511,6 +529,26 @@ CustomMouseArea {
         }
 
         target: root.visibilities
+    }
+    Connections {
+        function onHoveredChanged(): void {
+            if (!root.dockPanel)
+                return;
+            const isDockPopout = popouts.sourcePanel === "dockPanel" || popouts.isDockPanelPopout;
+            if (!isDockPopout)
+                return;
+
+            if (root.dockPanel.hovered) {
+                popoutHideTimer.stop();
+            } else {
+                if (!panels.popoutsWrapper.hovered) {
+                    if (!popoutHideTimer.running)
+                        popoutHideTimer.start();
+                }
+            }
+        }
+
+        target: root.dockPanel
     }
     Config.screen: screen.name
 }
