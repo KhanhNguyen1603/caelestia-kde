@@ -734,11 +734,15 @@ class WhatsNewEntryTests(unittest.TestCase):
         for chunk in chunks:
             identifier = re.match(r'\s*"([^"]*)"', chunk)
             revision = re.search(r'"revision":\s*(\d+)', chunk)
+            version = re.search(r'"version":\s*"([^"]*)"', chunk)
+            date = re.search(r'"date":\s*"([^"]*)"', chunk)
             media = re.search(r'"mediaUrl":\s*"([^"]*)"', chunk)
             parsed.append(
                 {
                     "id": identifier.group(1) if identifier else "",
                     "revision": int(revision.group(1)) if revision else None,
+                    "version": version.group(1) if version else "",
+                    "date": date.group(1) if date else "",
                     "title": bool(re.search(r'"title":\s*qsTr\(', chunk)),
                     "description": bool(re.search(r'"description":\s*qsTr\(', chunk)),
                     "media": media.group(1) if media else "",
@@ -762,6 +766,38 @@ class WhatsNewEntryTests(unittest.TestCase):
 
         self.assertNotIn("", ids, "every entry needs an id")
         self.assertEqual(len(ids), len(set(ids)), f"duplicate ids: {ids}")
+
+    def test_version_and_date_are_present_and_ordered(self) -> None:
+        """The window groups entries by version and prints the release date in its header.
+
+        A missing field drops the entry out of its release heading, and a version that
+        goes backwards splits one release into two blocks halfway down the list, so
+        both are checked here rather than left to the runtime.
+        """
+        entries = self.entries()
+
+        missing = [entry["id"] for entry in entries if not entry["version"] or not entry["date"]]
+        self.assertEqual(missing, [], "entries need a version and a date: " + ", ".join(missing))
+
+        malformed = [entry["id"] for entry in entries if not re.fullmatch(r"\d+\.\d+\.\d+", entry["version"])]
+        self.assertEqual(malformed, [], "versions read like 2.7.0: " + ", ".join(malformed))
+
+        bad_dates = [entry["id"] for entry in entries if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", entry["date"])]
+        self.assertEqual(bad_dates, [], "dates read like 2026-11-08: " + ", ".join(bad_dates))
+
+        releases = [(entry["version"], entry["date"]) for entry in entries]
+
+        def not_before(previous: tuple[str, str], current: tuple[str, str]) -> bool:
+            return tuple(int(part) for part in current[0].split(".")) >= tuple(
+                int(part) for part in previous[0].split(".")
+            ) and current[1] >= previous[1]
+
+        backwards = [
+            f"{previous} -> {current}"
+            for previous, current in zip(releases, releases[1:])
+            if not not_before(previous, current)
+        ]
+        self.assertEqual(backwards, [], "versions and dates must never go backwards down the file")
 
     def test_text_is_extractable(self) -> None:
         bare = [entry["id"] for entry in self.entries() if not (entry["title"] and entry["description"])]
