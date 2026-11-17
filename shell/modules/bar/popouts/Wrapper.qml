@@ -43,7 +43,7 @@ Item {
     property alias staysOpen: popoutState.staysOpen
     property alias dockModel: popoutState.dockModel
     property alias tasksModel: popoutState.tasksModel
-    property real currentCenter
+    property alias currentCenter: popoutState.currentCenter
     // Set by ClipWrapper: whether the current bar item sits under the sidebar,
     // which can be narrower than the bar's right side now that it is resizable.
     property bool underSidebar: true

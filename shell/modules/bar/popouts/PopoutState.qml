@@ -6,6 +6,10 @@ QtObject {
 
     property string currentName
     property bool hasCurrent
+    // Where the open popout is centred along the bar. It lives with the state rather than
+    // on the bar's wrapper because the tray's box hands its icons this object, and an icon
+    // opens its menu through the same path the bar's own icons use.
+    property real currentCenter
     // A popout opened as a place to pick from stays open until it is dismissed, rather
     // than closing the moment the pointer leaves it. It says so here instead of being
     // pinned by name, so any popout opened that way is kept open by the same rule.
