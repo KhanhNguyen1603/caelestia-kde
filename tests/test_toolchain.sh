@@ -10,9 +10,10 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/lib/toolchain.s
 # it; that the real lookup uses /usr/bin is covered by tests/test_tools.sh.
 system_tool() { printf '%s\n' "$1"; }
 
-# The cava release publishes no checksum for its archives, so unpacking one is a decision
-# the user makes through the documented opt-out. These tests make that decision the same
-# way a user would, and the tests that check the refusal do not.
+# The cava release is rebuilt on every commit and publishes no .sha256 beside its archives,
+# so the archive is unpacked against the digest the release API reports for it. These tests
+# make the opt-out decision the same way a user would where that cannot be resolved, and the
+# tests that check the refusal do not.
 with_unverified_allowed() {
     ( export CAELESTIA_ALLOW_UNVERIFIED_DOWNLOAD=1; "$@" )
 }
@@ -284,6 +285,40 @@ test_the_cava_sdk_download_is_refused_without_a_published_checksum() {
     assert_contains "$out" "publishes no checksum" "the missing hash has to be reported"
     assert_contains "$out" "CAELESTIA_ALLOW_UNVERIFIED_DOWNLOAD=1" "and the way to accept it named"
     assert_eq "" "$(calls_to "$log" tar)" "nothing may be unpacked as root"
+}
+
+test_the_cava_sdk_archive_is_checked_against_the_digest_the_release_reports() {
+    local tmp stub log out status digest
+    tmp="$(new_tmpdir)"
+    stub="$tmp/bin"
+    log="$tmp/calls.log"
+    digest="$(printf 'cava sdk\n' | sha256sum | cut -d' ' -f1)"
+
+    stub_bin "$stub" uname "echo x86_64"
+    # The API names the digest for the archive, and the download writes those same bytes to
+    # whatever -o names.
+    stub_bin "$stub" curl "case \"\$*\" in
+    *api.github.com*) printf '%s' '{\"assets\":[{\"name\":\"cava-x86_64-arch.tar.gz\",\"digest\":\"sha256:$digest\"}]}' ;;
+    *) while [[ \$# -gt 0 ]]; do
+           if [[ \"\$1\" == -o ]]; then printf 'cava sdk\n' > \"\$2\"; break; fi
+           shift
+       done ;;
+esac"
+    # jq answers the way the release does: this test is about the digest reaching the check,
+    # not about parsing the fixture above.
+    stub_bin "$stub" jq "cat >/dev/null
+printf '%s\n' 'sha256:$digest'"
+    recording_stub "$stub" tar "$log"
+    add_coreutils "$stub"
+    stub_bin "$stub" caelestia_sudo "printf 'caelestia_sudo %s\\n' \"\$*\" >> '$log'
+\"\$@\""
+
+    out="$(with_path "$stub" "" install_cava_sdk arch 2>&1)"
+    status=$?
+
+    assert_status 0 "$status" "an archive the release publishes a digest for must be unpacked"
+    assert_contains "$out" "matches the release" "the published digest has to be the thing checked"
+    assert_contains "$(calls_to "$log" tar)" "--exclude=bin" "and tar must still be the thing unpacking it"
 }
 
 test_the_cava_sdk_download_unpacks_once_the_user_opts_in() {
