@@ -36,7 +36,7 @@ ColumnLayout {
     }
 
     function hideIndicator(): void {
-        BarWidgets.setEnabled(GlobalConfig.bar, "updateIndicator", false);
+        BarPlacements.setShown("updateIndicator", false);
         root.popouts.hasCurrent = false;
     }
 

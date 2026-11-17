@@ -111,7 +111,9 @@ assert.strictEqual(new Date(restored.since).getTime(), since.getTime());
 }
 
 test_the_widget_opens_the_menu_rather_than_the_settings_card() {
-    assert_file_contains "$WIDGET" 'currentName = "keepawakemenu"' \
+    # A bar icon opens its menu through the one helper every icon uses, so the check is
+    # that it asks for the menu by name rather than that it sets the popout itself.
+    assert_file_contains "$WIDGET" 'openPopout("keepawakemenu")' \
         "the right click has to open the new menu"
     assert_file_contains "$POBOUTS" 'name: "keepawakemenu"' "the menu is a registered popout"
     assert_file_contains "$POBOUTS" 'sourceComponent: KeepAwakeMenu' "and is drawn by the menu itself"

@@ -20,10 +20,16 @@ Item {
     readonly property Popout currentPopout: content.children.find(c => c.shouldBeActive) ?? null
     readonly property Item current: currentPopout?.item ?? null
     readonly property bool currentIsContext: currentPopout?.isContext ?? false
+    // A popout that draws its own surface asks the drawer for nothing behind it: the
+    // plate and the blur a panel would have been given would only show around its edges.
+    readonly property bool currentOwnsSurface: currentPopout?.item?.popoutOwnSurface ?? false
 
-    readonly property real contentMargin: Tokens.padding.large * (currentPopout?.item?.scaleOffset ?? 1.0)
-    readonly property real availableWidth: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.width ?? 0) - contentMargin * 2 - Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0))
-    readonly property real availableHeight: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.height ?? 0) - contentMargin * 2 - Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0))
+    // A popout can ask for a tighter frame than the default: the hidden-icons box is
+    // a grid of glyphs, and needs less room around it than a panel of text does.
+    readonly property real contentMargin: (currentPopout?.item?.popoutMargin ?? Tokens.padding.large) * (currentPopout?.item?.scaleOffset ?? 1.0)
+    readonly property real framePadding: root.contentMargin * 2
+    readonly property real availableWidth: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.width ?? 0) - contentMargin * 2 - root.framePadding)
+    readonly property real availableHeight: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.height ?? 0) - contentMargin * 2 - root.framePadding)
 
     // Built-in popouts are handed the values they need one by one in their own
     // entry. Plugin popouts are plain components, so the values they declare
@@ -42,8 +48,8 @@ Item {
                 popout[name] = context[name];
     }
 
-    implicitWidth: Math.min(((currentPopout?.item?.width || currentPopout?.implicitWidth) ?? 0) + Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0), availableWidth)
-    implicitHeight: Math.min(((currentPopout?.item?.height || currentPopout?.implicitHeight) ?? 0) + Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0), availableHeight)
+    implicitWidth: Math.min(((currentPopout?.item?.width || currentPopout?.implicitWidth) ?? 0) + root.framePadding, availableWidth)
+    implicitHeight: Math.min(((currentPopout?.item?.height || currentPopout?.implicitHeight) ?? 0) + root.framePadding, availableHeight)
 
     Flickable {
         id: viewport
@@ -326,14 +332,19 @@ Item {
         }
 
         Popout {
-            name: "traycontext"
-            isContext: true
-            sourceComponent: BarComponentContext {
+            name: "trayOverflow"
+            previewKey: "tray"
+            sourceComponent: TrayOverflow {
                 popouts: root.popouts
-                label: qsTr("Tray settings")
-                subPage: "barTray"
-                secondLabel: qsTr("Elements & Modules")
-                secondSubPage: "taskbarElements"
+            }
+        }
+
+        Popout {
+            name: "trayicons"
+            previewKey: "tray"
+            isContext: true
+            sourceComponent: TrayIcons {
+                popouts: root.popouts
             }
         }
 

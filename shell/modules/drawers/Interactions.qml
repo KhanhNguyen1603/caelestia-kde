@@ -142,8 +142,11 @@ CustomMouseArea {
         const grabActive = root.focusGrab && (root.focusGrab.active || popouts.isDetached);
         // Any screen's menu can be the one this click dismisses.
         const menuOpen = Visibilities.contextPopoutOpen;
+        // A pinned hidden-icons box is dismissed by clicking away from it, the way a
+        // menu is: the click belongs to the dismiss, not to what is under it.
+        const boxOpen = popouts.staysOpen && popouts.hasCurrent;
 
-        if (grabActive || menuOpen) {
+        if (grabActive || menuOpen || boxOpen) {
             let inside = false;
 
             if (inBarArea(event.x, event.y)) inside = true;
@@ -159,6 +162,8 @@ CustomMouseArea {
                     root.focusGrab.clear();
                 if (menuOpen)
                     Visibilities.closeContextPopouts();
+                if (boxOpen)
+                    popouts.hasCurrent = false;
             }
         }
     }
@@ -382,6 +387,14 @@ CustomMouseArea {
         interval: 150
         onTriggered: {
             if (popouts.isContextPopout || panels.popoutsWrapper.hovered)
+                return;
+            // A box the user opened is theirs to dismiss, not the pointer's.
+            if (popouts.staysOpen)
+                return;
+            // A drag out of the bar opens the box under the pointer, which is
+            // outside every panel until the pointer reaches it: taking the panel
+            // away mid-gesture would leave the drag with nothing to land on.
+            if (TrayDrag.active)
                 return;
             if (!TrayRegistry.isTrayPopout(popouts.currentName) || ((popouts.current as StackView)?.depth ?? 0) <= 1) {
                 popouts.hasCurrent = false;

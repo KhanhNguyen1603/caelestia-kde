@@ -12,6 +12,7 @@ BAR_POPOUTS="$REPO_ROOT/shell/modules/bar/popouts"
 CONFIG="$REPO_ROOT/shell/plugin/src/Caelestia/Config"
 NEXUS_PANELS="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar"
 PRIVACY="$SERVICES/Privacy.qml"
+BAR_WIDGETS="$REPO_ROOT/shell/modules/bar/BarWidgets.qml"
 
 test_microphone_capture_is_what_the_audio_service_reports() {
     assert_file_contains "$SERVICES/Audio.qml" 'readonly property var captureStreams:' \
@@ -42,8 +43,8 @@ test_the_service_reports_facts_and_the_views_present_them() {
     assert_file_not_contains "$PRIVACY" 'entries' \
         "the service must not hand out rows"
 
-    assert_file_contains "$BAR_COMPONENTS/StatusIcons.qml" 'case "privacy":' "the bar has to know the icon id"
-    assert_file_contains "$BAR_COMPONENTS/StatusIcons.qml" 'return Privacy.inUse;' \
+    assert_file_contains "$BAR_COMPONENTS/StatusIcon.qml" 'case "privacy":' "the bar has to know the icon id"
+    assert_file_contains "$BAR_WIDGETS" 'return Privacy.inUse;' \
         "and the icon may only appear while something is capturing"
     assert_file_contains "$BAR_POPOUTS/Privacy.qml" 'QsServices.Privacy.microphoneApps' \
         "the popout builds its rows from the facts"
@@ -52,8 +53,8 @@ test_the_service_reports_facts_and_the_views_present_them() {
 test_the_icon_is_shipped_but_never_resurrected() {
     assert_file_contains "$CONFIG/barconfig.hpp" 'LIST_ENTRY(privacy, true)' \
         "new configs get the icon in the status area"
-    assert_file_contains "$NEXUS_PANELS/BarStatusIcons.qml" 'privacy: qsTr("Privacy")' \
-        "the status icon editor needs a label for it"
+    assert_file_contains "$SERVICES/BarIconMeta.qml" 'privacy: { name: qsTr("Privacy")' \
+        "the status icon's name is written down where the bar and the editor both read it"
     assert_file_not_contains "$SERVICES/ConfigMigrations.qml" 'privacy' \
         "a list the user edited is theirs: re-inserting a removed icon on every start is worse than one click in Nexus"
 }

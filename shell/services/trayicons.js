@@ -43,6 +43,17 @@ function iconNameOf(key) {
     return String(key ?? "").replace(/^(proc|icon):/, "");
 }
 
+// A title read by a person names the app ("Cachy-Update"); a notifier id or a bus name
+// names the plumbing, and the alias the icon name gives is longer than either.
+function readableTitle(title) {
+    const value = String(title ?? "");
+    if (value.length === 0)
+        return "";
+    if (/^\d+-\d+$/.test(value) || value.startsWith("org.kde.StatusNotifierItem"))
+        return "";
+    return value;
+}
+
 // hidden wins over visible: an icon in both lists stays hidden.
 function stateOf(key, hidden, visible) {
     if (hidden.includes(key))
@@ -50,6 +61,20 @@ function stateOf(key, hidden, visible) {
     if (visible.includes(key))
         return "visible";
     return "collapsed";
+}
+
+// Whether a list already says what the next one would: writing it again only costs a
+// config write and a redraw of everything that reads it.
+function sameList(a, b) {
+    const left = a ?? [];
+    const right = b ?? [];
+    if (left.length !== right.length)
+        return false;
+    for (let i = 0; i < left.length; i++) {
+        if (left[i] !== right[i])
+            return false;
+    }
+    return true;
 }
 
 // Rows carry a `key`. Listed keys come first, in the order the list gives them;

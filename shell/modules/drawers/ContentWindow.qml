@@ -17,6 +17,7 @@ import qs.utils
 import qs.modules.background
 import qs.modules.bar
 import qs.modules.overview as Overview
+import qs.modules.bar.components as BarComponents
 import qs.modules.background.desktopicons
 
 StyledWindow {
@@ -511,8 +512,18 @@ StyledWindow {
         PanelBg {
             id: popoutBg
 
+            // The tray's box brings its own surface, so a plate under it is a second
+            // panel saying nothing.
+            readonly property bool ownsSurface: panels.popouts.currentOwnsSurface
             property real extraShift: panels.popouts.isDetached ? 0 : 0.2
             property bool connectedToSidebar: (bar.position === "top" || bar.position === "bottom") && panels.popouts.sidebarOpen && panels.popouts.implicitWidth <= Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) + 1 && !panels.popouts.isDockPopout
+
+            // Hiding the plate is not enough to keep it out of the way: it is merged into
+            // the blob the panels share, and that shape is drawn whatever this item does.
+            readonly property bool shown: panel.visible && !popoutBg.ownsSurface
+
+            visible: popoutBg.shown
+            group: popoutBg.shown ? blobGroup : null
 
             panel: panels.popoutsWrapper
             deformAmount: connectedToSidebar ? 0.03 : (panels.popouts.isDetached ? 0.05 : panels.popouts.hasCurrent ? 0.15 : 0.1)
@@ -969,7 +980,10 @@ StyledWindow {
             deformMatrix: dashBg.deformMatrix
         }
         BlurMask {
-            target: panels.popoutsWrapper
+            // Nothing is blurred behind the box: it is drawn on a surface of its own, and
+            // a blur cut to the plate it does not have covers it only in part, which reads
+            // as the box being split across its middle.
+            target: popoutBg.ownsSurface ? null : panels.popoutsWrapper
             contentItem: root.contentItem
             blurOffsetTop: root.blurOffsetTop - (popoutBg.connectedToSidebar ? Tokens.spacing.extraLarge + 10 + Tokens.rounding.extraLarge : 0)
             blurOffsetBottom: root.blurOffsetBottom
@@ -1037,6 +1051,10 @@ StyledWindow {
             offsetScale: panels.floatingOsd.offsetScale
         }
     }
+
+    // Drawn last so the drag ghost passes over the bar and the box it is heading for
+    // instead of disappearing underneath them.
+    BarComponents.TrayDragGhost {}
 
     component PanelBg: BlobRect {
         required property Item panel

@@ -41,14 +41,14 @@ PageBase {
             Layout.fillWidth: true
             first: true
             text: qsTr("Enable component")
-            checked: BarWidgets.isEnabled(Config.bar, "dock")
+            checked: BarPlacements.placementOf("dock") !== "off"
             // Custom reset: enabled state lives in bar.entries, default is true
             reset: ({
-                customGet: () => BarWidgets.isEnabled(GlobalConfig.bar, "dock"),
+                customGet: () => BarPlacements.placementOf("dock") !== "off",
                 customDef: true,
-                customSet: v => BarWidgets.setEnabled(GlobalConfig.bar, "dock", v)
+                customSet: v => BarPlacements.setShown("dock", v)
             })
-            onToggled: BarWidgets.setEnabled(GlobalConfig.bar, "dock", checked)
+            onToggled: BarPlacements.setShown("dock", checked)
         }
 
         StepperRow {
