@@ -55,7 +55,7 @@ CustomMouseArea {
         }
 
         const thickness = Math.max(Config.border.thickness, Config.dockPanel.dragThreshold, 20);
-        const reach = (dockPanel.visible || dockPanel.pointerInReach) ? (dockPanel.contentWidth + thickness) : thickness;
+        const reach = (dockPanel.visible || dockPanel.pointerInReach) ? (dockPanel.contentThickness + thickness) : thickness;
 
         if (dockPanel.position === "bottom") {
             const barOffset = bar.position === "bottom" ? bar.implicitHeight : 0;

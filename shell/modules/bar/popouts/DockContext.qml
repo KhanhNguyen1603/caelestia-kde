@@ -19,9 +19,9 @@ ColumnLayout {
     property bool isPinned: {
         if (!model)
             return false;
-        const current = GlobalConfig.bar.dock.pinnedApps || [];
+        const current = DockManager.effectivePinnedApps || [];
         for (let i = 0; i < current.length; i++) {
-            if (model.id === current[i] || (model.entry && model.entry.id === current[i])) {
+            if (model.id === current[i] || (model.entry && model.entry.id === current[i]) || Strings.testRegex(current[i], model.id) || (model.entry && Strings.testRegex(current[i], model.entry.id))) {
                 return true;
             }
         }

@@ -396,7 +396,13 @@ Singleton {
 
     function unpinApp(id: string): void {
         const targetNode = root.useDockPanel ? GlobalConfig.dockPanel : GlobalConfig.bar.dock;
-        const current = (targetNode.pinnedApps || []).filter(item => item !== id);
+        const current = (targetNode.pinnedApps || []).filter(item => {
+            if (item === id) return false;
+            if (Strings.testRegex(item, id)) return false;
+            if (id.endsWith(".desktop") && Strings.testRegex(item, id.replace(".desktop", ""))) return false;
+            if (item.endsWith(".desktop") && Strings.testRegex(id, item.replace(".desktop", ""))) return false;
+            return true;
+        });
         targetNode.pinnedApps = current;
     }
 

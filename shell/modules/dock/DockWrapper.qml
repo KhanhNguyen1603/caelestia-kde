@@ -4,11 +4,13 @@ import QtQuick
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Widgets
 import Caelestia
 import Caelestia.Config
 import Caelestia.Services
 import qs.components
 import qs.components.controls
+import qs.components.effects
 import qs.components.widgets
 import qs.services
 import qs.utils
@@ -257,18 +259,85 @@ Item {
 
                         anchors.fill: parent
                         radius: Tokens.rounding.medium
-                        acceptedButtons: Qt.LeftButton
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-                        onClicked: {
+                        onClicked: mouse => {
+                            if (mouse.button === Qt.RightButton) {
+                                if (!root.popouts)
+                                    return;
+                                if (root.popouts.hasCurrent && root.popouts.currentName === "osiconcontext") {
+                                    root.popouts.hasCurrent = false;
+                                } else {
+                                    root.popouts.currentName = "osiconcontext";
+                                    root.popouts.currentCenter = root.isHorizontal
+                                        ? launcherButton.mapToItem(null, launcherButton.width / 2, 0).x
+                                        : (launcherButton.mapToItem(null, 0, launcherButton.height / 2).y ?? 0);
+                                    root.popouts.hasCurrent = true;
+                                }
+                                return;
+                            }
                             Visibilities.toggleLauncher("");
                         }
                     }
 
-                    MaterialIcon {
+                    Loader {
                         anchors.centerIn: parent
-                        text: "apps"
-                        fontStyle.pointSize: Math.round(root.iconSize * 0.6)
-                        color: Colours.palette.m3onSurface
+                        sourceComponent: {
+                            if (SysInfo.isDefaultLogo) {
+                                return caelestiaLogo;
+                            } else if (GlobalConfig.general.logo && GlobalConfig.general.logo !== "caelestia") {
+                                return customIcon;
+                            } else {
+                                return distroIcon;
+                            }
+                        }
+                    }
+
+                    Component {
+                        id: caelestiaLogo
+
+                        Logo {
+                            width: root.iconSize
+                            height: root.iconSize
+                        }
+                    }
+
+                    Component {
+                        id: distroIcon
+
+                        ColouredIcon {
+                            source: SysInfo.osLogo
+                            implicitSize: root.iconSize
+                            colour: Colours.palette.m3tertiary
+                        }
+                    }
+
+                    Component {
+                        id: customIcon
+
+                        Loader {
+                            sourceComponent: SysInfo.recolourCustomLogo ? colouredIconComponent : iconImageComponent
+                        }
+                    }
+
+                    Component {
+                        id: colouredIconComponent
+
+                        ColouredIcon {
+                            source: SysInfo.osLogo
+                            implicitSize: Math.round(root.iconSize * (SysInfo.customLogoSize / 100))
+                            colour: Colours.palette.m3tertiary
+                        }
+                    }
+
+                    Component {
+                        id: iconImageComponent
+
+                        IconImage {
+                            source: SysInfo.osLogo
+                            implicitWidth: Math.round(root.iconSize * (SysInfo.customLogoSize / 100))
+                            implicitHeight: Math.round(root.iconSize * (SysInfo.customLogoSize / 100))
+                        }
                     }
                 }
 
