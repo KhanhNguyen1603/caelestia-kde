@@ -17,20 +17,22 @@ ColumnLayout {
     property string view: "wireless"
     property var passwordNetwork: null
     property bool showPasswordDialog: false
+    // The connected row carries its own details, so whether they are open is the popout's
+    // state rather than the row's: the row is rebuilt whenever the scan reorders the list.
+    property bool detailsOpen: false
     property bool _isSidebarOpen: false
 
     readonly property var activeDeviceDetails: root.view === "wireless" ? Nmcli.wirelessDeviceDetails : Nmcli.ethernetDeviceDetails
     readonly property var activeDetails: {
         const d = root.activeDeviceDetails;
         if (!d || typeof d !== "object" || Object.keys(d).length === 0)
-            return { visible: false, address: "", rows: [] };
+            return { visible: false, rows: [] };
 
         const dnsList = Array.isArray(d.dns) ? d.dns : [];
         return {
             visible: true,
-            // The address heads the section, so it is not repeated as a row underneath.
-            address: d.ipAddress ?? "",
             rows: [
+                { label: qsTr("IP address"), value: d.ipAddress ?? "" },
                 { label: qsTr("Subnet mask"), value: d.subnet ?? "" },
                 { label: qsTr("Gateway"), value: d.gateway ?? "" },
                 { label: qsTr("DNS"), value: dnsList.join(", ") },
@@ -147,60 +149,136 @@ ColumnLayout {
             required property Nmcli.AccessPoint modelData
             readonly property bool isConnecting: Nmcli.connectingSsid === modelData?.ssid
             readonly property bool loading: networkItem.isConnecting
+            readonly property bool active: networkItem.modelData?.active ?? false
+            // The details hang off the row they describe, and only the network in use has any.
+            readonly property bool disclosable: networkItem.active && root.activeDetails.visible
+            readonly property bool disclosed: networkItem.disclosable && root.detailsOpen
 
             width: ListView.view.width
-            implicitHeight: networkRow.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
+            implicitHeight: networkColumn.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
             radius: Tokens.rounding.small * root.scaleOffset
-            color: networkItem.modelData?.active ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+            color: networkItem.active ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
 
-            RowLayout {
-                id: networkRow
+            ColumnLayout {
+                id: networkColumn
 
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: Tokens.padding.medium * root.scaleOffset
-                anchors.rightMargin: Tokens.padding.medium * root.scaleOffset
-                spacing: Tokens.spacing.small * root.scaleOffset
+                anchors.fill: parent
+                anchors.margins: Tokens.padding.small * root.scaleOffset
+                spacing: Tokens.spacing.extraSmall * root.scaleOffset
 
-                MaterialIcon {
-                    text: Icons.getNetworkIcon(networkItem.modelData?.strength ?? 0)
-                    color: networkItem.modelData?.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
-                }
+                RowLayout {
+                    id: networkRow
 
-                MaterialIcon {
-                    visible: networkItem.modelData?.isSecure ?? false
-                    text: "lock"
-                    color: Colours.palette.m3onSurfaceVariant
-                    fontStyle.pointSize: Tokens.font.icon.small.pointSize * root.fontScale
-                }
-
-                StyledText {
                     Layout.fillWidth: true
-                    Layout.preferredWidth: 0
-                    elide: Text.ElideRight
-                    text: networkItem.modelData?.ssid ?? ""
-                    color: networkItem.modelData?.active ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
-                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
-                }
+                    spacing: Tokens.spacing.small * root.scaleOffset
 
-                Item {
-                    Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
-                    Layout.preferredHeight: width
-
-                    CircularIndicator {
-                        anchors.fill: parent
-                        running: networkItem.loading
+                    MaterialIcon {
+                        text: Icons.getNetworkIcon(networkItem.modelData?.strength ?? 0)
+                        color: networkItem.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
                     }
 
                     MaterialIcon {
-                        anchors.centerIn: parent
-                        text: networkItem.modelData?.active ? "check_circle" : "radio_button_unchecked"
-                        color: networkItem.modelData?.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
-                        opacity: networkItem.loading ? 0 : 1
+                        visible: networkItem.modelData?.isSecure ?? false
+                        text: "lock"
+                        color: Colours.palette.m3onSurfaceVariant
+                        fontStyle.pointSize: Tokens.font.icon.small.pointSize * root.fontScale
                     }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 0
+                        elide: Text.ElideRight
+                        text: networkItem.modelData?.ssid ?? ""
+                        color: networkItem.active ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+                    }
+
+                    Item {
+                        Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
+                        Layout.preferredHeight: width
+
+                        CircularIndicator {
+                            anchors.fill: parent
+                            running: networkItem.loading
+                        }
+
+                        // The connected row trades its tick for a chevron: it is the only row
+                        // with anything to disclose, and the disclosure replaces the section
+                        // this popout used to spend a row on.
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: networkItem.disclosable ? "expand_more" : "radio_button_unchecked"
+                            rotation: networkItem.disclosed ? 180 : 0
+                            color: networkItem.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                            fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+                            opacity: networkItem.loading ? 0 : 1
+
+                            Behavior on rotation {
+                                Anim {
+                                    type: Anim.StandardSmall
+                                }
+                            }
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    visible: networkItem.disclosed
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Math.round((Tokens.font.icon.medium.pointSize + Tokens.spacing.small) * root.scaleOffset)
+                    Layout.bottomMargin: Tokens.padding.extraSmall * root.scaleOffset
+                    spacing: Tokens.spacing.extraSmall * root.scaleOffset
+
+                    Repeater {
+                        model: networkItem.disclosed ? root.activeDetails.rows : []
+
+                        RowLayout {
+                            required property var modelData
+
+                            visible: (modelData?.value ?? "") !== ""
+
+                            Layout.fillWidth: true
+                            spacing: Tokens.spacing.small * root.scaleOffset
+
+                            StyledText {
+                                text: modelData?.label ?? ""
+                                color: Colours.palette.m3onSurfaceVariant
+                                font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                horizontalAlignment: Text.AlignRight
+                                text: modelData?.value ?? ""
+                                color: Colours.palette.m3onSurfaceVariant
+                                elide: Text.ElideRight
+                                font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Above the row's own press area, so tapping the chevron discloses the details
+            // instead of disconnecting the network it describes.
+            Item {
+                id: detailsToggle
+
+                visible: networkItem.disclosable
+                anchors.right: parent.right
+                anchors.rightMargin: Tokens.padding.small * root.scaleOffset
+                anchors.verticalCenter: networkRow.verticalCenter
+                width: Math.round(Tokens.font.icon.medium.pointSize * 2 * root.scaleOffset)
+                height: Math.max(networkRow.implicitHeight, width)
+                z: 1
+
+                StateLayer {
+                    anchors.fill: parent
+                    radius: Tokens.rounding.full
+                    showHoverBackground: false
+                    disabled: networkItem.loading
+                    onClicked: root.detailsOpen = !root.detailsOpen
                 }
             }
 
@@ -516,46 +594,6 @@ ColumnLayout {
                     } else if (ethernetItem.modelData) {
                         Nmcli.connectEthernet(ethernetItem.modelData.connection || "", ethernetItem.modelData.iface || "", () => {});
                     }
-                }
-            }
-        }
-    }
-
-    PopoutSection {
-        visible: root.activeDetails.visible
-        Layout.fillWidth: true
-        Layout.topMargin: visible ? Tokens.padding.medium * root.scaleOffset : 0
-        scaleOffset: root.scaleOffset
-        fontScale: root.fontScale
-        title: qsTr("Connection details")
-        // The address is the part anyone opens this for, so it is on the shut header.
-        summary: root.activeDetails.address
-        expanded: false
-
-        Repeater {
-            model: root.activeDetails.rows
-
-            RowLayout {
-                required property var modelData
-
-                visible: (modelData?.value ?? "") !== ""
-
-                Layout.fillWidth: true
-                Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
-                spacing: Tokens.spacing.small * root.scaleOffset
-
-                StyledText {
-                    text: modelData?.label ?? ""
-                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignRight
-                    text: modelData?.value ?? ""
-                    color: Colours.palette.m3onSurfaceVariant
-                    elide: Text.ElideRight
-                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
                 }
             }
         }
