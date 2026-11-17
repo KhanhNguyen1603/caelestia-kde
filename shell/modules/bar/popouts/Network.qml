@@ -23,13 +23,14 @@ ColumnLayout {
     readonly property var activeDetails: {
         const d = root.activeDeviceDetails;
         if (!d || typeof d !== "object" || Object.keys(d).length === 0)
-            return { visible: false, rows: [] };
+            return { visible: false, address: "", rows: [] };
 
         const dnsList = Array.isArray(d.dns) ? d.dns : [];
         return {
             visible: true,
+            // The address heads the section, so it is not repeated as a row underneath.
+            address: d.ipAddress ?? "",
             rows: [
-                { label: qsTr("IP address"), value: d.ipAddress ?? "" },
                 { label: qsTr("Subnet mask"), value: d.subnet ?? "" },
                 { label: qsTr("Gateway"), value: d.gateway ?? "" },
                 { label: qsTr("DNS"), value: dnsList.join(", ") },
@@ -40,6 +41,18 @@ ColumnLayout {
 
     property real scaleOffset: 1.0
     property real fontScale: 1.0
+
+    // Both device lists cap at the same four and a half rows. A popout that grew with every
+    // visible access point pushed the rescan button and the sections below it off the panel;
+    // the half row is what says there is more, and the list scrolls to reach it. The row
+    // height is measured from the list rather than assumed, so it holds at any font scale.
+    function listHeight(list: var): real {
+        if (list.count <= 1)
+            return list.contentHeight;
+
+        const rowHeight = (list.contentHeight - list.spacing * (list.count - 1)) / list.count;
+        return Math.min(list.contentHeight, rowHeight * 4.5 + list.spacing * 4);
+    }
 
     spacing: Tokens.spacing.medium * scaleOffset
     // With the sidebar open, match its width so the popout joins it (like the
@@ -58,6 +71,22 @@ ColumnLayout {
             text: qsTr("Network")
             font.weight: 500
             font.pointSize: Tokens.font.title.small.pointSize * root.fontScale
+        }
+
+        // The count belongs beside the title it counts, not on a row of its own: it is the
+        // only thing that row carried, and a popout is short on rows.
+        StyledText {
+            visible: root.view === "wireless"
+            text: qsTr("%1 networks").arg(Nmcli.networks.length)
+            color: Colours.palette.m3onSurfaceVariant
+            font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+        }
+
+        StyledText {
+            visible: root.view === "ethernet"
+            text: qsTr("%1 devices").arg(Nmcli.ethernetDevices.length)
+            color: Colours.palette.m3onSurfaceVariant
+            font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
         }
 
         IconButton {
@@ -87,32 +116,11 @@ ColumnLayout {
             y: Tokens.padding.medium * root.scaleOffset
             spacing: Tokens.spacing.small * root.scaleOffset
 
-    StyledText {
-        visible: root.view === "wireless"
-
-        Layout.topMargin: visible ? Tokens.padding.medium * root.scaleOffset : 0
-        Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
-        text: qsTr("Wireless")
-        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
-    }
-
-    StyledText {
-        visible: root.view === "wireless"
-
-        Layout.topMargin: visible ? Tokens.spacing.small * root.scaleOffset : 0
-        Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
-        text: qsTr("%1 networks available").arg(Nmcli.networks.length) // qmllint disable missing-property
-        color: Colours.palette.m3onSurfaceVariant
-        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
-    }
-
-    // The list is capped at four and a half rows. A popout that grew with every visible access
-    // point pushed the rescan button and the VPN section off the panel; the half row is what
-    // says there is more below, and the list scrolls to reach it.
+    // The list is capped at four and a half rows: a popout that grew with every visible access
+    // point pushed the rescan button and the sections below it off the panel. The half row is
+    // what says there is more below, and the list scrolls to reach it.
     ListView {
         id: networkList
-
-        readonly property real rowHeight: count > 1 ? (contentHeight - spacing * (count - 1)) / count : contentHeight
 
         visible: root.view === "wireless"
         Layout.fillWidth: true
@@ -120,7 +128,7 @@ ColumnLayout {
         interactive: contentHeight > height
         boundsBehavior: Flickable.StopAtBounds
         spacing: Tokens.spacing.extraSmall * root.scaleOffset
-        implicitHeight: count > 1 ? Math.min(contentHeight, rowHeight * 4.5 + spacing * 4) : contentHeight
+        implicitHeight: root.listHeight(networkList)
         model: ScriptModel {
             values: [...Nmcli.networks].sort((a, b) => {
                 if (a.active !== b.active)
@@ -286,15 +294,8 @@ ColumnLayout {
         scaleOffset: root.scaleOffset
         fontScale: root.fontScale
         title: qsTr("VPN")
+        summary: qsTr("%1 profiles").arg(Nmcli.vpnConnections.length)
         expanded: false
-
-        StyledText {
-            Layout.topMargin: Tokens.spacing.extraSmall * root.scaleOffset
-            Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
-            text: qsTr("%1 profiles available").arg(Nmcli.vpnConnections.length)
-            color: Colours.palette.m3onSurfaceVariant
-            font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
-        }
 
         ListView {
             id: vpnList
@@ -427,45 +428,36 @@ ColumnLayout {
         }
     }
 
-    StyledText {
+    ListView {
+        id: ethernetList
+
         visible: root.view === "ethernet"
-
-        Layout.topMargin: visible ? Tokens.padding.medium * root.scaleOffset : 0
-        Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
-        text: qsTr("Ethernet")
-        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
-    }
-
-    StyledText {
-        visible: root.view === "ethernet"
-
-        Layout.topMargin: visible ? Tokens.spacing.small * root.scaleOffset : 0
-        Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
-        text: qsTr("%1 devices available").arg(Nmcli.ethernetDevices.length)
-        color: Colours.palette.m3onSurfaceVariant
-        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
-    }
-
-    Repeater {
-        visible: root.view === "ethernet"
+        Layout.fillWidth: true
+        clip: true
+        interactive: contentHeight > height
+        boundsBehavior: Flickable.StopAtBounds
+        spacing: Tokens.spacing.extraSmall * root.scaleOffset
+        implicitHeight: root.listHeight(ethernetList)
         model: ScriptModel {
             values: [...Nmcli.ethernetDevices].sort((a, b) => {
                 if (a.connected !== b.connected)
                     return b.connected - a.connected;
                 return (a.iface || "").localeCompare(b.iface || "");
-            }).slice(0, 8)
+            })
         }
 
-        StyledRect {
+        StyledScrollBar.vertical: StyledScrollBar {
+            flickable: ethernetList
+        }
+
+        delegate: StyledRect {
             id: ethernetItem
 
             required property Nmcli.EthernetDevice modelData
             readonly property bool loading: false
 
-            Layout.fillWidth: true
-            Layout.preferredWidth: 0
+            width: ListView.view.width
             implicitHeight: ethernetRow.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
-            visible: root.view === "ethernet"
             radius: Tokens.rounding.small * root.scaleOffset
             color: ethernetItem.modelData?.connected ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
 
@@ -536,6 +528,8 @@ ColumnLayout {
         scaleOffset: root.scaleOffset
         fontScale: root.fontScale
         title: qsTr("Connection details")
+        // The address is the part anyone opens this for, so it is on the shut header.
+        summary: root.activeDetails.address
         expanded: false
 
         Repeater {

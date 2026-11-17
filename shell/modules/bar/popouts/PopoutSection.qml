@@ -10,6 +10,10 @@ ColumnLayout {
     id: root
 
     required property string title
+    // The one fact worth having while the section is shut: an address, a profile count. It
+    // sits beside the title so a collapsed section still answers the question it was opened
+    // for, and the section does not have to be expanded to read it.
+    property string summary: ""
     property bool expanded: false
     property real scaleOffset: 1.0
     property real fontScale: 1.0
@@ -39,6 +43,16 @@ ColumnLayout {
                 text: root.title
                 font.weight: Font.Medium
                 font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+            }
+
+            StyledText {
+                visible: root.summary !== ""
+                Layout.maximumWidth: titleRow.width * 0.55
+                text: root.summary
+                color: Colours.palette.m3onSurfaceVariant
+                elide: Text.ElideRight
+                horizontalAlignment: Text.AlignRight
+                font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
             }
 
             MaterialIcon {
