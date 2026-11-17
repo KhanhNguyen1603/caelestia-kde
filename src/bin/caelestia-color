@@ -1107,14 +1107,16 @@ render_image() {
     if [[ "$variant_smart" == "true" ]]; then
         if measured="$(smart_variant "$wallpaper")"; then
             variant="$measured"
-            type="$(variant_type "$variant")"
         else
-            warn "cannot measure the wallpaper's colourfulness; matugen picks the variant"
-            type='scheme-smart'
+            # The wallpaper could not be measured, so there is no choice to make: the variant
+            # the caller asked for stands. Handing the choice to matugen instead returns a
+            # palette in a variant it does not name, which scheme.json then records as the one
+            # the caller asked for - and that unnamed palette comes back far more saturated
+            # than its label promises, which is what puts an unthemed accent on screen.
+            warn "cannot measure the wallpaper's colourfulness; keeping $variant"
         fi
-    else
-        type="$(variant_type "$variant")" || die "unknown variant: $variant"
     fi
+    type="$(variant_type "$variant")" || die "unknown variant: $variant"
 
     if [[ "$mode_smart" == "true" ]]; then
         mode_arg='smart'
