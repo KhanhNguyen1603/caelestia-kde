@@ -475,9 +475,12 @@ Item {
             }
         }
 
+        // One menu per running icon, wherever the bar drew it: an icon in the overflow
+        // box asks for its menu by name too, and a name nothing answers leaves the box
+        // closed with nothing in its place.
         Repeater {
             model: ScriptModel {
-                values: QsServices.TrayRegistry.trayItems.filter(item => item.hasMenu)
+                values: QsServices.TrayRegistry.liveItems.filter(item => item.hasMenu)
             }
 
             Popout {
