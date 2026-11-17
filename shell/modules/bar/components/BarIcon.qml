@@ -32,6 +32,9 @@ Item {
     // The release that ends a drag lands on the icon the drag started from, which Qt
     // reports as a click. It is not one: it is the end of the gesture.
     property bool suppressClick: false
+    // An icon the tray's box draws lives in a popout, so the open popout is its own
+    // container and not a reason to keep its name back.
+    property bool insidePopout: false
 
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
     // The bar thins itself with a curve rather than in step with the number, and the icons
@@ -44,7 +47,7 @@ Item {
     // slot it asks for, and the slot grows with it.
     readonly property real iconScale: 1.2 * root.barScale
     readonly property bool dragging: dragGesture.active
-    readonly property bool hovered: area.containsMouse && !(root.popouts?.hasCurrent ?? false)
+    readonly property bool hovered: area.containsMouse && (root.insidePopout || !(root.popouts?.hasCurrent ?? false))
     readonly property Item glyph: glyphLoader.item
 
     // A left click does what the widget does; a right click asks for its menu, and a
@@ -130,7 +133,7 @@ Item {
 
     Loader {
         asynchronous: true
-        active: root.tooltip.length > 0
+        active: root.tooltip.length > 0 && !root.insidePopout
         z: 10000
         width: 0
         height: 0
