@@ -77,6 +77,13 @@ Item {
         return Math.max(0, bottom - lowestPanelEdge);
     }
 
+    /// The column the sidebar and the utilities drawer share down one side of the window,
+    /// as wide as the part of it that is showing. A panel that centres itself has to keep
+    /// out of it: with both open, a centred dashboard had its right side under the cards.
+    readonly property real sideColumnWidth: Math.max(sidebar.visible ? sidebar.width * (1 - sidebar.offsetScale) : 0, utilities.visible ? utilities.width * (1 - utilities.offsetScale) : 0)
+    /// The column follows the bar: a bar on the right is where the column is not.
+    readonly property bool sideColumnOnLeft: sidebar.hAnchor === "left"
+
     /// Whether this window has to take the keyboard: a panel that owns text fields is
     /// open. The OSD is deliberately absent, because it only ever shows things, and so is
     /// the notification stack. Panels say it here, where they are built, so the next panel
@@ -294,7 +301,18 @@ Item {
 
         screenState: root.screenState
         visibilities: root.visibilities
-        anchors.horizontalCenter: parent.horizontalCenter
+        // Centred on the room the side column leaves, not on the whole window: the sidebar
+        // and the utilities drawer are open in a column of their own, and a dashboard
+        // centred across them has its right edge under their cards. The anchor is written
+        // out because the centre moves with that column while it slides in.
+        x: {
+            const centred = Math.max(0, (parent.width - width) / 2);
+            const column = root.sideColumnWidth;
+            if (column <= 0)
+                return centred;
+            const gap = Tokens.spacing.extraLarge;
+            return root.sideColumnOnLeft ? Math.max(centred, column + gap) : Math.min(centred, parent.width - column - width - gap);
+        }
         anchors.top: parent.top
     }
     BarPopouts.ClipWrapper {
