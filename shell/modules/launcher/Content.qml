@@ -252,7 +252,7 @@ Item {
         // own padding and each button insets its content by the medium padding.
         anchors.leftMargin: root.padding * 2 + Tokens.padding.medium
         anchors.verticalCenter: headerActions.verticalCenter
-        text: qsTr("Hola, %1").arg(root.userName)
+        text: qsTr("Hello, %1").arg(root.userName)
         font: Tokens.font.title.builders.medium.weight(Font.DemiBold).build()
         color: Colours.palette.m3onSurfaceVariant
     }
