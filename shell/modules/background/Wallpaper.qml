@@ -133,7 +133,7 @@ Item {
                             id: selectWallText
 
                             anchors.centerIn: parent
-                            text: qsTr("Set it now!")
+                            text: qsTr("Set wallpaper")
                             color: Colours.palette.m3onPrimary
                             font: Tokens.font.body.large
                         }
@@ -283,32 +283,44 @@ Item {
                 path: img.imagePath
                 visible: !img.isVideoImage && img.imagePath !== ""
                 asynchronous: true
+                // Caching every GIF frame can consume gigabytes at wallpaper sizes.
+                cache: !/\.gif(?:[?#]|$)/i.test(img.imagePath)
                 fillMode: Config.background.wallpaperFillMode
-                source: img.imagePath || ""
+                source: wallpaperImage.width > 0 && wallpaperImage.height > 0 ? (img.imagePath || "") : ""
                 playing: true
                 sourceSize: {
+                    // An unset size preserves GIF aspect ratio and avoids starting QMovie at 0x0.
+                    if (/\.gif(?:[?#]|$)/i.test(img.imagePath))
+                        return Qt.size(-1, -1);
                     if (img.isVideoImage || img.imagePath === "" || img.tiled)
                         return Qt.size(0, 0);
                     const dpr = wallpaperImage.Screen.devicePixelRatio || 1;
                     const edge = Math.ceil(Math.max(wallpaperImage.width, wallpaperImage.height) * dpr * 1.5);
-                    return edge > 0 ? Qt.size(edge, 0) : Qt.size(0, 0);
+                    return edge > 0 ? Qt.size(edge, 0) : Qt.size(-1, -1);
                 }
                 onStatusChanged: {
                     if (status === Image.Ready && !img.isVideoImage)
                         root.current = img;
                 }
             }
-            CachingVideo {
+            // Only for a video: any multimedia object loads Qt's FFmpeg backend, whose hardware
+            // probe opens CUDA and keeps a hybrid laptop's NVIDIA GPU awake.
+            Loader {
                 id: wallpaperVideo
 
+                readonly property bool playing: (item as CachingVideo)?.playing ?? false
+
                 anchors.fill: parent
-                path: img.videoPath
-                screen: root.screen
-                visible: img.isVideoImage && img.videoPath !== ""
-                fillMode: Config.background.wallpaperFillMode
-                onPlayingChanged: {
-                    if (playing && img.isVideoImage)
-                        root.current = img;
+                active: img.isVideoImage && img.videoPath !== ""
+
+                sourceComponent: CachingVideo {
+                    path: img.videoPath
+                    screen: root.screen
+                    fillMode: Config.background.wallpaperFillMode
+                    onPlayingChanged: {
+                        if (playing && img.isVideoImage)
+                            root.current = img;
+                    }
                 }
             }
         }

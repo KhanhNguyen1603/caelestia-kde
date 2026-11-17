@@ -18,7 +18,7 @@ StyledRect {
     implicitWidth: Tokens.sizes.bar.innerWidth
     implicitHeight: Tokens.sizes.bar.innerWidth
 
-    color: (root.popouts.hasCurrent && (root.popouts.currentName === "screencapture" || root.popouts.currentName === "rearrangecontext"))
+    color: (root.popouts.hasCurrent && (root.popouts.currentName === "screencapture" || root.popouts.currentName === "screencapturecontext"))
         ? Colours.palette.m3secondaryContainer
         : (clickArea.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
     radius: Tokens.rounding.full
@@ -32,7 +32,7 @@ StyledRect {
     MaterialIcon {
         anchors.centerIn: parent
         text: Recorder.running ? "screen_record" : "photo_camera"
-        color: (root.popouts.hasCurrent && (root.popouts.currentName === "screencapture" || root.popouts.currentName === "rearrangecontext"))
+        color: (root.popouts.hasCurrent && (root.popouts.currentName === "screencapture" || root.popouts.currentName === "screencapturecontext"))
             ? Colours.palette.m3onSecondaryContainer
             : Colours.palette.m3primary
         fontStyle: Tokens.font.icon.builders.medium.weight(Font.Medium).build()
@@ -61,31 +61,16 @@ StyledRect {
                     root.popouts.hasCurrent = true;
                 }
             } else if (mouse.button === Qt.RightButton) {
-                if (root.popouts.hasCurrent && root.popouts.currentName === "rearrangecontext") {
+                if (root.popouts.hasCurrent && root.popouts.currentName === "screencapturecontext") {
                     root.popouts.currentName = "";
                     root.popouts.hasCurrent = false;
                 } else {
-                    root.popouts.currentName = "rearrangecontext";
+                    root.popouts.currentName = "screencapturecontext";
                     root.popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
                     root.popouts.hasCurrent = true;
                 }
             }
             mouse.accepted = true;
-        }
-
-        onEntered: {
-            if (Config.bar.showOnHover && !root.popouts.hasCurrent) {
-                root.popouts.currentName = "screencapture";
-                root.popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
-                root.popouts.hasCurrent = true;
-            }
-        }
-
-        onExited: {
-            if (Config.bar.showOnHover && root.popouts.currentName === "screencapture" && !root.popouts.hasCurrent) {
-                root.popouts.currentName = "";
-                root.popouts.hasCurrent = false;
-            }
         }
     }
 }

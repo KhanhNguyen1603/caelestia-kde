@@ -6,6 +6,7 @@ import Caelestia.Config
 import qs.components
 import qs.components.controls
 import qs.services
+import qs.utils
 
 StyledRect {
     id: root
@@ -161,12 +162,12 @@ StyledRect {
 
             Layout.fillWidth: true
             textFormat: Text.StyledText
-            text: root.modelData?.bodyStyled || qsTr("No body here! :/")
+            text: root.modelData?.bodyStyled || qsTr("No message text")
             color: root.modelData?.urgency === "critical" ? Colours.palette.m3secondary : Colours.palette.m3outline
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
 
             onLinkActivated: link => {
-                Qt.openUrlExternally(link);
+                Launch.openUrl(link);
                 if (!Visibilities.sidebarPinned)
                     root.visibilities.sidebar = false;
             }

@@ -47,10 +47,22 @@ test_the_two_panels_are_kept_out_of_one_blob_once() {
     local window
     window="$(cat "$WINDOW")"
 
-    assert_contains "$window" 'exclude: [utilsBg]' \
-        "a notification background must not bridge into the drawer's behind it"
+    assert_contains "$window" 'exclude: [utilsBg, popoutBg]' \
+        "a notification background must not bridge into the drawer's behind it, or a popout over it"
     assert_not_contains "$window" 'notifsBg]' \
         "exclusion is symmetric, so one side saying it is enough"
+}
+
+test_a_centred_panel_keeps_out_of_the_side_column() {
+    local panels
+    panels="$(cat "$PANELS")"
+
+    assert_contains "$panels" 'readonly property real sideColumnWidth:' \
+        "the sidebar and the utilities drawer share one column, so its width is measured once"
+    assert_contains "$panels" 'sidebar.width * (1 - sidebar.offsetScale)' \
+        "and the column is only as wide as the part of it that is showing"
+    assert_contains "$panels" 'Math.min(centred, parent.width - column - width - gap)' \
+        "the dashboard is centred on the room the column leaves, or its right edge ends up under the cards"
 }
 
 run_tests

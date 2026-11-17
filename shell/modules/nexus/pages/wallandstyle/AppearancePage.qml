@@ -76,7 +76,7 @@ PageBase {
             text: qsTr("Restart Shell")
             icon: "restart_alt"
             type: TextButton.Filled
-            onClicked: Launch.exec(["bash", "-c", `bash "${Quickshell.shellPath("scripts/restart_shell.sh")}"; sleep 1; caelestia shell nexus openPage ${PageDictionary.pageIdxFor("appearance")} 8`])
+            onClicked: Launch.exec(["bash", "-c", `bash "${Quickshell.shellPath("scripts/restart_shell.sh")}"; sleep 1; caelestia shell nexus openPage appearance appearance`])
         },
         IconTextButton {
             id: resetBtn
@@ -156,6 +156,9 @@ PageBase {
             id: fontPicker
 
             visible: false
+            label: qsTr("Choose a system font")
+            rootParent: root.flickable
+            onFontSelected: family => root.applyFont(family)
         }
 
         SectionHeader {
@@ -197,6 +200,9 @@ PageBase {
 
             visible: false
             mono: true
+            label: qsTr("Choose a monospace font")
+            rootParent: root.flickable
+            onFontSelected: family => root.applyMonoFont(family)
         }
 
         SectionHeader {
@@ -227,28 +233,6 @@ PageBase {
                 onToggled: GlobalConfig.appearance.islands = checked
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
                 Layout.fillWidth: true
-            }
-            StepperRow {
-                reset: ({ node: GlobalConfig.border, setting: "thickness" })
-                label: qsTr("Border thickness")
-                subtext: qsTr("Thickness of the shell border in pixels. Set to 0 for a borderless look")
-                value: GlobalConfig.border.thickness
-                from: 0
-                to: 50
-                stepSize: 1
-                onMoved: v => GlobalConfig.border.thickness = v
-                Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
-            }
-            StepperRow {
-                reset: ({ node: GlobalConfig.appearance.rounding, setting: "scale" })
-                label: qsTr("Corner radius scale")
-                subtext: qsTr("Multiplies the shell's corner rounding")
-                value: GlobalConfig.appearance.rounding.scale
-                from: 0.5
-                to: 2.0
-                stepSize: 0.1
-                onMoved: v => GlobalConfig.appearance.rounding.scale = v
-                Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
             }
             ToggleRow {
                 reset: ({ node: GlobalConfig.appearance.transparency, setting: "enabled" })
@@ -304,6 +288,7 @@ PageBase {
             ToggleRow {
                 reset: ({ node: GlobalConfig.appearance, setting: "blur" })
                 text: qsTr("Background Blur")
+                beta: true
                 subtext: parent.isBbdxEnabled ? qsTr("Disabling has no effect if Better Blur dx is enabled") : qsTr("Enable a frosted glass effect by blurring the background")
                 checked: parent.isBbdxEnabled ? true : GlobalConfig.appearance.blur
                 enabled: GlobalConfig.appearance.transparency.enabled && !parent.isBbdxEnabled
@@ -487,8 +472,20 @@ PageBase {
             spacing: 0
 
             StepperRow {
-                reset: ({ node: GlobalConfig.border, setting: "rounding" })
+                reset: ({ node: GlobalConfig.border, setting: "thickness" })
                 first: true
+                Layout.fillWidth: true
+                label: qsTr("Border thickness")
+                subtext: qsTr("Thickness of the shell border in pixels. Set to 0 for a borderless look")
+                value: GlobalConfig.border.thickness
+                from: 0
+                to: 50
+                stepSize: 1
+                onMoved: v => GlobalConfig.border.thickness = v
+            }
+
+            StepperRow {
+                reset: ({ node: GlobalConfig.border, setting: "rounding" })
                 Layout.fillWidth: true
                 label: qsTr("Border rounding")
                 value: GlobalConfig.border.rounding
@@ -510,6 +507,18 @@ PageBase {
             }
 
             StepperRow {
+                reset: ({ node: GlobalConfig.appearance.rounding, setting: "scale" })
+                Layout.fillWidth: true
+                label: qsTr("Corner radius scale")
+                subtext: qsTr("Multiplies the shell's corner rounding")
+                value: GlobalConfig.appearance.rounding.scale
+                from: 0.5
+                to: 2.0
+                stepSize: 0.1
+                onMoved: v => GlobalConfig.appearance.rounding.scale = v
+            }
+
+            StepperRow {
                 reset: ({ node: GlobalConfig.appearance, setting: "deformScale" })
                 last: true
                 Layout.fillWidth: true
@@ -519,81 +528,6 @@ PageBase {
                 to: 1.5
                 stepSize: 0.05
                 onMoved: v => GlobalConfig.appearance.deformScale = v
-            }
-        }
-    }
-
-    component FontPickerRow: DialogRowButton {
-        id: picker
-
-        property bool mono: false
-        property var selectedItem: null
-
-        rootParent: root.flickable
-        icon: "font_download"
-        label: qsTr("Choose a system font")
-        header: picker.mono ? qsTr("Monospace fonts") : qsTr("System fonts")
-        acceptLabel: qsTr("Apply")
-        acceptAllowed: !!picker.selectedItem
-        separateContent: true
-        horizontalContentMargin: -Tokens.padding.small
-
-        onOpenChanged: {
-            if (open)
-                picker.selectedItem = null;
-        }
-
-        onAccepted: {
-            if (!picker.selectedItem)
-                return;
-            if (picker.mono)
-                root.applyMonoFont(picker.selectedItem);
-            else
-                root.applyFont(picker.selectedItem);
-            picker.selectedItem = null;
-        }
-
-        content: Component {
-            VerticalFadeListView {
-                spacing: 0
-                topMargin: Tokens.padding.large
-                bottomMargin: Tokens.padding.large
-
-                model: root.fontFamilies
-
-                delegate: StyledRect {
-                    id: fontItem
-
-                    required property string modelData
-
-                    readonly property bool selected: picker.selectedItem === fontItem.modelData
-
-                    anchors.left: ListView.view.contentItem.left
-                    anchors.right: ListView.view.contentItem.right
-                    anchors.margins: 1
-                    implicitHeight: fontLabel.implicitHeight + Tokens.padding.medium * 2
-                    radius: stateLayer.pressed ? Tokens.rounding.extraSmall : selected ? Tokens.rounding.largeIncreased : Tokens.rounding.medium
-                    color: Qt.alpha(Colours.palette.m3tertiaryContainer, selected ? 1 : 0)
-
-                    StateLayer {
-                        id: stateLayer
-
-                        anchors.fill: parent
-                        radius: parent.radius
-
-                        onClicked: picker.selectedItem = fontItem.modelData
-                    }
-
-                    StyledText {
-                        id: fontLabel
-
-                        anchors.fill: parent
-                        anchors.margins: Tokens.padding.medium
-                        text: fontItem.modelData
-                        font.family: fontItem.modelData
-                        elide: Text.ElideRight
-                    }
-                }
             }
         }
     }

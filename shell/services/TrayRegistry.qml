@@ -24,6 +24,10 @@ Singleton {
 
     readonly property string popoutPrefix: "traymenu"
 
+    // A tray icon can be dragged in among the bar's own icons, so on the bar it holds a
+    // row in the same list they use. The row names the icon by its stable key.
+    readonly property string rowPrefix: "tray:"
+
     // Pids of the running notifiers, so an alias can name the app rather than the
     // process that happens to host its icon.
     property var procNames: ({})
@@ -56,21 +60,47 @@ Singleton {
         return TrayIcons.ordered(rows, GlobalConfig.bar.tray.order);
     }
 
+    // Every running icon, before the bar's state decides where it belongs.
+    readonly property var liveItems: SystemTray.items.values.filter(item => item.status !== Status.Passive)
+
     // The icons the bar draws, in bar order. Hidden icons are in neither list, so the
     // bar and the tray popout cannot disagree about which icons exist.
-    readonly property var trayItems: {
-        const rows = SystemTray.items.values.filter(item => item.status !== Status.Passive && !root.isHidden(item)).map(item => ({
-                    key: root.keyOfItem(item),
-                    item: item
-                }));
-        return TrayIcons.ordered(rows, GlobalConfig.bar.tray.order).map(row => row.item);
-    }
+    readonly property var trayItems: root.orderedItems(root.liveItems.filter(item => !root.isHidden(item)))
+
+    // In compact mode the bar only draws the icons pinned to it; the rest wait in
+    // the overflow panel. Without compact mode collapsed icons stay on the bar,
+    // and only explicitly hidden icons move to the panel.
+    readonly property var visibleItems: root.orderedItems(root.liveItems.filter(item => root.stateOfItem(item) === "visible"))
+    // An icon the bar gave a row to is drawn from that row, on the bar, so the panel's
+    // own list leaves it out: the row decides where the icon is, not the state lists.
+    readonly property var boxedItems: root.liveItems.filter(item => !root.keysOf(item).some(key => root.rowedKeys[key]))
+    readonly property var overflowItems: root.orderedItems(root.boxedItems.filter(item => GlobalConfig.bar.tray.compact ? root.stateOfItem(item) !== "visible" : root.stateOfItem(item) === "hidden"))
+    readonly property var barItems: GlobalConfig.bar.tray.compact ? root.visibleItems : root.trayItems
+    readonly property int overflowCount: root.overflowItems.length
 
     readonly property int collapsedCount: root.trayItems.filter(item => root.isCollapsed(item)).length
+
+    // The tray icons the bar's entry list holds a place for, keyed by the icon's key.
+    readonly property var rowedKeys: {
+        const keys = {};
+        for (const entry of GlobalConfig.bar.entries ?? []) {
+            const key = root.keyOfRow(entry.id ?? "");
+            if (key.length > 0)
+                keys[key] = true;
+        }
+        return keys;
+    }
 
     readonly property var configuredKeys: {
         const tray = GlobalConfig.bar.tray;
         return [...new Set(tray.order.concat(tray.alwaysVisible, tray.hiddenIcons))];
+    }
+
+    function orderedItems(items: var): var {
+        return TrayIcons.ordered(items.map(item => ({
+            key: root.keyOfItem(item),
+            item: item
+        })), GlobalConfig.bar.tray.order).map(row => row.item);
     }
 
     function liveRows(): var {
@@ -87,10 +117,24 @@ Singleton {
         return TrayIcons.keyOf(item.id, item.icon, root.procNames[TrayIcons.pidOf(item.id)] ?? "");
     }
 
+    // Every name one icon answers to. The process alias only exists once `ps` has said
+    // which app a notifier belongs to, so a setting written before that names the icon by
+    // its theme icon instead; the notifier id outlives neither. Readers and writers take
+    // any of them, which keeps a place from going stale when the alias arrives.
+    function keysOf(item: var): var {
+        const keys = [];
+        const push = key => {
+            if (key && !keys.includes(key))
+                keys.push(key);
+        };
+        push(root.keyOfItem(item));
+        push(TrayIcons.keyOf(item.id, item.icon, ""));
+        push(item.id);
+        return keys;
+    }
+
     function displayName(item: var): string {
-        if (item.title && item.title !== item.id && !/^\d+-\d+$/.test(item.title))
-            return item.title;
-        return TrayIcons.labelOf(root.keyOfItem(item)) || item.id;
+        return TrayIcons.readableTitle(item.title) || TrayIcons.labelOf(root.keyOfItem(item)) || item.id;
     }
 
     function fallbackIcon(key: string): string {
@@ -114,7 +158,15 @@ Singleton {
     }
 
     function stateOfItem(item: var): string {
-        return root.stateOf(root.keyOfItem(item));
+        for (const key of root.keysOf(item)) {
+            if (GlobalConfig.bar.tray.hiddenIcons.includes(key))
+                return "hidden";
+        }
+        for (const key of root.keysOf(item)) {
+            if (GlobalConfig.bar.tray.alwaysVisible.includes(key))
+                return "visible";
+        }
+        return "collapsed";
     }
 
     function isHidden(item: var): bool {
@@ -127,10 +179,20 @@ Singleton {
 
     function setState(key: string, state: string): void {
         const tray = GlobalConfig.bar.tray;
-        const visible = tray.alwaysVisible.filter(entry => entry !== key);
-        const hidden = tray.hiddenIcons.filter(entry => entry !== key);
-        tray.alwaysVisible = state === "visible" ? [...visible, key] : visible;
-        tray.hiddenIcons = state === "hidden" ? [...hidden, key] : hidden;
+        // The lists may name this icon by an older alias of it: a state says where the
+        // icon is, so every name it had goes with it.
+        const item = root.itemOf(key);
+        const names = item ? root.keysOf(item) : [key];
+        const visible = tray.alwaysVisible.filter(entry => !names.includes(entry));
+        const hidden = tray.hiddenIcons.filter(entry => !names.includes(entry));
+        const nextVisible = state === "visible" ? [...visible, key] : visible;
+        const nextHidden = state === "hidden" ? [...hidden, key] : hidden;
+        // A list that already says this is written anyway only to make the bar draw every
+        // icon it holds again, which is what a slow-feeling toggle is made of.
+        if (!TrayIcons.sameList(nextVisible, tray.alwaysVisible))
+            tray.alwaysVisible = nextVisible;
+        if (!TrayIcons.sameList(nextHidden, tray.hiddenIcons))
+            tray.hiddenIcons = nextHidden;
     }
 
     function forget(key: string): void {
@@ -150,12 +212,55 @@ Singleton {
         GlobalConfig.bar.tray.order = keys;
     }
 
+    // Where a dragged icon lands: in the place of the icon it was dropped on. The
+    // order list holds every key the tray knows, so a key new to it is inserted
+    // rather than dropped.
+    function moveBefore(key: string, beforeKey: string): void {
+        if (key === beforeKey)
+            return;
+
+        const tray = GlobalConfig.bar.tray;
+        const order = [...new Set([...(tray.order ?? []), ...root.configuredKeys])].filter(entry => entry !== key);
+        const at = order.indexOf(beforeKey);
+        order.splice(at < 0 ? order.length : at, 0, key);
+        tray.order = order;
+    }
+
+    function rowOf(key: string): string {
+        return root.rowPrefix + key;
+    }
+
+    function keyOfRow(id: string): string {
+        return id.startsWith(root.rowPrefix) ? id.substring(root.rowPrefix.length) : "";
+    }
+
+    function itemOf(key: string): var {
+        return root.liveItems.find(item => root.keysOf(item).includes(key)) ?? null;
+    }
+
+    // The row this icon already holds, whichever alias it was written under, or the one a
+    // fresh drop should write: a drop must not leave a second row for one icon.
+    function rowFor(key: string): string {
+        const item = root.itemOf(key);
+        const names = item ? root.keysOf(item) : [key];
+        const entries = GlobalConfig.bar.entries ?? [];
+        for (const entry of entries) {
+            const rowKey = root.keyOfRow(entry.id ?? "");
+            if (rowKey.length > 0 && names.includes(rowKey))
+                return entry.id;
+        }
+        return root.rowOf(key);
+    }
+
     function popoutName(key: string): string {
         return `${root.popoutPrefix}${key}`;
     }
 
+    // The settings alias is shared on purpose: two live notifiers can resolve to
+    // the same key. The popout name carries the item id as well, so a second icon
+    // with the same alias cannot match the selected name and draw its menu too.
     function popoutNameOf(item: var): string {
-        return root.popoutName(root.keyOfItem(item));
+        return `${root.popoutName(root.keyOfItem(item))}#${item.id}`;
     }
 
     function isTrayPopout(name: string): bool {

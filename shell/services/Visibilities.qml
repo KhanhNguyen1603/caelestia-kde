@@ -69,7 +69,7 @@ Singleton {
     function load(screen: ShellScreen, visibilities: DrawerVisibilities): void {
         screens.set(Kwin.monitorFor(screen), visibilities);
         screens = new Map(screens);
-        visibilities.launcherChanged.connect(() => setLauncherOwner(visibilities, visibilities.launcher));
+        visibilities.launcherChanged.connect(() => { setLauncherOwner(visibilities, visibilities.launcher); });
         // PersistentProperties can restore the launcher as open, before the change
         // handler above is connected.
         if (visibilities.launcher)
@@ -134,6 +134,10 @@ Singleton {
         return space < 0 ? "" : rest.slice(0, space);
     }
     function openLauncher(mode: string): void {
+        // A disabled launcher has nothing to show: opening it anyway would leave
+        // the drawers window grabbing input for a panel that is not there.
+        if (!GlobalConfig.launcher.enabled)
+            return;
         const v = launcherScreen ?? getForActive();
         if (!v)
             return;
@@ -160,7 +164,7 @@ Singleton {
         const v = getForActive();
         return v ? v[drawer] === true : false;
     }
-    function setDrawer(drawer: string, open: boolean): void {
+    function setDrawer(drawer: string, open: bool): void {
         if (drawer === "launcher") {
             if (open)
                 openLauncher("");
@@ -176,7 +180,8 @@ Singleton {
         if (v)
             v[drawer] = open;
     }
-    function setLauncherOwner(visibilities: DrawerVisibilities, open: boolean): void {
+
+    function setLauncherOwner(visibilities: DrawerVisibilities, open: bool): void {
         if (!open) {
             if (launcherScreen !== visibilities)
                 return;
@@ -219,6 +224,29 @@ Singleton {
     function showAppWindows(names: var): void {
         overviewAppFilter = (names || []).filter(name => typeof name === "string" && name.length > 0);
         setOverview(true);
+    }
+    /// Only one transient surface at a time. The launcher, the drawers, the session dialog,
+    /// the overview and the bar's panels all draw in the same part of the screen, so two of
+    /// them open at once means one hides the other. Whichever opens last takes the screen;
+    /// the callers name themselves in `except`. The sidebar, the notification stack, the OSD
+    /// and the toasts are deliberately absent — they sit beside a surface, not over it.
+    function closeTransients(except: string): void {
+        for (const vis of screens.values()) {
+            if (except !== "launcher")
+                vis.launcher = false;
+            if (except !== "dashboard")
+                vis.dashboard = false;
+            if (except !== "utilities")
+                vis.utilities = false;
+            if (except !== "session")
+                vis.session = false;
+        }
+        if (except !== "overview")
+            setOverview(false);
+        if (except !== "popouts") {
+            for (const bar of bars.values())
+                bar?.popouts?.close();
+        }
     }
     function closeContextPopouts(): void {
         for (const bar of bars.values())

@@ -67,18 +67,18 @@ PageBase {
         ToggleRow {
             first: true
             text: qsTr("Enable component")
-            checked: BarWidgets.isEnabled(Config.bar, "greeter")
+            checked: BarPlacements.placementOf("greeter") !== "off"
             // Custom reset: enabled state lives in bar.entries, default is true
             reset: ({
-                customGet: () => BarWidgets.isEnabled(GlobalConfig.bar, "greeter"),
+                customGet: () => BarPlacements.placementOf("greeter") !== "off",
                 customDef: true,
                 customSet: v => {
-                    BarWidgets.setEnabled(GlobalConfig.bar, "greeter", v);
+                    BarPlacements.setShown("greeter", v);
                     GlobalConfig.save();
                 }
             })
             onToggled: {
-                BarWidgets.setEnabled(GlobalConfig.bar, "greeter", checked);
+                BarPlacements.setShown("greeter", checked);
                 GlobalConfig.save();
             }
         }

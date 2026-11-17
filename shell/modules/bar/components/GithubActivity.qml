@@ -280,8 +280,7 @@ PY
                     const idx = count === 0 ? 0 : Math.min(4, 1 + Math.floor((count * 4) / max));
                     window[i] = {
                         intensity: idx,
-                        count: count,
-                        tooltip: `${window[i].date}: ${count} contribution${count !== 1 ? 's' : ''}`
+                        count: count
                     };
                 }
 

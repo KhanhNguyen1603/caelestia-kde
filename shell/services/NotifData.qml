@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Notifications
 import Caelestia
 import Caelestia.Config
@@ -17,6 +18,9 @@ QtObject {
 
     property date time: new Date()
     property string timeStr: qsTr("now")
+    /// A toast that has only just arrived does not need to say so; the relative time earns its
+    /// place once the notification has been sitting on screen, and tells old from new in a stack.
+    readonly property bool fresh: timeStr === qsTr("now")
 
     readonly property Timer timeStrTimer: Timer {
         running: !notif.closed
@@ -241,6 +245,40 @@ QtObject {
             image = "file://" + image.slice("image://icon/".length);
         if (image && !image.startsWith("image://icon/") && !image.startsWith(Paths.notifimagecache))
             dummyImageLoader.active = true;
+    }
+
+    /// Runs the sender's default action, or opens the sending app when it has none.
+    /// Returns false if there was nothing to do.
+    function activate(): bool {
+        const action = actions.find(a => a.identifier === "default")
+            ?? actions.find(a => a.identifier === "open")
+            ?? actions.find(a => a.identifier === "run")
+            ?? (actions.length === 1 ? actions[0] : null);
+        if (action) {
+            action.invoke();
+            return true;
+        }
+
+        if (shellRaised)
+            return false;
+
+        const lowerApp = (appName ?? "").toLowerCase();
+        if (lowerApp === "notify-send"
+                || lowerApp.startsWith("caelestia")
+                || lowerApp === "screenshot"
+                || lowerApp === "color picker")
+            return false;
+
+        const desktopHint = hints?.["desktop-entry"];
+        if (desktopHint && desktopHint.toLowerCase().startsWith("caelestia"))
+            return false;
+
+        const entry = DesktopEntries.heuristicLookup(desktopHint || appName);
+        if (!entry || entry.id.includes("caelestia-shell"))
+            return false;
+
+        Launch.launchEntry(entry);
+        return true;
     }
 
     /// Answers a notification whose sender offered a reply field. The notification

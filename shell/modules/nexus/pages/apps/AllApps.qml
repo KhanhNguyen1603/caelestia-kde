@@ -14,7 +14,7 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
-    title: qsTr("All apps")
+    title: qsTr("All Apps")
     isSubPage: true
 
     ColumnLayout {
@@ -42,7 +42,7 @@ PageBase {
                 StateLayer {
                     onClicked: {
                         root.nState.selectedApp = appItem.modelData;
-                        root.nState.openSubPage(2);
+                        root.nState.openSubPage("appInfo");
                     }
                 }
 

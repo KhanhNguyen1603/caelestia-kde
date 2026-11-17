@@ -33,7 +33,7 @@ VerticalFadeListView {
     function executeSelected(): void {
         if (count > 0 && currentIndex >= 0 && currentIndex < count) {
             const entry = model[currentIndex];
-            root.nState.goToSubPage(entry.pageIdx, entry.subPageIdx);
+            root.nState.goToSubPage(entry.pageIdx, entry.subPage);
             root.entrySelected(entry);
             root.nState.searchQuery = "";
         }
@@ -64,8 +64,9 @@ VerticalFadeListView {
         readonly property string settingLabel: modelData.settingLabel
         readonly property string pageLabel: modelData.pageLabel
         readonly property string pageIcon: modelData.pageIcon
+        readonly property string sectionLabel: modelData.sectionLabel ?? ""
         readonly property int pageIdx: modelData.pageIdx
-        readonly property int subPageIdx: modelData.subPageIdx
+        readonly property string subPage: modelData.subPage
 
         readonly property bool isSelected: index === root.currentIndex
 
@@ -126,7 +127,7 @@ VerticalFadeListView {
             onClicked: {
                 root.currentIndex = item.index;
                 const entry = item.modelData;
-                root.nState.goToSubPage(item.pageIdx, item.subPageIdx);
+                root.nState.goToSubPage(item.pageIdx, item.subPage);
                 root.entrySelected(entry);
                 root.nState.searchQuery = "";
             }
@@ -181,7 +182,7 @@ VerticalFadeListView {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("in ") + item.pageLabel
+                    text: item.sectionLabel.length > 0 ? qsTr("in %1 › %2").arg(item.pageLabel).arg(item.sectionLabel) : qsTr("in %1").arg(item.pageLabel)
                     color: item.isSelected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                     font: NexusStyle.secondaryFont
                     elide: Text.ElideRight

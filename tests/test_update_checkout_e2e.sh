@@ -131,7 +131,7 @@ run_updater() {
 
     mkdir -p "$home" "$tools" "$home/.runtime" || return 1
     for tool in awk bash basename cat chmod cp date dirname env find flock git grep head \
-        id ls mkdir mktemp mv readlink rm rmdir sed sh sleep sort tail tar tr uname wc; do
+        id install ls mkdir mktemp mv readlink rm rmdir sed sh sleep sort tail tar tr uname wc; do
         resolved="$(command -v "$tool" 2>/dev/null)" || continue
         ln -sf "$resolved" "$tools/$tool"
     done
@@ -145,6 +145,7 @@ run_updater() {
     name = fixture
     email = fixture@example.invalid
 [url "$FIXTURE_REMOTE"]
+    insteadOf = https://github.com/caelestia-kde/caelestia.git
     insteadOf = https://github.com/ladybug-me/caelestia-kde.git
 [protocol "file"]
     allow = always

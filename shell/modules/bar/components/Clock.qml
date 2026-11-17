@@ -47,23 +47,6 @@ StyledRect {
         popouts.hasCurrent = true;
     }
 
-    /// Hover opens the calendar the way the other bar widgets open theirs, but after a
-    /// short pause: the clock sits before the tray, and a calendar this size should not
-    /// appear just because the pointer crossed it. Closing is not handled here — a
-    /// popout left behind is dismissed by the drawers' own hide timer once the pointer
-    /// is outside both the bar and the popout, which keeps hover and click identical.
-    function hoverOpen(): void {
-        const popouts = root.popouts;
-        if (!Config.bar.showOnHover || !Config.bar.popouts.clock || !popouts || popouts.hasCurrent)
-            return;
-
-        hoverTimer.restart();
-    }
-
-    function hoverClose(): void {
-        hoverTimer.stop();
-    }
-
     implicitWidth: isHorizontal ? (horizontalLayout.implicitWidth + root.padding * 2) : barThickness
     implicitHeight: isHorizontal ? barThickness : (verticalLayout.implicitHeight + root.padding * 2)
 
@@ -74,19 +57,11 @@ StyledRect {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        hoverEnabled: true
-
-        onEntered: root.hoverOpen()
-        onExited: root.hoverClose()
 
         onClicked: mouse => {
             const popouts = root.popouts;
             if (!popouts)
                 return;
-
-            // A click settles any pending hover move first, so it is not reopened a
-            // moment after it was deliberately closed.
-            hoverTimer.stop();
 
             if (mouse.button === Qt.RightButton) {
                 if (popouts.hasCurrent && popouts.currentName === "clockcontext") {
@@ -101,19 +76,6 @@ StyledRect {
                     root.openPopout("clock");
                 }
             }
-        }
-    }
-
-    Timer {
-        id: hoverTimer
-
-        interval: 150
-        onTriggered: {
-            const popouts = root.popouts;
-            if (!popouts || popouts.hasCurrent)
-                return;
-
-            root.openPopout("clock");
         }
     }
 
@@ -191,17 +153,15 @@ StyledRect {
             color: root.colour
         }
 
-        Loader {
+        // Loaded inline rather than through an asynchronous Loader: the extra
+        // width used to appear a moment after the bar slid in, which read as the
+        // am/pm label jumping next to the time.
+        StyledText {
             Layout.alignment: Qt.AlignVCenter
-            asynchronous: true
-            active: Units.twelveHourClock
-            visible: active
-
-            sourceComponent: StyledText {
-                text: Time.amPmStr.toLowerCase()
-                font: Tokens.font.body.builders.small.size(Math.round(root.textSize * 0.9)).build()
-                color: root.colour
-            }
+            visible: Units.twelveHourClock
+            text: Time.amPmStr.toLowerCase()
+            font: Tokens.font.body.builders.small.size(Math.round(root.textSize * 0.9)).build()
+            color: root.colour
         }
     }
 

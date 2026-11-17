@@ -11,6 +11,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REGISTRY="$REPO_ROOT/shell/services/BarWidgetRegistry.qml"
 BAR_WIDGETS="$REPO_ROOT/shell/modules/bar/BarWidgets.qml"
 BAR="$REPO_ROOT/shell/modules/bar/Bar.qml"
+DELEGATE="$REPO_ROOT/shell/modules/bar/components/BarWidgetDelegate.qml"
 CONTENT="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
 EDITOR="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarComponents.qml"
 LOADER="$REPO_ROOT/shell/services/PluginLoader.qml"
@@ -30,12 +31,12 @@ test_the_bar_widget_list_merges_the_plugin_registry() {
     assert_file_contains "$BAR_WIDGETS" 'allWidgets' \
         "built-ins and plugin widgets are combined into one list"
     # The merge must not leak into the helpers the node harness re-implements.
-    assert_file_contains "$BAR_WIDGETS" 'return root.byId[id] !== undefined' \
-        "isKnown reads the merged map so the harness keeps working"
+    assert_file_contains "$BAR_WIDGETS" 'return root.widget(id) !== null' \
+        "isKnown asks the merged map, so plugins and generated entries answer the same way"
 }
 
 test_the_bar_falls_back_to_plugin_widgets() {
-    assert_file_contains "$BAR" 'BarWidgetRegistry.widget(id)?.componentUrl' \
+    assert_file_contains "$DELEGATE" 'BarWidgetRegistry.widget(id)?.componentUrl' \
         "the delegate chooser needs a fallback that resolves plugin components"
     assert_file_contains "$BAR" 'typeof item.handleHover === "function"' \
         "any widget can opt into hover popouts through handleHover"
@@ -51,7 +52,7 @@ test_the_bar_forwards_scroll_events_to_widgets() {
 test_the_bar_hands_plugin_widgets_its_context() {
     assert_file_contains "$BAR" 'function applyWidgetContext(widget: var): void' \
         "the bar fills in the ambient values a plugin widget declares"
-    assert_file_contains "$BAR" 'root.applyWidgetContext(item)' \
+    assert_file_contains "$DELEGATE" 'root.bar.applyWidgetContext(item)' \
         "the context is handed over when the plugin component loads"
     assert_file_contains "$BAR" 'widget.hasOwnProperty(name)' \
         "only the values the widget declares are filled in"

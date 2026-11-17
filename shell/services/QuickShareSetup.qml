@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Caelestia.Services.QuickShare
+import qs.utils
 
 /// The system half of Quick Share. A transfer arrives on the fixed port
 /// `QuickShareService.listenPort`, which has to be open, behind an mDNS advertisement
@@ -26,8 +27,12 @@ Singleton {
         Unverified
     }
 
-    /// The helper, as installed next to the shell.
-    readonly property string script: Quickshell.shellPath("scripts/quickshare_setup.sh")
+    /// The helper, as installed where only root can change it. Empty when there is no
+    /// such copy: a source install also keeps one next to the shell, but that one is this
+    /// user's to rewrite, and polkit would run the rewrite as root.
+    readonly property string script: PrivilegedHelpers.path("quickshare_setup.sh")
+    /// Whether a copy this shell may elevate exists at all.
+    readonly property bool canElevate: root.script !== ""
 
     property int state: QuickShareSetup.State.Unknown
     /// Whether a report or a privileged run is in flight.
@@ -66,6 +71,17 @@ Singleton {
             return;
 
         root.state = QuickShareSetup.State.Unknown;
+
+        // Without a helper there is nothing to ask, and saying so is better than leaving
+        // the row looking like it is still waiting for an answer.
+        if (!root.canElevate) {
+            root.state = QuickShareSetup.State.Unverified;
+            if (root.message === "")
+                root.message = qsTr("Quick Share's setup helper is missing; reinstall Caelestia to restore it");
+            root.reported();
+            return;
+        }
+
         root.busy = true;
         reportProc.running = true;
     }
@@ -76,6 +92,11 @@ Singleton {
         if (root.busy)
             return;
 
+        if (!root.canElevate) {
+            root.message = qsTr("Quick Share's setup helper is missing; reinstall Caelestia to restore it");
+            return;
+        }
+
         root.busy = true;
         root.message = qsTr("Waiting for administrator rights…");
         root.lastRunSucceeded = false;
@@ -85,7 +106,7 @@ Singleton {
     Process {
         id: reportProc
 
-        command: ["bash", root.script, "--status", "--port", String(QuickShareService.listenPort)]
+        command: ["/bin/bash", root.script, "--status", "--port", String(QuickShareService.listenPort)]
         stdout: SplitParser {
             onRead: line => {
                 if (!line.startsWith("SETUP="))
@@ -133,7 +154,10 @@ Singleton {
     Process {
         id: setupProc
 
-        command: ["pkexec", "bash", root.script, "--port", String(QuickShareService.listenPort)]
+        // Both programs by absolute path. `pkexec` is what asks polkit for the privilege, and
+        // `bash` is what runs the helper; a copy of either dropped in a directory this user
+        // can write would be the thing standing between the prompt and the work.
+        command: ["/usr/bin/pkexec", "/bin/bash", root.script, "--port", String(QuickShareService.listenPort)]
         stderr: SplitParser {
             onRead: line => {
                 const said = line.trim();

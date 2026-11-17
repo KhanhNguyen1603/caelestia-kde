@@ -44,7 +44,7 @@ PageBase {
         if (iconString.indexOf("/") === 0) return "file://" + iconString;
 
         if (isStorePlugin) {
-            return "https://raw.githubusercontent.com/ladybug-me/caelestia-kde-plugins/" + root.storeBranch + "/" + basePath + "/" + iconString;
+            return "https://raw.githubusercontent.com/caelestia-kde/plugins/" + root.storeBranch + "/" + basePath + "/" + iconString;
         }
         return "file://" + basePath + "/" + iconString;
     }
@@ -99,7 +99,7 @@ PageBase {
             text: qsTr("Restart Shell")
             type: TextButton.Filled
             visible: PluginStore.restartRequired
-            onClicked: Launch.exec(["bash", "-c", `bash "${Quickshell.shellPath("scripts/restart_shell.sh")}"; sleep 1; caelestia shell nexus openPage ${PageDictionary.pageIdxFor("plugins")} 0`])
+            onClicked: Launch.exec(["bash", "-c", `bash "${Quickshell.shellPath("scripts/restart_shell.sh")}"; sleep 1; caelestia shell nexus openPage services plugins`])
         }
     ]
 
@@ -410,7 +410,12 @@ PageBase {
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: PluginStore.installError !== "" ? PluginStore.installError : PluginStore.installing ? PluginStore.installProgress : qsTr("The repository root must contain metadata.json")
+                        // A plugin runs inside the shell process, with everything this
+                        // session can reach. Saying so where the URL is typed is the only
+                        // place the person choosing it sees it.
+                        text: PluginStore.installError !== "" ? PluginStore.installError
+                            : PluginStore.installing ? PluginStore.installProgress
+                            : qsTr("The repository root must contain metadata.json. A plugin runs inside the shell, so it can do anything this session can.")
                         color: PluginStore.installError !== "" ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
                         font: NexusStyle.secondaryFont
                         elide: Text.ElideRight
@@ -501,8 +506,8 @@ PageBase {
                     mediaUrl: {
                         if (!storeDelegate.mediaurl) return "";
                         if (storeDelegate.mediaurl.indexOf("http://") === 0 || storeDelegate.mediaurl.indexOf("https://") === 0 || storeDelegate.mediaurl.indexOf("file://") === 0) return storeDelegate.mediaurl;
-                        if (storeDelegate.mediaurl.indexOf("/") === 0) return "https://raw.githubusercontent.com/ladybug-me/caelestia-kde-plugins/" + root.storeBranch + storeDelegate.mediaurl;
-                        return "https://raw.githubusercontent.com/ladybug-me/caelestia-kde-plugins/" + root.storeBranch + "/" + storeDelegate.path + "/" + storeDelegate.mediaurl;
+                        if (storeDelegate.mediaurl.indexOf("/") === 0) return "https://raw.githubusercontent.com/caelestia-kde/plugins/" + root.storeBranch + storeDelegate.mediaurl;
+                        return "https://raw.githubusercontent.com/caelestia-kde/plugins/" + root.storeBranch + "/" + storeDelegate.path + "/" + storeDelegate.mediaurl;
                     }
 
                     actionComponent: Component {

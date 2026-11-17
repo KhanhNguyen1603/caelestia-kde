@@ -24,14 +24,11 @@ Singleton {
                 const pageIdx = isKey
                     ? PageRegistry.indexForKey(props.initialPageIdx)
                     : props.initialPageIdx;
-                const rawSub = (props.initialSubPageIdx !== undefined && props.initialSubPageIdx !== -1)
-                    ? props.initialSubPageIdx
-                    : (isKey ? PageRegistry.defaultSubPageForKey(props.initialPageIdx) : -1);
-                const subIdx = (typeof rawSub === "number") ? rawSub : PageDictionary.defaultSubPageForKey(rawSub);
-                win.nexus.nState.goToSubPage(pageIdx, subIdx);
+                const subPage = props.initialSubPage || (isKey ? PageRegistry.defaultSubPageForKey(props.initialPageIdx) : "");
+                win.nexus.nState.goToSubPage(pageIdx, String(subPage));
             }
             win.visible = true;
-            win.raise();
+            Qt.callLater(win.raise);
             win.nexus.forceActiveFocus();
             Logger.mark("nexus=reused");
             return win;
@@ -40,14 +37,10 @@ Singleton {
         if (typeof resolvedProps.initialPageIdx === "string") {
             const key = resolvedProps.initialPageIdx;
             resolvedProps.initialPageIdx = PageRegistry.indexForKey(key);
-            if (resolvedProps.initialSubPageIdx === undefined || resolvedProps.initialSubPageIdx === -1)
-                resolvedProps.initialSubPageIdx = PageRegistry.defaultSubPageForKey(key);
+            if (!resolvedProps.initialSubPage)
+                resolvedProps.initialSubPage = PageRegistry.defaultSubPageForKey(key);
         }
-        if (typeof resolvedProps.initialSubPageIdx === "string") {
-            const mapped = PageDictionary.defaultSubPageForKey(resolvedProps.initialSubPageIdx);
-            if (mapped >= 0)
-                resolvedProps.initialSubPageIdx = mapped;
-        }
+
         const win = nexusComp.createObject(parent ?? dummy, resolvedProps);
         root.openWindow = win;
         if (win) {
@@ -60,19 +53,33 @@ Singleton {
 
     function close(): void {
         if (root.openWindow)
-            root.openWindow.destroy();
+            root.openWindow.visible = false;
     }
 
     function goBack(): void {
         if (!root.openWindow)
             return;
         const state = root.openWindow.nexus.nState;
-        if (state.subPageIdxStack.length > 0)
+        if (state.subPageKeyStack.length > 0)
             state.closeSubPage();
     }
 
     QtObject {
         id: dummy
+    }
+
+    // building the window costs seconds of CPU, so it is built once while idle and then only hidden/shown
+    Timer {
+        running: true
+        interval: 8000
+        onTriggered: {
+            if (root.openWindow)
+                return;
+            root.openWindow = nexusComp.createObject(dummy, {
+                visible: false
+            });
+            Logger.mark("nexus=created");
+        }
     }
 
     Component {
@@ -83,7 +90,7 @@ Singleton {
 
             property alias nexus: nexus
             property int initialPageIdx: 0
-            property var initialSubPageIdx: -1
+            property string initialSubPage: ""
 
             function raise(): void {
                 const pageTitles = PageRegistry.pages.map(p => p.label);
@@ -93,6 +100,12 @@ Singleton {
             }
 
             visible: true
+
+            onClosed: {
+                if (root.openWindow === win)
+                    root.openWindow = null;
+                win.destroy();
+            }
 
             Component.onDestruction: {
                 Logger.mark("nexus=destroyed");
@@ -111,11 +124,6 @@ Singleton {
                 Region { item: (GlobalConfig.appearance.transparency.enabled && GlobalConfig.appearance.blur) ? nexus : null }
             }
 
-            onVisibleChanged: {
-                if (!visible)
-                    destroy();
-            }
-
             implicitWidth: nexus.implicitWidth
             implicitHeight: nexus.implicitHeight
 
@@ -132,10 +140,10 @@ Singleton {
 
                 anchors.fill: parent
                 initialPageIdx: win.initialPageIdx
-                initialSubPageIdx: win.initialSubPageIdx
+                initialSubPage: win.initialSubPage
                 nState.screen: win.screen ?? Screens.activeScreen ?? Quickshell.screens[0]
                 nState.isWindow: true
-                onClose: win.destroy()
+                onClose: win.visible = false
             }
 
             Behavior on color {

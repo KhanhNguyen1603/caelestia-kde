@@ -200,6 +200,57 @@ export LD_LIBRARY_PATH="$install_root/usr/lib/caelestia${LD_LIBRARY_PATH:+:$LD_L
 mkdir -p "$XDG_STATE_HOME/caelestia"
 printf '{invalid scheme state' >"$XDG_STATE_HOME/caelestia/scheme.json"
 
+# The install is a fresh tree, but a bar saved by a version from before the unified tray
+# is not: it holds rows for everything but the tray, which is the state every existing
+# user starts from. Seeding one here is what makes the run end to end rather than a launch
+# of the defaults, and `check_migrated_bar` reads the answer back out of the file the
+# shell rewrote.
+legacy_config="$XDG_CONFIG_HOME/caelestia/shell.json"
+if [[ ! -f "$legacy_config" ]]; then
+    mkdir -p "$(dirname "$legacy_config")"
+    python3 - "$legacy_config" <<'PY'
+import json
+import sys
+
+rows = [
+    ("logo", "left"),
+    ("workspaces", "left"),
+    ("greeter", "left"),
+    ("dock", "middle"),
+    ("updateIndicator", "right"),
+    ("clock", "right"),
+    ("statusIcons", "right"),
+    ("power", "right"),
+]
+json.dump(
+    {"bar": {"entries": [{"id": name, "enabled": True, "zone": zone} for name, zone in rows]}},
+    open(sys.argv[1], "w", encoding="utf-8"),
+    indent=4,
+)
+PY
+fi
+
+# Reads the bar back out of the config the shell wrote: the tray's row has to be there, or
+# the icons it holds have nowhere to be drawn.
+check_migrated_bar() {
+    local run="$1"
+    python3 - "$legacy_config" "$run" <<'PY'
+import json
+import sys
+
+path, run = sys.argv[1], sys.argv[2]
+try:
+    with open(path, encoding="utf-8") as stream:
+        data = json.load(stream)
+except (OSError, ValueError) as error:
+    sys.exit(f"runtime smoke run {run} could not read the config it wrote: {error}")
+entries = (data.get("bar") or {}).get("entries") or []
+ids = [entry.get("id") for entry in entries]
+if "tray" not in ids:
+    sys.exit(f"runtime smoke run {run} left a bar saved before the unified tray without one: {ids}")
+PY
+}
+
 weston --backend=headless-backend.so --socket=wayland-runtime --idle-time=0 \
     >"$log_dir/weston.log" 2>&1 &
 weston_pid=$!
@@ -258,12 +309,13 @@ check_run_marks() {
         fi
     done <"$marks_file"
 
-    # Everything created has to be destroyed again. Only the balance is
-    # asserted: the engine may process the final close later than the last IPC
-    # reply, so the individual counts are not fixed.
+    # The settings window is kept hidden for reuse, so at most one created window
+    # may be left over. Only the balance is asserted: the engine may process the
+    # final close later than the last IPC reply, so the individual counts are
+    # not fixed.
     created=$(grep -Fc -- '[caelestia] nexus=created' "$log_file" || true)
     destroyed=$(grep -Fc -- '[caelestia] nexus=destroyed' "$log_file" || true)
-    if ((created < 1 || created != destroyed)); then
+    if ((created < 1 || created - destroyed > 1)); then
         echo "runtime smoke run $run created ${created} nexus window(s) but destroyed ${destroyed}" >&2
         return 1
     fi
@@ -332,6 +384,10 @@ for ((run = 1; run <= runs; run++)); do
         fi
     fi
     if ! check_run_marks "$log_file" "$run"; then
+        cat "$log_file" >&2
+        exit 1
+    fi
+    if ! check_migrated_bar "$run"; then
         cat "$log_file" >&2
         exit 1
     fi

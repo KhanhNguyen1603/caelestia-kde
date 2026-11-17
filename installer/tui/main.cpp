@@ -7,6 +7,7 @@
 #include <fstream>
 #include <csignal>
 #include <cstdlib>
+#include <fcntl.h>
 #include <filesystem>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -39,11 +40,18 @@ void check_signals() {
 
 void run_external(const std::string& script_path) {
     Term::restore();
+    int tty_fd = open("/dev/tty", O_RDWR | O_CLOEXEC);
     pid_t child = fork();
     if (child == 0) {
+        if (tty_fd >= 0) {
+            dup2(tty_fd, STDIN_FILENO);
+            dup2(tty_fd, STDERR_FILENO);
+        }
         execlp("bash", "bash", script_path.c_str(), static_cast<char*>(nullptr));
         _exit(127);
     }
+    if (tty_fd >= 0)
+        close(tty_fd);
     int status = 1;
     if (child > 0)
         waitpid(child, &status, 0);
@@ -51,6 +59,8 @@ void run_external(const std::string& script_path) {
     std::cout << "\n"
               << (rc == 0 ? "Finished." : "Finished with errors.")
               << std::endl;
+    if (rc == 0)
+        std::cerr << "[installer] done (success)" << std::endl;
     exit(rc == 0 ? 0 : 1);
 }
 
@@ -224,12 +234,6 @@ int main(int argc, char** argv) {
 
     if (g_answers["REMOVE_CACHE"] == "true") {
         string cache_dir = xdg_cache_dir() + "/caelestia-kde";
-        // Best effort: the cache is scratch space, and a failed removal only costs
-        // the next run the disk space it was asked to free.
-        //
-        // std::filesystem rather than `rm -rf`: the path is built from
-        // XDG_CACHE_HOME, and inside the shell's double quotes a `$`, a backtick or a
-        // quote in that variable would be a command, not a character.
         std::error_code remove_error;
         std::filesystem::remove_all(cache_dir, remove_error);
     }

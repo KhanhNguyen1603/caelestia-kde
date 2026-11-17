@@ -10,6 +10,7 @@ StyledSwitch {
 
     property string subtext
     property var reset
+    property bool beta: false
     property alias first: bg.first
     property alias last: bg.last
     property alias isSelected: bg.isSelected
@@ -60,16 +61,41 @@ StyledSwitch {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 0
 
-            StyledText {
-                id: label
+            RowLayout {
+                id: labelRow
 
                 anchors.left: parent.left
                 anchors.right: parent.right
+                spacing: Tokens.spacing.small
 
-                text: root.text
-                font: root.font
-                color: root.enabled ? Colours.palette.m3onSurface : Colours.disabledContent
-                elide: Text.ElideRight
+                StyledText {
+                    id: label
+
+                    Layout.fillWidth: true
+
+                    text: root.text
+                    font: root.font
+                    color: root.enabled ? Colours.palette.m3onSurface : Colours.disabledContent
+                    elide: Text.ElideRight
+                }
+
+                StyledRect {
+                    visible: root.beta
+                    Layout.alignment: Qt.AlignVCenter
+                    implicitWidth: betaLabel.implicitWidth + Tokens.padding.small * 2
+                    implicitHeight: betaLabel.implicitHeight + Tokens.padding.extraSmall
+                    radius: Tokens.rounding.full
+                    color: Colours.palette.m3secondaryContainer
+
+                    StyledText {
+                        id: betaLabel
+
+                        anchors.centerIn: parent
+                        text: qsTr("Beta")
+                        color: Colours.palette.m3onSecondaryContainer
+                        font: Tokens.font.label.small
+                    }
+                }
             }
 
             StyledText {
@@ -80,7 +106,7 @@ StyledSwitch {
                 text: root.subtext
                 color: root.enabled ? Colours.palette.m3onSurfaceVariant : Colours.disabledContent
                 font: NexusStyle.secondaryFont
-                elide: Text.ElideRight
+                wrapMode: Text.Wrap
             }
         }
     }

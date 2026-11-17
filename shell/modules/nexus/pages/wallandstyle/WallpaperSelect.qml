@@ -110,7 +110,7 @@ PageBase {
         sortDebouncer.restart();
     }
 
-    title: qsTr("Select wallpaper")
+    title: qsTr("Wallpapers")
     isSubPage: true
     scrollable: false
 
@@ -341,7 +341,7 @@ PageBase {
                     onClicked: {
                         if (modelData.parentDir !== Paths.wallsdir) {
                             root.nState.selectedWallpaperCategory = Wallpapers.getCategoryFor(modelData);
-                            root.nState.openSubPage(2);
+                            root.nState.openSubPage("wallpaperCategory");
                         } else {
                             Wallpapers.setWallpaper(modelData.path);
                         }

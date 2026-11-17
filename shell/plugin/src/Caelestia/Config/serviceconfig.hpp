@@ -74,6 +74,10 @@ private:
     CONFIG_GLOBAL_LIST(CalendarSourceList, calendarSources, {})
     CONFIG_GLOBAL_PROPERTY(int, calendarDays, 14)
 
+    CONFIG_GLOBAL_PROPERTY(int, timerAlarmDuration, 10)
+    CONFIG_GLOBAL_PROPERTY(bool, timerAlarmUntilDismissed, false)
+    CONFIG_GLOBAL_PROPERTY(QString, timerAlarmSound, u"freedesktop/stereo/alarm-clock-elapsed.oga"_s)
+
     CONFIG_GLOBAL_PROPERTY(bool, autoSchemeEnabled, false)
     CONFIG_GLOBAL_PROPERTY(QString, autoSchemeMode, u"solar"_s)
     // "HH:MM", local time. Also used as the fallback when solar times cannot be
@@ -84,6 +88,8 @@ private:
     CONFIG_GLOBAL_LIST(PlayerAliasList, playerAliases,
         { vmap({ { u"from"_s, u"com.github.th_ch.youtube_music"_s }, { u"to"_s, u"YT Music"_s } }) })
     CONFIG_GLOBAL_PROPERTY(QString, lyricsBackend, u"Auto"_s)
+    CONFIG_GLOBAL_PROPERTY(QString, lyricsArabicFont, u""_s)
+    CONFIG_GLOBAL_PROPERTY(bool, romanizeIndicLyrics, false)
     CONFIG_GLOBAL_PROPERTY(QStringList, bluetoothAutoReconnectDevices, QStringList())
 
     CONFIG_GLOBAL_PROPERTY(QString, hotspotSsid, QString())

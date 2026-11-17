@@ -15,21 +15,20 @@ Item {
     id: root
 
     property int initialPageIdx: 0
-    property var initialSubPageIdx: -1
+    property string initialSubPage: ""
     readonly property bool windowActive: Window.window ? Window.window.active : false
-    readonly property bool compact: root.width < 1120
+    readonly property bool sidePane: GlobalConfig.nexus.sidePane
+
+    // The fold is what the three-pane layout does when it runs out of width,
+    // so it is meaningless without the pane that gets folded away.
+    readonly property bool compact: root.width < 1120 && root.sidePane
 
     readonly property NexusState nState: NexusState {
         id: nState
 
         compact: root.compact
-        pendingSubPageIdx: {
-            if (root.initialSubPageIdx === -1 || root.initialSubPageIdx === undefined || root.initialSubPageIdx === "")
-                return -1;
-            return (typeof root.initialSubPageIdx === "number")
-                ? root.initialSubPageIdx
-                : PageDictionary.defaultSubPageForKey(root.initialSubPageIdx);
-        }
+        sidePane: root.sidePane
+        pendingSubPageKey: root.initialSubPage || ""
         currentPageIdx: root.initialPageIdx
 
         onClose: root.requestClose()
@@ -83,6 +82,16 @@ Item {
         root.forceActiveFocus();
     }
 
+    function navPaneWidth(): int {
+        if (root.compact)
+            return Math.min(340, Math.round(root.width * 0.45));
+        // Without the side pane the list carries the width it had before the
+        // three-pane layout took a slice of it.
+        if (!root.sidePane)
+            return Math.min(Tokens.sizes.nexus.maxNavWidth, Math.round(root.width / 3));
+        return Math.min(285, Math.round(root.width * 0.21));
+    }
+
     function moveUp(): void {
         if (root.activePane === 2)
             pages.moveUp();
@@ -101,6 +110,38 @@ Item {
             navPane.moveDown();
     }
 
+    // Pane 1 is the subcategory pane. Without it the section list and the
+    // content are neighbours, so stepping in skips the middle pane and
+    // stepping out lands on the sections.
+    function enterSubcategories(): void {
+        if (root.sidePane) {
+            root.activePane = 1;
+            subcategoryPane.selectCurrentOrFirst();
+        } else {
+            root.activePane = 2;
+            pages.selectFirst();
+        }
+    }
+
+    function leaveSubcategories(): void {
+        if (root.compact)
+            root.nState.exitCompactPage();
+        subcategoryPane.clearSelection();
+        root.activePane = 0;
+        navPane.selectCurrentOrFirst();
+    }
+
+    function leaveContent(): void {
+        pages.clearSelection();
+        if (root.sidePane) {
+            root.activePane = 1;
+            subcategoryPane.selectCurrentOrFirst();
+        } else {
+            root.activePane = 0;
+            navPane.selectCurrentOrFirst();
+        }
+    }
+
     function activateSelected(): void {
         if (root.activePane === 2) {
             pages.activateSelected();
@@ -114,8 +155,7 @@ Item {
             if (!wasSearchOpen) {
                 if (root.compact)
                     root.nState.enterCompactPage();
-                root.activePane = 1;
-                subcategoryPane.selectCurrentOrFirst();
+                root.enterSubcategories();
             }
         }
     }
@@ -124,19 +164,13 @@ Item {
         if (root.activePane === 2) {
             if (pages.stepLeft())
                 return;
-            if (root.nState.subPageIdxStack.length > 0) {
+            if (root.nState.subPageKeyStack.length > 0) {
                 WindowFactory.goBack();
             } else {
-                root.activePane = 1;
-                pages.clearSelection();
-                subcategoryPane.selectCurrentOrFirst();
+                root.leaveContent();
             }
         } else if (root.activePane === 1) {
-            if (root.compact)
-                root.nState.exitCompactPage();
-            root.activePane = 0;
-            subcategoryPane.clearSelection();
-            navPane.selectCurrentOrFirst();
+            root.leaveSubcategories();
         }
     }
 
@@ -154,8 +188,7 @@ Item {
             if (!wasSearchOpen) {
                 if (root.compact)
                     root.nState.enterCompactPage();
-                root.activePane = 1;
-                subcategoryPane.selectCurrentOrFirst();
+                root.enterSubcategories();
             }
         }
     }
@@ -171,7 +204,7 @@ Item {
     }
 
     function scrollCurrentPage(event: var): bool {
-        if (event.x <= subcategoryPane.x + subcategoryPane.width)
+        if (event.x <= (root.sidePane ? subcategoryPane.x + subcategoryPane.width : navPane.x + navPane.width))
             return false;
 
         const f = root.currentFlickable();
@@ -226,7 +259,7 @@ Item {
         anchors.margins: Tokens.padding.large
 
         nState: nState
-        width: root.compact ? Math.min(340, Math.round(root.width * 0.45)) : Math.min(285, Math.round(root.width * 0.21))
+        width: root.navPaneWidth()
         opacity: root.compact && root.nState.compactSubcategories ? 0 : 1
         enabled: !root.compact || !root.nState.compactSubcategories
 
@@ -249,6 +282,7 @@ Item {
     SubcategoryPane {
         id: subcategoryPane
 
+        visible: root.sidePane
         anchors.left: root.compact ? parent.left : navPane.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
@@ -258,7 +292,7 @@ Item {
 
         width: root.compact ? Math.min(340, Math.round(root.width * 0.45)) : Math.min(300, Math.round(root.width * 0.22))
         opacity: root.compact && !root.nState.compactSubcategories ? 0 : 1
-        enabled: !root.compact || root.nState.compactSubcategories
+        enabled: root.sidePane && (!root.compact || root.nState.compactSubcategories)
         z: 1
         nState: nState
 
@@ -272,7 +306,7 @@ Item {
     Pages {
         id: pages
 
-        anchors.left: subcategoryPane.right
+        anchors.left: root.sidePane ? subcategoryPane.right : navPane.right
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
@@ -384,18 +418,12 @@ Item {
         onActivated: {
             if (pages.handleEscape())
                 return;
-            if (root.nState.subPageIdxStack.length > 0) {
+            if (root.nState.subPageKeyStack.length > 0) {
                 WindowFactory.goBack();
             } else if (root.activePane === 2) {
-                root.activePane = 1;
-                pages.clearSelection();
-                subcategoryPane.selectCurrentOrFirst();
+                root.leaveContent();
             } else if (root.activePane === 1) {
-                if (root.compact)
-                    root.nState.exitCompactPage();
-                root.activePane = 0;
-                subcategoryPane.clearSelection();
-                navPane.selectCurrentOrFirst();
+                root.leaveSubcategories();
             } else {
                 root.requestClose();
             }
@@ -404,24 +432,18 @@ Item {
 
     Shortcut {
         sequence: "Backspace"
-        enabled: root.windowActive && !root.hasActiveInputField && (root.nState.subPageIdxStack.length > 0 || root.activePane > 0)
+        enabled: root.windowActive && !root.hasActiveInputField && (root.nState.subPageKeyStack.length > 0 || root.activePane > 0)
         autoRepeat: false
 
         onActivated: {
             if (pages.handleEscape())
                 return;
-            if (root.nState.subPageIdxStack.length > 0) {
+            if (root.nState.subPageKeyStack.length > 0) {
                 WindowFactory.goBack();
             } else if (root.activePane === 2) {
-                root.activePane = 1;
-                pages.clearSelection();
-                subcategoryPane.selectCurrentOrFirst();
+                root.leaveContent();
             } else if (root.activePane === 1) {
-                if (root.compact)
-                    root.nState.exitCompactPage();
-                root.activePane = 0;
-                subcategoryPane.clearSelection();
-                navPane.selectCurrentOrFirst();
+                root.leaveSubcategories();
             }
         }
     }

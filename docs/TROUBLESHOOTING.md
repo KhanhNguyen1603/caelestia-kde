@@ -1,10 +1,6 @@
-# TROUBLESHOOTING
+# Troubleshooting
 
-## Troubleshooting guide
-
-This document catalogs known failure modes, error conditions, and edge cases discovered through analysis of the installer, shell build system, scripts, documentation, and runtime architecture of this port.
-
----
+Known failure modes, how to confirm the cause, and the command that repairs it.
 
 ## Table of Contents
 
@@ -17,18 +13,18 @@ This document catalogs known failure modes, error conditions, and edge cases dis
 7. [KDE & Plasma Specific Issues](#7-kde--plasma-specific-issues)
    1. [Installer Window Rules](#77-installer-window-rules)
    2. [Quick Share Cannot Receive Files](#78-quick-share-cannot-receive-files)
+   3. [Plasma Audio Visualizer](#79-plasma-audio-visualizer)
+   4. [skwd-wall](#710-skwd-wall)
 8. [Post-Install Issues](#8-post-install-issues)
 9. [Uninstall Issues](#9-uninstall-issues)
 10. [Update Issues](#10-update-issues)
 11. [Diagnostic Commands Reference](#11-diagnostic-commands-reference)
 
----
-
 ## 1. Build & Compilation Issues
 
 ### 1.1 C++ Installer Compilation Fails
 
-The installer compiles the `caelestia-install` TUI binary during `setup.sh`. The CMake project requires **C++20** (`CMAKE_CXX_STANDARD 20`).
+`setup.sh` downloads the prebuilt `caelestia-install` binary for the release and verifies it. When no artifact matches the architecture or `tui.version`, it falls back to compiling `installer/tui`, which needs **C++20** (`CMAKE_CXX_STANDARD 20`) and the build toolchain.
 
 | Symptom | Likely Cause | Fix |
 |---|---|---|
@@ -91,8 +87,6 @@ The project enables ccache in both `installer/CMakeLists.txt` and `shell/CMakeLi
 - The cache directory (`~/.cache/ccache`) may be too small — increase it: `ccache -M 5G`
 - Debug builds (`-DCMAKE_BUILD_TYPE=Debug`) are much slower; the installer uses `Release`
 
----
-
 ## 2. Dependency & Package Issues
 
 ### 2.1 Arch Linux / yay Failures
@@ -144,8 +138,6 @@ $XDG_CACHE_HOME/caelestia-kde/failed_packages.txt
 ```
 
 The installer does **not** abort on package failure — it logs and continues. Check this file after installation if something doesn't work.
-
----
 
 ## 3. Runtime Issues — Shell
 
@@ -215,7 +207,7 @@ causing that app to freeze or crash.
 This falls back to static app icons for thumbnails instead of live video and
 avoids Caelestia's use of the protocol entirely.
 
-### 3.3.2 Black Window in Screen Center (xwaylandvideobridge) ([#1006](https://github.com/ladybug-me/caelestia-kde/issues/1006))
+### 3.3.2 Black Window in Screen Center (xwaylandvideobridge) ([#1006](https://github.com/caelestia-kde/caelestia/issues/1006))
 
 On systems where `xwaylandvideobridge` autostarts (such as Fedora KDE), an opaque black floating window can appear in the center of the display at startup and reappear whenever clicking the desktop.
 
@@ -233,7 +225,7 @@ bash scripts/04a-window-rules.sh
 
 The rule uses substring matching (`wmclassmatch 2`), omits `types` (matching both Dialog and Normal window types), enforces `placement 0` (NoPlacement to prevent centering), forces 0% active and inactive opacity, and marks the window to stay below others while skipping taskbars, pagers, and window switchers.
 
-### 3.3.3 Shell Crash-Loops When MangoHud Is Enabled Session-Wide ([#940](https://github.com/ladybug-me/caelestia-kde/issues/940))
+### 3.3.3 Shell Crash-Loops When MangoHud Is Enabled Session-Wide ([#940](https://github.com/caelestia-kde/caelestia/issues/940))
 
 With `MANGOHUD=1` set for the whole session (common on gaming distributions, e.g. in
 `~/.config/environment.d/`), the shell dies seconds after it starts and
@@ -334,8 +326,6 @@ System Settings.
 Applying once when the wallpaper or theme changes is expected and does not
 trigger any of this.
 
----
-
 ### 3.8 Workspace Tracker Effect Stops Loading After a KDE Update
 
 The workspace pills show the focused screen's desktop on every screen, swiping
@@ -361,7 +351,12 @@ The last command prints the effect's interface once it is loaded again, and
 fails while it is not. `bash shell/scripts/check-workspace-tracker.sh` answers the
 same question with an exit status (3 means enabled but not loaded).
 
----
+The shell checks the same thing at login, but only raises the *Desktop tracking
+is off* toast the first time it sees a given failure. After that the reason goes
+to the log (`journalctl --user -u caelestia-shell | grep WorkspaceTrackerGuard`)
+instead of a toast, because the same mismatch would otherwise cover the panels at
+every login until the effect is rebuilt. Rebuilding it and logging back in clears
+the record, so a later breakage is announced again.
 
 ### 3.9 Copy/Paste Crashes Krita or Inkscape (cliphist.service)
 
@@ -703,36 +698,50 @@ The list is that application's own history in that application's own order: when
 was opened by two applications, each records its own visit, and the jump list keeps the visit
 that application made rather than dropping the file because something else opened it later.
 
----
-
 ### 3.21 A Timer Did Not Fire, or Disappeared
 
 Timers are countdowns, and they live in the utilities drawer (*the card titled Timers*),
 in `~/.local/state/caelestia/timers.json` between shell restarts, and on the CLI:
 
 ```bash
-caelestia shell timers startFor 25m "take the bread out"   # same parser as the card
+caelestia shell timers startFor 25m "take the bread out"   # a duration as typed
 caelestia shell timers list                                # what is running, seconds left
+caelestia shell timers toggleActive                        # pause or resume the timer on the card
 caelestia shell timers cancel <id>                         # the id from list
 caelestia shell timers clear                               # all of them
 ```
 
-A duration is read the way it is typed: `25` and `25m` are minutes, `90s` is ninety
-seconds, `1h30` is an hour and a half.
+The card's field is a keypad, not a duration box: it counts digits rather than units. Two
+digits or fewer are seconds, up to four are minutes and seconds, and past that the field
+grows an hour column, so `30` is half a minute, `300` is 3:00 and `10300` is 1:03:00. The
+CLI keeps the other grammar, because a command line has room to say `25m`: a bare number
+there is minutes, `90s` is ninety seconds, and `1h30` is an hour and a half.
+
+The card shows one countdown in large type — the pinned timer, or the one ending soonest —
+with a bar for how much of it has run, and Start/Pause and Reset under it. The rest are
+listed below, each with its own pause, pin and cancel. Start/Pause acts on the countdown
+in large type: it starts what is typed when nothing is running, and stops or restarts that
+one otherwise.
 
 What is stored is the moment a timer *ends*, not the time it has left, so restarting the
-shell does not restart the countdown. A timer whose end passed while the shell was not
-running is reported once on the next start ("2 timers finished while the shell was not
-running") instead of replaying every one of them. Timers that end while the shell is
-running are each announced with their own message, since that message is still news.
+shell does not restart the countdown. A paused timer is the exception, because its clock
+has stopped on purpose: it stores the seconds it had left and comes back paused. A timer
+whose end passed while the shell was not running is reported once on the next start
+("2 timers finished while the shell was not running") instead of replaying every one of
+them. Timers that end while the shell is running are each announced with their own
+message, since that message is still news.
 
-A timer that ends while the shell is running raises a notification as *Timers*, which
-means it follows the same rules as any other: a banner and a chime, unless Do Not Disturb
-is on.
+A timer that finishes raises a notification as *Timers*, which means it follows the same
+rules as any other: a banner and a chime, unless Do Not Disturb is on. It also repeats an
+alarm until it is answered, so a timer set in another room is noticed. *Nexus → System
+Services → Timers* sets which of the system's own sounds it plays, how many seconds it
+repeats for (0 silencing it), or switches it to keep going until the timer is reset. The
+sounds are KDE's, read from `/usr/share/sounds`, so the list is whatever that machine has
+installed; a sound that is no longer there falls back to the shell's notification chime.
+*Reset* on the card, or `timers clear`, stops it either way.
 
 Typing a duration and pressing Enter starts the timer; leaving the field alone does not,
-so a click elsewhere cannot start a timer nobody asked for. The buttons under the field
-(5m, 10m, 25m, 45m) start one in a press.
+so a click elsewhere cannot start a timer nobody asked for.
 The card can be hidden entirely with *Nexus → Utilities panel → Timers*; the timers keep
 running, they are simply not in the drawer.
 
@@ -750,7 +759,6 @@ qalc "10 km to miles"        # the same answer from a terminal
 shell itself does. Currency rates come from the sources `qalc` knows about and go stale
 when it cannot reach them; `qalc -e "20 usd in eur"` prints the rate it used when asked to
 show its work.
-
 
 ## 4. Runtime Issues — Lock Screen
 
@@ -777,8 +785,6 @@ ls -la ~/.local/share/plasma/shells/caelestia.desktop/contents/lockscreen/LockSc
 | Lock screen fails or crashes | Greeter files missing or corrupted in `~/.local/share/plasma/shells/`. | Re-deploy via `BUNDLE_DIR=. ./scripts/08-build-shell.sh` or `cp -r src/kde/shells/caelestia.desktop ~/.local/share/plasma/shells/`. |
 | Lock screen shows wallpaper error | Legacy `PlasmaApplicationWallpaper` left in `kscreenlockerrc`. | Reset WallpaperPlugin: `kwriteconfig6 --file kscreenlockerrc --group Greeter --key WallpaperPlugin "org.kde.image"`. |
 | Profile picture missing | `~/.face` does not exist and no system user avatar set. | Place your avatar image at `~/.face` or configure an avatar in KDE System Settings → Users. |
-
----
 
 ## 5. Configuration Issues
 
@@ -844,8 +850,14 @@ that outlived a reboot would stop the machine from ever sleeping.
 ```bash
 caelestia shell idleInhibitor isEnabled    # what the shell currently believes
 caelestia shell idleInhibitor disable      # the normal way, writes the file
+caelestia shell idleInhibitor setFor 1800  # stay awake for half an hour, then let go
+caelestia shell idleInhibitor remaining    # seconds left, or -1 while it has no end
 rm -f "${XDG_RUNTIME_DIR:-/tmp/caelestia-$USER}/caelestia-keepawake.json"   # or forget it until the next restart
 ```
+
+The file stores the mode and the moment the hold ends, not the time left, so a hold set for an hour still
+has whatever was left of it after the shell restarts — it does not start over, and one whose moment passed
+while the shell was down comes back off.
 
 The inhibitor is a Wayland idle inhibitor, so it shows up in neither `systemd-inhibit --list` nor the power
 settings; only the shell knows about it.
@@ -969,8 +981,6 @@ sudo apt install iw    # Debian / Ubuntu
 
 A connection whose link quality is genuinely poor still shows fewer bars, and so does a
 roaming client sitting on a weak radio of a strong network.
-
----
 
 ## 7. KDE & Plasma Specific Issues
 
@@ -1107,7 +1117,7 @@ themes that ask for it, which is what that optional dependency is for.
 The installer writes five groups into `~/.config/kwinrulesrc` in priority order:
 `caelestia-shell-opacity` keeps the shell's own toplevels at full opacity,
 `caelestia-xwaylandvideobridge` keeps `xwaylandvideobridge` transparent and uncentered
-out of switchers and taskbars (resolving a black centered box glitch on distros like Fedora; see [issue #1006](https://github.com/ladybug-me/caelestia-kde/issues/1006)),
+out of switchers and taskbars (resolving a black centered box glitch on distros like Fedora; see [issue #1006](https://github.com/caelestia-kde/caelestia/issues/1006)),
 `caelestia-pip` keeps windows whose title matches `Picture(-| )in(-| )[Pp]icture` above others,
 `caelestia-dialogs` forces centered placement on dialogs, and `caelestia-opacity` gives
 normal windows and dialogs an inactive opacity of 95 percent. Specific rules are intentionally
@@ -1211,18 +1221,27 @@ which needs administrator rights on every start.
 them to the shell, because a package must not enable a system daemon or open a port
 behind the user's back. There, the first time Quick Share is switched on the shell
 checks the system through
-`<qmlconfdir>/scripts/quickshare_setup.sh --status`, and if something is missing asks
-through `pkexec` to put it right. The same helper is behind **Quick Share setup** on
-the Quick Share settings page (Nexus → Services → Quick Share), which is the way back
-if the check was declined, if the firewall changed later, or if the report reads
+`/usr/lib/caelestia/scripts/quickshare_setup.sh --status`, and if something is missing
+asks through `pkexec` to put it right. The same helper is behind **Quick Share setup**
+on the Quick Share settings page (Nexus → Services → Quick Share), which is the way
+back if the check was declined, if the firewall changed later, or if the report reads
 `SETUP=unknown` because the rule set cannot be read without root. The row says what it
 knows: where the report cannot see the port, it reports that the port could not be
 checked again rather than claiming a success it cannot confirm.
 
+That path is not the copy that ships with the shell. A source install keeps the shell
+in the user's home, and `pkexec` given a file the user can rewrite would run the
+rewrite as root, so `scripts/08-build-shell.sh` installs the two helpers it elevates
+(`quickshare_setup.sh` and `ollama_setup.sh`) into `/usr/lib/caelestia/scripts/` as
+root's own. The shell only ever elevates a copy root owns and nobody else can write,
+and says the helper is missing — with a reinstall as the remedy — when there is none.
+An existing checkout that has not been reinstalled since this changed reads the same
+way: run `update.sh`, or the installer, once.
+
 To see what the machine reports:
 
 ```bash
-bash ~/.config/quickshell/caelestia/scripts/quickshare_setup.sh --status --port 65000
+bash /usr/lib/caelestia/scripts/quickshare_setup.sh --status --port 65000
 ```
 
 The report is four lines. `AVAHI` is `active`, `inactive`, `absent` or `unknown`,
@@ -1234,7 +1253,7 @@ rule set needs root, and guessing there would raise a password prompt for nothin
 To do it by hand, run the helper as root:
 
 ```bash
-sudo bash ~/.config/quickshell/caelestia/scripts/quickshare_setup.sh --port 65000
+sudo /usr/lib/caelestia/scripts/quickshare_setup.sh --port 65000
 ```
 
 It is idempotent: it enables and starts `avahi-daemon.service` (falling back to
@@ -1259,7 +1278,40 @@ range (32768–60999), so the listener never collides with the local port of an 
 connection. If it is taken by something else, Quick Share reports that it could not
 listen and stays off.
 
----
+Sending: both devices now show a four-digit code, and the sending side will not send
+until you confirm that the two match. The code is derived from the handshake itself, so
+a device that relayed the connection between two others ends up with a different code
+on each end, which is the point of comparing them. Decline the prompt if the code on
+the receiving device is not the one shown here — that is a device in the middle, not the
+one you picked. Nothing leaves the machine before you confirm, and a request left
+unanswered is dropped after two minutes.
+
+### 7.9 Plasma Audio Visualizer
+
+- **Not installed:**
+  The desktop visualizer is a Plasma widget from `plasma-audio-visualizer`, not a shell module. Install it first; on Arch it is in the AUR (`yay -S plasma-audio-visualizer`).
+- **Empty config:**
+  The shell drives the widget through presets such as `Double Reverse` and `Single`. Editing the widget in Plasma saves the result as `User Defined`, which the shell reapplies. A fresh install can leave the preset on *User Defined* with nothing shown; pick another preset to bring it back.
+- **Hidden by wallpaper:**
+  The widget draws on the Plasma desktop. When the Quickshell wallpaper layer is on (`background.wallpaperEnabled`), the widget is hidden behind it, hence disabled automatically. In wallpaper settings, change wallpaper engine to skwd/plasma to use it.
+- **Customize:**
+  To use the visualizer without the shell's presets, turn it off in the shell and add the widget from Plasma's widget picker. To keep the shell's preset but change the look, pick Single or Double Reverse here, then edit the widget in Plasma's edit mode (right-click the desktop, *Edit Plasma Widgets*).
+
+### 7.10 skwd-wall
+
+`skwd-wall-v2` renders animated and video wallpapers. Without it, the shell falls back to its own wallpaper engine and the skwd-specific settings (tags, filters, effect pipelines) are unavailable. Installation is automatic; if that fails, see [liixini/skwd-wall](https://github.com/liixini/skwd-wall).
+
+The shell treats the engine as present when the `skwd-walld` user service is active:
+
+```bash
+systemctl --user status skwd-walld
+```
+
+The service can take more than one restart to register after the first install. To run the renderer by hand:
+
+```bash
+skwd-wall-v2
+```
 
 ## 8. Post-Install Issues
 
@@ -1293,13 +1345,13 @@ If the script is killed with **SIGKILL** (not SIGTERM), lock files may persist:
 
 | Lock File | Script |
 |---|---|
-| `${XDG_RUNTIME_DIR:-/tmp}/caelestia-setup.lock` | `setup.sh` |
-| `${XDG_RUNTIME_DIR:-/tmp}/caelestia-update.lock` | `update.sh` |
+| `${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/caelestia-$UID/setup.lock` | `setup.sh` |
+| `${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/caelestia-$UID/update.lock` | `update.sh` |
 
 **Always use Ctrl+C (SIGINT)** which is handled gracefully. Remove stale locks:
 ```bash
-rm -f "${XDG_RUNTIME_DIR:-/tmp}/caelestia-setup.lock"
-rm -f "${XDG_RUNTIME_DIR:-/tmp}/caelestia-update.lock"
+rm -f "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/caelestia-$UID/setup.lock"
+rm -f "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/caelestia-$UID/update.lock"
 ```
 
 ### 8.5 Update.sh Fails
@@ -1368,8 +1420,6 @@ tip, or a checkout that is exactly the released tag (an update pinned to a versi
 stale `main`, or a checkout carrying commits of its own builds locally, because the archive would
 replace that tree with the release's. `main` that has moved on since its last release cannot be
 told apart from that release, so it is installed as the release its `version.env` names.
-
----
 
 ## 9. Uninstall Issues
 
@@ -1445,8 +1495,6 @@ user's own:
 - `~/.config/caelestia-update/` and `~/.cache/caelestia-update-repo` - the updater's
   checkout and cache. Remove them yourself with the command in [10.1](#101-fixing-caelestia-updater-recommended).
 
----
-
 ## 10. Update Issues
 
 ### 10.1 Fixing caelestia updater (Recommended)
@@ -1467,12 +1515,35 @@ You can simply run `bash update.sh` in the cloned repo folder (~/caelestia-kde) 
 
 Run the following command to simply install the latest shell using installer.
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ladybug-me/caelestia-kde/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/caelestia-kde/caelestia/main/install.sh | sh
 ```
 
 - If it gives an error due to already present `~/caelestia-kde` directory in your pc, then remove that directory first and then run the above command. **Make sure to copy the `backups/` folder somewhere and then put it back here after installation completes.**
 
----
+### 10.4 The Updates page says it could not check
+
+The check reports a failure instead of "You're up to date" when it cannot get
+an answer, and leaves the last successful result untouched. The status line
+under the notice names the reason and says when the check last succeeded:
+
+```bash
+# Is GitHub reachable at all?
+git ls-remote --exit-code --heads https://github.com/caelestia-kde/caelestia.git main
+
+# The bare clone the check reads from, and its freshness
+git -C ~/.cache/caelestia-update-repo log --oneline -1 main
+```
+
+A stale or broken clone is repaired by deleting it, as in
+[10.1](#101-fixing-caelestia-updater-recommended). The check runs again the next
+time the page is opened, or immediately with **Try again**.
+
+### 10.5 Update checking is off
+
+With periodic checking off, the taskbar indicator stays hidden and the page
+answers a manual **Check** only. **Turn on** in the Updates page restores both,
+and the same switch lives under Panels → Taskbar → Update indicator, which opens
+the page for you when checking is off.
 
 ## 11. Diagnostic Commands Reference
 
@@ -1518,7 +1589,7 @@ cat /tmp/caelestia_installer_err.log 2>/dev/null
 
 ```bash
 # Test submodule availability
-git ls-remote https://github.com/ladybug-me/caelestia-kde.git HEAD
+git ls-remote https://github.com/caelestia-kde/caelestia.git HEAD
 
 # Test AUR access
 curl -sI https://aur.archlinux.org/rpc/?v=5\&type=info\&arg[]=quickshell-git | head -5
@@ -1537,15 +1608,13 @@ update-desktop-database ~/.local/share/applications/
 systemctl --user restart plasma-plasmashell
 ```
 
----
-
 ## Quick Reference: Common Fixes
 
 | Problem | Quick Fix |
 |---|---|
 | Shell won't start | `quickshell -d -n -p ~/.config/quickshell/caelestia/shell.qml` |
 | Lock screen not active | `kwriteconfig6 --file plasmashellrc --group "Shell" --key "ShellPackage" "caelestia.desktop"` |
-| Stale lock file | `rm -f "${XDG_RUNTIME_DIR:-/tmp}/caelestia-setup.lock"` |
+| Stale lock file | `rm -f "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/caelestia-$UID/setup.lock"` |
 | Missing QML module | `export QML2_IMPORT_PATH="$HOME/.local/lib/qt6/qml"` |
 | No window thumbnails | `kbuildsycoca6 --noincremental && qdbus6 org.kde.KWin /KWin reconfigure` |
 | Git submodule error | `git submodule update --init --recursive src/dots` |

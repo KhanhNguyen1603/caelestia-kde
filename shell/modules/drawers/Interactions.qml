@@ -5,6 +5,7 @@ import Caelestia.Config
 import qs.components
 import qs.components.controls
 import qs.services
+import qs.utils
 import qs.modules.bar as Bar
 import qs.modules.bar.popouts as BarPopouts
 
@@ -29,6 +30,9 @@ CustomMouseArea {
     property bool osdShortcutActive
     property bool utilitiesShortcutActive
     readonly property bool isBarHorizontal: bar.isHorizontal
+    // Something in this window that is not this item already has the focus: a panel's text
+    // field focuses itself as it opens, and the drawer must not take it back.
+    readonly property bool hasFocusedChild: root.Window.activeFocusItem !== null && root.Window.activeFocusItem !== root
     // Uses clampedThickness rather than the raw implicit size so the bar stays
     // reachable when the border thickness is set to 0 (the collapsed bar is 0px wide).
 
@@ -53,13 +57,13 @@ CustomMouseArea {
     function withinPanelHeight(panel: Item, x: real, y: real, span = 100): bool {
         const panelY = panels.topMargin + panel.y;
         const panelHeight = panel.content ? panel.content.nonAnimHeight : panel.height;
-        const b = spanBounds(panelY - Config.border.rounding - panels.topMargin, panelY + panelHeight + Config.border.rounding + panels.bottomMargin, span);
+        const b = spanBounds(panelY - Surface.panelRounding - panels.topMargin, panelY + panelHeight + Surface.panelRounding + panels.bottomMargin, span);
         return y >= b.x && y <= b.y;
     }
     function withinPanelWidth(panel: Item, x: real, y: real, span = 100): bool {
         const panelX = panels.leftMargin + panel.x;
         const panelWidth = panel.content ? panel.content.nonAnimWidth : panel.width;
-        const b = spanBounds(panelX - Config.border.rounding - panels.leftMargin, panelX + panelWidth + Config.border.rounding + panels.rightMargin, span);
+        const b = spanBounds(panelX - Surface.panelRounding - panels.leftMargin, panelX + panelWidth + Surface.panelRounding + panels.rightMargin, span);
         return x >= b.x && x <= b.y;
     }
     function inLeftPanel(panel: Item, x: real, y: real): bool {
@@ -79,7 +83,7 @@ CustomMouseArea {
     // Next to the open sidebar a popout doesn't always cover the bar item that
     // opened it; keep the strip straight above the item so it can be reached.
     function abovePopoutItem(panel: Item, x: real): bool {
-        return panel === panels.popoutsWrapper && !popouts.isDetached && Math.abs(x - popouts.currentCenter) <= Config.border.rounding;
+        return panel === panels.popoutsWrapper && !popouts.isDetached && Math.abs(x - popouts.currentCenter) <= Surface.panelRounding;
     }
     function inRightPanel(panel: Item, x: real, y: real, edge = 0, span = 100): bool {
         const onLeft = bar.position === "right";
@@ -100,7 +104,16 @@ CustomMouseArea {
     }
     function inBottomPanel(panel: Item, x: real, y: real, isCorner = false, edge = Config.border.thickness, span = 100): bool {
         const panelHeight = panel.height * (1 - (panel.offsetScale ?? 0)); // qmllint disable missing-property
-        return y > screen.height - Math.max(Config.border.minThickness, edge + panelHeight) - (isCorner ? Config.border.rounding : 0) && withinPanelWidth(panel, x, y, panelHeight > 0 ? 100 : span);
+        const bottomMargin = panelHeight > 0 ? panels.bottomMargin : 0;
+        return y > screen.height - Math.max(Config.border.minThickness, edge + panelHeight + bottomMargin) - (isCorner ? Config.border.rounding : 0) && withinPanelWidth(panel, x, y, panelHeight > 0 ? 100 : span);
+    }
+    function inLauncherAvatar(x: real, y: real): bool {
+        if (!panels.launcher.avatarVisible)
+            return false;
+        const av = panels.launcherAvatar;
+        const avX = panels.leftMargin + av.x;
+        const avY = panels.topMargin + av.y;
+        return x >= avX && x <= avX + av.width && y >= avY && y <= avY + av.height;
     }
     function inOverviewCorner(x: real, y: real): string {
         const thickness = Config.overview.hoverThickness;
@@ -121,6 +134,11 @@ CustomMouseArea {
     anchors.fill: parent
     acceptedButtons: (fullscreen && !capturesDismissClick && !(root.focusGrab && (root.focusGrab.active || popouts.isDetached))) ? Qt.NoButton : Qt.AllButtons
     hoverEnabled: true
+    Keys.onEscapePressed: {
+        if (!root.panels.wantsKeyboard || !root.focusGrab)
+            return;
+        root.focusGrab.clear(true);
+    }
     onPressed: event => {
         dragStart = Qt.point(event.x, event.y);
 
@@ -132,12 +150,15 @@ CustomMouseArea {
         const grabActive = root.focusGrab && (root.focusGrab.active || popouts.isDetached);
         // Any screen's menu can be the one this click dismisses.
         const menuOpen = Visibilities.contextPopoutOpen;
+        // A pinned hidden-icons box is dismissed by clicking away from it, the way a
+        // menu is: the click belongs to the dismiss, not to what is under it.
+        const boxOpen = popouts.staysOpen && popouts.hasCurrent;
 
-        if (grabActive || menuOpen) {
+        if (grabActive || menuOpen || boxOpen) {
             let inside = false;
 
             if (inBarArea(event.x, event.y)) inside = true;
-            else if (visibilities.launcher && inBottomPanel(panels.launcher, event.x, event.y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, event.x, event.y)) inside = true;
+            else if (visibilities.launcher && ((inBottomPanel(panels.launcher, event.x, event.y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, event.x, event.y)) || inLauncherAvatar(event.x, event.y))) inside = true;
             else if (visibilities.session && inRightPanel(panels.sessionWrapper, event.x, event.y)) inside = true;
             else if (visibilities.sidebar && inRightPanel(panels.sidebar, event.x, event.y)) inside = true;
             else if (visibilities.dashboard && inTopPanel(panels.dashboard, event.x, event.y, Config.dashboard.hoverThickness, Config.dashboard.hoverWidth) && withinPanelWidth(panels.dashboard, event.x, event.y)) inside = true;
@@ -149,6 +170,8 @@ CustomMouseArea {
                     root.focusGrab.clear();
                 if (menuOpen)
                     Visibilities.closeContextPopouts();
+                if (boxOpen)
+                    popouts.hasCurrent = false;
             }
         }
     }
@@ -213,12 +236,13 @@ CustomMouseArea {
         }
 
         if (panels.sidebar.offsetScale === 1) {
-            const showOsd = inRightPanel(panels.osdWrapper, x, y, Config.osd.hoverThickness, Config.osd.hoverWidth);
+            const inOsd = inRightPanel(panels.osdWrapper, x, y, Config.osd.hoverThickness, Config.osd.hoverWidth);
+            const showOsd = Config.osd.enabled && (Config.osd.showOnHover ? inOsd : (panels.osd.offsetScale < 1 && inOsd));
 
             if (!osdShortcutActive) {
                 visibilities.osd = showOsd;
                 root.panels.osd.hovered = showOsd;
-            } else if (showOsd) {
+            } else if (inOsd) {
                 osdShortcutActive = false;
                 root.panels.osd.hovered = true;
             }
@@ -229,25 +253,26 @@ CustomMouseArea {
                 const showThreshold = bar.position === "right" ? Config.session.dragThreshold : -Config.session.dragThreshold;
                 const hideThreshold = bar.position === "right" ? -Config.session.dragThreshold : Config.session.dragThreshold;
 
-                if (bar.position === "right" ? dragX > showThreshold : dragX < showThreshold)
+                if (Config.session.enabled && (bar.position === "right" ? dragX > showThreshold : dragX < showThreshold))
                     visibilities.session = true;
                 else if (bar.position === "right" ? dragX < hideThreshold : dragX > hideThreshold)
                     visibilities.session = false;
 
                 const showSidebarThreshold = bar.position === "right" ? Config.sidebar.dragThreshold : -Config.sidebar.dragThreshold;
-                if (showSidebar && panels.session.offsetScale <= 0 && (bar.position === "right" ? dragX > showSidebarThreshold : dragX < showSidebarThreshold))
+                if (Config.sidebar.enabled && showSidebar && panels.session.offsetScale <= 0 && (bar.position === "right" ? dragX > showSidebarThreshold : dragX < showSidebarThreshold))
                     visibilities.sidebar = true;
-            } else if (showSidebar && (bar.position === "right" ? dragX > Config.sidebar.dragThreshold : dragX < -Config.sidebar.dragThreshold)) {
+            } else if (Config.sidebar.enabled && showSidebar && (bar.position === "right" ? dragX > Config.sidebar.dragThreshold : dragX < -Config.sidebar.dragThreshold)) {
                 visibilities.sidebar = true;
             }
         } else {
             const outOfSidebar = bar.position === "right" ? x > panels.leftMargin + panels.sidebar.width * (1 - panels.sidebar.offsetScale) : x < screen.width - panels.sidebar.width * (1 - panels.sidebar.offsetScale);
-            const showOsd = outOfSidebar && inRightPanel(panels.osdWrapper, x, y, Config.osd.hoverThickness, Config.osd.hoverWidth);
+            const inOsd = outOfSidebar && inRightPanel(panels.osdWrapper, x, y, Config.osd.hoverThickness, Config.osd.hoverWidth);
+            const showOsd = Config.osd.enabled && (Config.osd.showOnHover ? inOsd : (panels.osd.offsetScale < 1 && inOsd));
 
             if (!osdShortcutActive) {
                 visibilities.osd = showOsd;
                 root.panels.osd.hovered = showOsd;
-            } else if (showOsd) {
+            } else if (inOsd) {
                 osdShortcutActive = false;
                 root.panels.osd.hovered = true;
             }
@@ -256,7 +281,7 @@ CustomMouseArea {
                 const showThreshold = bar.position === "right" ? Config.session.dragThreshold : -Config.session.dragThreshold;
                 const hideThreshold = bar.position === "right" ? -Config.session.dragThreshold : Config.session.dragThreshold;
 
-                if (bar.position === "right" ? dragX > showThreshold : dragX < showThreshold)
+                if (Config.session.enabled && (bar.position === "right" ? dragX > showThreshold : dragX < showThreshold))
                     visibilities.session = true;
                 else if (bar.position === "right" ? dragX < hideThreshold : dragX > hideThreshold)
                     visibilities.session = false;
@@ -266,19 +291,19 @@ CustomMouseArea {
                 visibilities.sidebar = false;
         }
 
-        if (Config.launcher.showOnHover) {
+        if (Config.launcher.enabled && Config.launcher.showOnHover) {
             if (!visibilities.launcher && inBottomPanel(panels.launcher, x, y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth))
                 visibilities.launcher = true;
-        } else if (pressed && inBottomPanel(panels.launcher, dragStart.x, dragStart.y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, x, y)) {
+        } else if (Config.launcher.enabled && pressed && inBottomPanel(panels.launcher, dragStart.x, dragStart.y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, x, y)) {
             if (dragY < -Config.launcher.dragThreshold)
                 visibilities.launcher = true;
             else if (dragY > Config.launcher.dragThreshold)
                 visibilities.launcher = false;
         }
 
-        const showDashboard = Config.dashboard.showOnHover && inTopPanel(panels.dashboard, x, y, Config.dashboard.hoverThickness, Config.dashboard.hoverWidth);
+        const showDashboard = Config.dashboard.enabled && Config.dashboard.showOnHover && inTopPanel(panels.dashboard, x, y, Config.dashboard.hoverThickness, Config.dashboard.hoverWidth);
 
-        if (Config.dashboard.showOnHover) {
+        if (Config.dashboard.enabled && Config.dashboard.showOnHover) {
             if (!dashboardShortcutActive) {
                 visibilities.dashboard = showDashboard;
             } else if (showDashboard) {
@@ -286,7 +311,7 @@ CustomMouseArea {
             }
         }
 
-        if (pressed && inTopPanel(panels.dashboard, dragStart.x, dragStart.y, Config.dashboard.hoverThickness, Config.dashboard.hoverWidth) && withinPanelWidth(panels.dashboard, x, y)) {
+        if (Config.dashboard.enabled && pressed && inTopPanel(panels.dashboard, dragStart.x, dragStart.y, Config.dashboard.hoverThickness, Config.dashboard.hoverWidth) && withinPanelWidth(panels.dashboard, x, y)) {
             if (dragY > Config.dashboard.dragThreshold)
                 visibilities.dashboard = true;
             else if (dragY < -Config.dashboard.dragThreshold)
@@ -312,9 +337,9 @@ CustomMouseArea {
         const inUtilitiesArea = bar.position === "bottom"
             ? inTopPanel(panels.utilities, x, y, Config.utilities.hoverThickness, Config.utilities.hoverWidth) && (root.visibilities.utilities ? inUtilitiesAreaOpen : inUtilitiesAreaClosed)
             : inBottomPanel(panels.utilities, x, y, true, Config.utilities.hoverThickness, Config.utilities.hoverWidth) && (root.visibilities.utilities ? inUtilitiesAreaOpen : inUtilitiesAreaClosed);
-        const showUtilities = Config.utilities.showOnHover && !popouts.hasCurrent && panels.popoutsWrapper.offsetScale > 0.99 && inUtilitiesArea;
+        const showUtilities = Config.utilities.enabled && Config.utilities.showOnHover && !popouts.hasCurrent && panels.popoutsWrapper.offsetScale > 0.99 && inUtilitiesArea;
 
-        if (Config.utilities.showOnHover) {
+        if (Config.utilities.enabled && Config.utilities.showOnHover) {
             if (!utilitiesShortcutActive) {
                 visibilities.utilities = showUtilities;
             } else if (showUtilities) {
@@ -322,7 +347,7 @@ CustomMouseArea {
             }
         }
 
-        if (pressed) {
+        if (Config.utilities.enabled && pressed) {
             const inUtilitiesDragStart = bar.position === "bottom"
                 ? inTopPanel(panels.utilities, dragStart.x, dragStart.y, Config.utilities.hoverThickness, Config.utilities.hoverWidth)
                 : inBottomPanel(panels.utilities, dragStart.x, dragStart.y, true, Config.utilities.hoverThickness, Config.utilities.hoverWidth);
@@ -364,12 +389,29 @@ CustomMouseArea {
             }
         }
     }
+
+    Binding {
+        target: root
+        property: "focus"
+        when: root.panels.wantsKeyboard && !root.hasFocusedChild
+        value: true
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
     Timer {
         id: popoutHideTimer
 
         interval: 150
         onTriggered: {
             if (popouts.isContextPopout || panels.popoutsWrapper.hovered)
+                return;
+            // A box the user opened is theirs to dismiss, not the pointer's.
+            if (popouts.staysOpen)
+                return;
+            // A drag out of the bar opens the box under the pointer, which is
+            // outside every panel until the pointer reaches it: taking the panel
+            // away mid-gesture would leave the drag with nothing to land on.
+            if (TrayDrag.active)
                 return;
             if (!TrayRegistry.isTrayPopout(popouts.currentName) || ((popouts.current as StackView)?.depth ?? 0) <= 1) {
                 popouts.hasCurrent = false;

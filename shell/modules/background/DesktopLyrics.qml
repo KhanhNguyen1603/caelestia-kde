@@ -29,7 +29,7 @@ Item {
     readonly property color safePrimary: useLightSet ? Colours.palette.m3primaryContainer : Colours.palette.m3primary
     readonly property color safeSecondary: useLightSet ? Colours.palette.m3secondaryContainer : Colours.palette.m3secondary
     readonly property color safeTertiary: useLightSet ? Colours.palette.m3tertiaryContainer : Colours.palette.m3tertiary
-    readonly property string sansFont: GlobalConfig.appearance.font.body.family
+    readonly property string sansFont: GlobalConfig.appearance.font.body.family || Tokens.font.body.medium.family
     readonly property int alignment: Config.background.desktopLyrics.alignment
     readonly property bool autoHide: Config.background.desktopLyrics.autoHide
     readonly property bool windowHidesLyrics: Kwin.windowHidesDesktopWidgets(root.screen ? root.screen.name : "", false)
@@ -247,7 +247,12 @@ Item {
 
             sourceComponent: MultiEffect {
                 source: ShaderEffectSource {
-                    sourceItem: root.wallpaper
+                    id: wallpaperSource
+
+                    // Set only while this source has a window: Qt takes an extra reference on the source
+                    // item's window if this is set before the effect places it in a window, and never
+                    // releases it, which crashes the shell when the screen goes away.
+                    sourceItem: wallpaperSource.Window.window ? root.wallpaper : null
                     sourceRect: Qt.rect(root.absX, root.absY, root.width, root.height)
                 }
                 maskSource: backgroundPlate
@@ -333,7 +338,7 @@ Item {
 
                     anchors.fill: parent
                     text: root.previousLyricText
-                    font.family: root.sansFont
+                    font.family: LyricFonts.familyForText(text, root.sansFont)
                     font.pointSize: Tokens.font.body.medium.pointSize * root.lyricsScale
                     color: root.safeSecondary
                     opacity: 0.6
@@ -386,7 +391,7 @@ Item {
 
                     width: parent.width
                     text: root.displayedLyric
-                    font.family: root.sansFont
+                    font.family: LyricFonts.familyForText(text, root.sansFont)
                     font.pointSize: Tokens.font.title.medium.pointSize * 1.3 * root.lyricsScale
                     font.weight: Font.Bold
                     color: Colours.palette.m3primary
@@ -424,7 +429,7 @@ Item {
 
                     anchors.fill: parent
                     text: root.nextLyricText
-                    font.family: root.sansFont
+                    font.family: LyricFonts.familyForText(text, root.sansFont)
                     font.pointSize: Tokens.font.body.medium.pointSize * root.lyricsScale
                     color: root.safeSecondary
                     opacity: 0.6

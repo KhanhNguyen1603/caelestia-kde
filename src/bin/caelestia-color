@@ -815,6 +815,11 @@ def cmd_resolve_thumb(thumb_path: str) -> int:
                 d = json.load(f)
             t = d.get("thumb")
             p = d.get("path")
+            # A Wallpaper Engine scene has no file to point at, so the thumbnail is the image.
+            # Falling through would pick whatever older wallpaper the files below still name.
+            if d.get("type") == "we" and thumb_p.stem in (str(d.get("we_id") or ""), pathlib.Path(str(t or "")).parent.name):
+                print(thumb_path)
+                return 0
             if p and os.path.exists(p) and (t == thumb_path or not t or thumb_p.stem in str(t)):
                 print(p)
                 return 0
@@ -1102,14 +1107,16 @@ render_image() {
     if [[ "$variant_smart" == "true" ]]; then
         if measured="$(smart_variant "$wallpaper")"; then
             variant="$measured"
-            type="$(variant_type "$variant")"
         else
-            warn "cannot measure the wallpaper's colourfulness; matugen picks the variant"
-            type='scheme-smart'
+            # The wallpaper could not be measured, so there is no choice to make: the variant
+            # the caller asked for stands. Handing the choice to matugen instead returns a
+            # palette in a variant it does not name, which scheme.json then records as the one
+            # the caller asked for - and that unnamed palette comes back far more saturated
+            # than its label promises, which is what puts an unthemed accent on screen.
+            warn "cannot measure the wallpaper's colourfulness; keeping $variant"
         fi
-    else
-        type="$(variant_type "$variant")" || die "unknown variant: $variant"
     fi
+    type="$(variant_type "$variant")" || die "unknown variant: $variant"
 
     if [[ "$mode_smart" == "true" ]]; then
         mode_arg='smart'
@@ -1401,17 +1408,19 @@ _find_parent_video_arg() {
     return 1
 }
 
-# Return 0 (true) if any ancestor process in the current process tree is skwd-walld.
+# Return 0 (true) if any ancestor process in the current process tree is skwd-walld,
+# if SKWD_WALLD is set in the environment, or if an apply path (-a) was passed from skwd-wall.
 # This detects the re-entrant call skwd-walld -> caelestia-color and is used to skip
 # the skwd-helm apply that would feed back into skwd-walld, creating an infinite loop.
 _called_from_skwd_walld() {
     [[ -n "${SKWD_WALLD:-}" ]] && return 0
+    [[ -n "${apply_file:-}" ]] && return 0
     local pid="$BASHPID" ppid comm
     while true; do
         ppid="$(ps -p "$pid" -o ppid= 2>/dev/null | tr -d ' ')" || break
         [[ -n "$ppid" && "$ppid" -gt 1 ]] || break
         comm="$(ps -p "$ppid" -o comm= 2>/dev/null | tr -d ' ')" || break
-        [[ "$comm" == "skwd-walld" ]] && return 0
+        [[ "$comm" == "skwd-walld" || "$comm" == "skwd-wall"* ]] && return 0
         pid="$ppid"
     done
     return 1
@@ -1464,7 +1473,7 @@ write_wallpaper_state() {
     if command -v skwd-helm >/dev/null 2>&1 && ! _called_from_skwd_walld; then
         local curr_helm
         curr_helm="$(skwd-helm current 2>/dev/null | cut -f2- || true)"
-        if [[ "$curr_helm" != "$wallpaper" ]]; then
+        if [[ -z "$curr_helm" ]] || ! grep -qxF "$wallpaper" <<< "$curr_helm"; then
             skwd-helm apply "$wallpaper" >/dev/null 2>&1 || true
         fi
     fi
@@ -1789,7 +1798,10 @@ cmd_wallpaper() {
         fi
     fi
 
-    local state_file="${apply_file:-$file}"
+    # skwd-wall passes a Wallpaper Engine workshop id or folder as -a for its own wallpapers;
+    # the thumbnail is the only real image then. apply_file stays set for the loop guard.
+    local state_file="$file"
+    [[ -n "$apply_file" && -f "$apply_file" ]] && state_file="$apply_file"
     state_file="$(resolve_actual_wallpaper "$state_file")"
 
     write_wallpaper_state "$state_file"

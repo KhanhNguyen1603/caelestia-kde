@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Caelestia.Config
+import qs.utils
 
 Region {
     id: root
@@ -16,6 +17,7 @@ Region {
     property real blurOffsetLeft: 0
     property real blurOffsetRight: 0
     property matrix4x4 deformMatrix
+    property real radius: (target && target["radius"] !== undefined) ? target["radius"] : Surface.panelRounding
 
     property BlurOffsets offsets: BlurOffsets {
         target: root.target
@@ -28,6 +30,7 @@ Region {
         blurOffsetLeft: root.blurOffsetLeft
         blurOffsetRight: root.blurOffsetRight
         deformMatrix: root.deformMatrix
+        radius: root.radius
     }
 
     BlurBodies {
@@ -58,9 +61,9 @@ Region {
     // Pure native blur fallback: a static rectangle covering the widget's layout area,
     // explicitly avoiding 'item: root.target' so we don't inherit its deformMatrix.
     Region {
-        x: (!GlobalConfig.appearance.blurMask && root.offsets.isActive) ? root.offsets.tX : 0
-        y: (!GlobalConfig.appearance.blurMask && root.offsets.isActive) ? root.offsets.tY : 0
-        width: (!GlobalConfig.appearance.blurMask && root.offsets.isActive) ? root.offsets.tW : 0
-        height: (!GlobalConfig.appearance.blurMask && root.offsets.isActive) ? root.offsets.tH : 0
+        x: (!GlobalConfig.appearance.blurMask && root.offsets.isActive) ? (root.offsets.tX + root.offsets.deformOffsetX) : 0
+        y: (!GlobalConfig.appearance.blurMask && root.offsets.isActive) ? (root.offsets.tY + root.offsets.deformOffsetY) : 0
+        width: (!GlobalConfig.appearance.blurMask && root.offsets.isActive) ? (root.offsets.tW * root.offsets.tScale) : 0
+        height: (!GlobalConfig.appearance.blurMask && root.offsets.isActive) ? (root.offsets.tH * root.offsets.tScale) : 0
     }
 }

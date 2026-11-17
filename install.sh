@@ -32,7 +32,7 @@ if [ ! -t 0 ]; then
     fi
 fi
 
-REPO="${CAELESTIA_REPO:-https://github.com/ladybug-me/caelestia-kde.git}"
+REPO="${CAELESTIA_REPO:-https://github.com/caelestia-kde/caelestia.git}"
 BRANCH="${CAELESTIA_BRANCH:-main}"
 DEST="${CAELESTIA_DIR:-$HOME/caelestia-kde}"
 
@@ -47,9 +47,9 @@ unset CDPATH
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
 if [ -f "$SCRIPT_DIR/scripts/setup.sh" ]; then
     if [ ! -t 0 ] && [ -c /dev/tty ]; then
-        exec bash "$SCRIPT_DIR/scripts/setup.sh" </dev/tty
+        exec bash "$SCRIPT_DIR/scripts/setup.sh" "$@" </dev/tty
     fi
-    exec bash "$SCRIPT_DIR/scripts/setup.sh"
+    exec bash "$SCRIPT_DIR/scripts/setup.sh" "$@"
 fi
 
 if [ -d "$DEST/.git" ]; then
@@ -64,7 +64,7 @@ else
 fi
 
 if [ ! -t 0 ] && [ -c /dev/tty ]; then
-    exec bash "$DEST/scripts/setup.sh" </dev/tty
+    exec bash "$DEST/scripts/setup.sh" "$@" </dev/tty
 fi
-exec bash "$DEST/scripts/setup.sh"
+exec bash "$DEST/scripts/setup.sh" "$@"
 }

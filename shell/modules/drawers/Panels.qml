@@ -13,6 +13,7 @@ import qs.modules.session as Session
 import qs.modules.sidebar as Sidebar
 import qs.modules.utilities as Utilities
 import qs.modules.bar.popouts as BarPopouts
+import qs.modules.osd.floating as FloatingOsd
 import qs.modules.utilities.toasts as Toasts
 import "../utilities/toasts/corner.js" as Corner
 
@@ -29,10 +30,12 @@ Item {
     property var overviewAnimConfig
     readonly property alias osd: osd
     readonly property alias osdWrapper: osdWrapper
+    readonly property alias floatingOsd: floatingOsd
     readonly property alias notifications: notifications
     readonly property alias session: session
     readonly property alias sessionWrapper: sessionWrapper
     readonly property alias launcher: launcher
+    readonly property alias launcherAvatar: launcherAvatar
     readonly property alias dashboard: dashboard
     readonly property alias popouts: popoutsWrapper.content
     readonly property alias popoutsWrapper: popoutsWrapper
@@ -40,6 +43,7 @@ Item {
     readonly property alias toasts: toasts
     readonly property alias sidebar: sidebar
     readonly property alias overview: overview
+    readonly property bool osdActive: (GlobalConfig.osd.showInFullscreen || !Kwin.hasFullscreenOn(root.screen?.name ?? "")) && (osd.active || floatingOsd.active)
     readonly property real leftMargin: anchors.leftMargin
     readonly property real rightMargin: anchors.rightMargin
     readonly property real topMargin: anchors.topMargin
@@ -73,29 +77,37 @@ Item {
         return Math.max(0, bottom - lowestPanelEdge);
     }
 
+    /// The column the sidebar and the utilities drawer share down one side of the window,
+    /// as wide as the part of it that is showing. A panel that centres itself has to keep
+    /// out of it: with both open, a centred dashboard had its right side under the cards.
+    readonly property real sideColumnWidth: Math.max(sidebar.visible ? sidebar.width * (1 - sidebar.offsetScale) : 0, utilities.visible ? utilities.width * (1 - utilities.offsetScale) : 0)
+    /// The column follows the bar: a bar on the right is where the column is not.
+    readonly property bool sideColumnOnLeft: sidebar.hAnchor === "left"
+
     /// Whether this window has to take the keyboard: a panel that owns text fields is
     /// open. The OSD is deliberately absent, because it only ever shows things, and so is
     /// the notification stack. Panels say it here, where they are built, so the next panel
     /// to grow a text field cannot be forgotten in another file.
     readonly property bool wantsKeyboard: launcher.offsetScale < 1 || session.offsetScale < 1 || dashboard.offsetScale < 1 || sidebar.offsetScale < 1 || overview.visible || utilities.offsetScale < 1 || (popouts.hasCurrent && !popouts.isDockPopout)
 
-    readonly property bool popoutIntersectsRight: {
-        if (!popoutsWrapper.visible || popoutsWrapper.offsetScale >= 1) return false;
-        if (bar.isHorizontal) {
-            const notifLeft = notifications.x;
-            const notifRight = notifLeft + (notifications.implicitWidth > 0 ? notifications.implicitWidth : Tokens.sizes.notifs.width);
-            // Use where the popout ends up, not where its slide currently is, so
-            // switching between bar items doesn't push the sidebar on the way.
-            const popLeft = popoutsWrapper.targetX;
-            const popRight = popoutsWrapper.targetX + popoutsWrapper.content.nonAnimWidth;
-            return popLeft < notifRight && popRight > notifLeft;
-        } else {
-            const notifTop = notifications.y;
-            const notifBottom = notifTop + (notifications.implicitHeight > 0 ? notifications.implicitHeight : 300);
-            const popTop = popoutsWrapper.y;
-            const popBottom = popoutsWrapper.y + popoutsWrapper.content.nonAnimHeight;
-            return popTop < notifBottom && popBottom > notifTop;
-        }
+    /// Whether an open bar popout, where it ends up, overlaps the notification stack
+    /// on both axes; the popout then draws over the stack on a backing of its own.
+    readonly property bool popoutCoversNotifications: {
+        if (!popoutsWrapper.visible || popoutsWrapper.offsetScale >= 1 || popoutsWrapper.content.isDockPopout)
+            return false;
+        const notifW = notifications.implicitWidth > 0 ? notifications.implicitWidth : Tokens.sizes.notifs.width;
+        const notifH = notifications.implicitHeight;
+        if (notifH <= 0)
+            return false;
+        const content = popoutsWrapper.content;
+        const popW = content.nonAnimWidth;
+        const popH = content.nonAnimHeight;
+        const popX = popoutsWrapper.targetX;
+        let popY = popoutsWrapper.y;
+        if (bar.isHorizontal && !content.isDetached)
+            popY = bar.position === "bottom" ? root.height - popH : 0;
+        return popX < notifications.x + notifW && popX + popW > notifications.x
+            && popY < notifications.y + notifH && popY + popH > notifications.y;
     }
 
     readonly property bool popoutIntersectsSidebar: {
@@ -212,9 +224,6 @@ Item {
         readonly property string _notifH: root.notifPosition.split("-")[1]
         property string vAnchor: _notifV
         property string hAnchor: _notifH
-        property bool shouldPush: root.popoutIntersectsRight && !popoutsWrapper.content.isDockPopout && !sidebar.visible
-
-        readonly property real _pushOffset: shouldPush ? (popoutsWrapper.implicitHeight + Tokens.spacing.extraLarge) : 0
 
         visibilities: root.visibilities
         screen: root.screen
@@ -230,8 +239,8 @@ Item {
             return Math.max(0, (parent.width - implicitWidth) / 2);
         }
         y: {
-            if (_notifV === "top") return _pushOffset;
-            return Math.max(0, parent.height - implicitHeight - _pushOffset);
+            if (_notifV === "top") return 0;
+            return Math.max(0, parent.height - implicitHeight);
         }
     }
     Item {
@@ -270,6 +279,20 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
     }
+    // Geometry for the circle the launcher's profile picture sits in. The
+    // background is drawn in the window around this rect, so it can join the
+    // launcher card through the blob group.
+    Item {
+        id: launcherAvatar
+
+        property real radius: Tokens.rounding.full
+
+        visible: launcher.avatarVisible
+        width: launcher.avatarSize
+        height: width
+        x: launcher.x + (launcher.width - width) / 2
+        y: launcher.y + 4 - (height / 2 + 4) * launcher.avatarOpenScale
+    }
     Dashboard.Wrapper {
         id: dashboard
 
@@ -278,7 +301,18 @@ Item {
 
         screenState: root.screenState
         visibilities: root.visibilities
-        anchors.horizontalCenter: parent.horizontalCenter
+        // Centred on the room the side column leaves, not on the whole window: the sidebar
+        // and the utilities drawer are open in a column of their own, and a dashboard
+        // centred across them has its right edge under their cards. The anchor is written
+        // out because the centre moves with that column while it slides in.
+        x: {
+            const centred = Math.max(0, (parent.width - width) / 2);
+            const column = root.sideColumnWidth;
+            if (column <= 0)
+                return centred;
+            const gap = Tokens.spacing.extraLarge;
+            return root.sideColumnOnLeft ? Math.max(centred, column + gap) : Math.min(centred, parent.width - column - width - gap);
+        }
         anchors.top: parent.top
     }
     BarPopouts.ClipWrapper {
@@ -287,6 +321,7 @@ Item {
         property string vAnchor: (bar.position === "top" || bar.position === "bottom") ? bar.position : "none"
         property string hAnchor: (bar.position === "left" || bar.position === "right") ? bar.position : "none"
 
+        backed: root.popoutCoversNotifications
         screen: root.screen
         bar: root.bar
         borderThickness: root.borderThickness
@@ -364,5 +399,11 @@ Item {
         screen: root.screen
         visibilities: root.visibilities
         panels: root
+    }
+    FloatingOsd.FloatingOsd {
+        id: floatingOsd
+
+        screen: root.screen
+        bar: root.bar
     }
 }

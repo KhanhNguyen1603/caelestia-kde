@@ -21,19 +21,6 @@ PageBase {
             text: qsTr("Configuration")
         }
 
-        ToggleRow {
-            first: true
-            last: true
-            text: qsTr("Show active indicator")
-            subtext: qsTr("Show a chip with the activation time when Keep Awake is on")
-            reset: ({ node: GlobalConfig.bar.keepawake, setting: "showActiveChip" })
-            checked: Config.bar.keepawake.showActiveChip
-            onToggled: {
-                GlobalConfig.bar.keepawake.showActiveChip = checked;
-                GlobalConfig.save();
-            }
-        }
-
         SectionHeader {
             text: qsTr("Widget")
         }

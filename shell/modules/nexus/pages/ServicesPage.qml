@@ -4,6 +4,7 @@ import Quickshell
 import Caelestia.Config
 import Caelestia.Services
 import qs.components
+import qs.components.containers
 import qs.components.controls
 import qs.services
 import qs.utils
@@ -56,6 +57,15 @@ PageBase {
         }
     ]
 
+    function alarmSoundName(name: string): string {
+        if (!name)
+            return qsTr("Shell chime");
+
+        const parts = String(name).split("/");
+        const file = parts[parts.length - 1].replace(/\.[^/.]+$/, "").replace(/-/g, " ");
+        return parts.length > 1 ? qsTr("%1 · %2").arg(file).arg(parts[0]) : file;
+    }
+
     function gpuKeyToIndex(key: string): int {
         const u = (key ?? "").trim().toUpperCase();
         if (u === "")
@@ -67,7 +77,7 @@ PageBase {
         return 3;
     }
 
-    title: qsTr("Services")
+    title: qsTr("System Services")
 
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
@@ -142,6 +152,28 @@ PageBase {
             onSelected: item => Lyrics.preferredBackend = root.lyricsItems.indexOf(item)
         }
 
+        ToggleRow {
+            text: qsTr("Romanize lyrics")
+            subtext: qsTr("Use Latin letters for Hindi lyrics (approximate; requires ICU)")
+            reset: ({ node: GlobalConfig.services, setting: "romanizeIndicLyrics" })
+            checked: GlobalConfig.services.romanizeIndicLyrics
+            enabled: Lyrics.romanizationAvailable
+            onToggled: GlobalConfig.services.romanizeIndicLyrics = checked
+        }
+
+        FontPickerRow {
+            id: lyricsFontPicker
+
+            rootParent: root.flickable
+            icon: "font_download"
+            label: GlobalConfig.services.lyricsArabicFont ? qsTr("Urdu lyrics font: %1").arg(GlobalConfig.services.lyricsArabicFont) : qsTr("Urdu lyrics font: Automatic")
+            header: qsTr("Choose an installed font")
+            selectedFamily: GlobalConfig.services.lyricsArabicFont
+            allowAutomatic: true
+            onOpenChanged: if (open) selectedFamily = GlobalConfig.services.lyricsArabicFont
+            onFontSelected: family => GlobalConfig.services.lyricsArabicFont = family
+        }
+
         SelectRow {
             last: true
             label: qsTr("Default player")
@@ -190,6 +222,58 @@ PageBase {
             to: 200
             stepSize: 5
             onMoved: v => GlobalConfig.services.maxVolume = v / 100
+        }
+
+        SectionHeader {
+            text: qsTr("Timers")
+        }
+
+        ToggleRow {
+            first: true
+            text: qsTr("Alarm until dismissed")
+            subtext: qsTr("Repeat the chime until the finished timer is reset")
+            reset: ({ node: GlobalConfig.services, setting: "timerAlarmUntilDismissed" })
+            checked: GlobalConfig.services.timerAlarmUntilDismissed
+            onToggled: GlobalConfig.services.timerAlarmUntilDismissed = checked
+        }
+
+        StepperRow {
+            visible: !GlobalConfig.services.timerAlarmUntilDismissed
+            label: qsTr("Alarm length")
+            subtext: qsTr("Seconds the chime repeats at zero; 0 silences it")
+            reset: ({ node: GlobalConfig.services, setting: "timerAlarmDuration" })
+            value: GlobalConfig.services.timerAlarmDuration
+            from: 0
+            to: 60
+            stepSize: 5
+            onMoved: v => GlobalConfig.services.timerAlarmDuration = v
+        }
+
+        Variants {
+            id: alarmSoundVariants
+
+            model: Audio.systemSounds
+
+            MenuItem {
+                required property string modelData
+
+                text: root.alarmSoundName(modelData)
+                value: modelData
+            }
+        }
+
+        SelectRow {
+            last: true
+            label: qsTr("Alarm sound")
+            subtext: qsTr("Played while a finished timer waits to be dismissed")
+            menuItems: alarmSoundVariants.instances
+            active: menuItems.find(i => i.value === GlobalConfig.services.timerAlarmSound) ?? null
+            fallbackText: root.alarmSoundName(GlobalConfig.services.timerAlarmSound)
+            onSelected: item => {
+                GlobalConfig.services.timerAlarmSound = item.value;
+                if (!Audio.playSystemSound(item.value, GlobalConfig.audio.sounds.notificationVolume))
+                    Audio.playNotification();
+            }
         }
 
         SectionHeader {
