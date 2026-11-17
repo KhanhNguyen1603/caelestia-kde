@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Shapes
 import Quickshell
 import Quickshell.Services.Notifications
+import Caelestia
 import Caelestia.Components
 import Caelestia.Config
 import qs.components
@@ -24,10 +25,35 @@ StyledRect {
     readonly property int nonAnimHeight: appName.height + summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + body.height + actions.height + actions.anchors.topMargin : Tokens.spacing.extraSmall + bodyPreview.height) + inner.anchors.margins * 2
     property bool expanded: Config.notifs.openExpanded
     readonly property bool hovered: cardMouse.containsMouse
+    // A body that already fits the preview has nothing behind the chevron, so the chevron is
+    // only offered when it would actually reveal something.
+    readonly property bool disclosable: (root.modelData?.actions?.length ?? 0) > 0 || bodyPreview.truncated
+
+    // A keyboard user gets the same hold the pointer gets, from the moment a control takes focus.
+    function holdOpen(hold: bool): void {
+        if (hold)
+            root.modelData?.timer.stop();
+        else if (!root.hovered)
+            root.modelData?.timer.start();
+    }
+
+    // Muting removes every trace of the toast, so it has to say what it did somewhere else.
+    function muteSender(): void {
+        if (!root.modelData?.appName)
+            return;
+
+        Notifs.muteApp(root.modelData.appName);
+        Toaster.toast(qsTr("Notifications off"), qsTr("%1 will stay quiet until you turn it back on").arg(root.modelData.appName), "notifications_off");
+    }
 
     color: root.isCritical ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.large
     implicitHeight: inner.implicitHeight
+
+    // Assistive technology reads the toast as a message, not as an unlabelled panel.
+    Accessible.role: Accessible.AlertMessage
+    Accessible.name: root.modelData?.summaryPlain ?? ""
+    Accessible.description: root.modelData?.bodyPlain ?? ""
 
     x: implicitWidth
     opacity: 0
@@ -258,7 +284,7 @@ StyledRect {
                 text: root.modelData?.appName ?? ""
                 font: appName.font
                 elide: Text.ElideRight
-                elideWidth: muteBtn.x - time.width - timeSep.width - appName.x - root.Tokens.spacing.small * 3
+                elideWidth: (root.hovered ? muteBtn.x : closeBtn.x) - (time.visible ? time.width + timeSep.width + root.Tokens.spacing.small : 0) - appName.x - root.Tokens.spacing.small * 2
             }
 
             StyledText {
@@ -309,6 +335,7 @@ StyledRect {
             StyledText {
                 id: timeSep
 
+                visible: !(root.modelData?.fresh ?? true)
                 anchors.top: parent.top
                 anchors.left: appName.right
                 anchors.leftMargin: Tokens.spacing.small
@@ -321,6 +348,7 @@ StyledRect {
             StyledText {
                 id: time
 
+                visible: timeSep.visible
                 anchors.top: parent.top
                 anchors.left: timeSep.right
                 anchors.leftMargin: Tokens.spacing.small
@@ -332,12 +360,11 @@ StyledRect {
                 font: Tokens.font.label.small
             }
 
-            // Dismissing is the one thing worth reaching from a toast that has not been opened,
-            // so the close sits in the corner the eye lands on rather than behind an expansion.
             // Everything the toast can do besides open sits on the header line and only shows
-            // under the pointer, the way an OS toast keeps its body for the message: the footer
-            // row these used to occupy is now text.
-            Item {
+            // under the pointer, the way an OS toast keeps its body for the message. Real
+            // buttons rather than bare state layers, so each is a labelled control a screen
+            // reader can find and a keyboard can reach, not a shape only a pointer can hit.
+            IconButton {
                 id: muteBtn
 
                 visible: root.hovered
@@ -346,27 +373,17 @@ StyledRect {
                 anchors.top: parent.top
                 anchors.topMargin: -Tokens.padding.extraSmall
 
-                implicitWidth: muteIcon.implicitHeight
-                implicitHeight: muteIcon.implicitHeight
-
-                StateLayer {
-                    radius: Tokens.rounding.full
-                    color: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                    Accessible.name: qsTr("Turn off notifications from %1").arg(root.modelData?.appName ?? "")
-                    Accessible.role: Accessible.Button
-                    onClicked: root.modelData?.appName && Notifs.muteApp(root.modelData.appName)
-                }
-
-                MaterialIcon {
-                    id: muteIcon
-
-                    anchors.centerIn: parent
-                    text: "notifications_off"
-                    fontStyle: Tokens.font.icon.medium
-                }
+                type: IconButton.Text
+                isRound: true
+                icon: "notifications_off"
+                padding: Tokens.padding.extraSmall
+                inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                accessibleName: qsTr("Turn off notifications from %1").arg(root.modelData?.appName ?? "")
+                onClicked: root.muteSender()
+                onActiveFocusChanged: root.holdOpen(activeFocus)
             }
 
-            Item {
+            IconButton {
                 id: copyBtn
 
                 visible: root.hovered
@@ -375,29 +392,19 @@ StyledRect {
                 anchors.top: parent.top
                 anchors.topMargin: -Tokens.padding.extraSmall
 
-                implicitWidth: copyIcon.implicitHeight
-                implicitHeight: copyIcon.implicitHeight
-
-                StateLayer {
-                    radius: Tokens.rounding.full
-                    color: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                    Accessible.name: qsTr("Copy the notification text")
-                    Accessible.role: Accessible.Button
-                    onClicked: {
-                        if (root.modelData) {
-                            Quickshell.clipboardText = root.modelData.body;
-                            copyTimer.restart();
-                        }
+                type: IconButton.Text
+                isRound: true
+                icon: copyTimer.running ? "inventory" : "content_copy"
+                padding: Tokens.padding.extraSmall
+                inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                accessibleName: qsTr("Copy the notification text")
+                onClicked: {
+                    if (root.modelData) {
+                        Quickshell.clipboardText = root.modelData.body;
+                        copyTimer.restart();
                     }
                 }
-
-                MaterialIcon {
-                    id: copyIcon
-
-                    anchors.centerIn: parent
-                    text: copyTimer.running ? "inventory" : "content_copy"
-                    fontStyle: Tokens.font.icon.medium
-                }
+                onActiveFocusChanged: root.holdOpen(activeFocus)
 
                 Timer {
                     id: copyTimer
@@ -406,31 +413,21 @@ StyledRect {
                 }
             }
 
-            Item {
+            IconButton {
                 id: closeBtn
 
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.topMargin: -Tokens.padding.extraSmall
 
-                implicitWidth: closeIcon.implicitHeight
-                implicitHeight: closeIcon.implicitHeight
-
-                StateLayer {
-                    radius: Tokens.rounding.full
-                    color: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                    Accessible.name: qsTr("Dismiss notification")
-                    Accessible.role: Accessible.Button
-                    onClicked: root.modelData?.close()
-                }
-
-                MaterialIcon {
-                    id: closeIcon
-
-                    anchors.centerIn: parent
-                    text: "close"
-                    fontStyle: Tokens.font.icon.medium
-                }
+                type: IconButton.Text
+                isRound: true
+                icon: "close"
+                padding: Tokens.padding.extraSmall
+                inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                accessibleName: qsTr("Dismiss notification")
+                onClicked: root.modelData?.close()
+                onActiveFocusChanged: root.holdOpen(activeFocus)
             }
 
             StyledText {
@@ -445,7 +442,7 @@ StyledRect {
                 text: root.modelData.bodyPlain
                 textFormat: Text.PlainText
                 elide: Text.ElideRight
-                maximumLineCount: 1
+                maximumLineCount: 2
                 color: Colours.palette.m3onSurfaceVariant
                 font: Tokens.font.body.medium
 
@@ -463,6 +460,7 @@ StyledRect {
             Item {
                 id: expandBtn
 
+                visible: root.expanded || root.disclosable
                 anchors.right: parent.right
                 anchors.verticalCenter: bodyPreview.verticalCenter
 
