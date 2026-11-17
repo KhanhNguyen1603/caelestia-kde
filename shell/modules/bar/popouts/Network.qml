@@ -91,6 +91,47 @@ ColumnLayout {
             font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
         }
 
+        // Rescanning is a small, repeatable action that belongs beside the settings that own
+        // it, not a full-width button that costs the popout a row every time it is shown.
+        Item {
+            visible: root.view === "wireless"
+
+            implicitWidth: scanButton.implicitWidth
+            implicitHeight: scanButton.implicitHeight
+            Layout.preferredWidth: implicitWidth
+            Layout.preferredHeight: implicitHeight
+
+            IconButton {
+                id: scanButton
+
+                anchors.fill: parent
+                opacity: Nmcli.scanning ? 0 : 1
+                icon: "wifi_find"
+                font: Tokens.font.icon.medium
+                type: IconButton.Tonal
+                isRound: true
+                accessibleName: qsTr("Rescan networks")
+                inactiveColour: Colours.tPalette.m3surfaceContainerHigh
+                inactiveOnColour: Colours.palette.m3onSurfaceVariant
+                disabled: Nmcli.scanning || !Nmcli.wifiEnabled
+                onClicked: Nmcli.rescanWifi()
+
+                Behavior on opacity {
+                    Anim {
+                        type: Anim.DefaultEffects
+                    }
+                }
+            }
+
+            CircularIndicator {
+                anchors.fill: parent
+                visible: Nmcli.scanning
+                strokeWidth: Tokens.padding.extraSmall / 2 * root.scaleOffset
+                bgColour: "transparent"
+                running: Nmcli.scanning
+            }
+        }
+
         IconButton {
             icon: "settings"
             font: Tokens.font.icon.medium
@@ -268,7 +309,8 @@ ColumnLayout {
                 visible: networkItem.disclosable
                 anchors.right: parent.right
                 anchors.rightMargin: Tokens.padding.small * root.scaleOffset
-                anchors.verticalCenter: networkRow.verticalCenter
+                // The row is the first thing in the column, so the column's top is its top.
+                anchors.top: networkColumn.top
                 width: Math.round(Tokens.font.icon.medium.pointSize * 2 * root.scaleOffset)
                 height: Math.max(networkRow.implicitHeight, width)
                 z: 1
@@ -307,62 +349,6 @@ ColumnLayout {
                     }
                 }
             }
-        }
-    }
-
-    StyledRect {
-        visible: root.view === "wireless"
-
-        Layout.topMargin: visible ? Tokens.spacing.small * root.scaleOffset : 0
-        Layout.fillWidth: true
-        implicitHeight: rescanBtn.implicitHeight + Tokens.padding.small * root.scaleOffset
-
-        radius: Tokens.rounding.full * root.scaleOffset
-        color: Colours.palette.m3primaryContainer
-
-        StateLayer {
-            color: Colours.palette.m3onPrimaryContainer
-            disabled: Nmcli.scanning || !Nmcli.wifiEnabled
-            onClicked: Nmcli.rescanWifi()
-        }
-
-        RowLayout {
-            id: rescanBtn
-
-            anchors.centerIn: parent
-            spacing: Tokens.spacing.small * root.scaleOffset
-            opacity: Nmcli.scanning ? 0 : 1
-
-            MaterialIcon {
-                id: scanIcon
-
-                Layout.topMargin: Math.round(fontInfo.pointSize * 0.0575)
-                animate: true
-                text: "wifi_find"
-                color: Colours.palette.m3onPrimaryContainer
-                fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
-            }
-
-            StyledText {
-                Layout.topMargin: -Math.round(scanIcon.fontInfo.pointSize * 0.0575)
-                text: qsTr("Rescan networks")
-                color: Colours.palette.m3onPrimaryContainer
-                font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
-            }
-
-            Behavior on opacity {
-                Anim {
-                    type: Anim.DefaultEffects
-                }
-            }
-        }
-
-        CircularIndicator {
-            anchors.centerIn: parent
-            strokeWidth: Tokens.padding.extraSmall / 2 * root.scaleOffset
-            bgColour: "transparent"
-            implicitSize: parent.implicitHeight - Tokens.padding.large * root.scaleOffset
-            running: Nmcli.scanning
         }
     }
 
@@ -607,11 +593,6 @@ ColumnLayout {
                 root.showPasswordDialog = false;
                 root.passwordNetwork = null;
             }
-        }
-
-        function onScanningChanged(): void {
-            if (!Nmcli.scanning)
-                scanIcon.rotation = 0;
         }
 
         target: Nmcli
