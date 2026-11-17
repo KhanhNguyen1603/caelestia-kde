@@ -475,7 +475,7 @@ StyledRect {
             IconButton {
                 id: expandBtn
 
-                visible: root.expanded || root.disclosable
+                visible: root.disclosable
                 anchors.right: parent.right
                 anchors.verticalCenter: bodyPreview.verticalCenter
 

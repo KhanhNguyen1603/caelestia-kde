@@ -230,7 +230,15 @@ FloatingWindow {
                     id: startupTimer
 
                     interval: 2300
-                    running: root.shown && !root.hasAnimated
+                    running: root.shown && !root.hasAnimated && !holdTimer.running
+
+                    onTriggered: holdTimer.start()
+                }
+
+                Timer {
+                    id: holdTimer
+
+                    interval: 1000
 
                     onTriggered: root.hasAnimated = true
                 }
