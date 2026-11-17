@@ -68,14 +68,26 @@ Item {
         return Math.min(Math.max(20, root.maxLabelWidth), Math.ceil(labelMetrics.width));
     }
 
-    signal activateRequested()
-
-    width: (root.isHorizontal && root.hasLabel)
+    readonly property real baseWidth: (root.isHorizontal && root.hasLabel)
         ? (root.itemSize + Tokens.spacing.small + root.calculatedLabelWidth + Tokens.padding.small)
         : root.itemSize
-    height: root.itemSize
+    readonly property real baseHeight: root.itemSize
+    property real currentScale: root.magnificationScale
+
+    signal activateRequested()
+
+    width: root.isHorizontal ? Math.round(root.baseWidth * root.currentScale) : root.baseWidth
+    height: !root.isHorizontal ? Math.round(root.baseHeight * root.currentScale) : root.baseHeight
     implicitWidth: root.width
     implicitHeight: root.height
+    z: dragArea.held ? 999 : Math.round(root.currentScale * 100)
+
+    Behavior on currentScale {
+        NumberAnimation {
+            duration: 80
+            easing.type: Easing.OutQuad
+        }
+    }
 
     TextMetrics {
         id: labelMetrics
@@ -127,9 +139,14 @@ Item {
             return LauncherEntry.forApp(root.modelData.id);
         }
 
-        width: root.width
-        height: root.height
-        scale: root.magnificationScale
+        width: root.isHorizontal ? root.width : Math.round(root.baseWidth * root.currentScale)
+        height: root.isHorizontal ? Math.round(root.baseHeight * root.currentScale) : root.height
+        anchors.bottom: (root.isHorizontal && root.position === "bottom") ? root.bottom : undefined
+        anchors.top: (root.isHorizontal && root.position === "top") ? root.top : undefined
+        anchors.left: (!root.isHorizontal && root.position === "left") ? root.left : undefined
+        anchors.right: (!root.isHorizontal && root.position === "right") ? root.right : undefined
+        anchors.horizontalCenter: root.isHorizontal ? root.horizontalCenter : undefined
+        anchors.verticalCenter: !root.isHorizontal ? root.verticalCenter : undefined
 
         Drag.active: dragArea.held
         Drag.source: delegateItem
@@ -151,12 +168,6 @@ Item {
                 }
             }
         ]
-
-        Behavior on scale {
-            Anim {
-                type: Anim.FastSpatial
-            }
-        }
 
         StyledRect {
             anchors.fill: parent
@@ -260,18 +271,18 @@ Item {
         Item {
             id: iconContainer
 
-            width: root.itemSize
-            height: root.height
+            width: Math.round(root.itemSize * root.currentScale)
+            height: Math.round(root.itemSize * root.currentScale)
             anchors.left: parent.left
-            anchors.top: parent.top
+            anchors.verticalCenter: parent.verticalCenter
 
             CachingIconImage {
                 id: icon
 
                 anchors.centerIn: parent
-                implicitSize: root.iconSize
-                width: root.iconSize
-                height: root.iconSize
+                implicitSize: Math.round(root.iconSize * root.currentScale)
+                width: Math.round(root.iconSize * root.currentScale)
+                height: Math.round(root.iconSize * root.currentScale)
                 source: root.modelData ? WinIcons.sourceFor(root.modelData.entry, root.modelData.appClass, root.modelData.iconName, root.modelData.pid ?? 0) : ""
                 visible: !root.recolourIcons
 
@@ -297,9 +308,9 @@ Item {
 
             ColouredIcon {
                 anchors.centerIn: parent
-                implicitSize: root.iconSize
-                width: root.iconSize
-                height: root.iconSize
+                implicitSize: Math.round(root.iconSize * root.currentScale)
+                width: Math.round(root.iconSize * root.currentScale)
+                height: Math.round(root.iconSize * root.currentScale)
                 source: visible ? icon.source : ""
                 colour: Colours.palette.m3secondary
                 layer.enabled: visible
@@ -312,13 +323,13 @@ Item {
 
             visible: root.hasLabel && root.isHorizontal
             anchors.left: iconContainer.right
-            anchors.leftMargin: Tokens.spacing.small
+            anchors.leftMargin: Math.round(Tokens.spacing.small * root.currentScale)
             anchors.verticalCenter: parent.verticalCenter
-            width: root.calculatedLabelWidth
+            width: Math.round(root.calculatedLabelWidth * root.currentScale)
             text: root.labelText
             elide: Text.ElideRight
             color: delegateItem.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurface
-            font: Tokens.font.label.builders.medium.size(Math.max(6, root.labelSize)).build()
+            font: Tokens.font.label.builders.medium.size(Math.max(6, Math.round(root.labelSize * root.currentScale))).build()
         }
 
         Loader {
@@ -333,7 +344,7 @@ Item {
         StyledRect {
             id: countBadge
 
-            readonly property int badgeHeight: Math.max(12, Math.round(root.iconSize * 0.55))
+            readonly property int badgeHeight: Math.max(12, Math.round(root.iconSize * root.currentScale * 0.55))
             readonly property int dotSize: Math.max(6, Math.round(badgeHeight * 0.75))
             readonly property bool asDot: (delegateItem.badge?.count ?? 0) <= 0
 
@@ -368,10 +379,10 @@ Item {
 
             visible: root.showBadges && (delegateItem.badge?.progressVisible ?? false)
             anchors.top: icon.bottom
-            anchors.topMargin: 1
+            anchors.topMargin: Math.max(1, Math.round(1 * root.currentScale))
             anchors.horizontalCenter: iconContainer.horizontalCenter
-            width: root.iconSize
-            height: 3
+            width: Math.round(root.iconSize * root.currentScale)
+            height: Math.max(2, Math.round(3 * root.currentScale))
             radius: Tokens.rounding.full
             color: Qt.alpha(Colours.palette.m3onSurface, 0.15)
 
@@ -395,7 +406,7 @@ Item {
                 horizontalCenter: (root.isHorizontal && !root.hasLabel) ? parent.horizontalCenter : undefined
                 verticalCenter: !root.isHorizontal ? parent.verticalCenter : undefined
             }
-            x: (root.isHorizontal && root.hasLabel) ? Math.round((root.itemSize - width) / 2) : 0
+            x: (root.isHorizontal && root.hasLabel) ? Math.round((iconContainer.width - width) / 2) : 0
             height: root.isHorizontal ? 4 : undefined
             width: !root.isHorizontal ? 4 : undefined
 

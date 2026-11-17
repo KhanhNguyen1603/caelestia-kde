@@ -71,10 +71,12 @@ Item {
     readonly property int exclusiveZone: Config.dockPanel.reserveSpace && !disabled && !dodgeEnabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? contentThickness : Config.border.thickness
     readonly property int visualThickness: !disabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? contentThickness : Config.border.thickness
     readonly property bool popoutActiveOnDock: Boolean(popouts && (popouts.hasCurrent || popouts.offsetScale < 0.99) && (popouts.sourcePanel === "dockPanel" || (popouts.sourcePanel === "" && popouts.isDockPanelPopout)))
+    readonly property int magReach: Math.round(root.itemSize * (Config.dockPanel.maxMagnification - 1) + 24)
+    property real dockHoverProgress: dockHoverTracker.hovered ? 1.0 : 0.0
     readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dockPanel || hovered || popoutActiveOnDock)
     property bool pointerInReach: false
     property bool revealActive: false
-    readonly property bool hovered: revealActive || dockHover.hovered
+    readonly property bool hovered: revealActive || dockHoverTracker.hovered
     readonly property int fullLength: (isHorizontal ? screen.width : screen.height) - (isIsland ? Config.dockPanel.floatingMargin * 2 : 0)
     readonly property int defaultLength: Math.min(fullLength, Math.max(root.itemSize + root.padding * 2, Math.round(computedContentSpan + root.padding * 2)))
     readonly property int fixedLength: Math.round(fullLength * Math.max(5, Math.min(100, Config.dockPanel.length)) / 100)
@@ -174,7 +176,7 @@ Item {
 
     width: clampedWidth
     height: clampedHeight
-    clip: true
+    clip: false
     visible: !visibilities.overview && (isHorizontal ? height > Math.max(Config.border.thickness, Config.border.minThickness) : width > Math.max(Config.border.thickness, Config.border.minThickness))
     implicitWidth: isHorizontal ? 0 : (fullscreen ? 0 : Config.border.thickness)
     implicitHeight: isHorizontal ? (fullscreen ? 0 : Config.border.thickness) : 0
@@ -212,6 +214,13 @@ Item {
         }
     ]
 
+    Behavior on dockHoverProgress {
+        NumberAnimation {
+            duration: Tokens.anim.durations.expressiveFastSpatial
+            easing: Tokens.anim.expressiveFastSpatial
+        }
+    }
+
     Item {
         id: content
 
@@ -240,8 +249,19 @@ Item {
                 }
             }
 
-            HoverHandler {
-                id: dockHoverTracker
+            Item {
+                id: hoverArea
+
+                z: 1000
+                anchors.fill: parent
+                anchors.topMargin: root.position === "bottom" ? -root.magReach : -root.padding
+                anchors.bottomMargin: root.position === "top" ? -root.magReach : -root.padding
+                anchors.leftMargin: root.position === "right" ? -root.magReach : -root.padding
+                anchors.rightMargin: root.position === "left" ? -root.magReach : -root.padding
+
+                HoverHandler {
+                    id: dockHoverTracker
+                }
             }
 
             Item {
@@ -391,7 +411,7 @@ Item {
                     orientation: root.isHorizontal ? ListView.Horizontal : ListView.Vertical
                     spacing: root.spacing
                     interactive: root.isHorizontal ? contentWidth > width + 1 : contentHeight > height + 1
-                    clip: true
+                    clip: false
 
                     onContentWidthChanged: root.clampScroll()
                     onWidthChanged: root.clampScroll()
@@ -440,7 +460,7 @@ Item {
                     orientation: Qt.Horizontal
                     size: listView.visibleArea.widthRatio
                     position: listView.visibleArea.xPosition
-                    shouldBeActive: dockHover.hovered || listView.moving || scrollAnim.running
+                    shouldBeActive: dockHoverTracker.hovered || listView.moving || scrollAnim.running
                     anchors.left: listView.left
                     anchors.right: listView.right
                     anchors.bottom: listView.bottom
@@ -453,7 +473,7 @@ Item {
                     orientation: Qt.Vertical
                     size: listView.visibleArea.heightRatio
                     position: listView.visibleArea.yPosition
-                    shouldBeActive: dockHover.hovered || listView.moving || scrollAnim.running
+                    shouldBeActive: dockHoverTracker.hovered || listView.moving || scrollAnim.running
                     anchors.top: listView.top
                     anchors.bottom: listView.bottom
                     anchors.right: listView.right
@@ -487,17 +507,26 @@ Item {
             maxLabelWidth: Config.dockPanel.maxLabelWidth
             labelSize: Config.dockPanel.labelSize
             magnificationScale: {
-                if (!Config.dockPanel.magnification || !dockHoverTracker.hovered)
+                if (!Config.dockPanel.magnification || root.dockHoverProgress <= 0.001)
                     return 1.0;
-                const cursorPos = root.isHorizontal ? dockHoverTracker.point.position.x : dockHoverTracker.point.position.y;
-                const itemPos = root.isHorizontal
-                    ? (itemDelegate.x + itemDelegate.width / 2 - listView.contentX + (launcherButton.visible ? launcherButton.width + root.spacing : 0) + root.padding)
-                    : (itemDelegate.y + itemDelegate.height / 2 - listView.contentY + (launcherButton.visible ? launcherButton.height + root.spacing : 0) + root.padding);
-                const dist = Math.abs(cursorPos - itemPos);
-                const reach = (root.itemSize + root.spacing) * 2.5;
+                const p = hoverArea.mapToItem(container, dockHoverTracker.point.position.x, dockHoverTracker.point.position.y);
+                const cursorPos = root.isHorizontal ? p.x : p.y;
+                const origin = itemDelegate.mapToItem(container, 0, 0);
+                const itemStart = root.isHorizontal ? origin.x : origin.y;
+                const itemSpan = root.isHorizontal ? itemDelegate.width : itemDelegate.height;
+                const itemEnd = itemStart + itemSpan;
+                let dist = 0;
+                if (cursorPos < itemStart)
+                    dist = itemStart - cursorPos;
+                else if (cursorPos > itemEnd)
+                    dist = cursorPos - itemEnd;
+                else
+                    dist = 0;
+
+                const reach = (root.itemSize + root.spacing) * 2.2;
                 if (dist >= reach) return 1.0;
-                const factor = Math.cos((dist / reach) * (Math.PI / 2));
-                return 1.0 + (Config.dockPanel.maxMagnification - 1.0) * factor;
+                const factor = (1.0 + Math.cos((dist / reach) * Math.PI)) / 2.0;
+                return 1.0 + (Config.dockPanel.maxMagnification - 1.0) * factor * root.dockHoverProgress;
             }
         }
     }
@@ -514,7 +543,7 @@ Item {
 
         interval: 400
         onTriggered: {
-            if (!root.pointerInReach && !dockHover.hovered)
+            if (!root.pointerInReach && !dockHoverTracker.hovered)
                 root.revealActive = false;
         }
     }
@@ -526,16 +555,16 @@ Item {
         onTriggered: root.publishMinimizeGeometry()
     }
 
-    HoverHandler {
-        id: dockHover
-
-        onHoveredChanged: {
-            if (hovered) {
+    Connections {
+        function onHoveredChanged(): void {
+            if (dockHoverTracker.hovered) {
                 unhoverTimer.stop();
             } else if (!root.pointerInReach && root.revealActive) {
                 unhoverTimer.restart();
             }
         }
+
+        target: dockHoverTracker
     }
 
     Connections {
