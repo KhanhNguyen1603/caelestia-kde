@@ -641,9 +641,10 @@ class ShellSurfaceTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn(
-            "LauncherEntry.forApp(modelData.id)",
+            "LauncherEntry.forApp(modelData.appClass || modelData.id)",
             dock,
-            "a tile has to ask the service for the badge published for its app",
+            "a tile has to ask the service for the badge published for its app, and ask by "
+            "app class first: a per-window id carries an address suffix the entry does not",
         )
         self.assertIn(
             "LauncherEntry.revision",

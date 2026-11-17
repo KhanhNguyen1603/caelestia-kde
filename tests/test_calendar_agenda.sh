@@ -188,22 +188,20 @@ test_calendar_settings_page_is_reachable() {
     assert_contains "$registry" 'key: "calendar"' "and be searchable"
 }
 
-test_the_clock_reaches_the_calendar_by_click_and_by_hover() {
+test_the_clock_reaches_the_calendar_by_click_and_not_by_hover() {
     local clock
     clock="$(cat "$CLOCK")"
 
-    # The popout is the only way to reach the agenda, so both have to open it.
-    assert_contains "$clock" 'onEntered: root.hoverOpen()' \
-        "hovering the clock must open the calendar"
-    assert_contains "$clock" 'Config.bar.showOnHover' "hover opening honours the bar's own setting"
-    assert_contains "$clock" '!Config.bar.popouts.clock' \
-        "and the calendar popout switch"
-    # A big popout must not appear because the pointer crossed the clock on its way
-    # to the tray, so the open is deferred.
-    assert_contains "$clock" 'interval: 150' "hover opening waits before it fires"
-    assert_contains "$clock" 'onExited: root.hoverClose()' \
-        "leaving before the delay cancels it"
-    assert_contains "$clock" 'hoverTimer.stop()' "a click settles a pending hover open"
+    # The popout is the only way to reach the agenda, so a click has to open it. Only a
+    # click, though: hover used to open it too, and the pointer crossing the clock on its
+    # way to the tray brought the whole calendar up.
+    assert_contains "$clock" 'onClicked: mouse => {' \
+        "clicking the clock is what opens the calendar"
+    assert_contains "$clock" 'root.openPopout("clock");' "to the agenda popout"
+    assert_contains "$clock" 'Config.bar.popouts.clock' \
+        "honouring the calendar popout's own switch"
+    assert_file_not_contains "$CLOCK" 'hoverOpen' \
+        "and hovering it must not open anything, however briefly"
     assert_contains "$(cat "$BAR_CONFIG")" 'CONFIG_PROPERTY(bool, clock, true)' \
         "the calendar popout is on by default, or the agenda is unreachable"
 }
