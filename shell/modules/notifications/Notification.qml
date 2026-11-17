@@ -10,6 +10,7 @@ import Caelestia.Config
 import qs.components
 import qs.components.controls
 import qs.components.effects
+import qs.components.images
 import qs.services
 import qs.utils
 
@@ -20,7 +21,15 @@ StyledRect {
     readonly property int urgency: root.modelData?.urgency ?? NotificationUrgency.Normal
     readonly property bool isCritical: root.urgency === NotificationUrgency.Critical
     readonly property bool isLow: root.urgency === NotificationUrgency.Low
-    readonly property bool hasImage: (modelData?.image.length ?? 0) > 0
+    // Senders put an icon *name* here as often as a path, and the name need not exist: Signal
+    // installs signal-desktop, so image://icon/signal resolves to nothing and Quickshell answers
+    // with a 2px missing-icon placeholder, which is the blocky square that used to show. The
+    // two-argument form returns empty for a miss so the icon falls back to the glyph below.
+    readonly property string imagePath: {
+        const img = modelData?.image ?? "";
+        return img.startsWith("image://icon/") ? Quickshell.iconPath(img.slice("image://icon/".length), true) : img;
+    }
+    readonly property bool hasImage: root.imagePath !== ""
     readonly property bool hasAppIcon: (modelData?.appIcon.length ?? 0) > 0
     readonly property int nonAnimHeight: appName.height + summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + body.height + actions.height + actions.anchors.topMargin : Tokens.spacing.extraSmall + bodyPreview.height) + inner.anchors.margins * 2
     property bool expanded: Config.notifs.openExpanded
@@ -168,16 +177,14 @@ StyledRect {
                     implicitWidth: TokenConfig.sizes.notifs.image
                     implicitHeight: TokenConfig.sizes.notifs.image
 
-                    Image {
+                    // The hint arrives as an image://icon/<name> provider URL or a file path.
+                    // A bare Image asks the provider before it has a size and gets its 2px
+                    // fallback back, which is the blocky placeholder that used to appear here;
+                    // CachingIconImage waits for a real size and picks the right renderer.
+                    CachingIconImage {
                         anchors.fill: parent
-                        source: Qt.resolvedUrl(root.modelData?.image ?? "")
-                        fillMode: Image.PreserveAspectCrop
-                        sourceSize: {
-                            const size = TokenConfig.sizes.notifs.image * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1);
-                            return Qt.size(size, size);
-                        }
-                        cache: false
-                        asynchronous: true
+                        implicitSize: TokenConfig.sizes.notifs.image
+                        source: root.imagePath
                     }
                 }
             }
@@ -347,7 +354,7 @@ StyledRect {
                 anchors.left: appName.right
                 anchors.leftMargin: Tokens.spacing.small
 
-                text: "•"
+                text: "Ã¢â‚¬Â¢"
                 color: Colours.palette.m3onSurfaceVariant
                 font: Tokens.font.label.small
             }
