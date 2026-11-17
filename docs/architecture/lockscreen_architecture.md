@@ -55,6 +55,14 @@ The blurred wallpaper is mapped onto the container (`lockBg`) and the layout reg
 
 `bgRadius` is 42 px, scaled with screen height. `bgMargin` is 16 px, and card corners use `bgRadius - bgMargin` (26 px at the default).
 
+## Reveal
+
+The greeter puts up its first frame the better part of a second after the lock request, and the session is already dark by then, so whatever the theme paints first is the first thing anyone sees. That first frame is the blurred wallpaper and nothing else: the content fades and settles in from 0.98 over `animSlow` while the frost thaws off the background.
+
+The thaw is keyed on rendered frames rather than on a timer from component creation, because a timer that starts while the screen is still black has usually run out before the first frame is composited. `ready` — which drives every part of the reveal — is set on the second `frameSwapped`, with a fallback timer that opens the lock screen anyway if a greeter never reports one.
+
+The frost is the same `wallpaperBlur` layer the cards use, plus a `clSurface` film that makes a blur read as glass rather than as an out-of-focus wallpaper. With `lock.blurWallpaper` on, the overlay stays at full opacity instead of thawing, and the film is left out so a deliberately blurred wallpaper stays a plain blur.
+
 ## Avatar
 
 [`ProfileAvatar.qml`](../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/ProfileAvatar.qml) prefers `~/.face`. When that is absent it falls back to the system account picture (`kscreenlocker_userImage`) and then to the Material Symbols user icon.
@@ -91,8 +99,11 @@ kwriteconfig6 --file plasmashellrc --group "Shell" --key "ShellPackage" "caelest
 The UI can be tested in a non-blocking window without locking the session:
 
 ```bash
-/usr/lib/kscreenlocker_greet --testing
+QML2_IMPORT_PATH="$HOME/.local/lib/qt6/qml" \
+    /usr/lib/kscreenlocker_greet --testing --shell caelestia.desktop
 ```
+
+`--shell` is what loads this theme; plain `--testing` shows the built-in locker. The import path is the one `~/.config/plasma-workspace/env/caelestia.sh` exports for the session: started from a terminal that has not sourced it, the theme fails to find `Caelestia.Services` and silently falls back to the built-in locker.
 
 [`tests/test_lockscreen_auth_loop.sh`](../../tests/test_lockscreen_auth_loop.sh) drives the real [`AuthHandler.qml`](../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/AuthHandler.qml) through the PySide6 harness in [`tests/qml/lockscreen_auth/`](../../tests/qml/lockscreen_auth/). The harness stands in for `authenticator` with kscreenlocker's PAM semantics: a prompt stays open until it is answered, a concurrent `Authenticate()` is refused, and `respond()` without a pending prompt is dropped. It runs in the isolated suite and skips when PySide6 is not installed:
 
