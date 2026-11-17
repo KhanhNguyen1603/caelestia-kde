@@ -176,10 +176,12 @@ test_the_same_failure_is_only_announced_once() {
     # time is worse than the missing effect it reports. The reason is remembered instead.
     local guard="$REPO_ROOT/shell/services/WorkspaceTrackerGuard.qml"
     assert_file_contains "$guard" 'property string announced: ""' "what was announced has to be kept"
-    assert_file_contains "$guard" 'if (detail === root.announced)' "and compared before a toast is raised"
-    assert_file_contains "$guard" 'workspace-tracker.json' "across restarts, not just within one session"
-    assert_file_contains "$guard" 'root.clearAnnouncement();' "while a working tracker forgets it, so a later break is news again"
+    assert_file_contains "$guard" 'if (detail === memory.announced)' "and compared before a toast is raised"
+    assert_file_contains "$guard" 'reloadableId: "workspaceTracker"' \
+        "across restarts, through the state the shell already persists for this"
+    assert_file_contains "$guard" 'memory.announced = "";' "while a working tracker forgets it, so a later break is news again"
     assert_file_contains "$guard" 'console.warn' "the log still says it every time"
+    assert_file_not_contains "$guard" 'FileView' "and none of this is a hand-rolled file format"
 }
 
 run_tests

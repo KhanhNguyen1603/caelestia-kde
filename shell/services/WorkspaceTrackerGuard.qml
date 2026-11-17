@@ -5,7 +5,6 @@ import Quickshell
 import Quickshell.Io
 import Caelestia
 import qs.services
-import qs.utils
 
 // The workspace-tracker effect is compiled against KWin's internals, so a KDE
 // update can leave the installed binary unloadable and the shell silently
@@ -14,46 +13,26 @@ Singleton {
     id: root
 
     readonly property string checkScript: Quickshell.shellPath("scripts/check-workspace-tracker.sh")
-    property string announced: ""
-    property bool loaded: false
-    property string pending: ""
 
     function report(detail: string): void {
-        if (!root.loaded) {
-            root.pending = detail;
-            return;
-        }
-
-        if (detail === root.announced)
+        if (detail === memory.announced)
             return;
 
-        root.announced = detail;
-        storage.setText(JSON.stringify({
-                announced: detail
-            }));
+        memory.announced = detail;
         // The toast is one elided title line above a box ~410px wide, so the message
         // stays to a sentence: what KWin refused, and the one command that fixes it.
         Toaster.toast(qsTr("Desktop tracking is off"), qsTr("KWin refused the workspace tracker (%1). Run caelestia update.").arg(detail), "extension_off", Toast.Warning);
     }
 
-    function clearAnnouncement(): void {
-        if (!root.loaded || root.announced === "")
-            return;
+    // The failure already announced. The same mismatch comes back at every login until the
+    // effect is rebuilt, and a toast that covers the panels each time is worse than the
+    // thing it reports; a working check clears it, so a later breakage is news again.
+    PersistentProperties {
+        id: memory
 
-        root.announced = "";
-        storage.setText(JSON.stringify({
-                announced: ""
-            }));
-    }
+        property string announced: ""
 
-    function finish(): void {
-        root.loaded = true;
-        if (root.pending === "")
-            return;
-
-        const detail = root.pending;
-        root.pending = "";
-        root.report(detail);
+        reloadableId: "workspaceTracker"
     }
 
     // KWin loads its effects long before the shell starts, so the delay only
@@ -63,28 +42,6 @@ Singleton {
         running: true
 
         onTriggered: check.running = true
-    }
-
-    FileView {
-        id: storage
-
-        printErrors: false
-        path: `${Paths.state}/workspace-tracker.json`
-
-        onLoaded: {
-            try {
-                root.announced = String(JSON.parse(text()).announced ?? "");
-            } catch (err) {
-                root.announced = "";
-            }
-            root.finish();
-        }
-
-        onLoadFailed: err => {
-            if (err !== FileViewError.FileNotFound)
-                Logger.log("[WorkspaceTrackerGuard] could not read what was announced:", err);
-            root.finish();
-        }
     }
 
     Process {
@@ -101,7 +58,7 @@ Singleton {
 
         onExited: code => {
             if (code !== 3) {
-                root.clearAnnouncement();
+                memory.announced = "";
                 return;
             }
 
