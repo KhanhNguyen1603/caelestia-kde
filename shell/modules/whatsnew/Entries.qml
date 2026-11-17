@@ -10,6 +10,8 @@ QtObject {
         {
             "id": "floating_osd_styles",
             "revision": 85,
+            "version": "2.7.0",
+            "date": "2026-11-08",
             "icon": "picture_in_picture_alt",
             "title": qsTr("Floating OSD Styles"),
             "settingsPage": "panels",
@@ -19,6 +21,8 @@ QtObject {
         {
             "id": "desktop_widgets",
             "revision": 86,
+            "version": "2.7.0",
+            "date": "2026-11-08",
             "icon": "widgets",
             "title": qsTr("Desktop Widgets"),
             "description": qsTr("Add clocks, calendars, notes, weather, media and folders to the desktop, then resize or configure each one.")
@@ -26,6 +30,8 @@ QtObject {
         {
             "id": "notification_click",
             "revision": 87,
+            "version": "2.7.0",
+            "date": "2026-11-08",
             "icon": "open_in_new",
             "title": qsTr("Open From a Notification"),
             "description": qsTr("Click a notification to open the app that sent it.")
@@ -33,6 +39,8 @@ QtObject {
         {
             "id": "notification_sounds",
             "revision": 88,
+            "version": "2.7.0",
+            "date": "2026-11-08",
             "icon": "volume_up",
             "title": qsTr("Notification Sounds"),
             "settingsPage": "audio",
@@ -42,6 +50,8 @@ QtObject {
         {
             "id": "quickshare_pairing_code",
             "revision": 89,
+            "version": "2.7.0",
+            "date": "2026-11-08",
             "icon": "verified_user",
             "title": qsTr("Quick Share Pairing Code"),
             "description": qsTr("Both devices show a four-digit code. Compare them before a file is sent.")

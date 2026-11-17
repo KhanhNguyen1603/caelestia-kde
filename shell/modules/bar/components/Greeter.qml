@@ -59,7 +59,7 @@ Item {
     }
 
     readonly property int maxSize: {
-        const otherModules = bar.children.filter(c => c.id && c.item !== this && c.id !== "spacer");
+        const otherModules = bar.children.filter(c => c.id && c.item && c.item !== this && c.id !== "spacer");
         if (bar.isHorizontal) {
             const otherWidth = otherModules.reduce((acc, curr) => acc + (curr.item.nonAnimWidth ?? curr.width), 0);
             return bar.width - otherWidth - bar.spacing * (bar.children.length - 1) - bar.vPadding * 2;
@@ -71,8 +71,8 @@ Item {
     property Title current: text1
 
     clip: true
-    implicitWidth: bar.isHorizontal ? (icon.implicitWidth + current.width + current.anchors.leftMargin) : Math.max(icon.implicitWidth, current.width)
-    implicitHeight: bar.isHorizontal ? Math.max(icon.implicitHeight, current.height) : (icon.implicitHeight + current.height + current.anchors.topMargin)
+    implicitWidth: bar.isHorizontal ? Math.max(0, Math.min(icon.implicitWidth + current.width + current.anchors.leftMargin, maxSize)) : Math.max(icon.implicitWidth, current.width)
+    implicitHeight: bar.isHorizontal ? Math.max(icon.implicitHeight, current.height) : Math.max(0, Math.min(icon.implicitHeight + current.height + current.anchors.topMargin, maxSize))
 
     MouseArea {
         anchors.fill: parent

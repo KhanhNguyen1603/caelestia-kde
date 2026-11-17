@@ -30,7 +30,13 @@ Item {
         reloadableId: "utilities"
     }
     readonly property bool shouldBeActive: visibilities.utilities && Config.utilities.enabled && !(visibilities.session && Config.session.enabled) && !visibilities.overview
-    readonly property real totalPadding: content.anchors.margins + CUtils.clamp(content.anchors.margins - Config.border.thickness, 0, content.anchors.margins)
+    // The content is anchored to the top and left only, so the room this wrapper reserves
+    // has to carry both sides of the inset: half of it is the margin the content is placed
+    // at, the other half is what closes the gap at the bottom and the right. Reserving
+    // `margins` plus a clamped remainder made those two edges tighter than the first two
+    // as soon as a border was configured.
+    readonly property real panelInset: Tokens.padding.large
+    readonly property real totalPadding: root.panelInset * 2
     readonly property real nonAnimHeight: ((content.item as Content)?.nonAnimHeight ?? 0) + totalPadding
     property real offsetScale: shouldBeActive ? 0 : 1
     property real sidebarLerp
@@ -78,7 +84,7 @@ Item {
 
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.margins: Tokens.padding.large
+        anchors.margins: root.panelInset
         asynchronous: true
         active: true
         onStatusChanged: {

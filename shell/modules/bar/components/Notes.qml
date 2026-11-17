@@ -12,6 +12,8 @@ Item {
 
     required property var popouts
 
+    readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
+
     implicitWidth: 32
     implicitHeight: 32
 
@@ -31,7 +33,7 @@ Item {
             // is there (it stays open, moving the pointer away closes it).
             if (root.popouts.currentName !== "notes") {
                 root.popouts.currentName = "notes";
-                root.popouts.currentCenter = root.mapToItem(null, root.implicitWidth / 2, 0).x;
+                root.popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
                 root.popouts.hasCurrent = true;
             }
         }
@@ -43,7 +45,7 @@ Item {
         cursorShape: Qt.PointingHandCursor
         onClicked: mouse => {
             root.popouts.currentName = "elementscontext";
-            root.popouts.currentCenter = root.mapToItem(null, root.implicitWidth / 2, 0).x;
+            root.popouts.currentCenter = root.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
             root.popouts.hasCurrent = true;
             mouse.accepted = true;
         }

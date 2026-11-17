@@ -4,11 +4,13 @@ import QtQuick
 import QtQuick.Shapes
 import Quickshell
 import Quickshell.Services.Notifications
+import Caelestia
 import Caelestia.Components
 import Caelestia.Config
 import qs.components
 import qs.components.controls
 import qs.components.effects
+import qs.components.images
 import qs.services
 import qs.utils
 
@@ -19,19 +21,61 @@ StyledRect {
     readonly property int urgency: root.modelData?.urgency ?? NotificationUrgency.Normal
     readonly property bool isCritical: root.urgency === NotificationUrgency.Critical
     readonly property bool isLow: root.urgency === NotificationUrgency.Low
-    readonly property bool hasImage: (modelData?.image.length ?? 0) > 0
+    // Senders put an icon *name* here as often as a path, and the name need not exist: Signal
+    // installs signal-desktop, so image://icon/signal resolves to nothing and Quickshell answers
+    // with a 2px missing-icon placeholder, which is the blocky square that used to show. The
+    // two-argument form returns empty for a miss so the icon falls back to the glyph below.
+    readonly property string imagePath: {
+        const img = modelData?.image ?? "";
+        return img.startsWith("image://icon/") ? Quickshell.iconPath(img.slice("image://icon/".length), true) : img;
+    }
+    readonly property bool hasImage: root.imagePath !== ""
     readonly property bool hasAppIcon: (modelData?.appIcon.length ?? 0) > 0
-    readonly property int nonAnimHeight: summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + appName.height + body.height + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
+    readonly property int nonAnimHeight: appName.height + summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + body.height + actions.height + actions.anchors.topMargin : Tokens.spacing.extraSmall + bodyPreview.height) + inner.anchors.margins * 2
     property bool expanded: Config.notifs.openExpanded
+    readonly property bool hovered: cardMouse.containsMouse
+    // A body that already fits the preview has nothing behind the chevron, so the chevron is
+    // only offered when it would actually reveal something.
+    readonly property bool disclosable: (root.modelData?.actions?.length ?? 0) > 0 || bodyPreview.truncated
 
-    color: root.isCritical ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
+    // A keyboard user gets the same hold the pointer gets, from the moment a control takes focus.
+    function holdOpen(hold: bool): void {
+        if (hold)
+            root.modelData?.timer.stop();
+        else if (!root.hovered)
+            root.modelData?.timer.start();
+    }
+
+    // Muting removes every trace of the toast, so it has to say what it did somewhere else.
+    function muteSender(): void {
+        if (!root.modelData?.appName)
+            return;
+
+        Notifs.muteApp(root.modelData.appName);
+        Toaster.toast(qsTr("Notifications off"), qsTr("%1 will stay quiet until you turn it back on").arg(root.modelData.appName), "notifications_off");
+    }
+
+    // Opaque rather than the translucent palette variant: a see-through card lets the backdrop
+    // bleed into its rounded corners, which reads as a blurred edge no amount of antialiasing
+    // fixes. A toast sits over whatever happens to be behind it, so it should not be porous.
+    color: root.isCritical ? Colours.palette.m3secondaryContainer : Colours.palette.m3surfaceContainer
     radius: Tokens.rounding.large
-
     implicitHeight: inner.implicitHeight
+    // A rounded rectangle draws a hard-edged arc unless this is set, and a 16px corner over a
+    // wallpaper is exactly where the stairsteps show. No layer here: a layered card is
+    // rasterised into its own texture, which softens every edge instead of smoothing the arc.
+    antialiasing: true
+
+    // Assistive technology reads the toast as a message, not as an unlabelled panel.
+    Accessible.role: Accessible.AlertMessage
+    Accessible.name: root.modelData?.summaryPlain ?? ""
+    Accessible.description: root.modelData?.bodyPlain ?? ""
 
     x: implicitWidth
+    opacity: 0
     Component.onCompleted: {
         x = 0;
+        opacity = 1;
         modelData?.lock(this);
     }
     Component.onDestruction: modelData?.unlock(this)
@@ -42,7 +86,15 @@ StyledRect {
         }
     }
 
+    Behavior on opacity {
+        Anim {
+            type: Anim.SlowEffects
+        }
+    }
+
     MouseArea {
+        id: cardMouse
+
         property int startY
         property bool swiped: false
 
@@ -120,21 +172,19 @@ StyledRect {
                 visible: root.hasImage || root.hasAppIcon
 
                 sourceComponent: StyledClippingRect {
-                    radius: Tokens.rounding.full
+                    radius: Tokens.rounding.small
                     color: root.isCritical ? Colours.palette.m3error : root.isLow ? Colours.layer(Colours.palette.m3surfaceContainerHighest, 2) : Colours.palette.m3secondaryContainer
                     implicitWidth: TokenConfig.sizes.notifs.image
                     implicitHeight: TokenConfig.sizes.notifs.image
 
-                    Image {
+                    // The hint arrives as an image://icon/<name> provider URL or a file path.
+                    // A bare Image asks the provider before it has a size and gets its 2px
+                    // fallback back, which is the blocky placeholder that used to appear here;
+                    // CachingIconImage waits for a real size and picks the right renderer.
+                    CachingIconImage {
                         anchors.fill: parent
-                        source: Qt.resolvedUrl(root.modelData?.image ?? "")
-                        fillMode: Image.PreserveAspectCrop
-                        sourceSize: {
-                            const size = TokenConfig.sizes.notifs.image * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1);
-                            return Qt.size(size, size);
-                        }
-                        cache: false
-                        asynchronous: true
+                        implicitSize: TokenConfig.sizes.notifs.image
+                        source: root.imagePath
                     }
                 }
             }
@@ -151,7 +201,9 @@ StyledRect {
                 anchors.bottom: root.hasImage ? image.bottom : undefined
 
                 sourceComponent: StyledRect {
-                    radius: Tokens.rounding.full
+                    // Same silhouette as an attached image so the icon column does not change
+                    // shape depending on which hint the sender happened to set.
+                    radius: root.hasImage ? Tokens.rounding.extraSmall : Tokens.rounding.small
                     color: root.isCritical ? Colours.palette.m3error : root.isLow ? Colours.layer(Colours.palette.m3surfaceContainerHighest, 2) : Colours.palette.m3secondaryContainer
                     implicitWidth: root.hasImage ? Tokens.sizes.notifs.badge : TokenConfig.sizes.notifs.image
                     implicitHeight: root.hasImage ? Tokens.sizes.notifs.badge : TokenConfig.sizes.notifs.image
@@ -238,14 +290,6 @@ StyledRect {
                 maximumLineCount: 1
                 color: Colours.palette.m3onSurfaceVariant
                 font: Tokens.font.label.medium
-
-                opacity: root.expanded ? 1 : 0
-
-                Behavior on opacity {
-                    Anim {
-                        type: Anim.DefaultEffects
-                    }
-                }
             }
 
             TextMetrics {
@@ -254,19 +298,26 @@ StyledRect {
                 text: root.modelData?.appName ?? ""
                 font: appName.font
                 elide: Text.ElideRight
-                elideWidth: expandBtn.x - time.width - timeSep.width - summary.x - root.Tokens.spacing.small * 3
+                elideWidth: (root.hovered ? muteBtn.x : closeBtn.x) - (time.visible ? time.width + timeSep.width + root.Tokens.spacing.small : 0) - appName.x - root.Tokens.spacing.small * 2
             }
 
             StyledText {
                 id: summary
 
-                anchors.top: parent.top
-                anchors.left: image.right
-                anchors.leftMargin: Tokens.spacing.medium
+                anchors.top: appName.bottom
+                anchors.topMargin: root.Tokens.spacing.extraSmall
+                anchors.left: appName.left
+                anchors.right: closeBtn.left
+                anchors.rightMargin: root.Tokens.spacing.small
 
                 animate: true
-                text: summaryMetrics.elidedText
-                maximumLineCount: 1
+                text: root.modelData?.summaryPlain ?? ""
+                textFormat: Text.PlainText
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                maximumLineCount: 2
+                elide: Text.ElideRight
+                font.pointSize: Tokens.font.body.large.pointSize * root.fontScale
+                font.weight: Font.DemiBold
                 height: implicitHeight
 
                 states: State {
@@ -275,14 +326,8 @@ StyledRect {
 
                     PropertyChanges {
                         summary.maximumLineCount: undefined
-                        summary.anchors.topMargin: root.Tokens.spacing.extraSmall
                         bodyPreview.anchors.topMargin: root.Tokens.spacing.extraSmall
                         body.anchors.topMargin: root.Tokens.spacing.extraSmall
-                    }
-
-                    AnchorChanges {
-                        target: summary
-                        anchors.top: appName.bottom
                     }
                 }
 
@@ -294,7 +339,6 @@ StyledRect {
                     Anim {
                         property: "topMargin"
                     }
-                    AnchorAnim {}
                 }
 
                 Behavior on height {
@@ -302,44 +346,23 @@ StyledRect {
                 }
             }
 
-            TextMetrics {
-                id: summaryMetrics
-
-                text: root.modelData?.summaryPlain ?? ""
-                font: summary.font
-                elide: Text.ElideRight
-                elideWidth: expandBtn.x - time.width - timeSep.width - summary.x - root.Tokens.spacing.small * 3
-            }
-
             StyledText {
                 id: timeSep
 
+                visible: !(root.modelData?.fresh ?? true)
                 anchors.top: parent.top
-                anchors.left: summary.right
+                anchors.left: appName.right
                 anchors.leftMargin: Tokens.spacing.small
 
-                text: "•"
+                text: "Ã¢â‚¬Â¢"
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.small
-
-                states: State {
-                    name: "expanded"
-                    when: root.expanded
-
-                    AnchorChanges {
-                        target: timeSep
-                        anchors.left: appName.right
-                    }
-                }
-
-                transitions: Transition {
-                    AnchorAnim {}
-                }
+                font: Tokens.font.label.small
             }
 
             StyledText {
                 id: time
 
+                visible: timeSep.visible
                 anchors.top: parent.top
                 anchors.left: timeSep.right
                 anchors.leftMargin: Tokens.spacing.small
@@ -348,42 +371,77 @@ StyledRect {
                 horizontalAlignment: Text.AlignLeft
                 text: root.modelData?.timeStr ?? ""
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.small
+                font: Tokens.font.label.small
             }
 
-            Item {
-                id: expandBtn
+            // Everything the toast can do besides open sits on the header line and only shows
+            // under the pointer, the way an OS toast keeps its body for the message. Real
+            // buttons rather than bare state layers, so each is a labelled control a screen
+            // reader can find and a keyboard can reach, not a shape only a pointer can hit.
+            IconButton {
+                id: muteBtn
+
+                visible: root.hovered
+                anchors.right: copyBtn.left
+                anchors.rightMargin: Tokens.spacing.extraSmall
+                anchors.top: parent.top
+                anchors.topMargin: -Tokens.padding.extraSmall
+
+                type: IconButton.Text
+                isRound: true
+                icon: "notifications_off"
+                padding: Tokens.padding.extraSmall
+                inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                accessibleName: qsTr("Turn off notifications from %1").arg(root.modelData?.appName ?? "")
+                onClicked: root.muteSender()
+                onActiveFocusChanged: root.holdOpen(activeFocus)
+            }
+
+            IconButton {
+                id: copyBtn
+
+                visible: root.hovered
+                anchors.right: closeBtn.left
+                anchors.rightMargin: Tokens.spacing.extraSmall
+                anchors.top: parent.top
+                anchors.topMargin: -Tokens.padding.extraSmall
+
+                type: IconButton.Text
+                isRound: true
+                icon: copyTimer.running ? "inventory" : "content_copy"
+                padding: Tokens.padding.extraSmall
+                inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                accessibleName: qsTr("Copy the notification text")
+                onClicked: {
+                    if (root.modelData) {
+                        Quickshell.clipboardText = root.modelData.body;
+                        copyTimer.restart();
+                    }
+                }
+                onActiveFocusChanged: root.holdOpen(activeFocus)
+
+                Timer {
+                    id: copyTimer
+
+                    interval: 3000
+                }
+            }
+
+            IconButton {
+                id: closeBtn
 
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.topMargin: -Tokens.padding.extraSmall
 
-                implicitWidth: expandIcon.implicitHeight
-                implicitHeight: expandIcon.implicitHeight
-
-                StateLayer {
-                    radius: Tokens.rounding.full
-                    color: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                    onClicked: root.expanded = !root.expanded
-                }
-
-                MaterialIcon {
-                    id: expandIcon
-
-                    anchors.centerIn: parent
-                    anchors.verticalCenterOffset: root.expanded ? -1 : 1
-                    text: "expand_more"
-                    fontStyle: Tokens.font.icon.medium
-                    rotation: root.expanded ? 180 : 0
-
-                    Behavior on anchors.verticalCenterOffset {
-                        Anim {}
-                    }
-
-                    Behavior on rotation {
-                        Anim {}
-                    }
-                }
+                type: IconButton.Text
+                isRound: true
+                icon: "close"
+                padding: Tokens.padding.extraSmall
+                inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                accessibleName: qsTr("Dismiss notification")
+                onClicked: root.modelData?.close()
+                onActiveFocusChanged: root.holdOpen(activeFocus)
             }
 
             StyledText {
@@ -398,9 +456,9 @@ StyledRect {
                 text: root.modelData.bodyPlain
                 textFormat: Text.PlainText
                 elide: Text.ElideRight
-                maximumLineCount: 1
+                maximumLineCount: 2
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.small
+                font: Tokens.font.body.medium
 
                 opacity: root.expanded ? 0 : 1
 
@@ -408,6 +466,31 @@ StyledRect {
                     Anim {
                         type: Anim.DefaultEffects
                     }
+                }
+            }
+
+            // The chevron lives at the end of the line it reveals instead of opposite the
+            // header it does not touch, so the direction of the expansion matches the control.
+            // Same IconButton as the corner controls, so both share the right edge.
+            IconButton {
+                id: expandBtn
+
+                visible: root.disclosable
+                anchors.right: parent.right
+                anchors.verticalCenter: bodyPreview.verticalCenter
+
+                type: IconButton.Text
+                isRound: true
+                icon: "expand_more"
+                padding: Tokens.padding.extraSmall
+                rotation: root.expanded ? 180 : 0
+                inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                accessibleName: root.expanded ? qsTr("Show less") : qsTr("Show more")
+                onClicked: root.expanded = !root.expanded
+                onActiveFocusChanged: root.holdOpen(activeFocus)
+
+                Behavior on rotation {
+                    Anim {}
                 }
             }
 
@@ -423,7 +506,7 @@ StyledRect {
                 textFormat: Text.StyledText
                 text: root.modelData.bodyStyled
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.small
+                font: Tokens.font.body.medium
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 height: text ? implicitHeight : 0
 
@@ -452,7 +535,7 @@ StyledRect {
                 anchors.top: body.bottom
                 anchors.topMargin: Tokens.spacing.small
 
-                spacing: Tokens.spacing.extraSmall
+                spacing: 0
                 opacity: root.expanded ? 1 : 0
 
                 Behavior on opacity {
@@ -464,76 +547,35 @@ StyledRect {
                 Repeater {
                     model: root.modelData?.actions ?? []
 
-                    TextButton {
+                    // An OS stacks actions as rows under a hairline. Chips read as in-app
+                    // buttons, which is the one thing a toast's own actions are not.
+                    Column {
                         required property var modelData
 
                         width: actions.width
-                        isRound: true
-                        shapeMorph: true
-                        inactiveColour: root.isCritical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
-                        inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
-                        text: modelData.text
-                        onClicked: modelData.invoke()
+                        spacing: 0
 
-                        label.horizontalAlignment: Text.AlignHCenter
-                        label.anchors.left: left
-                        label.anchors.right: right
-                        label.anchors.verticalCenter: verticalCenter
-                        label.anchors.centerIn: undefined
-                        label.anchors.margins: Tokens.padding.medium
-                        label.elide: Text.ElideRight
-                    }
-                }
-
-                ButtonRow {
-                    width: actions.width
-
-                    spacing: Tokens.spacing.extraSmall
-
-                    IconButton {
-                        isRound: true
-                        shapeMorph: true
-                        fillWidth: (root.modelData?.actions.length ?? 0) === 0
-                        inactiveColour: root.isCritical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
-                        inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
-                        icon: "notifications_off"
-                        padding: Tokens.padding.extraSmall
-                        onClicked: root.modelData?.appName && Notifs.muteApp(root.modelData.appName)
-                        label.animate: true
-                        Accessible.name: qsTr("Turn off notifications from %1").arg(root.modelData?.appName ?? "")
-                    }
-
-                    IconButton {
-                        isRound: true
-                        shapeMorph: true
-                        fillWidth: (root.modelData?.actions.length ?? 0) === 0
-                        inactiveColour: root.isCritical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
-                        inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
-                        icon: "close"
-                        padding: Tokens.padding.extraSmall
-                        onClicked: root.modelData?.close()
-                    }
-
-                    IconButton {
-                        isRound: true
-                        shapeMorph: true
-                        fillWidth: (root.modelData?.actions.length ?? 0) === 0
-                        inactiveColour: root.isCritical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
-                        inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
-                        icon: copyTimer.running ? "inventory" : "content_copy"
-                        padding: Tokens.padding.extraSmall
-                        onClicked: {
-                            if (root.modelData) {
-                                Quickshell.clipboardText = root.modelData.body;
-                                copyTimer.restart();
-                            }
+                        StyledRect {
+                            width: parent.width
+                            implicitHeight: 1
+                            color: Qt.alpha(Colours.palette.m3outlineVariant, 0.6)
                         }
-                        label.animate: true
 
-                        Timer {
-                            id: copyTimer
+                        TextButton {
+                            width: parent.width
+                            isRound: false
+                            inactiveColour: "transparent"
+                            inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurface
+                            text: modelData.text
+                            onClicked: modelData.invoke()
 
-                            interval: 3000
+                            label.horizontalAlignment: Text.AlignLeft
+                            label.anchors.left: left
+                            label.anchors.right: right
+                            label.anchors.verticalCenter: verticalCenter
+                            label.anchors.centerIn: undefined
+                            label.anchors.margins: Tokens.padding.medium
+                            label.elide: Text.ElideRight
                         }
                     }
                 }

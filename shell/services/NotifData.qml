@@ -18,6 +18,9 @@ QtObject {
 
     property date time: new Date()
     property string timeStr: qsTr("now")
+    /// A toast that has only just arrived does not need to say so; the relative time earns its
+    /// place once the notification has been sitting on screen, and tells old from new in a stack.
+    readonly property bool fresh: timeStr === qsTr("now")
 
     readonly property Timer timeStrTimer: Timer {
         running: !notif.closed

@@ -24,7 +24,7 @@ PageBase {
             "github": {
                 icon: "commit",
                 name: qsTr("GitHub"),
-                available: BarComponents.GithubStore.available,
+                available: !BarComponents.GithubStore.tokenMissing,
                 unavailableText: qsTr("GitHub token not detected")
             },
             "media": { icon: "graphic_eq", name: qsTr("Now playing") },

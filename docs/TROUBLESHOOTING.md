@@ -351,6 +351,13 @@ The last command prints the effect's interface once it is loaded again, and
 fails while it is not. `bash shell/scripts/check-workspace-tracker.sh` answers the
 same question with an exit status (3 means enabled but not loaded).
 
+The shell checks the same thing at login, but only raises the *Desktop tracking
+is off* toast the first time it sees a given failure. After that the reason goes
+to the log (`journalctl --user -u caelestia-shell | grep WorkspaceTrackerGuard`)
+instead of a toast, because the same mismatch would otherwise cover the panels at
+every login until the effect is rebuilt. Rebuilding it and logging back in clears
+the record, so a later breakage is announced again.
+
 ### 3.9 Copy/Paste Crashes Krita or Inkscape (cliphist.service)
 
 Krita crashes when a selection is copied and pasted inside the document, while
@@ -697,28 +704,44 @@ Timers are countdowns, and they live in the utilities drawer (*the card titled T
 in `~/.local/state/caelestia/timers.json` between shell restarts, and on the CLI:
 
 ```bash
-caelestia shell timers startFor 25m "take the bread out"   # same parser as the card
+caelestia shell timers startFor 25m "take the bread out"   # a duration as typed
 caelestia shell timers list                                # what is running, seconds left
+caelestia shell timers toggleActive                        # pause or resume the timer on the card
 caelestia shell timers cancel <id>                         # the id from list
 caelestia shell timers clear                               # all of them
 ```
 
-A duration is read the way it is typed: `25` and `25m` are minutes, `90s` is ninety
-seconds, `1h30` is an hour and a half.
+The card's field is a keypad, not a duration box: it counts digits rather than units. Two
+digits or fewer are seconds, up to four are minutes and seconds, and past that the field
+grows an hour column, so `30` is half a minute, `300` is 3:00 and `10300` is 1:03:00. The
+CLI keeps the other grammar, because a command line has room to say `25m`: a bare number
+there is minutes, `90s` is ninety seconds, and `1h30` is an hour and a half.
+
+The card shows one countdown in large type — the pinned timer, or the one ending soonest —
+with a bar for how much of it has run, and Start/Pause and Reset under it. The rest are
+listed below, each with its own pause, pin and cancel. Start/Pause acts on the countdown
+in large type: it starts what is typed when nothing is running, and stops or restarts that
+one otherwise.
 
 What is stored is the moment a timer *ends*, not the time it has left, so restarting the
-shell does not restart the countdown. A timer whose end passed while the shell was not
-running is reported once on the next start ("2 timers finished while the shell was not
-running") instead of replaying every one of them. Timers that end while the shell is
-running are each announced with their own message, since that message is still news.
+shell does not restart the countdown. A paused timer is the exception, because its clock
+has stopped on purpose: it stores the seconds it had left and comes back paused. A timer
+whose end passed while the shell was not running is reported once on the next start
+("2 timers finished while the shell was not running") instead of replaying every one of
+them. Timers that end while the shell is running are each announced with their own
+message, since that message is still news.
 
-A timer that ends while the shell is running raises a notification as *Timers*, which
-means it follows the same rules as any other: a banner and a chime, unless Do Not Disturb
-is on.
+A timer that finishes raises a notification as *Timers*, which means it follows the same
+rules as any other: a banner and a chime, unless Do Not Disturb is on. It also repeats an
+alarm until it is answered, so a timer set in another room is noticed. *Nexus → System
+Services → Timers* sets which of the system's own sounds it plays, how many seconds it
+repeats for (0 silencing it), or switches it to keep going until the timer is reset. The
+sounds are KDE's, read from `/usr/share/sounds`, so the list is whatever that machine has
+installed; a sound that is no longer there falls back to the shell's notification chime.
+*Reset* on the card, or `timers clear`, stops it either way.
 
 Typing a duration and pressing Enter starts the timer; leaving the field alone does not,
-so a click elsewhere cannot start a timer nobody asked for. The buttons under the field
-(5m, 10m, 25m, 45m) start one in a press.
+so a click elsewhere cannot start a timer nobody asked for.
 The card can be hidden entirely with *Nexus → Utilities panel → Timers*; the timers keep
 running, they are simply not in the drawer.
 

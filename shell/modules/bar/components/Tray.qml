@@ -13,7 +13,10 @@ Item {
     readonly property alias layout: layout
     readonly property alias expandIcon: expandIcon
 
-    readonly property int padding: root.hasBackground ? Tokens.padding.medium : Tokens.padding.extraSmall
+    // The icons sit inside a pill of their own, so the space around them is a step wider
+    // than the inset the other bar widgets use: at the medium inset the row read as pinned
+    // to the edge of the pill rather than held in it.
+    readonly property int padding: root.hasBackground ? Tokens.padding.large : Tokens.padding.small
     readonly property int spacing: root.hasBackground ? Tokens.spacing.small : 0
 
     // When the tray owns the right-zone widgets it is the one system tray for
@@ -101,13 +104,15 @@ Item {
         return null;
     }
 
-    function arrowHit(barItem: var, x: real, y: real): bool {
-        if (!expandIcon.item)
+    // `pos` is the pointer's cross-axis coordinate on the bar, which is all the hover
+    // routing has: the chevron is matched against its own span on that axis.
+    function arrowHit(barItem: var, pos: real): bool {
+        const item = expandIcon.item;
+        if (!item)
             return false;
-        const p = expandIcon.mapFromItem(barItem, x, y);
-        const coord = isHorizontal ? p.x : p.y;
-        const size = isHorizontal ? expandIcon.width : expandIcon.height;
-        return coord >= -root.spacing && coord <= size + root.spacing;
+        const center = root.isHorizontal ? item.mapToItem(barItem, item.width / 2, 0).x : item.mapToItem(barItem, 0, item.height / 2).y;
+        const size = root.isHorizontal ? item.width : item.height;
+        return pos >= center - size / 2 - root.spacing && pos <= center + size / 2 + root.spacing;
     }
 
     // The point on the bar the box hangs from: the chevron when it is there, the

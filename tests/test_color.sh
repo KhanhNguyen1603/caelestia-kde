@@ -370,7 +370,13 @@ test_the_wallpaper_picks_the_variant_unless_asked_not_to() {
 
     FFMPEG_PATTERN=unreadable run_color wallpaper -f "$image"
     assert_status 0 "$STATUS" "an unreadable image should still produce a scheme"
-    assert_contains "$(cat "$CALLS")" "--type scheme-smart" "matugen picks the variant as a fallback"
+    # There is no colourfulness to measure, so there is no choice to make: the variant in use
+    # stands. Asking matugen for `scheme-smart` returns a palette in a variant it does not
+    # name, which is then filed under the label the caller asked for.
+    assert_contains "$(cat "$CALLS")" "--type scheme-tonal-spot" \
+        "an unreadable image keeps the variant already in use"
+    assert_eq "0" "$(printf '%s' "$(cat "$CALLS")" | grep -c 'scheme-smart' || true)" \
+        "and never asks matugen to pick an unnamed one"
 }
 
 test_no_smart_keeps_the_mode_and_variant() {

@@ -11,22 +11,24 @@ import qs.modules.bar.components
 import qs.modules.bar.components.performance
 import qs.modules.bar.components.workspaces
 
-// One entry of the bar, drawn as whatever kind it says it is. The bar draws them in its
-// zones and the tray's box draws the ones it holds, so both read the same list of kinds
-// instead of the box keeping a copy of one.
-//
-// The chooser picks on `kind`, which is the widget id for everything the registry
-// declares and its own name for entries that stand for one item of a group, like a single
-// status icon. `bar` is null in the box, which draws the entries it holds without one:
-// what a widget asks the bar for then falls back to what the layout can answer alone.
 DelegateChooser {
     id: root
 
-    // The bar this entry is drawn for, when there is one, and the popout state every icon
-    // opens its panel through. The tray's box draws entries of its own with no bar behind
-    // them, and its widgets still have a panel to open.
     property var bar: null
     property var popouts: bar ? bar.popouts : null
+
+    function applyBoxContext(widget: var): void {
+        if (!widget)
+            return;
+
+        const context = {
+            popouts: root.popouts,
+            visibilities: Visibilities.getForActive()
+        };
+        for (const name in context)
+            if (widget.hasOwnProperty(name))
+                widget[name] = context[name];
+    }
 
     role: "kind"
 
@@ -44,7 +46,6 @@ DelegateChooser {
             sourceComponent: Workspaces {
                 bar: root.bar
                 screen: root.bar ? root.bar.screen : null
-                fullscreen: root.bar ? root.bar.fullscreen : false
             }
         }
     }
@@ -192,7 +193,8 @@ DelegateChooser {
     DelegateChoice {
         roleValue: "github"
         delegate: WrappedLoader {
-            visible: enabled && GithubStore.available
+            // A failed fetch is not a missing token, so only the token decides this.
+            visible: enabled && !GithubStore.tokenMissing
             sourceComponent: GithubActivity {
                 popouts: root.popouts
             }
@@ -269,7 +271,12 @@ DelegateChooser {
         delegate: WrappedLoader {
             source: BarWidgetRegistry.widget(id)?.componentUrl ?? ""
 
-            onItemChanged: root.bar.applyWidgetContext(item)
+            onItemChanged: {
+                if (root.bar)
+                    root.bar.applyWidgetContext(item);
+                else
+                    root.applyBoxContext(item);
+            }
         }
     }
 

@@ -111,8 +111,6 @@ GridLayout {
             property int prevActiveWsId: -1
             property bool hasRandomShape: false
 
-            property int prevWs: -1
-
             property int watchedWs: root.ws
 
             property int lastWatchedWs: -1
@@ -156,7 +154,6 @@ GridLayout {
                     }
                 }
                 wasPositionActive = active;
-                prevWs = lastKnownWs;
                 lastKnownWs = root.ws;
                 prevActiveWsId = root.activeWsId;
             }
@@ -225,7 +222,6 @@ GridLayout {
                     hasRandomShape = false;
                 }
                 wasPositionActive = active;
-                prevWs = -1;
                 lastKnownWs = root.ws;
                 prevActiveWsId = root.activeWsId;
                 lastWatchedWs = root.ws;
