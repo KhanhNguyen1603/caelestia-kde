@@ -186,10 +186,13 @@ StyledWindow {
 
         property bool active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || (!Config.dashboard.showOnHover && visibilities.dashboard && Config.dashboard.enabled) || (!Config.utilities.showOnHover && visibilities.utilities && Config.utilities.enabled) || (TrayRegistry.isTrayPopout(panels.popouts.currentName) && (panels.popouts.current as StackView)?.depth > 1)
 
-        function clear() {
+        function clear(forceSidebar = false) {
             visibilities.launcher = false;
             visibilities.session = false;
-            if (!Visibilities.sidebarPinned)
+
+            if (forceSidebar)
+                GlobalConfig.sidebar.pinned = false;
+            if (forceSidebar || !Visibilities.sidebarPinned)
                 visibilities.sidebar = false;
             visibilities.dashboard = false;
             visibilities.utilities = false;
