@@ -191,7 +191,8 @@ DelegateChooser {
     DelegateChoice {
         roleValue: "github"
         delegate: WrappedLoader {
-            visible: enabled && GithubStore.available
+            // A failed fetch is not a missing token, so only the token decides this.
+            visible: enabled && !GithubStore.tokenMissing
             sourceComponent: GithubActivity {
                 popouts: root.popouts
             }

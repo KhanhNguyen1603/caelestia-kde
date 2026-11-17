@@ -125,29 +125,15 @@ Item {
                 }
             }
 
-            const isKWin = (Kwin.windowList.length > 0);
-
             if (entry.toplevels.length === 1) {
                 let addr = String(entry.toplevels[0].address);
-                if (activeIdx === 0) {
-                    if (isKWin) {
-                        Kwin.minimizeWindow(addr);
-                    }
-                } else {
-                    if (isKWin) {
-                        Kwin.focusWindow(addr);
-                    } else {
-                        Kwin.dispatch(Kwin.usingLua ? `hl.dsp.focus({ window = "address:0x${addr}" })` : `focuswindow address:0x${addr}`);
-                    }
-                }
+                if (activeIdx === 0)
+                    Kwin.minimizeWindow(addr);
+                else
+                    Kwin.focusWindow(addr);
             } else {
                 let nextIdx = activeIdx !== -1 ? (activeIdx + 1) % entry.toplevels.length : 0;
-                let addr = String(entry.toplevels[nextIdx].address);
-                if (isKWin) {
-                    Kwin.focusWindow(addr);
-                } else {
-                    Kwin.dispatch(Kwin.usingLua ? `hl.dsp.focus({ window = "address:0x${addr}" })` : `focuswindow address:0x${addr}`);
-                }
+                Kwin.focusWindow(String(entry.toplevels[nextIdx].address));
             }
         } else if (entry.entry) {
             let newLaunching = Object.assign({}, root.launchingApps);
@@ -639,20 +625,14 @@ Item {
                         return false;
                     }
 
-                    property bool hasWindows: {
-                        const dummy = root.modelUpdateTrigger;
-                        if (!modelData) return false;
-                        return modelData.toplevels.length > 0;
-                    }
-
                     readonly property var badge: {
                         const dummy = LauncherEntry.revision;
                         if (!modelData || !(Config.bar.dock.showBadges ?? true))
                             return null;
-                        return LauncherEntry.forApp(modelData.id);
+                        // Per-window ids carry a "#address" suffix that LauncherEntry does not
+                        // normalise, so the lookup goes by the application class instead.
+                        return LauncherEntry.forApp(modelData.appClass || modelData.id);
                     }
-
-
 
                     CachingIconImage {
                         id: icon
