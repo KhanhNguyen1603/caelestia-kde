@@ -441,10 +441,6 @@ Item {
         visible: false
     }
 
-    // The greeter's first painted frame is the wallpaper, so holding a heavy frost there
-    // turns the step out of the session into a defrost instead of a snap from black to a
-    // sharp desktop. It thaws once the content has settled, unless the wallpaper is meant
-    // to stay blurred, in which case it never clears.
     Item {
         id: fullWallpaperBlurOverlay
 
@@ -467,9 +463,6 @@ Item {
             live: true
         }
 
-        // The film that makes a blur read as glass rather than as an out-of-focus
-        // wallpaper. It belongs to the reveal only: a wallpaper that is deliberately
-        // blurred stays a plain blur.
         Rectangle {
             anchors.fill: parent
             visible: !lockScreenUi.blurWallpaper
