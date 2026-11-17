@@ -232,13 +232,13 @@ PageBase {
             first: true
             text: qsTr("Alarm until dismissed")
             subtext: qsTr("Repeat the chime until the finished timer is reset")
-            reset: ({ node: GlobalConfig.services, setting: "timerAlarm" })
-            checked: GlobalConfig.services.timerAlarm
-            onToggled: GlobalConfig.services.timerAlarm = checked
+            reset: ({ node: GlobalConfig.services, setting: "timerAlarmUntilDismissed" })
+            checked: GlobalConfig.services.timerAlarmUntilDismissed
+            onToggled: GlobalConfig.services.timerAlarmUntilDismissed = checked
         }
 
         StepperRow {
-            visible: !GlobalConfig.services.timerAlarm
+            visible: !GlobalConfig.services.timerAlarmUntilDismissed
             label: qsTr("Alarm length")
             subtext: qsTr("Seconds the chime repeats at zero; 0 silences it")
             reset: ({ node: GlobalConfig.services, setting: "timerAlarmDuration" })
@@ -252,7 +252,7 @@ PageBase {
         Variants {
             id: alarmSoundVariants
 
-            model: Timers.alarmSounds
+            model: Audio.systemSounds
 
             MenuItem {
                 required property string modelData
@@ -271,7 +271,8 @@ PageBase {
             fallbackText: root.alarmSoundName(GlobalConfig.services.timerAlarmSound)
             onSelected: item => {
                 GlobalConfig.services.timerAlarmSound = item.value;
-                Audio.playSystemSound(Timers.alarmSoundPath(item.value), GlobalConfig.audio.sounds.notificationVolume);
+                if (!Audio.playSystemSound(item.value, GlobalConfig.audio.sounds.notificationVolume))
+                    Audio.playNotification();
             }
         }
 

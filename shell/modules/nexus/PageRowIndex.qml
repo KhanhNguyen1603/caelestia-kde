@@ -2444,6 +2444,27 @@ QtObject {
             subPage: "services"
         },
         {
+            label: qsTr("Alarm until dismissed"),
+            description: qsTr("Repeat the chime until the finished timer is reset"),
+            section: qsTr("System Services"),
+            pageIdx: 7,
+            subPage: "services"
+        },
+        {
+            label: qsTr("Alarm length"),
+            description: qsTr("Seconds the chime repeats at zero; 0 silences it"),
+            section: qsTr("System Services"),
+            pageIdx: 7,
+            subPage: "services"
+        },
+        {
+            label: qsTr("Alarm sound"),
+            description: qsTr("Played while a finished timer waits to be dismissed"),
+            section: qsTr("System Services"),
+            pageIdx: 7,
+            subPage: "services"
+        },
+        {
             label: qsTr("Discord Rich Presence"),
             description: qsTr("Number of bars in the audio visualisers"),
             section: qsTr("System Services"),

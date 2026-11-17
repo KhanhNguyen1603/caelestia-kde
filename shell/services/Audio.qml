@@ -24,6 +24,12 @@ Singleton {
 
     property list<PwNode> appStreams: []
 
+    /// The sounds the machine already ships, named relative to `systemSoundRoot`. The timer
+    /// alarm picks one, and the settings offer exactly these, so a sound that is not installed
+    /// cannot be chosen in the first place.
+    property var systemSounds: []
+    readonly property string systemSoundRoot: "/usr/share/sounds/"
+
     // The capture half of `streams`: applications recording rather than playing. The
     // nodes only exist while something is recording, which is what makes them readable
     // as "who is listening".
@@ -212,11 +218,15 @@ Singleton {
         playSoundSource(Qt.resolvedUrl("../assets/sounds/notifications/" + name), true, GlobalConfig.audio.sounds.notificationVolume);
     }
 
-    function playSystemSound(path: string, volume: real): void {
-        if (!path)
-            return;
+    /// Plays one of the system's own sounds. The setting names a sound rather than a path, so
+    /// what it can reach is this list; returns false when it named something else, leaving the
+    /// caller to fall back to the shell's own chime.
+    function playSystemSound(name: string, volume: real): bool {
+        if (!GlobalConfig.audio.sounds.enabled || !name || root.systemSounds.indexOf(String(name)) < 0)
+            return false;
 
-        playSoundSource("file://" + path, true, volume);
+        root._playAudioFile("file://" + root.systemSoundRoot + name, volume);
+        return true;
     }
 
     function playCameraClick(): void {
@@ -365,6 +375,19 @@ Singleton {
 
     PwObjectTracker {
         objects: [root.sink, root.source, ...root.sinks, ...root.sources, ...root.streams].filter(n => n)
+    }
+
+    /// No shell in the command: `find` takes the patterns itself, so there is no quoting to
+    /// get wrong and nothing for a shell to parse.
+    Process {
+        id: systemSoundScan
+
+        running: true
+        command: ["find", "-L", root.systemSoundRoot, "-name", "*.ogg", "-o", "-name", "*.oga", "-o", "-name", "*.wav"]
+
+        stdout: StdioCollector {
+            onStreamFinished: root.systemSounds = String(text ?? "").trim().split("\n").filter(path => path.length > 0).map(path => path.replace(root.systemSoundRoot, "")).sort()
+        }
     }
 
     BeatTracker {

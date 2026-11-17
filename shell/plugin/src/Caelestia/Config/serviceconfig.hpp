@@ -75,7 +75,7 @@ private:
     CONFIG_GLOBAL_PROPERTY(int, calendarDays, 14)
 
     CONFIG_GLOBAL_PROPERTY(int, timerAlarmDuration, 10)
-    CONFIG_GLOBAL_PROPERTY(bool, timerAlarm, false)
+    CONFIG_GLOBAL_PROPERTY(bool, timerAlarmUntilDismissed, false)
     CONFIG_GLOBAL_PROPERTY(QString, timerAlarmSound, u"freedesktop/stereo/alarm-clock-elapsed.oga"_s)
 
     CONFIG_GLOBAL_PROPERTY(bool, autoSchemeEnabled, false)

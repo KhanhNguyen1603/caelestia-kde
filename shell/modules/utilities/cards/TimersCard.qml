@@ -14,27 +14,32 @@ StyledRect {
     property bool expanded: false
 
     readonly property var active: Timers.activeTimer
-    readonly property bool ringing: Timers.ringing
-    readonly property bool activePaused: Timers.paused(root.active)
+    /// One of `running`, `paused`, `rang` or `idle`. Every label and button below reads it
+    /// rather than re-deciding what state the timer is in.
+    readonly property string mode: root.active ? String(root.active.state) : "idle"
     readonly property real activeProgress: Timers.progress(root.active)
     readonly property int activeTotal: root.active ? Number(root.active.total ?? 0) : 0
-    readonly property int typedSeconds: Timers.parseDigits(digitsField.text)
+    readonly property int typedSeconds: Timers.parseKeypad(digitsField.text)
     readonly property string stateLabel: {
-        if (root.ringing)
+        switch (root.mode) {
+        case "rang":
             return qsTr("Time is up");
-        if (root.active === null)
-            return qsTr("Nothing running");
-        if (root.activePaused)
+        case "paused":
             return qsTr("Paused");
-        if (String(root.active.message ?? "").length > 0)
-            return String(root.active.message);
-        return qsTr("Counting down");
+        case "running":
+            return String(root.active.message ?? "").length > 0 ? String(root.active.message) : qsTr("Counting down");
+        default:
+            return qsTr("Nothing running");
+        }
     }
-    readonly property string primaryLabel: root.activePaused ? qsTr("Resume") : (root.active === null || root.ringing ? qsTr("Start") : qsTr("Pause"))
-    readonly property bool primaryEnabled: root.activePaused || (root.active !== null && !root.ringing) || (root.active === null && root.typedSeconds > 0)
+    readonly property string primaryLabel: root.mode === "paused" ? qsTr("Resume") : (root.mode === "running" ? qsTr("Pause") : qsTr("Start"))
+    readonly property bool primaryEnabled: root.mode === "paused" || root.mode === "running" || root.typedSeconds > 0
 
-    readonly property real collapsedHeight: header.implicitHeight + progress.height + content.spacing + Tokens.padding.large * 2
-    readonly property real expandedHeight: header.implicitHeight + progress.height + content.spacing * 2 + bodyLayout.implicitHeight + Tokens.padding.large * 2
+    /// The header and the progress line are always there; only the body comes and goes, so
+    /// the card is the chrome plus whatever the body measures at the moment.
+    readonly property real chromeHeight: header.implicitHeight + progress.implicitHeight + content.spacing
+    readonly property real collapsedHeight: root.chromeHeight + Tokens.padding.large * 2
+    readonly property real expandedHeight: root.collapsedHeight + bodyLayout.implicitHeight + content.spacing
     readonly property real nonAnimHeight: root.expanded ? expandedHeight : collapsedHeight
 
     function begin(seconds: int): void {
@@ -51,16 +56,17 @@ StyledRect {
     }
 
     function primaryAction(): void {
-        if (root.activePaused) {
+        switch (root.mode) {
+        case "paused":
             Timers.resume(root.active.id);
             return;
-        }
-        if (root.active === null) {
+        case "running":
+            Timers.pause(root.active.id);
+            return;
+        case "idle":
             root.beginTyped();
             return;
         }
-        if (!root.ringing)
-            Timers.pause(root.active.id);
     }
 
     Layout.fillWidth: true
@@ -108,14 +114,14 @@ StyledRect {
                 implicitHeight: icon.implicitHeight + Tokens.padding.large
 
                 radius: Tokens.rounding.full
-                color: root.ringing ? Colours.palette.m3error : (root.active !== null ? Colours.palette.m3primary : Colours.palette.m3secondaryContainer)
+                color: root.mode === "rang" ? Colours.palette.m3error : (root.mode === "idle" ? Colours.palette.m3secondaryContainer : Colours.palette.m3primary)
 
                 MaterialIcon {
                     id: icon
 
                     anchors.centerIn: parent
                     text: "timer"
-                    color: root.ringing ? Colours.palette.m3onError : (root.active !== null ? Colours.palette.m3onPrimary : Colours.palette.m3onSecondaryContainer)
+                    color: root.mode === "rang" ? Colours.palette.m3onError : (root.mode === "idle" ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onPrimary)
                     fontStyle: Tokens.font.icon.large
                 }
             }
@@ -134,7 +140,7 @@ StyledRect {
                 StyledText {
                     Layout.fillWidth: true
                     text: root.stateLabel
-                    color: root.ringing ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                    color: root.mode === "rang" ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
                     font: Tokens.font.body.small
                     elide: Text.ElideRight
                 }
@@ -142,11 +148,12 @@ StyledRect {
 
             StyledText {
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                text: root.active === null ? qsTr("--:--") : Timers.formatted(root.active)
-                color: root.ringing ? Colours.palette.m3error : (root.active === null ? Colours.palette.m3outlineVariant : (root.activePaused ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3primary))
+                text: root.mode === "idle" ? qsTr("--:--") : Timers.formatted(root.active)
+                color: root.mode === "rang" ? Colours.palette.m3error : (root.mode === "idle" ? Colours.palette.m3outlineVariant : (root.mode === "paused" ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3primary))
                 font: Tokens.font.headline.small
-
-                Component.onCompleted: font.features = { "tnum": 1 }
+                font.features: ({
+                        "tnum": 1
+                    })
             }
         }
 
@@ -163,7 +170,7 @@ StyledRect {
                 width: root.activeProgress * parent.width
                 height: parent.height
                 radius: parent.radius
-                color: root.ringing ? Colours.palette.m3error : Colours.palette.m3primary
+                color: root.mode === "rang" ? Colours.palette.m3error : Colours.palette.m3primary
 
                 Behavior on width {
                     Anim {
@@ -236,73 +243,78 @@ StyledRect {
             Repeater {
                 model: Timers.others
 
-                delegate: StyledRect {
-                    id: timerRow
-
-                    required property var modelData
-                    required property int index
-
-                    Layout.fillWidth: true
-                    implicitHeight: timerLayout.implicitHeight + Tokens.padding.small * 2
-
-                    radius: Tokens.rounding.medium
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
-
-                    RowLayout {
-                        id: timerLayout
-
-                        anchors.fill: parent
-                        anchors.margins: Tokens.padding.small
-                        spacing: Tokens.spacing.small
-
-                        MaterialIcon {
-                            text: "timer"
-                            color: Colours.palette.m3onSurfaceVariant
-                            fontStyle: Tokens.font.icon.small
-                        }
-
-                        StyledText {
-                            text: Timers.formatted(timerRow.modelData)
-                            color: Timers.paused(timerRow.modelData) ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
-                            font: Tokens.font.title.small
-
-                            Component.onCompleted: font.features = { "tnum": 1 }
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: timerRow.modelData.message || qsTr("Timer")
-                            color: Colours.palette.m3onSurfaceVariant
-                            font: Tokens.font.body.small
-                            elide: Text.ElideRight
-                        }
-
-                        IconButton {
-                            icon: Timers.paused(timerRow.modelData) ? "play_arrow" : "pause"
-                            onClicked: Timers.toggle(timerRow.modelData.id)
-                            Accessible.name: Timers.paused(timerRow.modelData) ? qsTr("Resume this timer") : qsTr("Pause this timer")
-                        }
-
-                        IconButton {
-                            id: pinBtn
-
-                            icon: "push_pin"
-                            isToggle: true
-                            checked: Timers.pinnedId === timerRow.modelData.id
-                            onClicked: {
-                                Timers.pin(timerRow.modelData.id);
-                                pinBtn.internalChecked = Timers.pinnedId === timerRow.modelData.id;
-                            }
-                            Accessible.name: checked ? qsTr("Unpin this timer") : qsTr("Pin this timer")
-                        }
-
-                        IconButton {
-                            icon: "close"
-                            onClicked: Timers.cancel(timerRow.modelData.id)
-                            Accessible.name: qsTr("Cancel this timer")
-                        }
-                    }
+                delegate: TimerRow {
+                    timer: modelData
                 }
+            }
+        }
+    }
+
+    component TimerRow: StyledRect {
+        id: row
+
+        required property var timer
+
+        readonly property bool paused: String(row.timer.state) === "paused"
+
+        Layout.fillWidth: true
+        implicitHeight: timerLayout.implicitHeight + Tokens.padding.small * 2
+        radius: Tokens.rounding.medium
+        color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+        RowLayout {
+            id: timerLayout
+
+            anchors.fill: parent
+            anchors.margins: Tokens.padding.small
+            spacing: Tokens.spacing.small
+
+            MaterialIcon {
+                text: "timer"
+                color: Colours.palette.m3onSurfaceVariant
+                fontStyle: Tokens.font.icon.small
+            }
+
+            StyledText {
+                text: Timers.formatted(row.timer)
+                color: row.paused ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
+                font: Tokens.font.title.small
+                font.features: ({
+                        "tnum": 1
+                    })
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                text: row.timer.message || qsTr("Timer")
+                color: Colours.palette.m3onSurfaceVariant
+                font: Tokens.font.body.small
+                elide: Text.ElideRight
+            }
+
+            IconButton {
+                icon: row.paused ? "play_arrow" : "pause"
+                onClicked: Timers.toggle(row.timer.id)
+                Accessible.name: row.paused ? qsTr("Resume this timer") : qsTr("Pause this timer")
+            }
+
+            IconButton {
+                id: pinBtn
+
+                icon: "push_pin"
+                isToggle: true
+                checked: Timers.pinnedId === row.timer.id
+                onClicked: {
+                    Timers.pin(row.timer.id);
+                    pinBtn.internalChecked = Timers.pinnedId === row.timer.id;
+                }
+                Accessible.name: checked ? qsTr("Unpin this timer") : qsTr("Pin this timer")
+            }
+
+            IconButton {
+                icon: "close"
+                onClicked: Timers.cancel(row.timer.id)
+                Accessible.name: qsTr("Cancel this timer")
             }
         }
     }
