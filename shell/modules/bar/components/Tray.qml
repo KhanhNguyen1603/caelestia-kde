@@ -13,7 +13,10 @@ Item {
     readonly property alias layout: layout
     readonly property alias expandIcon: expandIcon
 
-    readonly property int padding: root.hasBackground ? Tokens.padding.medium : Tokens.padding.extraSmall
+    // The icons sit inside a pill of their own, so the space around them is a step wider
+    // than the inset the other bar widgets use: at the medium inset the row read as pinned
+    // to the edge of the pill rather than held in it.
+    readonly property int padding: root.hasBackground ? Tokens.padding.large : Tokens.padding.small
     readonly property int spacing: root.hasBackground ? Tokens.spacing.small : 0
 
     // When the tray owns the right-zone widgets it is the one system tray for
