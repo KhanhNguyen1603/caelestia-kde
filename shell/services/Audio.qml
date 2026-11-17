@@ -212,6 +212,13 @@ Singleton {
         playSoundSource(Qt.resolvedUrl("../assets/sounds/notifications/" + name), true, GlobalConfig.audio.sounds.notificationVolume);
     }
 
+    function playSystemSound(path: string, volume: real): void {
+        if (!path)
+            return;
+
+        playSoundSource("file://" + path, true, volume);
+    }
+
     function playCameraClick(): void {
         playSoundSource(Qt.resolvedUrl("../assets/sounds/camera_click.wav"), GlobalConfig.audio.sounds.cameraClick, GlobalConfig.audio.sounds.sfxVolume);
     }

@@ -13,25 +13,54 @@ StyledRect {
     required property DrawerVisibilities visibilities
     property bool expanded: false
 
-    readonly property real collapsedHeight: header.implicitHeight + Tokens.padding.large * 2
-    readonly property real expandedHeight: header.implicitHeight + content.spacing + bodyLayout.implicitHeight + Tokens.padding.large * 2
-    readonly property real nonAnimHeight: root.expanded ? expandedHeight : collapsedHeight
+    readonly property var active: Timers.activeTimer
+    readonly property bool ringing: Timers.ringing
+    readonly property bool activePaused: Timers.paused(root.active)
+    readonly property real activeProgress: Timers.progress(root.active)
+    readonly property int activeTotal: root.active ? Number(root.active.total ?? 0) : 0
+    readonly property int typedSeconds: Timers.parseDigits(digitsField.text)
+    readonly property string stateLabel: {
+        if (root.ringing)
+            return qsTr("Time is up");
+        if (root.active === null)
+            return qsTr("Nothing running");
+        if (root.activePaused)
+            return qsTr("Paused");
+        if (String(root.active.message ?? "").length > 0)
+            return String(root.active.message);
+        return qsTr("Counting down");
+    }
+    readonly property string primaryLabel: root.activePaused ? qsTr("Resume") : (root.active === null || root.ringing ? qsTr("Start") : qsTr("Pause"))
+    readonly property bool primaryEnabled: root.activePaused || (root.active !== null && !root.ringing) || (root.active === null && root.typedSeconds > 0)
 
-    /// The duration as it is typed, so the field, the button and Enter all ask the same
-    /// question of the same string.
-    readonly property int typedSeconds: Timers.parseDuration(durationField.text)
+    readonly property real collapsedHeight: header.implicitHeight + progress.height + content.spacing + Tokens.padding.large * 2
+    readonly property real expandedHeight: header.implicitHeight + progress.height + content.spacing * 2 + bodyLayout.implicitHeight + Tokens.padding.large * 2
+    readonly property real nonAnimHeight: root.expanded ? expandedHeight : collapsedHeight
 
     function begin(seconds: int): void {
         if (seconds <= 0)
             return;
 
         Timers.start(seconds, messageField.text);
-        durationField.text = "";
+        digitsField.text = "";
         messageField.text = "";
     }
 
     function beginTyped(): void {
         root.begin(root.typedSeconds);
+    }
+
+    function primaryAction(): void {
+        if (root.activePaused) {
+            Timers.resume(root.active.id);
+            return;
+        }
+        if (root.active === null) {
+            root.beginTyped();
+            return;
+        }
+        if (!root.ringing)
+            Timers.pause(root.active.id);
     }
 
     Layout.fillWidth: true
@@ -79,14 +108,14 @@ StyledRect {
                 implicitHeight: icon.implicitHeight + Tokens.padding.large
 
                 radius: Tokens.rounding.full
-                color: Timers.count > 0 ? Colours.palette.m3primary : Colours.palette.m3secondaryContainer
+                color: root.ringing ? Colours.palette.m3error : (root.active !== null ? Colours.palette.m3primary : Colours.palette.m3secondaryContainer)
 
                 MaterialIcon {
                     id: icon
 
                     anchors.centerIn: parent
                     text: "timer"
-                    color: Timers.count > 0 ? Colours.palette.m3onPrimary : Colours.palette.m3onSecondaryContainer
+                    color: root.ringing ? Colours.palette.m3onError : (root.active !== null ? Colours.palette.m3onPrimary : Colours.palette.m3onSecondaryContainer)
                     fontStyle: Tokens.font.icon.large
                 }
             }
@@ -104,24 +133,43 @@ StyledRect {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: Timers.count === 0 ? qsTr("Nothing running") : qsTr("%1 running").arg(Timers.count)
-                    color: Colours.palette.m3onSurfaceVariant
+                    text: root.stateLabel
+                    color: root.ringing ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
                     font: Tokens.font.body.small
                     elide: Text.ElideRight
                 }
             }
 
             StyledText {
-                visible: Timers.pinnedTimer !== null
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                Layout.rightMargin: Tokens.spacing.medium
-                Layout.preferredWidth: Math.max(84, implicitWidth)
-                horizontalAlignment: Text.AlignRight
-                text: Timers.pinnedTimer ? Units.formatDuration(Timers.remaining(Timers.pinnedTimer)) : ""
-                color: Colours.palette.m3primary
-                font: Tokens.font.title.large
+                text: root.active === null ? qsTr("--:--") : Timers.formatted(root.active)
+                color: root.ringing ? Colours.palette.m3error : (root.active === null ? Colours.palette.m3outlineVariant : (root.activePaused ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3primary))
+                font: Tokens.font.headline.small
 
                 Component.onCompleted: font.features = { "tnum": 1 }
+            }
+        }
+
+        StyledRect {
+            id: progress
+
+            Layout.fillWidth: true
+            implicitHeight: 4
+            radius: Tokens.rounding.full
+            color: Colours.palette.m3surfaceVariant
+            opacity: root.activeTotal > 0 ? 1 : 0
+
+            StyledRect {
+                width: root.activeProgress * parent.width
+                height: parent.height
+                radius: parent.radius
+                color: root.ringing ? Colours.palette.m3error : Colours.palette.m3primary
+
+                Behavior on width {
+                    Anim {
+                        type: Anim.FastEffects
+                    }
+                }
             }
         }
 
@@ -139,8 +187,54 @@ StyledRect {
                 }
             }
 
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Tokens.spacing.small
+
+                StyledTextField {
+                    id: digitsField
+
+                    Layout.preferredWidth: 96
+                    horizontalAlignment: TextInput.AlignHCenter
+                    placeholderText: qsTr("300 = 3:00")
+                    onAccepted: root.beginTyped()
+                }
+
+                StyledTextField {
+                    id: messageField
+
+                    Layout.fillWidth: true
+                    horizontalAlignment: TextInput.AlignLeft
+                    placeholderText: qsTr("What is it for?")
+                    onAccepted: root.beginTyped()
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Tokens.spacing.small
+
+                TextButton {
+                    text: qsTr("Reset")
+                    type: TextButton.Text
+                    disabled: Timers.count === 0
+                    onClicked: Timers.clear()
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                TextButton {
+                    text: root.primaryLabel
+                    type: TextButton.Filled
+                    disabled: !root.primaryEnabled
+                    onClicked: root.primaryAction()
+                }
+            }
+
             Repeater {
-                model: Timers.list
+                model: Timers.others
 
                 delegate: StyledRect {
                     id: timerRow
@@ -161,9 +255,18 @@ StyledRect {
                         anchors.margins: Tokens.padding.small
                         spacing: Tokens.spacing.small
 
+                        MaterialIcon {
+                            text: "timer"
+                            color: Colours.palette.m3onSurfaceVariant
+                            fontStyle: Tokens.font.icon.small
+                        }
+
                         StyledText {
-                            text: Units.formatDuration(Timers.remaining(timerRow.modelData))
+                            text: Timers.formatted(timerRow.modelData)
+                            color: Timers.paused(timerRow.modelData) ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
                             font: Tokens.font.title.small
+
+                            Component.onCompleted: font.features = { "tnum": 1 }
                         }
 
                         StyledText {
@@ -172,6 +275,12 @@ StyledRect {
                             color: Colours.palette.m3onSurfaceVariant
                             font: Tokens.font.body.small
                             elide: Text.ElideRight
+                        }
+
+                        IconButton {
+                            icon: Timers.paused(timerRow.modelData) ? "play_arrow" : "pause"
+                            onClicked: Timers.toggle(timerRow.modelData.id)
+                            Accessible.name: Timers.paused(timerRow.modelData) ? qsTr("Resume this timer") : qsTr("Pause this timer")
                         }
 
                         IconButton {
@@ -192,54 +301,6 @@ StyledRect {
                             onClicked: Timers.cancel(timerRow.modelData.id)
                             Accessible.name: qsTr("Cancel this timer")
                         }
-                    }
-                }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.topMargin: Tokens.spacing.extraSmall
-                spacing: Tokens.spacing.small
-
-                StyledTextField {
-                    id: durationField
-
-                    Layout.preferredWidth: 84
-                    horizontalAlignment: TextInput.AlignHCenter
-                    placeholderText: qsTr("25m")
-                    onAccepted: root.beginTyped()
-                }
-
-                StyledTextField {
-                    id: messageField
-
-                    Layout.fillWidth: true
-                    horizontalAlignment: TextInput.AlignLeft
-                    placeholderText: qsTr("What is it for?")
-                    onAccepted: root.beginTyped()
-                }
-
-                IconButton {
-                    icon: "play_arrow"
-                    enabled: root.typedSeconds > 0
-                    onClicked: root.beginTyped()
-                    Accessible.name: qsTr("Start the timer")
-                }
-            }
-
-            Flow {
-                Layout.fillWidth: true
-                spacing: Tokens.spacing.extraSmall
-
-                Repeater {
-                    model: [5, 10, 25, 45]
-
-                    delegate: TextButton {
-                        required property int modelData
-
-                        text: qsTr("%1m").arg(modelData)
-                        type: TextButton.Tonal
-                        onClicked: root.begin(modelData * 60)
                     }
                 }
             }

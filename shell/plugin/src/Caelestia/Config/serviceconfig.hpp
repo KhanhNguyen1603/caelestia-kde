@@ -74,6 +74,10 @@ private:
     CONFIG_GLOBAL_LIST(CalendarSourceList, calendarSources, {})
     CONFIG_GLOBAL_PROPERTY(int, calendarDays, 14)
 
+    CONFIG_GLOBAL_PROPERTY(int, timerAlarmDuration, 10)
+    CONFIG_GLOBAL_PROPERTY(bool, timerAlarm, false)
+    CONFIG_GLOBAL_PROPERTY(QString, timerAlarmSound, u"freedesktop/stereo/alarm-clock-elapsed.oga"_s)
+
     CONFIG_GLOBAL_PROPERTY(bool, autoSchemeEnabled, false)
     CONFIG_GLOBAL_PROPERTY(QString, autoSchemeMode, u"solar"_s)
     // "HH:MM", local time. Also used as the fallback when solar times cannot be
