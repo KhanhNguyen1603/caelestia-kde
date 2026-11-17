@@ -19,7 +19,7 @@ PageBase {
         MenuItem {
             property string value: "bounce"
 
-            text: qsTr("macOS Elastic Bounce")
+            text: qsTr("Elastic Bounce")
         },
         MenuItem {
             property string value: "pulse"

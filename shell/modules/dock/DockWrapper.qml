@@ -72,7 +72,7 @@ Item {
     readonly property int visualThickness: !disabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? contentThickness : Config.border.thickness
     readonly property bool popoutActiveOnDock: Boolean(popouts && (popouts.hasCurrent || popouts.offsetScale < 0.99) && (popouts.sourcePanel === "dockPanel" || (popouts.sourcePanel === "" && popouts.isDockPanelPopout)))
     readonly property int magReach: Math.round(root.itemSize * (Config.dockPanel.maxMagnification - 1) + 24)
-    property real dockHoverProgress: dockHoverTracker.hovered ? 1.0 : 0.0
+    property bool isFirstMagnification: false
     readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dockPanel || hovered || popoutActiveOnDock)
     property bool pointerInReach: false
     property bool revealActive: false
@@ -214,12 +214,6 @@ Item {
         }
     ]
 
-    Behavior on dockHoverProgress {
-        NumberAnimation {
-            duration: Tokens.anim.durations.expressiveFastSpatial
-            easing: Tokens.anim.expressiveFastSpatial
-        }
-    }
 
     Item {
         id: content
@@ -506,8 +500,20 @@ Item {
             labelWidth: Config.dockPanel.labelWidth
             maxLabelWidth: Config.dockPanel.maxLabelWidth
             labelSize: Config.dockPanel.labelSize
+            isHovered: {
+                if (!dockHoverTracker.hovered)
+                    return false;
+                const p = hoverArea.mapToItem(container, dockHoverTracker.point.position.x, dockHoverTracker.point.position.y);
+                const cursorPos = root.isHorizontal ? p.x : p.y;
+                const origin = itemDelegate.mapToItem(container, 0, 0);
+                const itemStart = root.isHorizontal ? origin.x : origin.y;
+                const itemSpan = root.isHorizontal ? itemDelegate.width : itemDelegate.height;
+                const halfGap = root.spacing / 2;
+                return cursorPos >= (itemStart - halfGap) && cursorPos < (itemStart + itemSpan + halfGap);
+            }
+            isFirstMagnification: root.isFirstMagnification
             magnificationScale: {
-                if (!Config.dockPanel.magnification || root.dockHoverProgress <= 0.001)
+                if (!Config.dockPanel.magnification || !dockHoverTracker.hovered)
                     return 1.0;
                 const p = hoverArea.mapToItem(container, dockHoverTracker.point.position.x, dockHoverTracker.point.position.y);
                 const cursorPos = root.isHorizontal ? p.x : p.y;
@@ -526,9 +532,16 @@ Item {
                 const reach = (root.itemSize + root.spacing) * 2.2;
                 if (dist >= reach) return 1.0;
                 const factor = (1.0 + Math.cos((dist / reach) * Math.PI)) / 2.0;
-                return 1.0 + (Config.dockPanel.maxMagnification - 1.0) * factor * root.dockHoverProgress;
+                return 1.0 + (Config.dockPanel.maxMagnification - 1.0) * factor;
             }
         }
+    }
+
+    Timer {
+        id: firstMagTimer
+
+        interval: 100
+        onTriggered: root.isFirstMagnification = false
     }
 
     Timer {
@@ -558,9 +571,15 @@ Item {
     Connections {
         function onHoveredChanged(): void {
             if (dockHoverTracker.hovered) {
+                root.isFirstMagnification = true;
+                firstMagTimer.restart();
                 unhoverTimer.stop();
-            } else if (!root.pointerInReach && root.revealActive) {
-                unhoverTimer.restart();
+            } else {
+                root.isFirstMagnification = false;
+                firstMagTimer.stop();
+                if (!root.pointerInReach && root.revealActive) {
+                    unhoverTimer.restart();
+                }
             }
         }
 

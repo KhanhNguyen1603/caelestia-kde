@@ -29,6 +29,8 @@ Item {
     property string position: "bottom"
     property bool isHorizontal: root.position === "top" || root.position === "bottom"
     property real magnificationScale: 1.0
+    property bool isHovered: false
+    property bool isFirstMagnification: false
     property string sourcePanel: "dockPanel"
     property var popouts: null
     property var listView: null
@@ -79,6 +81,19 @@ Item {
 
     signal activateRequested()
 
+    onIsHoveredChanged: {
+        if (root.isHovered && root.popouts) {
+            if (root.popouts.hasCurrent && root.popouts.currentName === "dockcontext") return;
+            root.popouts.sourcePanel = root.sourcePanel;
+            root.popouts.currentName = "dockhover";
+            root.popouts.currentCenter = root.isHorizontal
+                ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x
+                : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
+            root.popouts.dockModel = root.modelData;
+            root.popouts.hasCurrent = true;
+        }
+    }
+
     width: root.isHorizontal ? Math.round(root.baseWidth * root.currentScale) : root.baseWidth
     height: !root.isHorizontal ? Math.round(root.baseHeight * root.currentScale) : root.baseHeight
     implicitWidth: root.width
@@ -86,6 +101,8 @@ Item {
     z: dragArea.held ? 999 : Math.round(root.currentScale * 100)
 
     Behavior on currentScale {
+        enabled: !root.isFirstMagnification
+
         NumberAnimation {
             duration: 80
             easing.type: Easing.OutQuad
@@ -186,6 +203,21 @@ Item {
         }
 
         StyledRect {
+            id: hoverHighlight
+
+            anchors.fill: parent
+            radius: Tokens.rounding.medium
+            color: Colours.palette.m3onSurface
+            opacity: root.isHovered ? 0.12 : 0
+
+            Behavior on opacity {
+                Anim {
+                    type: Anim.DefaultEffects
+                }
+            }
+        }
+
+        StyledRect {
             anchors.fill: parent
             radius: Tokens.rounding.medium
             color: Colours.palette.m3error
@@ -204,6 +236,7 @@ Item {
             anchors.fill: parent
             radius: Tokens.rounding.medium
             acceptedButtons: Qt.NoButton
+            showHoverBackground: false
 
             onEntered: {
                 if (!root.popouts) return;
