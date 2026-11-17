@@ -32,9 +32,14 @@ Item {
     // The release that ends a drag lands on the icon the drag started from, which Qt
     // reports as a click. It is not one: it is the end of the gesture.
     property bool suppressClick: false
-    // An icon the tray's box draws lives in a popout, so the open popout is its own
-    // container and not a reason to keep its name back.
+    // An icon the tray's box draws is inside a popout, so the popout being open is not a
+    // reason to keep its name back.
     property bool insidePopout: false
+    // Where the name hangs. The bar maps into the window and is drawn there; a popout is
+    // drawn where its plate is, not where its items say they are, so a tooltip placed
+    // against the window would land somewhere else entirely. The box hands itself over
+    // instead, and the name lands on the icon under the pointer.
+    property Item tooltipParent: null
 
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
     // The bar thins itself with a curve rather than in step with the number, and the icons
@@ -133,7 +138,7 @@ Item {
 
     Loader {
         asynchronous: true
-        active: root.tooltip.length > 0 && !root.insidePopout
+        active: root.tooltip.length > 0
         z: 10000
         width: 0
         height: 0
@@ -141,8 +146,8 @@ Item {
         sourceComponent: Component {
             Tooltip {
                 // The window is the whole screen, unlike the bar's clipped strip:
-                // a tooltip placed against it is not cut off by the bar.
-                parent: root.Window.contentItem
+                // a tooltip placed against it sits by the pointer wherever the icon is.
+                parent: root.tooltipParent ?? root.Window.contentItem
                 target: root
                 text: root.tooltip
             }
