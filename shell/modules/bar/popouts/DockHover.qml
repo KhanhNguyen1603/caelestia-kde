@@ -132,36 +132,44 @@ StyledRect {
                         return Math.max(min, Math.min(max, raw));
                     }
 
+                    readonly property bool isDockPanel: root.popouts.sourcePanel === "dockPanel" || (root.popouts.sourcePanel !== "bar" && Boolean(Config.dockPanel && Config.dockPanel.enabled))
+                    readonly property bool previewEnabled: isDockPanel
+                        ? Boolean(Config.dockPanel && Config.dockPanel.previewOnDesktop)
+                        : Boolean(Config.bar && Config.bar.dock && Config.bar.dock.previewOnDesktop)
+                    readonly property bool isCardHovered: cardHover.hovered || cardStateLayer.containsMouse
+
                     implicitWidth: root.cardWidth
                     implicitHeight: cardLayout.implicitHeight
                     radius: Tokens.rounding.small
                     color: "transparent"
 
+                    onIsCardHoveredChanged: {
+                        if (isCardHovered) {
+                            previewTimer.restart();
+                        } else {
+                            previewTimer.stop();
+                            Kwin.clearHighlight();
+                        }
+                    }
+
                     Timer {
                         id: previewTimer
 
-                        interval: 500
+                        interval: 400
 
                         onTriggered: {
-                            if (cardHover.hovered && card.modelData?.address && (Config.dockPanel && Config.dockPanel.enabled ? Config.dockPanel.previewOnDesktop : Config.bar.dock.previewOnDesktop))
-                                Kwin.highlightWindow(card.modelData.address);
+                            if (card.isCardHovered && card.modelData?.address && card.previewEnabled)
+                                Kwin.highlightWindow(String(card.modelData.address));
                         }
                     }
 
                     HoverHandler {
                         id: cardHover
-
-                        onHoveredChanged: {
-                            if (hovered) {
-                                previewTimer.restart();
-                            } else {
-                                previewTimer.stop();
-                                Kwin.clearHighlight();
-                            }
-                        }
                     }
 
                     StateLayer {
+                        id: cardStateLayer
+
                         anchors.fill: parent
                         radius: parent.radius
                         onClicked: {
@@ -202,7 +210,7 @@ StyledRect {
                                 implicitHeight: closeIcon.implicitHeight + Tokens.padding.small * scaleOffset * 2
                                 radius: Tokens.rounding.small
                                 color: Colours.tPalette.m3surfaceVariant
-                                opacity: cardHover.hovered ? 1 : 0
+                                opacity: card.isCardHovered ? 1 : 0
                                 visible: opacity > 0.01
 
                                 Behavior on opacity {

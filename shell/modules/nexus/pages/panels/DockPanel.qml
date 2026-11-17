@@ -224,6 +224,37 @@ PageBase {
         }
 
         SectionHeader {
+            text: qsTr("Window Management")
+        }
+
+        SelectRow {
+            first: true
+            label: qsTr("Window grouping")
+            subtext: qsTr("How multiple windows of the same app share a dock icon")
+            active: Config.dockPanel.windowGrouping === DockWindowGrouping.Ungrouped ? root.windowGroupingItems[2] : Config.dockPanel.windowGrouping === DockWindowGrouping.PinnedFirst ? root.windowGroupingItems[1] : root.windowGroupingItems[0]
+            menuItems: root.windowGroupingItems
+            fallbackIcon: "grid_view"
+            onSelected: item => GlobalConfig.dockPanel.windowGrouping = item.value
+        }
+
+        ToggleRow {
+            text: qsTr("Filter by current desktop")
+            subtext: qsTr("Only show applications and windows belonging to the active virtual workspace")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "currentDesktopOnly" })
+            checked: Config.dockPanel.currentDesktopOnly
+            onToggled: GlobalConfig.dockPanel.currentDesktopOnly = checked
+        }
+
+        ToggleRow {
+            last: true
+            text: qsTr("Preview window on desktop")
+            subtext: qsTr("Highlight and show the window itself on the workspace while hovering over dock previews")
+            reset: ({ node: GlobalConfig.dockPanel, setting: "previewOnDesktop" })
+            checked: Config.dockPanel.previewOnDesktop
+            onToggled: GlobalConfig.dockPanel.previewOnDesktop = checked
+        }
+
+        SectionHeader {
             text: qsTr("Dimensions & Sizing")
         }
 
@@ -394,37 +425,6 @@ PageBase {
             reset: ({ node: GlobalConfig.dockPanel, setting: "recolourIcons" })
             checked: Config.dockPanel.recolourIcons
             onToggled: GlobalConfig.dockPanel.recolourIcons = checked
-        }
-
-        SectionHeader {
-            text: qsTr("Window Management")
-        }
-
-        SelectRow {
-            first: true
-            label: qsTr("Window grouping")
-            subtext: qsTr("How multiple windows of the same app share a dock icon")
-            active: Config.dockPanel.windowGrouping === DockWindowGrouping.Ungrouped ? root.windowGroupingItems[2] : Config.dockPanel.windowGrouping === DockWindowGrouping.PinnedFirst ? root.windowGroupingItems[1] : root.windowGroupingItems[0]
-            menuItems: root.windowGroupingItems
-            fallbackIcon: "grid_view"
-            onSelected: item => GlobalConfig.dockPanel.windowGrouping = item.value
-        }
-
-        ToggleRow {
-            text: qsTr("Filter by current desktop")
-            subtext: qsTr("Only show applications and windows belonging to the active virtual workspace")
-            reset: ({ node: GlobalConfig.dockPanel, setting: "currentDesktopOnly" })
-            checked: Config.dockPanel.currentDesktopOnly
-            onToggled: GlobalConfig.dockPanel.currentDesktopOnly = checked
-        }
-
-        ToggleRow {
-            last: true
-            text: qsTr("Preview window on desktop")
-            subtext: qsTr("Highlight and show the window itself on the workspace while hovering over dock previews")
-            reset: ({ node: GlobalConfig.dockPanel, setting: "previewOnDesktop" })
-            checked: Config.dockPanel.previewOnDesktop
-            onToggled: GlobalConfig.dockPanel.previewOnDesktop = checked
         }
     }
 }
