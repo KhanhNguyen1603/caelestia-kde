@@ -7,6 +7,7 @@ import Caelestia
 import Caelestia.Config
 import qs.components
 import qs.components.containers
+import qs.components.effects
 import qs.components.widgets
 import qs.services
 
@@ -18,11 +19,6 @@ Item {
     property real room: Number.POSITIVE_INFINITY
     readonly property int padding: Tokens.padding.large
     readonly property int clampedPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
-    /// Room for the shadow each card casts. The stack clips every card so a swipe reads as
-    /// leaving the stack, which would otherwise clip the shadow away with it.
-    readonly property int elevationMargin: Tokens.padding.medium
-    /// The card itself, once the shadow gutters and the stack padding are taken out.
-    readonly property int cardWidth: root.implicitWidth - root.padding - root.clampedPadding - root.elevationMargin * 2
 
     /// Nothing to show: the stack is not there at all, rather than a strip of padding.
     readonly property bool empty: list.count === 0
@@ -151,7 +147,7 @@ Item {
 
         required property NotifData modelData
         required property int index
-        readonly property real nonAnimHeight: notif.nonAnimHeight + root.elevationMargin * 2
+        readonly property alias nonAnimHeight: notif.nonAnimHeight
         property int idx
 
         onIndexChanged: {
@@ -159,8 +155,8 @@ Item {
                 idx = index;
         }
 
-        implicitWidth: notif.implicitWidth + root.elevationMargin * 2
-        implicitHeight: notif.implicitHeight + root.elevationMargin * 2 + (idx === 0 ? 0 : Tokens.spacing.medium)
+        implicitWidth: notif.implicitWidth
+        implicitHeight: notif.implicitHeight + (idx === 0 ? 0 : Tokens.spacing.medium)
 
         ListView.onRemove: removeAnim.start()
 
@@ -187,12 +183,20 @@ Item {
                 property: "z"
                 value: 1
             }
-            Anim {
-                target: notif
-                property: "x"
-                to: (notif.x >= 0 ? root.implicitWidth : -root.implicitWidth) * 2
-                duration: Tokens.anim.durations.normal
-                easing: Tokens.anim.emphasized
+            ParallelAnimation {
+                Anim {
+                    target: notif
+                    property: "x"
+                    to: (notif.x >= 0 ? root.implicitWidth : -root.implicitWidth) * 2
+                    duration: Tokens.anim.durations.normal
+                    easing: Tokens.anim.emphasized
+                }
+                Anim {
+                    target: notif
+                    property: "opacity"
+                    to: 0
+                    duration: Tokens.anim.durations.normal
+                }
             }
             PropertyAction {
                 target: wrapper
@@ -201,10 +205,24 @@ Item {
             }
         }
 
+        // The shadow has to be behind the clip rather than inside the card: the clip is what
+        // hides the card as it swipes away, and it would take the shadow with it.
+        Elevation {
+            x: clip.x + notif.x
+            y: clip.y + notif.y
+            z: -1
+            width: notif.width
+            height: notif.height
+            radius: notif.radius
+            opacity: notif.opacity
+            level: 3
+        }
+
         ClippingRectangle {
-            anchors.fill: parent
-            anchors.margins: root.elevationMargin
-            anchors.topMargin: root.elevationMargin + (wrapper.idx === 0 ? 0 : Tokens.spacing.medium)
+            id: clip
+
+            anchors.top: parent.top
+            anchors.topMargin: wrapper.idx === 0 ? 0 : Tokens.spacing.medium
 
             color: "transparent"
             radius: notif.radius
@@ -215,7 +233,7 @@ Item {
                 id: notif
 
                 modelData: wrapper.modelData
-                implicitWidth: root.cardWidth
+                implicitWidth: root.implicitWidth - root.padding - root.clampedPadding
             }
         }
     }

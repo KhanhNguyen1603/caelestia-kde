@@ -23,14 +23,17 @@ StyledRect {
     readonly property bool hasAppIcon: (modelData?.appIcon.length ?? 0) > 0
     readonly property int nonAnimHeight: appName.height + summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + body.height + actions.height + actions.anchors.topMargin : Tokens.spacing.extraSmall + bodyPreview.height) + inner.anchors.margins * 2
     property bool expanded: Config.notifs.openExpanded
+    readonly property bool hovered: cardMouse.containsMouse
 
     color: root.isCritical ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.large
     implicitHeight: inner.implicitHeight
 
     x: implicitWidth
+    opacity: 0
     Component.onCompleted: {
         x = 0;
+        opacity = 1;
         modelData?.lock(this);
     }
     Component.onDestruction: modelData?.unlock(this)
@@ -41,16 +44,15 @@ StyledRect {
         }
     }
 
-    // The card floats over the wallpaper, so it has to cast something: without a shadow the
-    // stack reads as a row of rectangles painted on the desktop rather than a notification.
-    Elevation {
-        anchors.fill: parent
-        radius: parent.radius
-        z: -1
-        level: 2
+    Behavior on opacity {
+        Anim {
+            type: Anim.SlowEffects
+        }
     }
 
     MouseArea {
+        id: cardMouse
+
         property int startY
         property bool swiped: false
 
@@ -254,7 +256,7 @@ StyledRect {
                 text: root.modelData?.appName ?? ""
                 font: appName.font
                 elide: Text.ElideRight
-                elideWidth: closeBtn.x - time.width - timeSep.width - appName.x - root.Tokens.spacing.small * 3
+                elideWidth: muteBtn.x - time.width - timeSep.width - appName.x - root.Tokens.spacing.small * 3
             }
 
             StyledText {
@@ -272,6 +274,7 @@ StyledRect {
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 maximumLineCount: 2
                 elide: Text.ElideRight
+                font.pointSize: Tokens.font.body.large.pointSize * root.fontScale
                 font.weight: Font.DemiBold
                 height: implicitHeight
 
@@ -310,7 +313,7 @@ StyledRect {
 
                 text: "•"
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.small
+                font: Tokens.font.label.small
             }
 
             StyledText {
@@ -324,11 +327,83 @@ StyledRect {
                 horizontalAlignment: Text.AlignLeft
                 text: root.modelData?.timeStr ?? ""
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.small
+                font: Tokens.font.label.small
             }
 
             // Dismissing is the one thing worth reaching from a toast that has not been opened,
             // so the close sits in the corner the eye lands on rather than behind an expansion.
+            // Everything the toast can do besides open sits on the header line and only shows
+            // under the pointer, the way an OS toast keeps its body for the message: the footer
+            // row these used to occupy is now text.
+            Item {
+                id: muteBtn
+
+                visible: root.hovered
+                anchors.right: copyBtn.left
+                anchors.rightMargin: Tokens.spacing.extraSmall
+                anchors.top: parent.top
+                anchors.topMargin: -Tokens.padding.extraSmall
+
+                implicitWidth: muteIcon.implicitHeight
+                implicitHeight: muteIcon.implicitHeight
+
+                StateLayer {
+                    radius: Tokens.rounding.full
+                    color: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                    Accessible.name: qsTr("Turn off notifications from %1").arg(root.modelData?.appName ?? "")
+                    Accessible.role: Accessible.Button
+                    onClicked: root.modelData?.appName && Notifs.muteApp(root.modelData.appName)
+                }
+
+                MaterialIcon {
+                    id: muteIcon
+
+                    anchors.centerIn: parent
+                    text: "notifications_off"
+                    fontStyle: Tokens.font.icon.medium
+                }
+            }
+
+            Item {
+                id: copyBtn
+
+                visible: root.hovered
+                anchors.right: closeBtn.left
+                anchors.rightMargin: Tokens.spacing.extraSmall
+                anchors.top: parent.top
+                anchors.topMargin: -Tokens.padding.extraSmall
+
+                implicitWidth: copyIcon.implicitHeight
+                implicitHeight: copyIcon.implicitHeight
+
+                StateLayer {
+                    radius: Tokens.rounding.full
+                    color: root.isCritical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                    Accessible.name: qsTr("Copy the notification text")
+                    Accessible.role: Accessible.Button
+                    onClicked: {
+                        if (root.modelData) {
+                            Quickshell.clipboardText = root.modelData.body;
+                            copyTimer.restart();
+                        }
+                    }
+                }
+
+                MaterialIcon {
+                    id: copyIcon
+
+                    anchors.centerIn: parent
+                    text: copyTimer.running ? "inventory" : "content_copy"
+                    fontStyle: Tokens.font.icon.medium
+                }
+
+                Timer {
+                    id: copyTimer
+
+                    interval: 3000
+                }
+            }
+
             Item {
                 id: closeBtn
 
@@ -370,7 +445,7 @@ StyledRect {
                 elide: Text.ElideRight
                 maximumLineCount: 1
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.small
+                font: Tokens.font.body.medium
 
                 opacity: root.expanded ? 0 : 1
 
@@ -426,7 +501,7 @@ StyledRect {
                 textFormat: Text.StyledText
                 text: root.modelData.bodyStyled
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.small
+                font: Tokens.font.body.medium
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 height: text ? implicitHeight : 0
 
@@ -455,7 +530,7 @@ StyledRect {
                 anchors.top: body.bottom
                 anchors.topMargin: Tokens.spacing.small
 
-                spacing: Tokens.spacing.extraSmall
+                spacing: 0
                 opacity: root.expanded ? 1 : 0
 
                 Behavior on opacity {
@@ -467,65 +542,35 @@ StyledRect {
                 Repeater {
                     model: root.modelData?.actions ?? []
 
-                    TextButton {
+                    // An OS stacks actions as rows under a hairline. Chips read as in-app
+                    // buttons, which is the one thing a toast's own actions are not.
+                    Column {
                         required property var modelData
 
                         width: actions.width
-                        isRound: true
-                        shapeMorph: true
-                        inactiveColour: root.isCritical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
-                        inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
-                        text: modelData.text
-                        onClicked: modelData.invoke()
+                        spacing: 0
 
-                        label.horizontalAlignment: Text.AlignHCenter
-                        label.anchors.left: left
-                        label.anchors.right: right
-                        label.anchors.verticalCenter: verticalCenter
-                        label.anchors.centerIn: undefined
-                        label.anchors.margins: Tokens.padding.medium
-                        label.elide: Text.ElideRight
-                    }
-                }
-
-                ButtonRow {
-                    width: actions.width
-
-                    spacing: Tokens.spacing.extraSmall
-
-                    IconButton {
-                        isRound: true
-                        shapeMorph: true
-                        fillWidth: (root.modelData?.actions.length ?? 0) === 0
-                        inactiveColour: root.isCritical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
-                        inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
-                        icon: "notifications_off"
-                        padding: Tokens.padding.extraSmall
-                        onClicked: root.modelData?.appName && Notifs.muteApp(root.modelData.appName)
-                        label.animate: true
-                        Accessible.name: qsTr("Turn off notifications from %1").arg(root.modelData?.appName ?? "")
-                    }
-
-                    IconButton {
-                        isRound: true
-                        shapeMorph: true
-                        fillWidth: (root.modelData?.actions.length ?? 0) === 0
-                        inactiveColour: root.isCritical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
-                        inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
-                        icon: copyTimer.running ? "inventory" : "content_copy"
-                        padding: Tokens.padding.extraSmall
-                        onClicked: {
-                            if (root.modelData) {
-                                Quickshell.clipboardText = root.modelData.body;
-                                copyTimer.restart();
-                            }
+                        StyledRect {
+                            width: parent.width
+                            implicitHeight: 1
+                            color: Qt.alpha(Colours.palette.m3outlineVariant, 0.6)
                         }
-                        label.animate: true
 
-                        Timer {
-                            id: copyTimer
+                        TextButton {
+                            width: parent.width
+                            isRound: false
+                            inactiveColour: "transparent"
+                            inactiveOnColour: root.isCritical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurface
+                            text: modelData.text
+                            onClicked: modelData.invoke()
 
-                            interval: 3000
+                            label.horizontalAlignment: Text.AlignLeft
+                            label.anchors.left: left
+                            label.anchors.right: right
+                            label.anchors.verticalCenter: verticalCenter
+                            label.anchors.centerIn: undefined
+                            label.anchors.margins: Tokens.padding.medium
+                            label.elide: Text.ElideRight
                         }
                     }
                 }
