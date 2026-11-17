@@ -21,7 +21,7 @@ import qs.services
  * NetworkConnection.handleConnect(network, null, (network) => {
  *     // Show password dialog
  *     root.passwordNetwork = network;
- *     root.showPasswordDialog = true;
+ *     root.openSection = "password";
  * });
  * ```
  */
@@ -82,7 +82,7 @@ QtObject {
 
                         // Handle password dialog - use session if available, otherwise use callback
                         if (session && session.network) {
-                            session.network.showPasswordDialog = true;
+                            session.network.openSection = "password";
                             session.network.pendingNetwork = network;
                         } else if (onPasswordNeeded) {
                             onPasswordNeeded(network);

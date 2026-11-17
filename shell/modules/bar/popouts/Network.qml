@@ -16,13 +16,10 @@ ColumnLayout {
 
     property string view: "wireless"
     property var passwordNetwork: null
-    property bool showPasswordDialog: false
-    // The connected row carries its own details, so whether they are open is the popout's
-    // state rather than the row's: the row is rebuilt whenever the scan reorders the list.
-    property bool detailsOpen: false
-    // The VPN profiles are a header button's business now, so whether they are showing is
-    // remembered here for the same reason.
-    property bool vpnOpen: false
+    /// Which section is showing: `""`, `"details"`, `"vpn"` or `"password"`. One value rather
+    /// than a flag each, so two of them cannot be open at once — and the rows they hang off
+    /// are rebuilt whenever the scan reorders the list, so this is the popout's state.
+    property string openSection: ""
     property bool _isSidebarOpen: false
 
     readonly property var activeDeviceDetails: root.view === "wireless" ? Nmcli.wirelessDeviceDetails : Nmcli.ethernetDeviceDetails
@@ -103,11 +100,11 @@ ColumnLayout {
             type: IconButton.Tonal
             isRound: true
             isToggle: true
-            checked: root.vpnOpen
+            checked: root.openSection === "vpn"
             accessibleName: qsTr("Show VPN profiles")
             inactiveColour: Colours.tPalette.m3surfaceContainerHigh
             inactiveOnColour: Colours.palette.m3onSurfaceVariant
-            onClicked: root.vpnOpen = !root.vpnOpen
+            onClicked: root.openSection = root.openSection === "vpn" ? "" : "vpn"
         }
 
         // Rescanning is a small, repeatable action that belongs beside the settings that own
@@ -212,7 +209,7 @@ ColumnLayout {
                     readonly property bool active: networkItem.modelData?.active ?? false
                     // The details hang off the row they describe, and only the network in use has any.
                     readonly property bool disclosable: networkItem.active && root.activeDetails.visible
-                    readonly property bool disclosed: networkItem.disclosable && root.detailsOpen
+                    readonly property bool disclosed: networkItem.disclosable && root.openSection === "details"
 
                     width: ListView.view.width
                     implicitHeight: networkColumn.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
@@ -286,7 +283,7 @@ ColumnLayout {
                                         radius: Tokens.rounding.full
                                         showHoverBackground: false
                                         disabled: networkItem.loading
-                                        onClicked: root.detailsOpen = !root.detailsOpen
+                                        onClicked: root.openSection = root.openSection === "details" ? "" : "details"
                                     }
                                 }
 
@@ -365,7 +362,7 @@ ColumnLayout {
                                     };
                                     NetworkConnection.passwordNetwork = networkSnapshot;
                                     root.passwordNetwork = networkSnapshot;
-                                    root.showPasswordDialog = true;
+                                    root.openSection = "password";
                                     root.popouts.currentName = "wirelesspassword";
                                 });
 
@@ -380,7 +377,7 @@ ColumnLayout {
             ListView {
                 id: vpnList
 
-                visible: root.view === "wireless" && root.vpnOpen
+                visible: root.view === "wireless" && root.openSection === "vpn"
                 model: Nmcli.vpnConnections
                 Layout.fillWidth: true
                 Layout.leftMargin: Tokens.padding.extraSmall * root.scaleOffset
@@ -595,8 +592,8 @@ ColumnLayout {
 
     Connections {
         function onActiveChanged(): void {
-            if (root.showPasswordDialog && root.passwordNetwork && Nmcli.active && Nmcli.active.ssid === root.passwordNetwork.ssid) {
-                root.showPasswordDialog = false;
+            if (root.openSection === "password" && root.passwordNetwork && Nmcli.active && Nmcli.active.ssid === root.passwordNetwork.ssid) {
+                root.openSection = "";
                 root.passwordNetwork = null;
             }
         }
@@ -606,8 +603,8 @@ ColumnLayout {
 
     Connections {
         function onCurrentNameChanged(): void {
-            if (root.popouts.currentName !== "wirelesspassword" && root.showPasswordDialog) {
-                root.showPasswordDialog = false;
+            if (root.popouts.currentName !== "wirelesspassword" && root.openSection === "password") {
+                root.openSection = "";
                 root.passwordNetwork = null;
             }
         }
