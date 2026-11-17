@@ -161,7 +161,9 @@ StyledRect {
                 anchors.bottom: root.hasImage ? image.bottom : undefined
 
                 sourceComponent: StyledRect {
-                    radius: Tokens.rounding.full
+                    // Same silhouette as an attached image so the icon column does not change
+                    // shape depending on which hint the sender happened to set.
+                    radius: root.hasImage ? Tokens.rounding.extraSmall : Tokens.rounding.small
                     color: root.isCritical ? Colours.palette.m3error : root.isLow ? Colours.layer(Colours.palette.m3surfaceContainerHighest, 2) : Colours.palette.m3secondaryContainer
                     implicitWidth: root.hasImage ? Tokens.sizes.notifs.badge : TokenConfig.sizes.notifs.image
                     implicitHeight: root.hasImage ? Tokens.sizes.notifs.badge : TokenConfig.sizes.notifs.image
