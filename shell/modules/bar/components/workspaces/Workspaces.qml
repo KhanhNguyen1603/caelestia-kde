@@ -14,7 +14,6 @@ Item {
 
     required property var bar
     required property ShellScreen screen
-    required property bool fullscreen
     Config.screen: root.screen.name
     readonly property int barThickness: bar.thickness
 
@@ -24,7 +23,10 @@ Item {
     StyledClippingRect {
         id: container
 
-        readonly property bool onSpecial: false
+        // True while the focused monitor shows a special workspace, which is what swaps the
+        // strip for the specials and dims the normal one. The KWin backend has no special
+        // workspaces, so this stays false there and the Hyprland-shaped source answers.
+        readonly property bool onSpecial: ((Config.bar.workspaces.perMonitor ? Kwin.monitorFor(root.screen) : Kwin.focusedMonitor)?.lastIpcObject?.specialWorkspace?.name ?? "") !== ""
         readonly property bool isHorizontal: root.bar.isHorizontal
         property var kwinWindowList: Kwin.windowList
 
@@ -161,7 +163,6 @@ Item {
                     activeWsId: container.activeWsId
                     workspaces: container.pills
                     mask: layout
-                    fullscreen: root.fullscreen
                     screenName: root.screen.name
                 }
             }

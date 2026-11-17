@@ -44,7 +44,6 @@ DelegateChooser {
             sourceComponent: Workspaces {
                 bar: root.bar
                 screen: root.bar ? root.bar.screen : null
-                fullscreen: root.bar ? root.bar.fullscreen : false
             }
         }
     }
