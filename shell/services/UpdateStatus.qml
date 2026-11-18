@@ -160,15 +160,29 @@ Singleton {
             });
         }
 
+        if (UpdateChecker.handoff === UpdateChecker.Handoff.Running || UpdateChecker.handoff === UpdateChecker.Handoff.Pending) {
+            // What the run itself reports, when it reports anything: the stage it is in and
+            // how far through the five it is. A minute of silence means the record is left
+            // over from a run that stopped, so the state below speaks instead.
+            if (UpdateChecker.progressTotal > 0 && root.now - UpdateChecker.progressAtMs < 60000) {
+                const step = qsTr("Step %1 of %2").arg(UpdateChecker.progressIndex).arg(UpdateChecker.progressTotal);
+                return root.card("sync", UpdateChecker.progressText, step, null, root.action("terminal", qsTr("Run in terminal"), "open_in_new"), {
+                    dismissible: true,
+                    highlight: true,
+                    progress: UpdateChecker.progressFraction
+                });
+            }
+        }
+
         if (UpdateChecker.handoff === UpdateChecker.Handoff.Running) {
-            return root.card("terminal", qsTr("Updating in the terminal"), root.handoffDetail(), root.action("reopen", qsTr("Open terminal again"), "open_in_new"), root.action("copy", qsTr("Copy command"), "content_copy"), {
+            return root.card("terminal", qsTr("Updating in the terminal"), root.handoffDetail(), root.action("terminal", qsTr("Run in terminal"), "open_in_new"), root.action("copy", qsTr("Copy command"), "content_copy"), {
                 dismissible: true,
                 highlight: true
             });
         }
 
         if (UpdateChecker.handoff === UpdateChecker.Handoff.Pending) {
-            return root.card("terminal", qsTr("Opening the terminal…"), qsTr("Running %1").arg(command), root.action("reopen", qsTr("Open terminal again"), "open_in_new"), root.action("copy", qsTr("Copy command"), "content_copy"), {
+            return root.card("terminal", qsTr("Starting the update…"), qsTr("Running %1").arg(command), root.action("terminal", qsTr("Run in terminal"), "open_in_new"), root.action("copy", qsTr("Copy command"), "content_copy"), {
                 dismissible: true,
                 highlight: true
             });

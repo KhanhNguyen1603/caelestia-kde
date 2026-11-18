@@ -307,4 +307,27 @@ test_staging_is_a_separate_step() {
     assert_file_contains "$CHECKER" 'function stageArgs' "and the page reaches it through the checker"
 }
 
+test_the_run_reports_its_own_progress() {
+    local updater="$REPO_ROOT/src/bin/caelestia-update"
+
+    assert_file_contains "$updater" 'printf '"'"'%s|%s|%s|%s\n'"'"' "$1" "$2" "$3"' \
+        "the updater writes the stage it is in where the shell can read it"
+    assert_file_contains "$updater" 'stage 1 5' "and reports the first of its five stages"
+    assert_file_contains "$updater" 'clear_progress' "and clears the record when it finishes"
+
+    assert_file_contains "$CHECKER" 'progressFile' "the checker watches that record"
+    assert_file_contains "$CHECKER" 'progressFraction' "and turns it into a fraction"
+    assert_file_contains "$STATUS" 'progress: UpdateChecker.progressFraction' "the card carries it"
+    assert_file_contains "$PAGE" 'root.status.progress' "and the row draws it"
+}
+
+test_the_update_runs_without_taking_over_the_screen() {
+    # The run restarts the shell by the end, so the pane is what can survive it: the update
+    # is launched on its own and its progress read back, not handed to a terminal window.
+    assert_file_contains "$PAGE" 'Launch.exec(UpdateChecker.updaterArgs(version))' \
+        "the update is started without a terminal"
+    assert_file_contains "$PAGE" 'function runInTerminal' "with the terminal kept as the escape hatch"
+    assert_file_contains "$STATUS" 'root.action("terminal"' "which the card offers when the run needs watching"
+}
+
 run_tests

@@ -42,6 +42,16 @@ Singleton {
     property string lastResultCode: ""
     property string stagedLabel: ""
 
+    /// What the running updater is doing, from the record it writes as it goes. The
+    /// terminal that starts it may not be watched, and the shell that started it is
+    /// restarted by the end, so this file is what the pane can show.
+    property int progressIndex: 0
+    property int progressTotal: 0
+    property string progressText: ""
+    property double progressAtMs: 0
+
+    readonly property real progressFraction: root.progressTotal > 0 ? Math.min(1, root.progressIndex / root.progressTotal) : 0
+
     readonly property string stateDir: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/caelestia`
 
     property string _localCommit: ""
@@ -866,6 +876,27 @@ exit 1
             root.stagedLabel = record === null ? "" : record.label;
         }
         onLoadFailed: root.stagedLabel = ""
+    }
+
+    FileView {
+        id: progressFile
+
+        path: `${root.stateDir}/progress`
+        printErrors: false
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            const parts = text().trim().split("|");
+            if (parts.length < 4) {
+                root.progressTotal = 0;
+                return;
+            }
+            root.progressIndex = parseInt(parts[0]) || 0;
+            root.progressTotal = parseInt(parts[1]) || 0;
+            root.progressText = parts[2] || "";
+            root.progressAtMs = (parseFloat(parts[3]) || 0) * 1000;
+        }
+        onLoadFailed: root.progressTotal = 0
     }
 
     Timer {

@@ -17,6 +17,19 @@ record() { # <file> <status> <label> [code]
     printf '%s|%s|%s\n' "$2" "$3" "${4:-0}" > "$STATE_DIR/$1" 2>/dev/null || true
 }
 
+# What the run is doing, where the shell can read it. The terminal that starts this may
+# not be watched by anyone, and the shell that started it is restarted by the end, so a
+# file is the only account of progress that both can see.
+stage() { # <index> <total> <text>
+    echo "PROGRESS: ${1}/${2}: ${3}"
+    mkdir -p "$STATE_DIR" 2>/dev/null || return 0
+    printf '%s|%s|%s|%s\n' "$1" "$2" "$3" "$(date +%s)" > "$STATE_DIR/progress" 2>/dev/null || true
+}
+
+clear_progress() {
+    rm -f "$STATE_DIR/progress" 2>/dev/null || true
+}
+
 STAGE_REQUEST=0
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -146,8 +159,9 @@ if [ "$STAGE_REQUEST" -eq 1 ]; then
     info "Downloading the packages this update needs..."
     if sudo pacman -Syuw --noconfirm; then
         record staged-update staged "$UPDATE_LABEL"
+        clear_progress
         ok "Downloaded. Run the update again to install it."
-        echo "PROGRESS: done: Update downloaded"
+        stage 1 1 "Downloaded"
         exit 0
     else
         STAGE_STATUS=$?
@@ -167,6 +181,7 @@ if [ "$PACKAGED" -eq 1 ]; then
     echo "  Caelestia Update (this install came from a package)"
     echo "---------------------------------------------"
     echo
+    stage 1 2 "Updating system packages"
     # $1 is the branch, $2 the version: only the latter means "a version was asked for".
     if [ -n "${TARGET_REF:-}" ]; then
         echo "  A single version cannot be selected from here; choose it where the"
@@ -202,7 +217,7 @@ if [ "$PACKAGED" -eq 1 ]; then
     else
         record last-update failed "$UPDATE_LABEL" "$PACKAGE_STATUS"
     fi
-    echo "PROGRESS: done: Package update finished"
+    clear_progress
     exit 0
 fi
 
@@ -249,7 +264,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # 1. Fetch from GitHub
-echo "PROGRESS: 1/5: Fetching updates from GitHub..."
+stage 1 5 "Fetching updates from GitHub"
 info "Checking for local repository cache..."
 
 export BACKUP_DIR="$UPD_DIR/backups/$(date +%Y%m%d_%H%M%S)"
@@ -324,7 +339,7 @@ fi
 [[ -f "$UPD_DIR/repo/src/dots/starship.toml" ]] || die "Missing src/dots content after update"
 
 # 2. System update via Polkit
-echo "PROGRESS: 2/5: Running system update..."
+stage 2 5 "Updating system packages"
 echo
 echo "---------------------------------------------"
 echo "  Step 1 - System Updates"
@@ -353,7 +368,7 @@ if [[ -f "$BUNDLE_DIR/scripts/lib/update-state.sh" ]]; then
 fi
 
 # 4. Deploy Configs
-echo "PROGRESS: 3/5: Deploying configuration files..."
+stage 3 5 "Deploying configuration files"
 echo
 echo "---------------------------------------------"
 echo "  Step 2 - Deploy Configs"
@@ -363,10 +378,10 @@ if [[ "${CAELESTIA_SKIP_DEPLOY:-0}" == "1" ]]; then
 else
     run_stage 900 bash "$UPD_DIR/repo/scripts/03-deploy-configs.sh" || die "Config deployment failed or timed out."
 fi
-echo "PROGRESS: 3/5: Configuration files deployed."
+stage 3 5 "Configuration files deployed"
 
 # 5. Build Shell
-echo "PROGRESS: 4/5: Building the Caelestia shell UI..."
+stage 4 5 "Building the shell"
 echo
 echo "---------------------------------------------"
 echo "  Step 3 - Build Caelestia Shell UI"
@@ -498,8 +513,9 @@ else
     fi
 fi
 
+stage 5 5 "Finishing up"
 record last-update ok "$UPDATE_LABEL"
-echo "PROGRESS: done: Update completed successfully"
+clear_progress
 echo
 echo "---------------------------------------------"
 echo "  Update Completed Successfully!"

@@ -86,6 +86,8 @@ PageBase {
             confirmDialog.open();
         } else if (key === "install" || key === "reinstall" || key === "reopen") {
             root.launchUpdater();
+        } else if (key === "terminal") {
+            root.runInTerminal();
         } else if (key === "stage") {
             root.stageUpdate();
         } else if (key === "copy") {
@@ -125,10 +127,21 @@ PageBase {
         Launch.exec([...root.terminalCommand, "sh", "-c", hold, "sh", ...args]);
     }
 
+    // The update runs on its own, not in a terminal the user has to watch: it restarts the
+    // shell by the end, so its progress comes back through the record it writes, and the
+    // pane keeps working while it runs. The terminal stays available as the escape hatch
+    // for an escalation prompt or a failure worth reading.
     function launchUpdater(): void {
         root.launchFailed = false;
         const version = root.selectedVersionId !== "" ? root.selectedVersionId : UpdateChecker.handoffVersion;
         root.selectedVersionId = "";
+        Launch.exec(UpdateChecker.updaterArgs(version));
+        UpdateChecker.markHandoff(version);
+    }
+
+    function runInTerminal(): void {
+        root.launchFailed = false;
+        const version = UpdateChecker.handoffVersion;
         root.launchInTerminal(UpdateChecker.updaterArgs(version));
         UpdateChecker.markHandoff(version);
     }
@@ -236,6 +249,34 @@ PageBase {
                         wrapMode: Text.Wrap
                         maximumLineCount: 2
                         elide: Text.ElideRight
+                    }
+
+                    // The run's own report, in the row it belongs to: a thin bar and the
+                    // stage it names, rather than a sentence claiming an update is under way.
+                    StyledRect {
+                        Layout.fillWidth: true
+                        Layout.topMargin: Tokens.spacing.extraSmall
+                        implicitHeight: Tokens.padding.small
+                        visible: root.status.progress !== undefined && root.status.progress > 0
+                        radius: Tokens.rounding.full
+                        color: Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
+
+                        StyledRect {
+                            anchors {
+                                left: parent.left
+                                top: parent.top
+                                bottom: parent.bottom
+                            }
+                            width: parent.width * Math.max(0, Math.min(1, root.status.progress))
+                            radius: Tokens.rounding.full
+                            color: Colours.palette.m3primary
+
+                            Behavior on width {
+                                Anim {
+                                    type: Anim.FastEffects
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -485,12 +526,8 @@ PageBase {
             Layout.rightMargin: root.inset
             spacing: Tokens.spacing.small
 
-            StyledText {
+            Item {
                 Layout.fillWidth: true
-                text: root.branchDataLoading ? qsTr("Switching to %1…").arg(root.pendingBranch) : qsTr("Updates open in a terminal.")
-                font: NexusStyle.secondaryFont
-                color: Colours.palette.m3onSurfaceVariant
-                wrapMode: Text.Wrap
             }
 
             TextButton {
