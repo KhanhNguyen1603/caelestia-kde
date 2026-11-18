@@ -44,7 +44,11 @@ Item {
     // thread the dots hang from. Nothing here depends on the selection.
     readonly property var rows: {
         const rows = [];
+        // The available entries need a heading of their own: without one they sit
+        // directly above "Your version" and read as the version already installed.
         const available = root.entries.filter(e => e.state === "available");
+        if (available.length > 0)
+            rows.push({ kind: "header", title: qsTr("Available") });
         for (let i = 0; i < available.length; i++)
             rows.push({ kind: "entry", entry: available[i] });
 
@@ -271,6 +275,20 @@ Item {
                     opacity: 0.15
                 }
 
+                // Declared before the content, so it sits underneath it in the stacking
+                // order: the row's action strip is inside the Column and has to be able
+                // to take the press. A handler declared after the Column covers the
+                // buttons, and a press on "Update to X" toggles the selection off instead.
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: !row.isHeader
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onEntered: row.hovered = true
+                    onExited: row.hovered = false
+                    onClicked: row.clicked()
+                }
+
                 Column {
                     visible: !row.isHeader
                     anchors {
@@ -367,16 +385,6 @@ Item {
                             Layout.fillWidth: true
                         }
                     }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    enabled: !row.isHeader
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onEntered: row.hovered = true
-                    onExited: row.hovered = false
-                    onClicked: row.clicked()
                 }
             }
         }

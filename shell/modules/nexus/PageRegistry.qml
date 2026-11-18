@@ -28,15 +28,17 @@ QtObject {
                 pageIdx: cat.categoryIdx
             });
 
-            index.push({
-                settingLabel: cat.label,
-                settingDescription: cat.description || "",
-                pageIdx: cat.categoryIdx,
-                subPage: "hub",
-                pageLabel: qsTr("Main Page"),
-                pageIcon: cat.icon,
-                searchText: [cat.label, cat.description, cat.key].filter(Boolean).join(" ")
-            });
+            if (!cat.singlePage) {
+                index.push({
+                    settingLabel: cat.label,
+                    settingDescription: cat.description || "",
+                    pageIdx: cat.categoryIdx,
+                    subPage: "hub",
+                    pageLabel: qsTr("Main Page"),
+                    pageIcon: cat.icon,
+                    searchText: [cat.label, cat.description, cat.key].filter(Boolean).join(" ")
+                });
+            }
 
             const pages = cat.pages || [];
             for (let pIdx = 0; pIdx < pages.length; pIdx++) {

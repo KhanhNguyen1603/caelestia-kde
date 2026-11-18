@@ -2993,22 +2993,22 @@ QtObject {
             subPage: "toastPreferences"
         },
         {
+            label: qsTr("Automatic Updates"),
+            description: qsTr("Checked every 30 minutes, and once when the shell starts"),
+            section: qsTr("Updates"),
+            pageIdx: 8,
+            subPage: "updates"
+        },
+        {
             label: qsTr("Update channel"),
             section: qsTr("Updates"),
-            pageIdx: 7,
+            pageIdx: 8,
             subPage: "updates"
         },
         {
-            label: qsTr("Check for updates automatically"),
-            description: qsTr("Every 30 minutes, and once when the shell starts"),
+            label: qsTr("Backup folder"),
             section: qsTr("Updates"),
-            pageIdx: 7,
-            subPage: "updates"
-        },
-        {
-            label: qsTr("Open backup folder"),
-            section: qsTr("Updates"),
-            pageIdx: 7,
+            pageIdx: 8,
             subPage: "updates"
         },
         {
