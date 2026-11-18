@@ -155,7 +155,7 @@ Singleton {
         const command = UpdateChecker.updaterArgs(selectedId).join(" ");
 
         if (launchFailed) {
-            return root.card("error", qsTr("Couldn't open a terminal"), qsTr("Run %1 in a terminal instead").arg(command), root.action("copy", qsTr("Copy command"), "content_copy"), null, {
+            return root.card("error", qsTr("Couldn't start the update"), qsTr("Run %1 in a terminal instead").arg(command), root.action("copy", qsTr("Copy command"), "content_copy"), root.action("terminal", qsTr("Run in terminal"), "open_in_new"), {
                 highlight: true
             });
         }
@@ -200,7 +200,7 @@ Singleton {
                     highlight: true
                 });
             }
-            return root.card("check_circle", named ? qsTr("Updated to %1").arg(label) : qsTr("Update finished"), named ? "" : qsTr("The %1 channel was updated").arg(label), null, dismiss, {});
+            return root.card("check_circle", named ? qsTr("Updated to %1").arg(label) : qsTr("Update finished"), named && UpdateChecker.lastResultLogout ? qsTr("Log out and back in to load it") : named ? "" : qsTr("The %1 channel was updated").arg(label), null, dismiss, {});
         }
 
         if (selection !== null && selection !== undefined) {

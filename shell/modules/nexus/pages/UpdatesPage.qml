@@ -33,6 +33,9 @@ PageBase {
     property string selectedVersionId: ""
     property string pendingBranch: ""
     property bool launchFailed: false
+    // Set when a run was started and has not yet shown a sign of life. The update has no
+    // terminal to fail visibly in, so this is what notices that it never began.
+    property bool awaitingStart: false
     property string backupError: ""
     property bool timelineExpanded: false
     property bool showInternal: false
@@ -137,6 +140,7 @@ PageBase {
         root.selectedVersionId = "";
         Launch.exec(UpdateChecker.updaterArgs(version));
         UpdateChecker.markHandoff(version);
+        root.awaitingStart = true;
     }
 
     function runInTerminal(): void {
@@ -157,6 +161,19 @@ PageBase {
 
     Item {
         visible: false
+
+        // A run started from here has no terminal to fail in, so nothing would tell the
+        // reader that it never began. Eight seconds is enough for the process to reach its
+        // first stage; after that the pane offers the terminal and the command instead.
+        Timer {
+            interval: 8000
+            repeat: false
+            running: root.awaitingStart && UpdateChecker.handoff === UpdateChecker.Handoff.Pending && UpdateChecker.progressTotal === 0
+            onTriggered: {
+                root.awaitingStart = false;
+                root.launchFailed = true;
+            }
+        }
 
         // pendingBranch describes one check: the one its channel pick started. Left set,
         // every later check - the periodic one, a retry - re-shows "Switching to X…" and

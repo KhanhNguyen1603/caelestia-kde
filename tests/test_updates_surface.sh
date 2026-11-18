@@ -330,4 +330,28 @@ test_the_update_runs_without_taking_over_the_screen() {
     assert_file_contains "$STATUS" 'root.action("terminal"' "which the card offers when the run needs watching"
 }
 
+test_a_run_the_shell_started_restarts_the_shell() {
+    local updater="$REPO_ROOT/src/bin/caelestia-update"
+
+    assert_file_contains "$updater" 'INTERACTIVE=0' "the updater knows whether anyone is watching"
+    # A prompt needs a terminal; a run the shell started has none, and the click that
+    # started it already answered the only question the prompt would ask.
+    assert_file_contains "$updater" '[ "$INTERACTIVE" -eq 0 ] || ask_yes_no' \
+        "so an unwatched run restarts the shell instead of waiting for an answer"
+    # A logout closes everything open, so it is reported rather than taken.
+    assert_file_contains "$updater" 'NEEDS_LOGOUT=1' "a rebuilt plugin is reported, not acted on"
+    assert_file_contains "$updater" '"${NEEDS_LOGOUT:-0}"' "and the record carries it"
+    assert_file_contains "$CHECKER" 'lastResultLogout' "which the shell reads back"
+    assert_file_contains "$STATUS" 'qsTr("Log out and back in to load it")' "and says so after the restart"
+}
+
+test_a_run_that_never_started_is_reported() {
+    assert_file_contains "$PAGE" 'root.awaitingStart = true' "starting an update arms a watchdog"
+    assert_file_contains "$PAGE" 'root.launchFailed = true' "which reports a run that never began"
+    assert_file_contains "$PAGE" 'UpdateChecker.progressTotal === 0' \
+        "and only while nothing has reported a stage"
+    assert_file_contains "$STATUS" "qsTr(\"Couldn't start the update\")" "the card names what failed"
+    assert_file_contains "$STATUS" 'root.action("terminal"' "and offers the terminal as the way through"
+}
+
 run_tests

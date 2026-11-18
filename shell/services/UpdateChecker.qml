@@ -40,6 +40,7 @@ Singleton {
     property string lastResultStatus: ""
     property string lastResultLabel: ""
     property string lastResultCode: ""
+    property bool lastResultLogout: false
     property string stagedLabel: ""
 
     /// What the running updater is doing, from the record it writes as it goes. The
@@ -104,10 +105,11 @@ Singleton {
         root.lastResultStatus = "";
         root.lastResultLabel = "";
         root.lastResultCode = "";
+        root.lastResultLogout = false;
         Quickshell.execDetached(["rm", "-f", `${root.stateDir}/last-update`]);
     }
 
-    /// A record is `status|label|code`, written by caelestia-update when it finished.
+    /// A record is `status|label|code|logout`, written by caelestia-update when it finished.
     function parseRecord(line): var {
         const parts = line.trim().split("|");
         if (parts.length < 2 || parts[0] === "")
@@ -115,7 +117,8 @@ Singleton {
         return {
             status: parts[0],
             label: parts[1],
-            code: parts.length > 2 ? parts[2] : ""
+            code: parts.length > 2 ? parts[2] : "",
+            logout: parts.length > 3 && parts[3] === "1"
         };
     }
 
@@ -853,16 +856,22 @@ exit 1
 
         path: `${root.stateDir}/last-update`
         printErrors: false
+        // The updater writes this and then restarts the shell, so the record can land either
+        // side of that restart. Watching it means the order does not matter.
+        watchChanges: true
+        onFileChanged: reload()
         onLoaded: {
             const record = root.parseRecord(text());
             root.lastResultStatus = record === null ? "" : record.status;
             root.lastResultLabel = record === null ? "" : record.label;
             root.lastResultCode = record === null ? "" : record.code;
+            root.lastResultLogout = record !== null && record.logout;
         }
         onLoadFailed: {
             root.lastResultStatus = "";
             root.lastResultLabel = "";
             root.lastResultCode = "";
+            root.lastResultLogout = false;
         }
     }
 

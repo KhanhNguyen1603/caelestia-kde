@@ -12,9 +12,9 @@ warn() { echo "[WARN]  $*"; }
 # shell only spawns, so this file is the one account of what happened that outlives the
 # restart an update causes.
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia"
-record() { # <file> <status> <label> [code]
+record() { # <file> <status> <label> [code] [logout]
     mkdir -p "$STATE_DIR" 2>/dev/null || return 0
-    printf '%s|%s|%s\n' "$2" "$3" "${4:-0}" > "$STATE_DIR/$1" 2>/dev/null || true
+    printf '%s|%s|%s|%s\n' "$2" "$3" "${4:-0}" "${5:-0}" > "$STATE_DIR/$1" 2>/dev/null || true
 }
 
 # What the run is doing, where the shell can read it. The terminal that starts this may
@@ -29,6 +29,13 @@ stage() { # <index> <total> <text>
 clear_progress() {
     rm -f "$STATE_DIR/progress" 2>/dev/null || true
 }
+
+# Whether a person is watching: a prompt needs a terminal, and a run started by the shell
+# has none, so what a prompt would ask has to be decided instead of asked.
+INTERACTIVE=0
+if (exec </dev/tty >/dev/tty) 2>/dev/null; then
+    INTERACTIVE=1
+fi
 
 STAGE_REQUEST=0
 while [ "$#" -gt 0 ]; do
@@ -497,15 +504,20 @@ if [[ "${CAELESTIA_SKIP_BUILD:-0}" == "1" ]]; then
     info "Build skipped; the running shell is already what is installed."
 elif [[ "$SHELL_CHANGED" -eq 1 ]]; then
     notify_update "Log out to load the new shell: it was rebuilt and a restart alone leaves it on the old plugin."
+    # A logout closes everything the user has open, so it is never taken on their behalf; it
+    # is reported instead, and the page says so after the restart.
     if ask_yes_no "The shell itself was rebuilt. Restarting it is not enough, so log out to load it. Log out now? [y/N] "; then
         info "Logging out..."
         log_out_now || warn "Could not log out automatically; log out manually to load the new shell."
     else
+        NEEDS_LOGOUT=1
         info "Log out when convenient to load the new shell."
     fi
 else
-    notify_update "Restart the shell to load it."
-    if ask_yes_no "Restart the Caelestia shell to load the update? [y/N] "; then
+    notify_update "Restarting the shell to load it."
+    # Nothing is lost by restarting the shell, and a run the shell started has nobody to
+    # answer a prompt: it restarts, which is what asking for the update meant.
+    if [ "$INTERACTIVE" -eq 0 ] || ask_yes_no "Restart the Caelestia shell to load the update? [y/N] "; then
         info "Restarting the shell..."
         restart_shell_now || warn "Could not restart the shell automatically; restart it manually."
     else
@@ -514,7 +526,7 @@ else
 fi
 
 stage 5 5 "Finishing up"
-record last-update ok "$UPDATE_LABEL"
+record last-update ok "$UPDATE_LABEL" 0 "${NEEDS_LOGOUT:-0}"
 clear_progress
 echo
 echo "---------------------------------------------"
