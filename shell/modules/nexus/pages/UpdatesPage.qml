@@ -179,12 +179,12 @@ PageBase {
         // every later check - the periodic one, a retry - re-shows "Switching to X…" and
         // hides the settings below it while nothing is being switched.
         Connections {
-            target: UpdateChecker
-
             function onCheckingUpdatesChanged(): void {
                 if (!UpdateChecker.checkingUpdates)
                     root.pendingBranch = "";
             }
+
+            target: UpdateChecker
         }
 
         Variants {
@@ -393,17 +393,53 @@ PageBase {
             Layout.fillWidth: true
             spacing: 2
 
-            ToggleRow {
+            ConnectedRect {
                 first: true
                 last: !GlobalConfig.general.checkUpdates
-                text: qsTr("Automatic Updates")
-                subtext: qsTr("Checked every 30 minutes, and once when the shell starts")
-                reset: ({
-                    node: GlobalConfig.general,
-                    setting: "checkUpdates"
-                })
-                checked: GlobalConfig.general.checkUpdates
-                onToggled: GlobalConfig.general.checkUpdates = checked
+                Layout.fillWidth: true
+                implicitHeight: autoRow.implicitHeight + Tokens.padding.medium * 2
+
+                RowLayout {
+                    id: autoRow
+
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        leftMargin: root.inset
+                        rightMargin: root.inset
+                        topMargin: Tokens.padding.medium
+                    }
+                    spacing: Tokens.spacing.medium
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+                        spacing: 2
+
+                        StyledText {
+                            text: qsTr("Automatic Updates")
+                            font: Tokens.font.body.small
+                            color: Colours.palette.m3onSurface
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Checked every 30 minutes, and once when the shell starts")
+                            font: NexusStyle.secondaryFont
+                            color: Colours.palette.m3onSurfaceVariant
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    // Trailing edge, like every other control on the page: the row component
+                    // this replaced kept room for a reset affordance the setting does not need.
+                    StyledSwitch {
+                        Layout.alignment: Qt.AlignVCenter
+                        checked: GlobalConfig.general.checkUpdates
+                        onToggled: GlobalConfig.general.checkUpdates = checked
+                    }
+                }
             }
 
             SelectRow {
