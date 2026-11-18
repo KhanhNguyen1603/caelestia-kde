@@ -34,37 +34,9 @@ BarIcon {
         }
     }
 
-    // Hovering says what the icon is; the menu is the right button's job.
-    tooltip: {
-        switch (root.iconId) {
-        case "lockStatus":
-            return qsTr("Lock keys");
-        case "kbLayout":
-            return qsTr("Keyboard layout");
-        case "audio":
-            return qsTr("Volume");
-        case "microphone":
-            return qsTr("Microphone");
-        case "privacy":
-            return qsTr("Privacy");
-        case "network":
-            return qsTr("Network");
-        case "ethernet":
-            return qsTr("Ethernet");
-        case "bluetooth":
-            return qsTr("Bluetooth");
-        case "battery":
-            return qsTr("Battery");
-        case "peripheralBattery":
-            return qsTr("Device battery");
-        case "nightlight":
-            return qsTr("Night light");
-        case "notifications":
-            return qsTr("Notifications");
-        default:
-            return root.iconId;
-        }
-    }
+    // Hovering says what the icon is; the menu is the right button's job. The name comes
+    // from BarIconMeta so the tooltip and the settings list cannot drift apart.
+    tooltip: BarIconMeta.nameOf(root.iconId)
 
     onActivated: {
         if (root.iconId === "notifications") {
