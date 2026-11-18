@@ -2673,6 +2673,13 @@ QtObject {
             subPage: "tabSwitcher"
         },
         {
+            label: qsTr("Layout"),
+            description: qsTr("Carousel: a single horizontally scrolling row of previews. Grid: previews arranged like the overview, keeping each window's shape and position"),
+            section: qsTr("Window Switcher"),
+            pageIdx: 2,
+            subPage: "tabSwitcher"
+        },
+        {
             label: qsTr("Show minimized windows"),
             description: qsTr("Include minimized windows in the window switcher"),
             section: qsTr("Window Switcher"),

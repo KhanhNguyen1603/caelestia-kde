@@ -24,6 +24,7 @@ Item {
     property real offsetScale: shouldBeActive ? 0 : 1
     property real avatarOpenScale: shouldBeActive ? 1 : 0
     property bool keepAlive: false
+    property bool detached: false
 
     readonly property bool avatarVisible: root.visible && (content.item?.showAvatar ?? false)
     readonly property int avatarSize: content.item?.avatarSize ?? 0
@@ -44,8 +45,10 @@ Item {
     // profile picture deliberately overhangs the top edge of the card.
     clip: Config.bar.position === "bottom" && !root.avatarVisible
     visible: offsetScale < 1
-    anchors.bottomMargin: (Config.bar.position === "bottom" ? 0 : -implicitHeight - 5) * offsetScale
-    height: Config.bar.position === "bottom" ? implicitHeight * (1 - offsetScale) : implicitHeight
+    // Detached, the card floats in the middle of the window: with a bottom
+    // anchor that is a bottom margin of half the leftover space.
+    anchors.bottomMargin: root.detached ? Math.max(0, (parent.height - implicitHeight) / 2) : (Config.bar.position === "bottom" ? 0 : -implicitHeight - 5) * offsetScale
+    height: Config.bar.position === "bottom" && !root.detached ? implicitHeight * (1 - offsetScale) : implicitHeight
     implicitHeight: content.implicitHeight
     implicitWidth: content.implicitWidth || 630
     opacity: 1 - offsetScale
