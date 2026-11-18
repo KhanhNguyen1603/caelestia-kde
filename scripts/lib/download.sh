@@ -80,7 +80,8 @@ unverified_download_allowed() {
 # leaves the caller on the sidecar-then-refuse path; a release nobody can vouch for is still
 # the user's decision to make.
 release_digest_for_url() {
-    local url="$1" owner project tag name rest release_json digest curl jq
+    local url="$1" owner project tag name rest release_json digest api curl jq attempt
+    local -a auth=()
 
     case "$url" in
         https://github.com/*/releases/download/*/*) ;;
@@ -93,8 +94,23 @@ release_digest_for_url() {
 
     IFS=/ read -r owner project _ _ tag rest <<< "${url#https://github.com/}"
     name="${rest##*/}"
+    api="https://api.github.com/repos/${owner}/${project}/releases/tags/${tag}"
 
-    release_json="$("$curl" -fsSL "https://api.github.com/repos/${owner}/${project}/releases/tags/${tag}" 2>/dev/null || true)"
+    # The unauthenticated API answers 60 requests an hour per address, and a CI runner's
+    # shared address reaches that ceiling often enough that a token in the environment -
+    # GITHUB_TOKEN on a runner - is used whenever there is one. A build that cannot resolve
+    # the digest refuses the install, so the lookup is retried rather than given up on.
+    if [[ -n "${GITHUB_TOKEN:-${GH_TOKEN:-}}" ]]; then
+        auth=(-H "Authorization: Bearer ${GITHUB_TOKEN:-$GH_TOKEN}")
+    fi
+
+    for attempt in 1 2 3; do
+        release_json="$("$curl" -fsSL "${auth[@]}" "$api" 2>/dev/null || true)"
+        if [[ -n "$release_json" ]]; then
+            break
+        fi
+        sleep 2
+    done
     [[ -n "$release_json" ]] || return 0
 
     digest="$(printf '%s' "$release_json" | "$jq" -r --arg name "$name" '
