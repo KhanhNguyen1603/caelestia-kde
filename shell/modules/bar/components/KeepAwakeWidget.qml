@@ -29,6 +29,7 @@ BarIcon {
             // across a bar.
             text: "coffee"
             fill: root.awake ? 1 : 0
+            fontScale: root.iconScale
             color: root.awake ? Colours.palette.m3primary : Colours.palette.m3secondary
         }
     }
