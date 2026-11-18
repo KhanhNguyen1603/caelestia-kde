@@ -30,6 +30,7 @@ Row {
 
     property alias menuItems: menu.items
     property alias active: menu.active
+    property alias recommended: menu.recommended
     property alias expanded: menu.expanded
     readonly property alias menu: menu
     readonly property alias iconLabel: iconLabel
