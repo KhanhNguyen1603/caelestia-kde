@@ -45,7 +45,10 @@ Item {
     readonly property real barScale: root.rawScale < 1.0 ? Math.sqrt(Math.max(0.1, root.rawScale)) : root.rawScale
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * root.barScale)
     // A bar icon is read at a glance, so its glyph is drawn a little larger than the
-    // slot it asks for, and the slot grows with it.
+    // slot it asks for, and the slot grows with it. The glyph grows itself rather than
+    // being scaled: it is either text, which is rendered at the size its font asks for,
+    // or a bitmap, which is asked for at the size it is drawn at. A glyph stretched by
+    // a transform is a resampled copy of whatever size it was drawn at.
     readonly property real iconScale: 1.2 * root.barScale
     readonly property bool dragging: dragGesture.active
     readonly property bool hovered: area.containsMouse && (root.insidePopout || !(root.popouts?.blocksHoverNames ?? false))
@@ -73,8 +76,8 @@ Item {
         popouts.hasCurrent = true;
     }
 
-    implicitWidth: root.isHorizontal ? Math.round(glyphLoader.implicitWidth * root.iconScale) : root.barThickness
-    implicitHeight: root.isHorizontal ? root.barThickness : Math.round(glyphLoader.implicitHeight * root.iconScale)
+    implicitWidth: root.isHorizontal ? Math.round(glyphLoader.implicitWidth) : root.barThickness
+    implicitHeight: root.isHorizontal ? root.barThickness : Math.round(glyphLoader.implicitHeight)
     // Fading only once the ghost exists keeps the snapshot clean and means the icon
     // never disappears before there is something under the pointer to replace it.
     opacity: root.dragging && TrayDrag.ghost !== null ? 0.35 : 1
@@ -101,7 +104,6 @@ Item {
         id: glyphLoader
 
         anchors.centerIn: parent
-        scale: root.iconScale
         sourceComponent: root.glyphComponent
     }
 

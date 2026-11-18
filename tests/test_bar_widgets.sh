@@ -409,8 +409,12 @@ test_a_tray_icon_is_a_bar_icon() {
         "and the release that ends a drag is not read as a click on the icon"
     assert_file_contains "$icon" 'readonly property real iconScale: 1.2 * root.barScale' \
         "a bar made thinner shrinks its icons with it, instead of drawing them past its edge"
-    assert_file_contains "$TRAY_ITEM" 'Math.round(Tokens.font.icon.small.pointSize * 1.2)' \
+    assert_file_not_contains "$icon" 'scale: root.iconScale' \
+        "the glyph is drawn at that size instead of being scaled into it, which would stretch a glyph rendered smaller"
+    assert_file_contains "$TRAY_ITEM" 'Math.round(Tokens.font.icon.small.pointSize * 1.33 * root.iconScale)' \
         "and an app's bitmap is asked for at the size it is drawn at, so it is not upscaled"
+    assert_file_contains "$STATUS_ICON" 'fontScale: root.iconScale' \
+        "a glyph icon is asked for at that size too, rather than scaled up from its font size"
     for gone in 'StateLayer' 'QsMenuOpener' 'Tooltip' 'TrayDragGesture' 'ColouredIcon'; do
         if [[ "$gone" != 'QsMenuOpener' && "$gone" != 'ColouredIcon' ]]; then
             assert_file_not_contains "$TRAY_ITEM" "$gone {" \

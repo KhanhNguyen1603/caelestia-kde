@@ -139,6 +139,7 @@ BarIcon {
                     opacity: Kwin.capsLock ? 1 : 0
 
                     text: "keyboard_capslock_badge"
+                    fontScale: root.iconScale
                     color: root.colour
 
                     Behavior on opacity {
@@ -181,6 +182,7 @@ BarIcon {
                     opacity: Kwin.numLock ? 1 : 0
 
                     text: "looks_one"
+                    fontScale: root.iconScale
                     color: root.colour
 
                     Behavior on opacity {
@@ -215,6 +217,7 @@ BarIcon {
         MaterialIcon {
             animate: true
             text: Icons.getVolumeIcon(Audio.volume, Audio.muted)
+            fontScale: root.iconScale
             color: root.colour
         }
     }
@@ -225,6 +228,7 @@ BarIcon {
         MaterialIcon {
             animate: true
             text: Icons.getMicVolumeIcon(Audio.sourceVolume, Audio.sourceMuted)
+            fontScale: root.iconScale
             color: root.colour
         }
     }
@@ -235,6 +239,7 @@ BarIcon {
         MaterialIcon {
             animate: true
             text: Privacy.microphoneApps.length > 0 ? "mic" : "videocam"
+            fontScale: root.iconScale
             color: root.colour
         }
     }
@@ -246,7 +251,7 @@ BarIcon {
             animate: true
             text: Kwin.kbLayout
             color: root.colour
-            font: Tokens.font.mono.medium
+            font: Tokens.font.mono.builders.medium.scale(root.iconScale).build()
         }
     }
 
@@ -256,6 +261,7 @@ BarIcon {
         MaterialIcon {
             animate: true
             text: Nmcli.active ? Icons.getNetworkIcon(WifiSignal.strength) : "wifi_off"
+            fontScale: root.iconScale
             color: root.colour
         }
     }
@@ -266,6 +272,7 @@ BarIcon {
         MaterialIcon {
             animate: true
             text: "cable"
+            fontScale: root.iconScale
             color: root.colour
         }
     }
@@ -288,6 +295,7 @@ BarIcon {
                         return "bluetooth_disabled";
                     return "bluetooth";
                 }
+                fontScale: root.iconScale
                 color: root.colour
             }
 
@@ -310,6 +318,7 @@ BarIcon {
                     text: Icons.getBluetoothIcon(modelData?.icon)
                     color: device.pending ? Qt.alpha(root.colour, 0.5) : root.colour
                     fill: 1
+                    fontScale: root.iconScale
 
                     SequentialAnimation on opacity {
                         running: device.pending && Tokens.anim.enabled
@@ -351,6 +360,7 @@ BarIcon {
             }
             color: !UPower.onBattery || UPower.displayDevice.percentage > 0.2 ? root.colour : Colours.palette.m3error
             fill: 1
+            fontScale: root.iconScale
         }
     }
 
@@ -386,6 +396,7 @@ BarIcon {
                     }
                     color: modelData.percentage > 0.2 ? root.colour : Colours.palette.m3error
                     fill: 1
+                    fontScale: root.iconScale
                 }
             }
         }
@@ -397,6 +408,7 @@ BarIcon {
         MaterialIcon {
             animate: true
             text: "bedtime"
+            fontScale: root.iconScale
             color: root.colour
         }
     }
@@ -412,6 +424,7 @@ BarIcon {
                     return "notifications_unread";
                 return "notifications";
             }
+            fontScale: root.iconScale
             color: root.colour
         }
     }

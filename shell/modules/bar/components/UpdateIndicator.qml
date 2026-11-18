@@ -24,6 +24,7 @@ BarIcon {
     glyphComponent: Component {
         MaterialIcon {
             text: root.status.icon
+            fontScale: root.iconScale
             color: root.status.highlight ? Colours.palette.m3primary : Colours.palette.m3secondary
         }
     }
