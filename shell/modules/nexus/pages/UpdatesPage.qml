@@ -393,53 +393,15 @@ PageBase {
             Layout.fillWidth: true
             spacing: 2
 
-            ConnectedRect {
+            // No reset: the row keeps no room for a reset affordance the setting does not
+            // need, which is what puts the switch on the trailing edge.
+            ToggleRow {
                 first: true
                 last: !GlobalConfig.general.checkUpdates
-                Layout.fillWidth: true
-                implicitHeight: autoRow.implicitHeight + Tokens.padding.medium * 2
-
-                RowLayout {
-                    id: autoRow
-
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        top: parent.top
-                        leftMargin: root.inset
-                        rightMargin: root.inset
-                        topMargin: Tokens.padding.medium
-                    }
-                    spacing: Tokens.spacing.medium
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: 2
-
-                        StyledText {
-                            text: qsTr("Automatic Updates")
-                            font: Tokens.font.body.small
-                            color: Colours.palette.m3onSurface
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Checked every 30 minutes, and once when the shell starts")
-                            font: NexusStyle.secondaryFont
-                            color: Colours.palette.m3onSurfaceVariant
-                            elide: Text.ElideRight
-                        }
-                    }
-
-                    // Trailing edge, like every other control on the page: the row component
-                    // this replaced kept room for a reset affordance the setting does not need.
-                    StyledSwitch {
-                        Layout.alignment: Qt.AlignVCenter
-                        checked: GlobalConfig.general.checkUpdates
-                        onToggled: GlobalConfig.general.checkUpdates = checked
-                    }
-                }
+                text: qsTr("Automatic Updates")
+                subtext: qsTr("Checked every 30 minutes, and once when the shell starts")
+                checked: GlobalConfig.general.checkUpdates
+                onToggled: GlobalConfig.general.checkUpdates = checked
             }
 
             SelectRow {

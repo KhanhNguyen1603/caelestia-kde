@@ -2993,14 +2993,14 @@ QtObject {
             subPage: "toastPreferences"
         },
         {
-            label: qsTr("Update channel"),
+            label: qsTr("Automatic Updates"),
+            description: qsTr("Checked every 30 minutes, and once when the shell starts"),
             section: qsTr("Updates"),
             pageIdx: 8,
             subPage: "updates"
         },
         {
-            label: qsTr("Automatic Updates"),
-            description: qsTr("Every 30 minutes, and once when the shell starts"),
+            label: qsTr("Update channel"),
             section: qsTr("Updates"),
             pageIdx: 8,
             subPage: "updates"
