@@ -37,7 +37,9 @@ PageBase {
     property bool konsoleAvailable: false
 
     readonly property bool branchDataLoading: root.pendingBranch !== "" && UpdateChecker.checkingUpdates
-    readonly property bool updaterActive: UpdateChecker.handoff !== UpdateChecker.Handoff.None
+    // The settings that decide what an update is unfold from the card that offers it,
+    // rather than sitting three screens below the button that acts on them.
+    property bool settingsExpanded: false
 
     readonly property var entries: UpdateModel.deriveEntries({
         versionSummaryMode: UpdateChecker.versionSummaryMode,
@@ -47,7 +49,7 @@ PageBase {
         installedCommitHash: UpdateChecker.installedCommitHash
     })
 
-    readonly property var shown: UpdateModel.disclosure(root.entries, root.timelineExpanded, root.showInternal, 3)
+    readonly property var shown: UpdateModel.disclosure(root.entries, root.timelineExpanded, root.showInternal, 1)
 
     readonly property var selection: {
         const entry = UpdateModel.entryById(root.entries, root.selectedVersionId);
@@ -138,15 +140,6 @@ PageBase {
     }
 
     title: qsTr("Updates")
-
-    headerActions: [
-        IconTextButton {
-            text: qsTr("Help")
-            icon: "help"
-            type: TextButton.Tonal
-            onClicked: Qt.openUrlExternally("https://github.com/caelestia-kde/caelestia/blob/main/docs/TROUBLESHOOTING.md#10-update-issues")
-        }
-    ]
 
     Item {
         visible: false
@@ -292,6 +285,19 @@ PageBase {
                     verticalPadding: Tokens.padding.extraSmall
                     onClicked: root.runAction("dismiss")
                 }
+
+                IconTextButton {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.topMargin: Tokens.spacing.extraSmall
+                    visible: !root.busy
+                    text: root.settingsExpanded ? qsTr("Hide update settings") : qsTr("Update settings")
+                    icon: root.settingsExpanded ? "expand_less" : "expand_more"
+                    type: TextButton.Text
+                    font: Tokens.font.label.medium
+                    horizontalPadding: Tokens.padding.medium
+                    verticalPadding: Tokens.padding.extraSmall
+                    onClicked: root.settingsExpanded = !root.settingsExpanded
+                }
             }
         }
 
@@ -329,12 +335,72 @@ PageBase {
         }
 
         SectionHeader {
-            visible: !root.branchDataLoading && root.notesText !== ""
+            visible: root.settingsExpanded && !root.branchDataLoading
+            text: qsTr("Update settings")
+        }
+
+        SelectRow {
+            first: true
+            visible: root.settingsExpanded && !root.branchDataLoading
+            enabled: !root.branchDataLoading
+            label: qsTr("Update channel")
+            subtext: UpdateChecker.currentBranch === "main" ? qsTr("Stable releases") : qsTr("Development builds — may be unstable")
+            menuItems: root.branchItems
+            active: root.activeBranchItem
+            fallbackText: UpdateChecker.currentBranch
+            fallbackIcon: "call_split"
+            onSelected: function(item) {
+                // SelectRow emits this when the menu is cancelled and on every arrow key,
+                // so a pick that matches the channel already followed must not start a
+                // check, let alone write that channel to the state file again.
+                if (item.text === UpdateChecker.currentBranch)
+                    return;
+                root.selectedVersionId = "";
+                root.pendingBranch = item.text;
+                UpdateChecker.checkNow(item.text);
+            }
+        }
+
+        ToggleRow {
+            visible: root.settingsExpanded && !root.branchDataLoading
+            text: qsTr("Check for updates automatically")
+            subtext: qsTr("Every 30 minutes, and once when the shell starts")
+            reset: ({
+                node: GlobalConfig.general,
+                setting: "checkUpdates"
+            })
+            checked: GlobalConfig.general.checkUpdates
+            onToggled: GlobalConfig.general.checkUpdates = checked
+        }
+
+        NavRow {
+            first: true
+            visible: root.settingsExpanded && !root.branchDataLoading
+            icon: "folder"
+            label: qsTr("Open backup folder")
+            status: root.backupError !== "" ? root.backupError : qsTr("View your previously backed-up configuration files")
+            onClicked: {
+                root.backupError = "";
+                backupFolderProcess.running = true;
+            }
+        }
+
+        NavRow {
+            last: true
+            visible: root.settingsExpanded && !root.branchDataLoading
+            icon: "help"
+            label: qsTr("Troubleshooting")
+            status: qsTr("What to do when an update does not finish")
+            onClicked: Qt.openUrlExternally("https://github.com/caelestia-kde/caelestia/blob/main/docs/TROUBLESHOOTING.md#10-update-issues")
+        }
+
+        SectionHeader {
+            visible: !root.branchDataLoading && root.selectedVersionId !== "" && root.notesText !== ""
             text: qsTr("Release notes")
         }
 
         ConnectedRect {
-            visible: !root.branchDataLoading && root.notesText !== ""
+            visible: !root.branchDataLoading && root.selectedVersionId !== "" && root.notesText !== ""
             first: true
             last: true
             Layout.fillWidth: true
@@ -411,7 +477,7 @@ PageBase {
 
             TextButton {
                 visible: !root.timelineExpanded && root.shown.hiddenByCap > 0
-                text: qsTr("Show all commits (%1)").arg(root.shown.hiddenByCap)
+                text: (root.shown.isCommitList ? qsTr("Show all commits (%1)") : qsTr("Show all versions (%1)")).arg(root.shown.hiddenByCap)
                 type: TextButton.Tonal
                 font: Tokens.font.body.small
                 horizontalPadding: Tokens.padding.large
@@ -493,63 +559,6 @@ PageBase {
                     color: Colours.palette.m3onSurfaceVariant
                     wrapMode: Text.Wrap
                 }
-            }
-        }
-
-        SectionHeader {
-            visible: !root.branchDataLoading
-            text: qsTr("Update settings")
-        }
-
-        SelectRow {
-            first: true
-            enabled: !root.branchDataLoading
-            label: qsTr("Update channel")
-            subtext: UpdateChecker.currentBranch === "main" ? qsTr("Stable releases") : qsTr("Development builds — may be unstable")
-            menuItems: root.branchItems
-            active: root.activeBranchItem
-            fallbackText: UpdateChecker.currentBranch
-            fallbackIcon: "call_split"
-            onSelected: function(item) {
-                // SelectRow emits this when the menu is cancelled and on every arrow key,
-                // so a pick that matches the channel already followed must not start a
-                // check, let alone write that channel to the state file again.
-                if (item.text === UpdateChecker.currentBranch)
-                    return;
-                root.selectedVersionId = "";
-                root.pendingBranch = item.text;
-                UpdateChecker.checkNow(item.text);
-            }
-        }
-
-        ToggleRow {
-            last: true
-            visible: !root.branchDataLoading
-            text: qsTr("Check for updates automatically")
-            subtext: qsTr("Every 30 minutes, and once when the shell starts")
-            reset: ({
-                node: GlobalConfig.general,
-                setting: "checkUpdates"
-            })
-            checked: GlobalConfig.general.checkUpdates
-            onToggled: GlobalConfig.general.checkUpdates = checked
-        }
-
-        SectionHeader {
-            visible: !root.branchDataLoading
-            text: qsTr("Maintenance")
-        }
-
-        NavRow {
-            first: true
-            last: true
-            visible: !root.branchDataLoading
-            icon: "folder"
-            label: qsTr("Open backup folder")
-            status: root.backupError !== "" ? root.backupError : qsTr("View your previously backed-up configuration files")
-            onClicked: {
-                root.backupError = "";
-                backupFolderProcess.running = true;
             }
         }
 

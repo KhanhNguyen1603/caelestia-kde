@@ -210,7 +210,7 @@ Singleton {
             const latest = root.latestVersion();
             const staged = UpdateChecker.stagedLabel !== "";
             const title = UpdateChecker.versionSummaryMode
-                ? (latest !== "" ? qsTr("Version %1 is available").arg(latest) : qsTr("An update is available"))
+                ? (latest !== "" ? qsTr("Caelestia %1 is available").arg(latest) : qsTr("An update is available"))
                 : qsTr("%1 new commits on %2").arg(UpdateChecker.pendingCount).arg(UpdateChecker.currentBranch);
             const primary = root.action("install", staged ? qsTr("Restart & Update") : latest !== "" && UpdateChecker.versionSummaryMode ? qsTr("Update to %1").arg(latest) : qsTr("Update now"), "system_update_alt");
             // Downloading first costs the user nothing and takes the slow half off the one
