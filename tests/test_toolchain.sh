@@ -321,6 +321,27 @@ printf '%s\n' 'sha256:$digest'"
     assert_contains "$(calls_to "$log" tar)" "--exclude=bin" "and tar must still be the thing unpacking it"
 }
 
+test_the_release_lookup_authenticates_when_a_token_is_in_the_environment() {
+    local tmp stub log url
+    tmp="$(new_tmpdir)"
+    stub="$tmp/bin"
+    log="$tmp/calls.log"
+    url="https://github.com/ladybug-me/cava/releases/download/continuous/cava-x86_64-arch.tar.gz"
+
+    stub_bin "$stub" curl "printf 'curl %s\n' \"\$*\" >> '$log'
+printf '%s' '{\"assets\":[]}'"
+    stub_bin "$stub" jq "cat >/dev/null"
+
+    ( export GITHUB_TOKEN=test-token; with_path "$stub" "" release_digest_for_url "$url" >/dev/null )
+    assert_contains "$(calls_to "$log" curl)" "Authorization: Bearer test-token" \
+        "the shared address of a runner is rate limited without the token it already has"
+
+    : > "$log"
+    ( unset GITHUB_TOKEN GH_TOKEN; with_path "$stub" "" release_digest_for_url "$url" >/dev/null )
+    assert_not_contains "$(calls_to "$log" curl)" "Authorization: Bearer" \
+        "an install with no token in the environment still asks anonymously"
+}
+
 test_the_cava_sdk_download_unpacks_once_the_user_opts_in() {
     local tmp stub log out status
     tmp="$(new_tmpdir)"
