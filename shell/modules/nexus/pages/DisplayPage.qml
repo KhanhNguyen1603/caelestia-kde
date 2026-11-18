@@ -71,6 +71,14 @@ PageBase {
         }
     ]
 
+    /// The density worth scaling to, which depends on how far the screen sits: a 13.5" laptop
+    /// is read from about 40 cm, a 27" monitor from about 70 cm, and a desktop is drawn for
+    /// 96 dpi at 63 cm, so the same pixels-per-inch wants a different scale on each.
+    function targetDpi(diagonalInches: real): real {
+        const distance = Math.max(30, 40 + 2.2 * (diagonalInches - 13.5));
+        return 96 * 63 / distance;
+    }
+
     /// A scale or rotation the menu does not list leaves `active` empty on purpose: the
     /// button then shows what the screen really is instead of the nearest preset.
     function scaleItem(output: var): MenuItem {
@@ -82,9 +90,35 @@ PageBase {
         return root.rotationItems.find(item => item.value === output.rotation) ?? null;
     }
 
+    function currentMode(output: var): var {
+        return Displays.modesFor(output).find(mode => String(mode.id) === String(output.currentModeId)) ?? null;
+    }
+
     function currentModeLabel(output: var): string {
-        const mode = Displays.modesFor(output).find(candidate => String(candidate.id) === String(output.currentModeId));
+        const mode = root.currentMode(output);
         return mode ? Displays.modeLabel(mode) : qsTr("Unknown mode");
+    }
+
+    /// The preset the panel's own density asks for, so the interface keeps the size it has on
+    /// a screen that dense instead of shrinking on a finer one. A panel that does not report
+    /// its size has no recommendation to offer.
+    function recommendedScaleItem(output: var): MenuItem {
+        const mode = root.currentMode(output);
+        const sizeMm = output?.sizeMM;
+        const pixels = mode ? Math.hypot(mode.size.width, mode.size.height) : 0;
+        const millimetres = sizeMm ? Math.hypot(sizeMm.width, sizeMm.height) : 0;
+        if (pixels === 0 || millimetres === 0)
+            return null;
+
+        const inches = millimetres / 25.4;
+        const ideal = pixels / inches / root.targetDpi(inches);
+        let best = root.scaleItems[0];
+        for (let i = 1; i < root.scaleItems.length; i++) {
+            const candidate = root.scaleItems[i];
+            if (Math.abs(Number(candidate.value) - ideal) < Math.abs(Number(best.value) - ideal))
+                best = candidate;
+        }
+        return best;
     }
 
     title: qsTr("Displays")
@@ -151,6 +185,7 @@ PageBase {
                     subtext: qsTr("How large everything is drawn")
                     menuItems: root.scaleItems
                     active: root.scaleItem(outputSection.output)
+                    recommended: root.recommendedScaleItem(outputSection.output)
                     fallbackText: `${Math.round(outputSection.output.scale * 100)}%`
                     onSelected: item => Displays.setScale(outputSection.output.name, Number(item.value))
                 }

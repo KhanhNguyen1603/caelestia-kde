@@ -13,6 +13,7 @@ ConnectedRect {
     property string subtext
     property alias menuItems: splitButton.menuItems
     property alias active: splitButton.active
+    property alias recommended: splitButton.recommended
     property alias fallbackText: splitButton.fallbackText
     property alias fallbackIcon: splitButton.fallbackIcon
     property alias menuOnTop: splitButton.menuOnTop

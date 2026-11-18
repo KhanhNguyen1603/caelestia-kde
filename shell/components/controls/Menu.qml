@@ -52,6 +52,9 @@ MouseArea {
     property list<MenuItem> items
     property var dynamicModel: items
     property MenuItem active: dynamicModel[0] ?? null
+    /// The entry worth pointing out, such as the setting that suits the hardware in hand;
+    /// null when there is nothing to say.
+    property MenuItem recommended: null
     property bool expanded
     property bool rightClickReposition: false
     property real maxHeight: 320
@@ -126,6 +129,11 @@ MouseArea {
 
     function closeSubmenu(): void {
         submenuOpen = false;
+    }
+
+    function optionText(entry: var): string {
+        const label = entry?.text ?? "";
+        return entry && entry === root.recommended ? `${label} ${qsTr("(Recommended)")}` : label;
     }
 
     function close(): void {
@@ -557,7 +565,7 @@ MouseArea {
                 StyledText {
                     Layout.alignment: Qt.AlignVCenter
                     Layout.fillWidth: true
-                    text: item.modelData?.text ?? ""
+                    text: root.optionText(item.modelData)
                     color: Colours.palette.m3onSurface
                 }
 
