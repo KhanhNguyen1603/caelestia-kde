@@ -207,10 +207,10 @@ test_the_rows_do_not_depend_on_the_selection() {
 }
 
 test_the_update_rows_have_one_owner() {
-    assert_file_contains "$PAGE" 'text: qsTr("Check for updates automatically")' \
+    assert_file_contains "$PAGE" 'text: qsTr("Automatic Updates")' \
         "the page owns whether checking happens"
     assert_file_not_contains "$PAGE" 'Show Update Indicator' "and does not also own the indicator"
-    assert_file_contains "$PAGE" 'label: qsTr("Open backup folder")' "maintenance has its own section"
+    assert_file_contains "$PAGE" 'label: qsTr("Backup folder")' "the backup it takes is a row in that group"
     assert_file_contains "$PAGE" 'label: qsTr("Update channel")' "and the channel is a setting"
 }
 
