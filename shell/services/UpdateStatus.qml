@@ -108,6 +108,24 @@ Singleton {
         return root.action("install", qsTr("Update to %1").arg(label), "system_update_alt");
     }
 
+    // The packaged path hands the install to the package manager, which replaces the files
+    // the shell runs from but cannot restart it; the source path rebuilds and restarts.
+    function handoffDetail(): string {
+        return UpdateChecker.packagedUpdate ? qsTr("Log out and back in when it finishes") : qsTr("The shell restarts when it finishes");
+    }
+
+    // What the update leaves behind, said the same way wherever the card describes it.
+    function afterwardsText(): string {
+        return UpdateChecker.packagedUpdate ? qsTr("also upgrades system packages") : qsTr("the shell restarts");
+    }
+
+    function updateDetail(): string {
+        const detail = root.baseDetail();
+        if (UpdateChecker.stagedLabel !== "")
+            return qsTr("%1 downloaded").arg(UpdateChecker.stagedLabel);
+        return UpdateChecker.packagedUpdate ? qsTr("%1 · %2").arg(detail).arg(root.afterwardsText()) : detail;
+    }
+
     function selectionDetail(state): string {
         const parts = [];
         const version = root.versionText();
@@ -116,7 +134,7 @@ Singleton {
         if (state === "past")
             parts.push(qsTr("older version"));
         parts.push(qsTr("settings are backed up"));
-        parts.push(qsTr("the shell restarts"));
+        parts.push(root.afterwardsText());
         return parts.join(" · ");
     }
 
@@ -129,7 +147,12 @@ Singleton {
     }
 
     function describe(selection, launchFailed): var {
-        const command = UpdateChecker.updaterArgs().join(" ");
+        // The command this card is about. A selection names a version; with none, the
+        // updater falls back to the version the running handoff is for. Passing "" for
+        // "nothing selected" would drop that version, so Copy would hand over a different
+        // command than the one the card shows.
+        const selectedId = selection !== null && selection !== undefined ? selection.id : undefined;
+        const command = UpdateChecker.updaterArgs(selectedId).join(" ");
 
         if (launchFailed) {
             return root.card("error", qsTr("Couldn't open a terminal"), qsTr("Run %1 in a terminal instead").arg(command), root.action("copy", qsTr("Copy command"), "content_copy"), null, {
@@ -138,7 +161,7 @@ Singleton {
         }
 
         if (UpdateChecker.handoff === UpdateChecker.Handoff.Running) {
-            return root.card("terminal", qsTr("Updating in the terminal"), qsTr("The shell restarts when it finishes"), root.action("reopen", qsTr("Open terminal again"), "open_in_new"), root.action("copy", qsTr("Copy command"), "content_copy"), {
+            return root.card("terminal", qsTr("Updating in the terminal"), root.handoffDetail(), root.action("reopen", qsTr("Open terminal again"), "open_in_new"), root.action("copy", qsTr("Copy command"), "content_copy"), {
                 dismissible: true,
                 highlight: true
             });
@@ -149,6 +172,21 @@ Singleton {
                 dismissible: true,
                 highlight: true
             });
+        }
+
+        // The updater runs in a terminal this shell cannot see, so its own record of what
+        // happened is the only thing that can report the outcome - and the restart it
+        // causes is the moment that record is news.
+        if (UpdateChecker.handoff === UpdateChecker.Handoff.None && UpdateChecker.lastResultStatus !== "") {
+            const label = UpdateChecker.lastResultLabel;
+            const named = /^v?\d/.test(label);
+            const dismiss = root.action("dismissResult", qsTr("Dismiss"), "close");
+            if (UpdateChecker.lastResultStatus === "failed") {
+                return root.card("error", qsTr("The last update did not finish"), label === "" ? qsTr("Run the update again to see why") : qsTr("%1 did not finish").arg(label), dismiss, null, {
+                    highlight: true
+                });
+            }
+            return root.card("check_circle", named ? qsTr("Updated to %1").arg(label) : qsTr("Update finished"), named ? "" : qsTr("The %1 channel was updated").arg(label), null, dismiss, {});
         }
 
         if (selection !== null && selection !== undefined) {
@@ -170,11 +208,16 @@ Singleton {
 
         if (UpdateChecker.hasUpdate) {
             const latest = root.latestVersion();
+            const staged = UpdateChecker.stagedLabel !== "";
             const title = UpdateChecker.versionSummaryMode
                 ? (latest !== "" ? qsTr("Version %1 is available").arg(latest) : qsTr("An update is available"))
                 : qsTr("%1 new commits on %2").arg(UpdateChecker.pendingCount).arg(UpdateChecker.currentBranch);
-            const primary = root.action("install", latest !== "" && UpdateChecker.versionSummaryMode ? qsTr("Update to %1").arg(latest) : qsTr("Update now"), "system_update_alt");
-            return root.card("update", title, root.baseDetail(), primary, root.action("check", qsTr("Check again"), "refresh"), {
+            const primary = root.action("install", staged ? qsTr("Restart & Update") : latest !== "" && UpdateChecker.versionSummaryMode ? qsTr("Update to %1").arg(latest) : qsTr("Update now"), "system_update_alt");
+            // Downloading first costs the user nothing and takes the slow half off the one
+            // click that changes the system. It is only separable where the package manager
+            // owns the install, so a checkout keeps its single action.
+            const secondary = UpdateChecker.stagedLabel !== "" || !UpdateChecker.packagedUpdate ? root.action("check", qsTr("Check again"), "refresh") : root.action("stage", qsTr("Download first"), "download");
+            return root.card("update", title, root.updateDetail(), primary, secondary, {
                 highlight: true
             });
         }

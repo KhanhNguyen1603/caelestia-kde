@@ -52,6 +52,7 @@ PageBase {
     readonly property var selection: {
         const entry = UpdateModel.entryById(root.entries, root.selectedVersionId);
         return entry === null ? null : {
+            id: entry.id,
             state: entry.state,
             label: entry.label
         };
@@ -80,12 +81,16 @@ PageBase {
             confirmDialog.open();
         } else if (key === "install" || key === "reinstall" || key === "reopen") {
             root.launchUpdater();
+        } else if (key === "stage") {
+            root.stageUpdate();
         } else if (key === "copy") {
             root.copyCommand();
         } else if (key === "clear") {
             root.selectedVersionId = "";
         } else if (key === "dismiss") {
             UpdateChecker.dismissHandoff();
+        } else if (key === "dismissResult") {
+            UpdateChecker.clearResult();
         }
     }
 
@@ -95,24 +100,41 @@ PageBase {
     }
 
     function copyCommand(): void {
-        const command = UpdateChecker.updaterArgs(root.selectedVersionId).join(" ");
+        // An empty selection is not a version: passing "" would suppress the version the
+        // card is about, so the copied command would not be the one on screen.
+        const version = root.selectedVersionId === "" ? undefined : root.selectedVersionId;
+        const command = UpdateChecker.updaterArgs(version).join(" ");
         Quickshell.execDetached(["sh", "-c", "printf %s \"$1\" | wl-copy", "--", command]);
     }
 
-    // Launch the updater in the user's terminal. The page only reports the
-    // handoff; the updater owns its output, progress and escalation prompts.
-    function launchUpdater(): void {
+    // The terminal holds its window open afterwards: the update restarts the shell and its
+    // output is what the user needs to read. The arguments are exec'd as they are - naming
+    // the program again would hand the updater "caelestia-update" as its first argument,
+    // which is not a branch, so it falls back to main and drops the version asked for.
+    function launchInTerminal(args): void {
         if (!root.terminalAvailable) {
             root.launchFailed = true;
             return;
         }
-        const version = root.selectedVersionId !== "" ? root.selectedVersionId : UpdateChecker.handoffVersion;
+        const hold = '"$@"; s=$?; printf "\\n[update exited with status %s] Press Enter to close..." "$s"; read -r _';
+        Launch.exec([...root.terminalCommand, "sh", "-c", hold, "sh", ...args]);
+    }
+
+    function launchUpdater(): void {
         root.launchFailed = false;
+        const version = root.selectedVersionId !== "" ? root.selectedVersionId : UpdateChecker.handoffVersion;
         root.selectedVersionId = "";
-        // Holds the terminal open afterwards: the update restarts the shell and its output is what the user needs to read.
-        const hold = 'caelestia-update "$@"; s=$?; printf "\\n[caelestia-update exited with status %s] Press Enter to close..." "$s"; read -r _';
-        Launch.exec([...root.terminalCommand, "sh", "-c", hold, "sh", ...UpdateChecker.updaterArgs(version)]);
+        root.launchInTerminal(UpdateChecker.updaterArgs(version));
         UpdateChecker.markHandoff(version);
+    }
+
+    // Downloads what the update needs without changing anything, so the slow half can
+    // happen while the user keeps working and applying it stays a separate decision.
+    function stageUpdate(): void {
+        root.launchFailed = false;
+        const version = root.selectedVersionId === "" ? undefined : root.selectedVersionId;
+        root.launchInTerminal(UpdateChecker.stageArgs(version));
+        UpdateChecker.markStaged(version);
     }
 
     title: qsTr("Updates")
@@ -128,6 +150,18 @@ PageBase {
 
     Item {
         visible: false
+
+        // pendingBranch describes one check: the one its channel pick started. Left set,
+        // every later check - the periodic one, a retry - re-shows "Switching to X…" and
+        // hides the settings below it while nothing is being switched.
+        Connections {
+            target: UpdateChecker
+
+            function onCheckingUpdatesChanged(): void {
+                if (!UpdateChecker.checkingUpdates)
+                    root.pendingBranch = "";
+            }
+        }
 
         Variants {
             id: branchVariants
@@ -362,7 +396,7 @@ PageBase {
 
                 entries: root.shown.entries
                 selectedId: root.selectedVersionId
-                selectAction: root.selection !== null ? root.status.primary : null
+                selectAction: root.selection !== null ? UpdateStatus.selectionAction(root.selection.state, root.selection.label) : null
                 onEntryClicked: (entryId, entryState) => {
                     root.selectedVersionId = root.selectedVersionId === entryId ? "" : entryId;
                 }
@@ -477,8 +511,13 @@ PageBase {
             fallbackText: UpdateChecker.currentBranch
             fallbackIcon: "call_split"
             onSelected: function(item) {
+                // SelectRow emits this when the menu is cancelled and on every arrow key,
+                // so a pick that matches the channel already followed must not start a
+                // check, let alone write that channel to the state file again.
+                if (item.text === UpdateChecker.currentBranch)
+                    return;
                 root.selectedVersionId = "";
-                root.pendingBranch = item.text !== UpdateChecker.currentBranch ? item.text : "";
+                root.pendingBranch = item.text;
                 UpdateChecker.checkNow(item.text);
             }
         }

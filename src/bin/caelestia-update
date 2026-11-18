@@ -8,6 +8,24 @@ info() { echo "[INFO]  $*"; }
 ok()   { echo "[OK]    $*"; }
 warn() { echo "[WARN]  $*"; }
 
+# Where the outcome is recorded for the shell to read. The updater runs in a terminal the
+# shell only spawns, so this file is the one account of what happened that outlives the
+# restart an update causes.
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia"
+record() { # <file> <status> <label> [code]
+    mkdir -p "$STATE_DIR" 2>/dev/null || return 0
+    printf '%s|%s|%s\n' "$2" "$3" "${4:-0}" > "$STATE_DIR/$1" 2>/dev/null || true
+}
+
+STAGE_REQUEST=0
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --stage) STAGE_REQUEST=1; shift ;;
+        --) shift; break ;;
+        *) break ;;
+    esac
+done
+
 run_stage() {
     local timeout_seconds="$1"
     shift
@@ -62,6 +80,18 @@ else
 fi
 echo "---------------------------------------------"
 
+# What this run is for, named the way a reader would: the version when one was asked for,
+# otherwise the channel.
+UPDATE_LABEL="${TARGET_REF:-$BRANCH}"
+
+# A run supersedes the last outcome. Clearing it first means a crash part-way cannot leave
+# an older "updated" on the page once the shell comes back up.
+mkdir -p "$STATE_DIR" 2>/dev/null || true
+rm -f "$STATE_DIR/last-update" 2>/dev/null || true
+if [ "$STAGE_REQUEST" -eq 0 ]; then
+    rm -f "$STATE_DIR/staged-update" 2>/dev/null || true
+fi
+
 # Which half owns this install: /usr/bin is a package, anything else a checkout. Nothing
 # is probed on disk, so it stays right whatever the package is called.
 SELF_DIR="$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)"
@@ -105,6 +135,28 @@ EOF
 chmod +x "$UPD_DIR/bin/sudo"
 export PATH="$UPD_DIR/bin:$PATH"
 
+# A staging run downloads what the update needs and changes nothing else, so the slow half
+# can happen while the user keeps working and applying it stays a separate decision. Only a
+# package install can be staged: a checkout's download is its build, which is the install.
+if [ "$STAGE_REQUEST" -eq 1 ]; then
+    if [ "$PACKAGED" -ne 1 ]; then
+        warn "Staging is for a package install; this checkout builds and installs in one run."
+        exit 1
+    fi
+    info "Downloading the packages this update needs..."
+    if sudo pacman -Syuw --noconfirm; then
+        record staged-update staged "$UPDATE_LABEL"
+        ok "Downloaded. Run the update again to install it."
+        echo "PROGRESS: done: Update downloaded"
+        exit 0
+    else
+        STAGE_STATUS=$?
+        record staged-update failed "$UPDATE_LABEL" "$STAGE_STATUS"
+        warn "The download did not finish; nothing was installed."
+        exit "$STAGE_STATUS"
+    fi
+fi
+
 # Package-managed install.
 #
 # A package owns what it installed, so the update is the package manager, not the clone
@@ -121,11 +173,16 @@ if [ "$PACKAGED" -eq 1 ]; then
         echo "  package was installed from."
         echo
     fi
+    PACKAGE_STATUS=0
     if command -v pacman &> /dev/null; then
         info "Updating the system packages..."
-        sudo pacman -Syu --noconfirm || warn "The package update failed or was cancelled."
+        sudo pacman -Syu --noconfirm || PACKAGE_STATUS=$?
+        if [ "$PACKAGE_STATUS" -ne 0 ]; then
+            warn "The package update failed or was cancelled."
+        fi
     else
         warn "No pacman found; update this package with the tool that installed it."
+        PACKAGE_STATUS=1
     fi
     info "And the shell itself:"
     echo "    pacman:  sudo pacman -Syu caelestia-kde"
@@ -140,6 +197,11 @@ if [ "$PACKAGED" -eq 1 ]; then
     fi
 
     echo "    then log out and back in."
+    if [ "$PACKAGE_STATUS" -eq 0 ]; then
+        record last-update ok "$UPDATE_LABEL"
+    else
+        record last-update failed "$UPDATE_LABEL" "$PACKAGE_STATUS"
+    fi
     echo "PROGRESS: done: Package update finished"
     exit 0
 fi
@@ -436,6 +498,7 @@ else
     fi
 fi
 
+record last-update ok "$UPDATE_LABEL"
 echo "PROGRESS: done: Update completed successfully"
 echo
 echo "---------------------------------------------"

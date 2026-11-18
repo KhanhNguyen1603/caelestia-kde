@@ -245,4 +245,66 @@ test_the_updates_page_index_has_one_lookup() {
         "which resolves it once"
 }
 
+test_the_page_hands_the_updater_its_arguments_exactly_once() {
+    # The arguments already name the program; the terminal's shell script has to exec them
+    # as they are. Naming it again passed "caelestia-update" as the branch, which falls back
+    # to main and drops the version that was selected.
+    assert_file_contains "$PAGE" '''const hold = '"'"'"$@"; s=$?''' \
+        "the held-open terminal execs the arguments it was given"
+    assert_file_not_contains "$PAGE" 'caelestia-update "$@"' \
+        "and never prefixes them with the program name a second time"
+}
+
+test_a_channel_pick_only_checks_when_it_changes_the_channel() {
+    assert_file_contains "$PAGE" 'if (item.text === UpdateChecker.currentBranch)' \
+        "a pick that matches the channel already followed is not a switch"
+    assert_file_contains "$PAGE" 'function onCheckingUpdatesChanged' \
+        "and the loading state ends when the check it armed finishes"
+}
+
+test_the_selected_row_offers_the_selections_own_action() {
+    assert_file_contains "$PAGE" 'UpdateStatus.selectionAction(root.selection.state, root.selection.label)' \
+        "the row's action comes from the selection, not from whatever card is showing"
+    assert_file_contains "$TIMELINE" 'selectAction !== null' "and the row reserves room only for an action it has"
+}
+
+test_the_timeline_names_the_available_group() {
+    assert_file_contains "$TIMELINE" 'qsTr("Available")' \
+        "an available version needs its own heading, or it reads as the installed one"
+    # The row's own tap area has to sit under the content: declared after it, it covers the
+    # action strip and a press on "Update to X" toggles the selection off instead.
+    local mousearea content
+    mousearea="$(grep -n 'MouseArea {' "$TIMELINE" | cut -d: -f1 | tail -n 1)"
+    content="$(grep -n 'topMargin: row.isRelease ? 7 : 10' "$TIMELINE" | cut -d: -f1)"
+    if [[ -z "$mousearea" || -z "$content" ]] || ((mousearea > content)); then
+        fail "the row's tap area must be declared before the content it sits under"
+    fi
+}
+
+test_the_card_says_what_the_update_does() {
+    assert_file_contains "$STATUS" 'function handoffDetail' "the restart promise matches the path"
+    assert_file_contains "$STATUS" 'qsTr("also upgrades system packages")' \
+        "a packaged update is a system upgrade and says so"
+    assert_file_contains "$CHECKER" 'packagedUpdate' "which the checker detects from the install"
+    assert_file_contains "$STATUS" 'UpdateChecker.updaterArgs(selectedId)' \
+        "the command the card prints is the one Copy hands over"
+}
+
+test_the_outcome_of_a_run_comes_back() {
+    assert_file_contains "$PAGE" 'UpdateChecker.clearResult()' "the page can dismiss what the updater recorded"
+    assert_file_contains "$STATUS" 'lastResultStatus' "the card reports it"
+    assert_file_contains "$CHECKER" 'parseRecord' "from the record caelestia-update writes"
+    assert_file_contains "$REPO_ROOT/src/bin/caelestia-update" 'record last-update' \
+        "which the updater writes when it finishes"
+}
+
+test_staging_is_a_separate_step() {
+    local updater
+    updater="$REPO_ROOT/src/bin/caelestia-update"
+    assert_file_contains "$updater" '--stage) STAGE_REQUEST=1' "the updater takes a staging flag"
+    assert_file_contains "$updater" 'pacman -Syuw' "which downloads without installing"
+    assert_file_not_contains "$PAGE" 'pacman -Syu' "the page never names the package manager itself"
+    assert_file_contains "$CHECKER" 'function stageArgs' "and the page reaches it through the checker"
+}
+
 run_tests
