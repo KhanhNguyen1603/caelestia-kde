@@ -14,6 +14,8 @@ PAGE="$REPO_ROOT/shell/modules/nexus/pages/UpdatesPage.qml"
 TIMELINE="$COMMON/UpdateTimeline.qml"
 POPOUT="$REPO_ROOT/shell/modules/bar/popouts/Updates.qml"
 INDICATOR="$REPO_ROOT/shell/modules/bar/components/UpdateIndicator.qml"
+REGISTRY="$REPO_ROOT/shell/modules/nexus/PageCompRegistry.qml"
+NEXUS_STATE="$REPO_ROOT/shell/modules/nexus/NexusState.qml"
 
 commit() {
     printf '{hash:"%s",fullHash:"%s",subject:"%s",author:"Solanaceae",date:"today",isMerge:%s}' \
@@ -243,6 +245,16 @@ test_the_updates_page_index_has_one_lookup() {
     assert_eq "0" "$copies" "the three copies of the lookup belong to PageRegistry"
     assert_file_contains "$REPO_ROOT/shell/modules/nexus/PageRegistry.qml" 'updatesPageIdx' \
         "which resolves it once"
+}
+
+test_the_updates_entry_opens_the_page_without_a_hub() {
+    # A sidebar entry that opens a list of one asks for a second click to reach the only
+    # thing on the list.
+    assert_file_contains "$REGISTRY" 'singlePage: true' "the Updates category is a single page"
+    assert_file_contains "$REGISTRY" 'cat.singlePage ? [] : [root.hubSubPage]' \
+        "so its stack has no hub to land on"
+    assert_file_contains "$NEXUS_STATE" 'isSinglePageCategory(pageIdx)' \
+        "and the entry resolves straight to the page"
 }
 
 test_the_page_hands_the_updater_its_arguments_exactly_once() {

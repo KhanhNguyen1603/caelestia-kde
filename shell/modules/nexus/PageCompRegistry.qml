@@ -685,6 +685,7 @@ QtObject {
             icon: "system_update"
             description: qsTr("Shell versions and system packages")
             defaultPage: "updates"
+            singlePage: true
 
             Page {
                 key: "updates"
@@ -714,7 +715,7 @@ QtObject {
     function collectAllPagesForCategory(catIdx: int): var {
         const cat = categories[catIdx];
         if (!cat) return [];
-        const list = [root.hubSubPage];
+        const list = cat.singlePage ? [] : [root.hubSubPage];
         for (let i = 0; i < cat.pages.length; i++) {
             const p = cat.pages[i];
             list.push(p);
@@ -725,6 +726,10 @@ QtObject {
             }
         }
         return list;
+    }
+
+    function isSinglePageCategory(idx: int): bool {
+        return idx >= 0 && idx < categories.length && categories[idx].singlePage;
     }
 
     function defaultPageForCategory(idx: int): string {
