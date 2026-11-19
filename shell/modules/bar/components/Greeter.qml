@@ -11,7 +11,6 @@ Item {
     id: root
 
     required property var bar
-    required property Brightness.Monitor monitor
     property color colour: Colours.palette.m3primary
 
     readonly property real rawScale: !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0
@@ -58,21 +57,15 @@ Item {
         return `${msg}, ${formattedUser}!`;
     }
 
-    readonly property int maxSize: {
-        const otherModules = bar.children.filter(c => c.id && c.item && c.item !== this && c.id !== "spacer");
-        if (bar.isHorizontal) {
-            const otherWidth = otherModules.reduce((acc, curr) => acc + (curr.item.nonAnimWidth ?? curr.width), 0);
-            return bar.width - otherWidth - bar.spacing * (bar.children.length - 1) - bar.vPadding * 2;
-        } else {
-            const otherHeight = otherModules.reduce((acc, curr) => acc + (curr.item.nonAnimHeight ?? curr.height), 0);
-            return bar.height - otherHeight - bar.spacing * (bar.children.length - 1) - bar.vPadding * 2;
-        }
-    }
     property Title current: text1
 
     clip: true
-    implicitWidth: bar.isHorizontal ? Math.max(0, Math.min(icon.implicitWidth + current.width + current.anchors.leftMargin, maxSize)) : Math.max(icon.implicitWidth, current.width)
-    implicitHeight: bar.isHorizontal ? Math.max(icon.implicitHeight, current.height) : Math.max(0, Math.min(icon.implicitHeight + current.height + current.anchors.topMargin, maxSize))
+    implicitWidth: bar.isHorizontal
+        ? (icon.implicitWidth + current.width + current.anchors.leftMargin)
+        : Math.max(icon.implicitWidth, current.width)
+    implicitHeight: bar.isHorizontal
+        ? Math.max(icon.implicitHeight, current.height)
+        : (icon.implicitHeight + current.height + current.anchors.topMargin)
 
     MouseArea {
         anchors.fill: parent
@@ -124,6 +117,8 @@ Item {
 
     Title {
         id: text1
+
+        text: root.windowTitle
     }
 
     Title {
