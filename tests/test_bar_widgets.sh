@@ -26,6 +26,17 @@ registry_entries() {
     sed -nE 's/^ *\{ id: "([A-Za-z0-9_]+)", zone: "([a-z]+)" \},?$/\1 \2/p' "$REGISTRY"
 }
 
+test_peripheral_battery_joins_the_sidebar_at_its_live_width() {
+    local popout
+    popout="$(sed -n '/sourceComponent: PeripheralBattery {/,/^            }/p' "$POPOUTS")"
+    assert_contains "$popout" 'width: _isSidebarOpen' "the horizontal sidebar selects the attached width"
+    assert_contains "$popout" 'sidebarWidthFor(Tokens.sizes.sidebar.width) - root.framePadding' \
+        "the battery frame should fit the current sidebar, including its padding"
+    assert_contains "$popout" ': implicitWidth' "the standalone popout should fit its device labels"
+    assert_file_contains "$REPO_ROOT/shell/modules/bar/popouts/PeripheralBattery.qml" 'wrapMode: Text.Wrap' \
+        "a device name that exceeds the attached width should wrap"
+}
+
 registry_ids() {
     registry_entries | awk '{ print $1 }' | sort
 }
