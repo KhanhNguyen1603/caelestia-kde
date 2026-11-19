@@ -48,7 +48,9 @@ StyledWindow {
     readonly property var desktopPopups: [viewOptions, widgetGallery, widgetSettings]
     readonly property bool transientOverlayOpen: panels.popouts.isDetached || panels.popouts.isContextPopout || (panels.popouts.staysOpen && panels.popouts.hasCurrent) || root.desktopMenus.some(menu => menu.expanded) || root.desktopPopups.some(popup => popup.open) || visibilities.overview || (Visibilities.launcherOpen && Config.launcher.enabled) || (Config.dashboard.enabled && visibilities.dashboard) || (Config.session.enabled && visibilities.session) || (Config.utilities.enabled && visibilities.utilities)
     readonly property bool hasOpenOverlay: focusGrabState.active || transientOverlayOpen || (Config.sidebar.enabled && visibilities.sidebar)
+    // A tray popout takes over from the launcher before the game regains focus.
     readonly property bool hasFullscreen: actualFullscreen && !hasOpenOverlay
+        && !(panels.popouts.hasCurrent && root.contentItem.Window.active)
     // The launcher is one panel across outputs: a screen that does not show it
     // still takes input, so that a press there dismisses it.
     readonly property bool foreignLauncherOpen: Visibilities.launcherOpen && !visibilities.launcher
