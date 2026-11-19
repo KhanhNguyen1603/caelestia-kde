@@ -74,7 +74,7 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
 
         onPositionChanged: {
-            if (root.bar.popouts.hasCurrent && root.bar.popouts.currentName === "greetercontext") return;
+            if (root.bar.popouts.hasCurrent && (root.bar.popouts.currentName === "greetercontext" || root.bar.popouts.staysOpen)) return;
             const popouts = root.bar.popouts;
             if (popouts.hasCurrent && popouts.currentName !== "greeter" && popouts.currentName !== "activewindow")
                 popouts.hasCurrent = false;
@@ -86,14 +86,13 @@ Item {
                 popouts.currentCenter = bar.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
                 popouts.hasCurrent = true;
             } else if (mouse.button === Qt.LeftButton) {
-                if (!Config.bar.greeter.showOnHover) {
-                    if (popouts.hasCurrent && (popouts.currentName === "greeter" || popouts.currentName === "activewindow")) {
-                        popouts.hasCurrent = false;
-                    } else {
-                        popouts.currentName = "greeter";
-                        popouts.currentCenter = bar.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
-                        popouts.hasCurrent = true;
-                    }
+                if (popouts.hasCurrent && (popouts.currentName === "greeter" || popouts.currentName === "activewindow")) {
+                    popouts.hasCurrent = false;
+                } else if (Config.bar.popouts.greeter && !Config.bar.greeter.showOnHover) {
+                    popouts.currentName = "greeter";
+                    popouts.currentCenter = bar.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
+                    popouts.hasCurrent = true;
+                    popouts.staysOpen = true;
                 } else if (popouts.hasCurrent && popouts.currentName === "greetercontext") {
                     popouts.hasCurrent = false;
                 }
