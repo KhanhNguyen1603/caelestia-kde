@@ -366,35 +366,11 @@ Singleton {
     }
 
     function hasFullscreen(): bool {
-        const wins = root.windowList;
-        const activeWs = root.activeWsId;
-        for (let i = 0; i < wins.length; i++) {
-            if (wins[i].fullscreen === true && !wins[i].minimized) {
-                const winWs = wins[i].workspace?.id ?? -1;
-                if (activeWs !== -1 && winWs !== -1 && winWs !== activeWs)
-                    continue;
-                return true;
-            }
-        }
-        return false;
+        return KWinActiveWindowBridge.fullscreenOutputs.length > 0;
     }
 
     function hasFullscreenOn(screenName: string): bool {
-        if (!screenName)
-            return hasFullscreen();
-        const wins = root.windowList;
-        const activeWs = root.activeWsId;
-        for (let i = 0; i < wins.length; i++) {
-            if (!wins[i].fullscreen || wins[i].minimized)
-                continue;
-            if (wins[i].output !== screenName)
-                continue;
-            const winWs = wins[i].workspace?.id ?? -1;
-            if (activeWs !== -1 && winWs !== -1 && winWs !== activeWs)
-                continue;
-            return true;
-        }
-        return false;
+        return screenName ? KWinActiveWindowBridge.fullscreenOutputs.includes(screenName) : hasFullscreen();
     }
 
     function hasWindowOverlapping(screenName: string, x: real, y: real, width: real, height: real, focusedOnly: bool): bool {

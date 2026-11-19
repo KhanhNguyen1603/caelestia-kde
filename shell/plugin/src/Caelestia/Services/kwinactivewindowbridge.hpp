@@ -2,6 +2,7 @@
 
 #include <QHash>
 #include <QObject>
+#include <QPointer>
 #include <QQmlEngine>
 #include <QTimer>
 #include <QVariantList>
@@ -9,6 +10,7 @@
 
 namespace caelestia::services {
 
+class KWinWorkspaceState;
 class PlasmaWindowHandle;
 
 class KWinActiveWindowBridge : public QObject {
@@ -17,14 +19,17 @@ class KWinActiveWindowBridge : public QObject {
     Q_PROPERTY(QVariantMap lastActiveWindow READ lastActiveWindow NOTIFY lastActiveWindowChanged)
     Q_PROPERTY(QString activeOutputName READ activeOutputName WRITE setActiveOutputName NOTIFY activeOutputNameChanged)
     Q_PROPERTY(QVariantList windowList READ windowList NOTIFY windowListChanged)
+    // Outputs whose topmost visible window is fullscreen.
+    Q_PROPERTY(QStringList fullscreenOutputs READ fullscreenOutputs NOTIFY fullscreenOutputsChanged)
     Q_PROPERTY(QString pendingFocusAddress READ pendingFocusAddress NOTIFY pendingFocusAddressChanged)
     Q_PROPERTY(QString highlightedAddress READ highlightedAddress NOTIFY highlightedAddressChanged)
     QML_ELEMENT
     QML_SINGLETON
 
 public:
-    explicit KWinActiveWindowBridge(QObject* parent = nullptr);
     ~KWinActiveWindowBridge() override;
+
+    static KWinActiveWindowBridge* create(QQmlEngine* engine, QJSEngine* jsEngine);
 
     QVariantMap activeWindow() const;
     QVariantMap lastActiveWindow() const;
@@ -32,6 +37,7 @@ public:
     Q_INVOKABLE void setActiveOutputName(const QString& outputName);
 
     QVariantList windowList() const;
+    QStringList fullscreenOutputs() const;
     QString pendingFocusAddress() const;
     QString highlightedAddress() const;
 
@@ -59,6 +65,7 @@ signals:
     void lastActiveWindowChanged();
     void activeOutputNameChanged();
     void windowListChanged();
+    void fullscreenOutputsChanged();
     void pendingFocusAddressChanged();
     void highlightedAddressChanged();
 
@@ -67,8 +74,13 @@ private slots:
     void onWindowLost(const QString& uuid);
     void scheduleWindowListUpdate();
     void buildWindowList();
+    void scheduleFullscreenUpdate();
+    void updateFullscreenOutputs();
 
 private:
+    // Private, so QML builds the singleton through create().
+    explicit KWinActiveWindowBridge(QObject* parent = nullptr);
+
     QVariantMap windowToVariant(PlasmaWindowHandle* w) const;
     QString getOutputNameForGeometry(int x, int y, int w, int h) const;
     void onStateChanged(PlasmaWindowHandle* handle);
@@ -84,8 +96,11 @@ private:
     QString m_activeOutputName;
     QString m_pendingFocusAddress;
     QString m_highlightedAddress;
+    QStringList m_fullscreenOutputs;
+    QPointer<KWinWorkspaceState> m_workspaceState;
 
     QTimer m_updateTimer;
+    QTimer m_fullscreenTimer;
 };
 
 } // namespace caelestia::services
