@@ -17,6 +17,7 @@ Searcher {
     readonly property string fallback: Quickshell.shellPath("assets/wallpaper.webp")
 
     property bool hasSkwd: false
+    property bool skwdChecked: false
     property bool previousWallpaperEnabledState: false
     readonly property bool previewing: previewPath !== ""
     readonly property string current: previewing ? previewPath : actualCurrent
@@ -132,12 +133,26 @@ Searcher {
         }
     }
 
+    function shellOwnsWallpaper(): bool {
+        if (GlobalConfig.background.disableQuickshellDesktop)
+            return false;
+        const engine = Config.background.wallpaperEngine;
+        return engine === "quickshell" || (engine !== "skwd/plasma" && engine !== "plasma" && !root.hasSkwd);
+    }
+
+    /// The desktop keeps the wallpaper of whichever plugin Plasma has active, and only the image
+    /// plugin reads what is written below. skwd's plugin renders the wallpaper skwd recorded
+    /// instead, and only its daemon keeps that record current: with the daemon stopped the two
+    /// drifted apart and a session came back painted over twice. Any other plugin is the user's
+    /// own choice and is left alone.
     function syncPlasmaWallpaper(imagePath: string): void {
         if (!imagePath)
             return;
+        const ownPlugin = (root.skwdChecked && !root.hasSkwd && root.shellOwnsWallpaper()) ? 'if (d.wallpaperPlugin === "org.skwd.wall.plasma") d.wallpaperPlugin = "org.kde.image";' : "";
         const script = 'var allDesktops = desktops();' +
             'for (var i = 0; i < allDesktops.length; i++) {' +
             '    var d = allDesktops[i];' +
+            ownPlugin +
             '    d.currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];' +
             '    d.writeConfig("Image", "file://" + ' + JSON.stringify(imagePath) + ');' +
             '}';
@@ -326,6 +341,9 @@ Searcher {
             if (sConf)
                 sConf.background.resetOption("wallpaperEnabled");
         }
+
+        if (root.shellOwnsWallpaper() && root.actualCurrent)
+            root.syncPlasmaWallpaper(root.actualCurrent);
     }
 
     list: filteredList
@@ -422,6 +440,7 @@ Searcher {
         onExited: code => {
             const hasSkwd = (code === 0);
             root.hasSkwd = hasSkwd;
+            root.skwdChecked = true;
             root.applyWallpaperEngine();
         }
     }
