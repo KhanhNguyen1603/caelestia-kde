@@ -29,16 +29,17 @@ Scope {
 
     readonly property int dockPanelThickness: root.dockPanel ? root.dockPanel.exclusiveZone : 0
     readonly property string dockPanelPosition: root.dockPanel ? root.dockPanel.position : Config.dockPanel.position
+    readonly property int defaultBorderExclusion: root.bar.isIsland ? 0 : Config.border.thickness
 
-    readonly property int leftExclusion: (root.bar.position === "left" ? root.bar.exclusiveZone : Config.border.thickness)
+    readonly property int leftExclusion: (root.bar.position === "left" ? root.bar.exclusiveZone : defaultBorderExclusion)
         + (root.reserveSidebar && root.bar.position === "right" ? root.sidebarWidth : 0)
         + (dockPanelPosition === "left" ? dockPanelThickness : 0)
-    readonly property int topExclusion: (root.bar.position === "top" ? root.bar.exclusiveZone : Config.border.thickness)
+    readonly property int topExclusion: (root.bar.position === "top" ? root.bar.exclusiveZone : defaultBorderExclusion)
         + (dockPanelPosition === "top" ? dockPanelThickness : 0)
-    readonly property int rightExclusion: (root.bar.position === "right" ? root.bar.exclusiveZone : Config.border.thickness)
+    readonly property int rightExclusion: (root.bar.position === "right" ? root.bar.exclusiveZone : defaultBorderExclusion)
         + (root.reserveSidebar && root.bar.position !== "right" ? root.sidebarWidth : 0)
         + (dockPanelPosition === "right" ? dockPanelThickness : 0)
-    readonly property int bottomExclusion: (root.bar.position === "bottom" ? root.bar.exclusiveZone : Config.border.thickness)
+    readonly property int bottomExclusion: (root.bar.position === "bottom" ? root.bar.exclusiveZone : defaultBorderExclusion)
         + (dockPanelPosition === "bottom" ? dockPanelThickness : 0)
 
     readonly property real usableWidth: Math.max(100, root.screen.width - leftExclusion - rightExclusion)

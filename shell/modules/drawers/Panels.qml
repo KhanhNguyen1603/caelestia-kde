@@ -129,15 +129,21 @@ Item {
         }
     }
 
+    readonly property real defaultBorder: (bar.isIsland || (dockPanel && dockPanel.isIsland)) ? 0 : borderThickness
+    readonly property real barLeftOffset: bar.position === "left" ? (bar.visible ? bar.implicitWidth + (bar.isIsland ? bar.islandMargin : 0) : defaultBorder) : defaultBorder
+    readonly property real dockLeftOffset: (dockPanel && dockPanel.position === "left" && !dockPanel.disabled && dockPanel.visible) ? (dockPanel.implicitWidth + (dockPanel.isIsland ? dockPanel.islandMargin : 0)) : 0
+    readonly property real barRightOffset: bar.position === "right" ? (bar.visible ? bar.implicitWidth + (bar.isIsland ? bar.islandMargin : 0) : defaultBorder) : defaultBorder
+    readonly property real dockRightOffset: (dockPanel && dockPanel.position === "right" && !dockPanel.disabled && dockPanel.visible) ? (dockPanel.implicitWidth + (dockPanel.isIsland ? dockPanel.islandMargin : 0)) : 0
+    readonly property real barTopOffset: bar.position === "top" ? (bar.visible ? bar.implicitHeight + (bar.isIsland ? bar.islandMargin : 0) : defaultBorder) : defaultBorder
+    readonly property real dockTopOffset: (dockPanel && dockPanel.position === "top" && !dockPanel.disabled && dockPanel.visible) ? (dockPanel.implicitHeight + (dockPanel.isIsland ? dockPanel.islandMargin : 0)) : 0
+    readonly property real barBottomOffset: bar.position === "bottom" ? (bar.visible ? bar.implicitHeight + (bar.isIsland ? bar.islandMargin : 0) : defaultBorder) : defaultBorder
+    readonly property real dockBottomOffset: (dockPanel && dockPanel.position === "bottom" && !dockPanel.disabled && dockPanel.visible) ? (dockPanel.implicitHeight + (dockPanel.isIsland ? dockPanel.islandMargin : 0)) : 0
+
     anchors.fill: parent
-    anchors.leftMargin: (bar.position === "left" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness)
-        + (dockPanel && dockPanel.position === "left" ? dockPanel.implicitWidth + (dockPanel.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : 0)
-    anchors.rightMargin: (bar.position === "right" ? bar.implicitWidth + (bar.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness)
-        + (dockPanel && dockPanel.position === "right" ? dockPanel.implicitWidth + (dockPanel.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : 0)
-    anchors.topMargin: (bar.position === "top" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness)
-        + (dockPanel && dockPanel.position === "top" ? dockPanel.implicitHeight + (dockPanel.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : 0)
-    anchors.bottomMargin: (bar.position === "bottom" ? bar.implicitHeight + (bar.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness)
-        + (dockPanel && dockPanel.position === "bottom" ? dockPanel.implicitHeight + (dockPanel.isIsland ? Tokens.spacing.extraLarge * 2 : 0) : 0)
+    anchors.leftMargin: barLeftOffset + dockLeftOffset
+    anchors.rightMargin: barRightOffset + dockRightOffset
+    anchors.topMargin: barTopOffset + dockTopOffset
+    anchors.bottomMargin: barBottomOffset + dockBottomOffset
 
     states: [
         State {

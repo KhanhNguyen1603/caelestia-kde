@@ -416,15 +416,6 @@ PageBase {
             onMoved: v => GlobalConfig.dockPanel.maxMagnification = v
         }
 
-        SliderRow {
-            label: qsTr("Background opacity")
-            subtext: qsTr("Translucency of the frosted glass dock pill")
-            valueLabel: Math.round(Config.dockPanel.backgroundOpacity * 100) + "%"
-            value: Config.dockPanel.backgroundOpacity
-            reset: ({ node: GlobalConfig.dockPanel, setting: "backgroundOpacity" })
-            onMoved: v => GlobalConfig.dockPanel.backgroundOpacity = Math.round(v * 100) / 100
-        }
-
         SelectRow {
             label: qsTr("Launch animation style")
             subtext: qsTr("Animation or indicator style when an application is launching")

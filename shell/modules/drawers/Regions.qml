@@ -12,15 +12,15 @@ Region {
     required property var dockPanel
     required property Panels panels
     required property var win
-    readonly property real borderThickness: Config.border.thickness
-    readonly property real clampedThickness: Config.border.clampedThickness
+    readonly property real borderThickness: root.bar.isIsland ? 0 : Config.border.thickness
+    readonly property real clampedThickness: root.bar.isIsland ? 0 : Config.border.clampedThickness
     readonly property real dockPanelThickness: dockPanel && !dockPanel.disabled ? (!Config.dockPanel.persistent ? Math.max(dockPanel.clampedThickness, edgeExtent(Config.dockPanel.dragThreshold)) : dockPanel.clampedThickness) : 0
     readonly property int dockMagExtra: (root.dockPanel && Config.dockPanel.magnification && !root.dockPanel.disabled) ? (root.dockPanel.magReach ?? 0) : 0
     readonly property string dockPanelPosition: dockPanel ? dockPanel.position : Config.dockPanel.position
-    readonly property real barLeftWidth: bar.position === "left" ? bar.clampedThickness : clampedThickness
-    readonly property real barRightWidth: bar.position === "right" ? bar.clampedThickness : clampedThickness
-    readonly property real barTopHeight: bar.position === "top" ? bar.clampedThickness : clampedThickness
-    readonly property real barBottomHeight: bar.position === "bottom" ? bar.clampedThickness : clampedThickness
+    readonly property real barLeftWidth: bar.position === "left" ? (bar.clampedThickness + bar.islandMargin) : clampedThickness
+    readonly property real barRightWidth: bar.position === "right" ? (bar.clampedThickness + bar.islandMargin) : clampedThickness
+    readonly property real barTopHeight: bar.position === "top" ? (bar.clampedThickness + bar.islandMargin) : clampedThickness
+    readonly property real barBottomHeight: bar.position === "bottom" ? (bar.clampedThickness + bar.islandMargin) : clampedThickness
     // A closed panel's input region must be at least as deep as its hover trigger,
     // otherwise the pointer never reaches the area Interactions tests against.
 
@@ -87,25 +87,27 @@ Region {
             if (!root.dockPanel || root.dockPanel.disabled) return 0;
             if (root.dockPanel.visible) {
                 const base = root.dockPanel.position === "left" ? 0 : root.dockPanel.x;
-                return (root.dockPanel.position === "right") ? (base - root.dockMagExtra) : base;
+                return (root.dockPanel.position === "right") ? (base - root.dockMagExtra) : (base - (root.dockPanel.isHorizontal ? root.dockMagExtra : 0));
             }
             if (root.dockPanel.isHorizontal) return root.dockPanel.x;
-            return root.dockPanel.position === "left" ? 0 : root.win.width - width;
+            const barOffset = (root.bar.position === "left") ? (root.bar.clampedThickness + root.bar.islandMargin) : 0;
+            return root.dockPanel.position === "left" ? barOffset : root.win.width - width - (root.bar.position === "right" ? (root.bar.clampedThickness + root.bar.islandMargin) : 0);
         }
         y: {
             if (!root.dockPanel || root.dockPanel.disabled) return 0;
             if (root.dockPanel.visible) {
                 const base = root.dockPanel.position === "top" ? 0 : root.dockPanel.y;
-                return (root.dockPanel.position === "bottom") ? (base - root.dockMagExtra) : base;
+                return (root.dockPanel.position === "bottom") ? (base - root.dockMagExtra) : (base - (root.dockPanel.isHorizontal ? 0 : root.dockMagExtra));
             }
             if (!root.dockPanel.isHorizontal) return root.dockPanel.y;
-            return root.dockPanel.position === "top" ? 0 : root.win.height - height;
+            const barOffset = (root.bar.position === "top") ? (root.bar.clampedThickness + root.bar.islandMargin) : 0;
+            return root.dockPanel.position === "top" ? barOffset : root.win.height - height - (root.bar.position === "bottom" ? (root.bar.clampedThickness + root.bar.islandMargin) : 0);
         }
         width: {
             if (!root.dockPanel || root.dockPanel.disabled) return 0;
             if (root.dockPanel.visible) {
-                const margin = root.dockPanel.isIsland ? Config.dockPanel.floatingMargin : 0;
-                const mag = (!root.dockPanel.isHorizontal ? root.dockMagExtra : 0);
+                const margin = root.dockPanel.islandMargin ?? 0;
+                const mag = root.dockMagExtra * (root.dockPanel.isHorizontal ? 2 : 1);
                 return root.dockPanel.width + (!root.dockPanel.isHorizontal ? margin : 0) + mag;
             }
             if (root.dockPanel.isHorizontal) return root.dockPanel.clampedLength;
@@ -114,8 +116,8 @@ Region {
         height: {
             if (!root.dockPanel || root.dockPanel.disabled) return 0;
             if (root.dockPanel.visible) {
-                const margin = root.dockPanel.isIsland ? Config.dockPanel.floatingMargin : 0;
-                const mag = (root.dockPanel.isHorizontal ? root.dockMagExtra : 0);
+                const margin = root.dockPanel.islandMargin ?? 0;
+                const mag = root.dockMagExtra * (root.dockPanel.isHorizontal ? 1 : 2);
                 return root.dockPanel.height + (root.dockPanel.isHorizontal ? margin : 0) + mag;
             }
             if (!root.dockPanel.isHorizontal) return root.dockPanel.clampedLength;

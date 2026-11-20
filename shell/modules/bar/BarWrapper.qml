@@ -22,6 +22,7 @@ Item {
     readonly property bool disabled: Strings.testRegexList(Config.bar.excludedScreens, screen.name)
     readonly property string position: Config.bar.position
     readonly property bool isIsland: Config.bar.islands
+    readonly property int islandMargin: isIsland ? Tokens.spacing.extraLarge : 0
     readonly property real barScale: Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0)
     readonly property int padding: Math.max(Tokens.padding.small, Config.border.thickness)
     readonly property int contentWidth: Math.round(Tokens.sizes.bar.innerWidth * barScale) + padding * 2
@@ -31,13 +32,14 @@ Item {
     readonly property rect dodgeRect: {
         const ox = screen.x ?? 0;
         const oy = screen.y ?? 0;
+        const totalDepth = contentWidth + islandMargin;
         if (position === "top")
-            return Qt.rect(ox, oy, screen.width, contentWidth);
+            return Qt.rect(ox, oy, screen.width, totalDepth);
         if (position === "bottom")
-            return Qt.rect(ox, oy + screen.height - contentWidth, screen.width, contentWidth);
+            return Qt.rect(ox, oy + screen.height - totalDepth, screen.width, totalDepth);
         if (position === "left")
-            return Qt.rect(ox, oy, contentWidth, screen.height);
-        return Qt.rect(ox + screen.width - contentWidth, oy, contentWidth, screen.height);
+            return Qt.rect(ox, oy, totalDepth, screen.height);
+        return Qt.rect(ox + screen.width - totalDepth, oy, totalDepth, screen.height);
     }
     readonly property var _dodgeWatchWindowList: (true) ? Kwin.windowList : null
     readonly property var _dodgeWatchActiveWindow: (true) ? Kwin.activeWindow : null
@@ -54,8 +56,8 @@ Item {
     }
 
     readonly property bool keptOpen: Config.bar.persistent && !dodging
-    readonly property int exclusiveZone: !disabled && !dodgeEnabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
-    readonly property int visualThickness: !disabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
+    readonly property int exclusiveZone: !disabled && !dodgeEnabled && (Config.bar.persistent || visibilities.bar) ? (contentWidth + islandMargin) : (isIsland ? 0 : Config.border.thickness)
+    readonly property int visualThickness: !disabled && (Config.bar.persistent || visibilities.bar) ? (contentWidth + islandMargin) : (isIsland ? 0 : Config.border.thickness)
     readonly property bool popoutActiveOnBar: popouts.hasCurrent && (popouts.sourcePanel === "bar" || (!popouts.isDockPanelPopout && popouts.sourcePanel !== "dockPanel"))
     readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.bar || hovered || popoutActiveOnBar || visibilities.launcher)
     // Written by Interactions from the pointer position: a collapsed bar is

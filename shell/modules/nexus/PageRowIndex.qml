@@ -234,13 +234,6 @@ QtObject {
             subPage: "appearance"
         },
         {
-            label: qsTr("Islands"),
-            description: qsTr("Everything appears as its own floating widget (Very Experimental)"),
-            section: qsTr("Theme & Effects"),
-            pageIdx: 0,
-            subPage: "appearance"
-        },
-        {
             label: qsTr("Transparency"),
             description: qsTr("Enable transparency across the shell"),
             section: qsTr("Theme & Effects"),
@@ -523,6 +516,13 @@ QtObject {
         {
             label: qsTr("Filter by current desktop"),
             description: qsTr("Only show applications and windows belonging to the active virtual desktop"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "barDock"
+        },
+        {
+            label: qsTr("Launch animation style"),
+            description: qsTr("Animation or indicator style when an application is launching"),
             section: qsTr("Dock"),
             pageIdx: 2,
             subPage: "barDock"
@@ -1439,6 +1439,48 @@ QtObject {
             subPage: "dockPanel"
         },
         {
+            label: qsTr("Window grouping"),
+            description: qsTr("How multiple windows of the same app share a dock icon"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Filter by current desktop"),
+            description: qsTr("Only show applications and windows belonging to the active virtual workspace"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Preview window on desktop"),
+            description: qsTr("Highlight and show the window itself on the workspace while hovering over dock previews"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Island mode"),
+            description: qsTr("Detach the dock from screen edges into a floating island pill"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Fixed length"),
+            description: qsTr("Set a fixed panel length instead of sizing automatically to content"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Length percentage"),
+            description: qsTr("Length of the dock as a percentage of the screen edge"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
             label: qsTr("Dock size"),
             description: qsTr("Height or width dimension of the dock container"),
             section: qsTr("Dock"),
@@ -1488,8 +1530,8 @@ QtObject {
             subPage: "dockPanel"
         },
         {
-            label: qsTr("Background opacity"),
-            description: qsTr("Translucency of the frosted glass dock pill"),
+            label: qsTr("Launch animation style"),
+            description: qsTr("Animation or indicator style when an application is launching"),
             section: qsTr("Dock"),
             pageIdx: 2,
             subPage: "dockPanel"
@@ -1530,22 +1572,36 @@ QtObject {
             subPage: "dockPanel"
         },
         {
-            label: qsTr("Window grouping"),
-            description: qsTr("How multiple windows of the same app share a dock icon"),
+            label: qsTr("Show labels"),
+            description: qsTr("Display text label next to each dock application icon"),
             section: qsTr("Dock"),
             pageIdx: 2,
             subPage: "dockPanel"
         },
         {
-            label: qsTr("Filter by current desktop"),
-            description: qsTr("Only show applications and windows belonging to the active virtual workspace"),
+            label: qsTr("Label size"),
+            description: qsTr("Font size in pixels for application labels"),
             section: qsTr("Dock"),
             pageIdx: 2,
             subPage: "dockPanel"
         },
         {
-            label: qsTr("Preview window on desktop"),
-            description: qsTr("Highlight and show the window itself on the workspace while hovering over dock previews"),
+            label: qsTr("Fixed label width"),
+            description: qsTr("Use a uniform fixed width instead of adapting to text length"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Label width"),
+            description: qsTr("Fixed width in pixels for application labels"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Maximum label width"),
+            description: qsTr("Maximum width cap in pixels before truncating with ellipsis"),
             section: qsTr("Dock"),
             pageIdx: 2,
             subPage: "dockPanel"
@@ -2936,6 +2992,13 @@ QtObject {
         {
             label: qsTr("Persistent"),
             description: qsTr("Keep the bar visible at all times"),
+            section: qsTr("Taskbar"),
+            pageIdx: 2,
+            subPage: "taskbar"
+        },
+        {
+            label: qsTr("Island mode"),
+            description: qsTr("Detach the bar from screen edges into a floating island pill"),
             section: qsTr("Taskbar"),
             pageIdx: 2,
             subPage: "taskbar"

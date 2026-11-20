@@ -43,17 +43,19 @@ Item {
         return itemCount * root.itemSize + (itemCount - 1) * root.spacing;
     }
     readonly property int contentThickness: Math.max(root.itemSize, Tokens.sizes.bar.innerWidth) + root.padding * 2
+    readonly property int islandMargin: isIsland ? Config.dockPanel.floatingMargin : 0
     readonly property bool dodgeEnabled: Config.dockPanel.dodgeWindows && !Config.dockPanel.persistent && !disabled
     readonly property rect dodgeRect: {
         const ox = screen.x ?? 0;
         const oy = screen.y ?? 0;
+        const totalDepth = contentThickness + islandMargin;
         if (position === "top")
-            return Qt.rect(ox, oy, screen.width, contentThickness);
+            return Qt.rect(ox, oy, screen.width, totalDepth);
         if (position === "bottom")
-            return Qt.rect(ox, oy + screen.height - contentThickness, screen.width, contentThickness);
+            return Qt.rect(ox, oy + screen.height - totalDepth, screen.width, totalDepth);
         if (position === "left")
-            return Qt.rect(ox, oy, contentThickness, screen.height);
-        return Qt.rect(ox + screen.width - contentThickness, oy, contentThickness, screen.height);
+            return Qt.rect(ox, oy, totalDepth, screen.height);
+        return Qt.rect(ox + screen.width - totalDepth, oy, totalDepth, screen.height);
     }
     readonly property var _dodgeWatchWindowList: (true) ? Kwin.windowList : null
     readonly property var _dodgeWatchActiveWindow: (true) ? Kwin.activeWindow : null
@@ -68,8 +70,8 @@ Item {
     }
 
     readonly property bool keptOpen: (Config.dockPanel.persistent || dodgeEnabled) && !dodging
-    readonly property int exclusiveZone: Config.dockPanel.reserveSpace && !disabled && !dodgeEnabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? contentThickness : Config.border.thickness
-    readonly property int visualThickness: !disabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? contentThickness : Config.border.thickness
+    readonly property int exclusiveZone: Config.dockPanel.reserveSpace && !disabled && !dodgeEnabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? (contentThickness + islandMargin) : (isIsland ? 0 : Config.border.thickness)
+    readonly property int visualThickness: !disabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? (contentThickness + islandMargin) : (isIsland ? 0 : Config.border.thickness)
     readonly property bool popoutActiveOnDock: Boolean(popouts && (popouts.hasCurrent || popouts.offsetScale < 0.99) && (popouts.sourcePanel === "dockPanel" || (popouts.sourcePanel === "" && popouts.isDockPanelPopout)))
     readonly property int magReach: Math.round(root.itemSize * (Config.dockPanel.maxMagnification - 1) + 24)
     property bool isFirstMagnification: false
