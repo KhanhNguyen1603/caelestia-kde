@@ -100,6 +100,105 @@ Item {
     implicitHeight: root.height
     z: dragArea.held ? 999 : Math.round(root.currentScale * 100)
 
+    states: [
+        State {
+            name: "bottom"
+            when: root.position === "bottom"
+
+            AnchorChanges {
+                target: delegateItem
+                anchors.top: undefined
+                anchors.bottom: root.bottom
+                anchors.left: undefined
+                anchors.right: undefined
+                anchors.horizontalCenter: root.horizontalCenter
+                anchors.verticalCenter: undefined
+            }
+
+            AnchorChanges {
+                target: indicatorContainer
+                anchors.top: undefined
+                anchors.bottom: delegateItem.bottom
+                anchors.left: undefined
+                anchors.right: undefined
+                anchors.horizontalCenter: iconContainer.horizontalCenter
+                anchors.verticalCenter: undefined
+            }
+        },
+        State {
+            name: "top"
+            when: root.position === "top"
+
+            AnchorChanges {
+                target: delegateItem
+                anchors.top: root.top
+                anchors.bottom: undefined
+                anchors.left: undefined
+                anchors.right: undefined
+                anchors.horizontalCenter: root.horizontalCenter
+                anchors.verticalCenter: undefined
+            }
+
+            AnchorChanges {
+                target: indicatorContainer
+                anchors.top: delegateItem.top
+                anchors.bottom: undefined
+                anchors.left: undefined
+                anchors.right: undefined
+                anchors.horizontalCenter: iconContainer.horizontalCenter
+                anchors.verticalCenter: undefined
+            }
+        },
+        State {
+            name: "left"
+            when: root.position === "left"
+
+            AnchorChanges {
+                target: delegateItem
+                anchors.top: undefined
+                anchors.bottom: undefined
+                anchors.left: root.left
+                anchors.right: undefined
+                anchors.horizontalCenter: undefined
+                anchors.verticalCenter: root.verticalCenter
+            }
+
+            AnchorChanges {
+                target: indicatorContainer
+                anchors.top: undefined
+                anchors.bottom: undefined
+                anchors.left: delegateItem.left
+                anchors.right: undefined
+                anchors.horizontalCenter: undefined
+                anchors.verticalCenter: iconContainer.verticalCenter
+            }
+        },
+        State {
+            name: "right"
+            when: root.position === "right"
+
+            AnchorChanges {
+                target: delegateItem
+                anchors.top: undefined
+                anchors.bottom: undefined
+                anchors.left: undefined
+                anchors.right: root.right
+                anchors.horizontalCenter: undefined
+                anchors.verticalCenter: root.verticalCenter
+            }
+
+            AnchorChanges {
+                target: indicatorContainer
+                anchors.top: undefined
+                anchors.bottom: undefined
+                anchors.left: undefined
+                anchors.right: delegateItem.right
+                anchors.horizontalCenter: undefined
+                anchors.verticalCenter: iconContainer.verticalCenter
+            }
+        }
+    ]
+
     Behavior on currentScale {
         Anim {
             type: Anim.FastSpatial
@@ -153,12 +252,6 @@ Item {
 
         width: root.isHorizontal ? root.width : Math.round(root.baseWidth * root.currentScale)
         height: root.isHorizontal ? Math.round(root.baseHeight * root.currentScale) : root.height
-        anchors.bottom: (root.isHorizontal && root.position === "bottom") ? root.bottom : undefined
-        anchors.top: (root.isHorizontal && root.position === "top") ? root.top : undefined
-        anchors.left: (!root.isHorizontal && root.position === "left") ? root.left : undefined
-        anchors.right: (!root.isHorizontal && root.position === "right") ? root.right : undefined
-        anchors.horizontalCenter: root.isHorizontal ? root.horizontalCenter : undefined
-        anchors.verticalCenter: !root.isHorizontal ? root.verticalCenter : undefined
 
         Drag.active: dragArea.held
         Drag.source: delegateItem
@@ -442,15 +535,6 @@ Item {
             id: indicatorContainer
 
             visible: root.activeIndicators && delegateItem.hasWindows
-            anchors {
-                bottom: (root.position === "bottom" || root.position === "top") ? (root.position === "top" ? undefined : parent.bottom) : undefined
-                top: root.position === "top" ? parent.top : undefined
-                left: root.position === "left" ? parent.left : undefined
-                right: root.position === "right" ? parent.right : undefined
-                horizontalCenter: (root.isHorizontal && !root.hasLabel) ? parent.horizontalCenter : undefined
-                verticalCenter: !root.isHorizontal ? parent.verticalCenter : undefined
-            }
-            x: (root.isHorizontal && root.hasLabel) ? Math.round((iconContainer.width - width) / 2) : 0
             height: root.isHorizontal ? root.indicatorThickness : undefined
             width: !root.isHorizontal ? root.indicatorThickness : undefined
 

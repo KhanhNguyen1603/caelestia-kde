@@ -147,4 +147,18 @@ test_exclusions_do_not_double_count_border_on_dock_edge() {
         "bottom exclusion must not add dock thickness on top of default border exclusion"
 }
 
+test_dock_item_uses_anchor_changes_to_avoid_stale_anchors() {
+    local item
+    item="$(cat "$DOCK_ITEM")"
+
+    assert_contains "$item" 'AnchorChanges {' \
+        "dock item must use AnchorChanges to cleanly detach stale anchors across position transitions"
+    assert_contains "$item" 'anchors.horizontalCenter: iconContainer.horizontalCenter' \
+        "dock indicators must anchor their horizontal center to iconContainer"
+    assert_not_contains "$item" 'anchors.bottom: (root.isHorizontal && root.position === "bottom") ? root.bottom : undefined' \
+        "delegateItem must not use ternary anchor bindings to undefined"
+    assert_not_contains "$item" 'bottom: (root.position === "bottom" || root.position === "top") ? (root.position === "top" ? undefined : parent.bottom) : undefined' \
+        "indicatorContainer must not use ternary anchor bindings to undefined"
+}
+
 run_tests
