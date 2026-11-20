@@ -15,6 +15,7 @@ DOCK_ITEM="$REPO_ROOT/shell/components/widgets/DockItem.qml"
 DOCK_MANAGER="$REPO_ROOT/shell/services/DockManager.qml"
 BAR_DOCK="$REPO_ROOT/shell/modules/bar/components/Dock.qml"
 DOCK_HOVER="$REPO_ROOT/shell/modules/bar/popouts/DockHover.qml"
+EXCLUSIONS="$REPO_ROOT/shell/modules/drawers/Exclusions.qml"
 
 test_dock_interaction_area_is_bounded_to_panel_geometry() {
     local interactions
@@ -128,6 +129,22 @@ test_dock_hover_preview_tracks_source_panel() {
 
     assert_contains "$hover" 'root.popouts.sourcePanel' \
         "dock hover preview must track whether summoned by bar or floating dock"
+}
+
+test_exclusions_do_not_double_count_border_on_dock_edge() {
+    local exclusions
+    exclusions="$(cat "$EXCLUSIONS")"
+
+    assert_contains "$exclusions" 'dockPanelPosition === "bottom" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion' \
+        "bottom exclusion must not unconditionally add defaultBorderExclusion to dockPanel exclusive zone"
+    assert_contains "$exclusions" 'dockPanelPosition === "top" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion' \
+        "top exclusion must not unconditionally add defaultBorderExclusion to dockPanel exclusive zone"
+    assert_contains "$exclusions" 'dockPanelPosition === "left" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion' \
+        "left exclusion must not unconditionally add defaultBorderExclusion to dockPanel exclusive zone"
+    assert_contains "$exclusions" 'dockPanelPosition === "right" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion' \
+        "right exclusion must not unconditionally add defaultBorderExclusion to dockPanel exclusive zone"
+    assert_not_contains "$exclusions" '+ (dockPanelPosition === "bottom" ? dockPanelThickness : 0)' \
+        "bottom exclusion must not add dock thickness on top of default border exclusion"
 }
 
 run_tests
