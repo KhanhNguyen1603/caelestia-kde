@@ -26,6 +26,7 @@ Item {
     property bool showBadges: true
     property bool activeIndicators: true
     property string indicatorStyle: "pill"
+    readonly property real indicatorThickness: Math.max(2, Math.round(root.iconSize * 0.08 * root.currentScale))
     property string position: "bottom"
     property bool isHorizontal: root.position === "top" || root.position === "bottom"
     property real magnificationScale: 1.0
@@ -458,18 +459,18 @@ Item {
                 verticalCenter: !root.isHorizontal ? parent.verticalCenter : undefined
             }
             x: (root.isHorizontal && root.hasLabel) ? Math.round((iconContainer.width - width) / 2) : 0
-            height: root.isHorizontal ? 4 : undefined
-            width: !root.isHorizontal ? 4 : undefined
+            height: root.isHorizontal ? root.indicatorThickness : undefined
+            width: !root.isHorizontal ? root.indicatorThickness : undefined
 
             ListView {
                 id: indicatorList
 
                 anchors.centerIn: parent
-                spacing: 2
+                spacing: Math.max(1, Math.round(root.iconSize * 0.05 * root.currentScale))
                 orientation: root.isHorizontal ? ListView.Horizontal : ListView.Vertical
                 interactive: false
-                width: root.isHorizontal ? contentWidth : 4
-                height: root.isHorizontal ? 4 : contentHeight
+                width: root.isHorizontal ? contentWidth : root.indicatorThickness
+                height: root.isHorizontal ? root.indicatorThickness : contentHeight
 
                 model: {
                     const dummy = DockManager.modelUpdateTrigger;
@@ -481,21 +482,26 @@ Item {
                 delegate: Rectangle {
                     required property int index
 
+                    readonly property real barLength: Math.max(4, Math.round(root.iconSize * 0.7 * root.currentScale))
+                    readonly property real dotSize: Math.max(2, Math.round(root.iconSize * 0.1 * root.currentScale))
+                    readonly property real pillActive: Math.max(4, Math.round(root.iconSize * 0.32 * root.currentScale))
+                    readonly property real pillInactive: Math.max(2, Math.round(root.iconSize * 0.12 * root.currentScale))
+
                     width: {
                         if (root.indicatorStyle === "bar")
-                            return root.isHorizontal ? Math.round(root.itemSize * 0.6) : 3;
+                            return root.isHorizontal ? barLength : root.indicatorThickness;
                         if (root.indicatorStyle === "dot")
-                            return 4;
-                        return root.isHorizontal ? ((index === 0 && delegateItem.isActive) ? 14 : 5) : 3;
+                            return dotSize;
+                        return root.isHorizontal ? ((index === 0 && delegateItem.isActive) ? pillActive : pillInactive) : root.indicatorThickness;
                     }
                     height: {
                         if (root.indicatorStyle === "bar")
-                            return root.isHorizontal ? 3 : Math.round(root.itemSize * 0.6);
+                            return root.isHorizontal ? root.indicatorThickness : barLength;
                         if (root.indicatorStyle === "dot")
-                            return 4;
-                        return root.isHorizontal ? 3 : ((index === 0 && delegateItem.isActive) ? 14 : 5);
+                            return dotSize;
+                        return root.isHorizontal ? root.indicatorThickness : ((index === 0 && delegateItem.isActive) ? pillActive : pillInactive);
                     }
-                    radius: root.indicatorStyle === "bar" ? 1 : Tokens.rounding.full
+                    radius: root.indicatorStyle === "bar" ? Math.max(1, Math.round(root.indicatorThickness / 2)) : Tokens.rounding.full
                     color: delegateItem.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurface
 
                     Behavior on width {
