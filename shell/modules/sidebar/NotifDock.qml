@@ -195,7 +195,7 @@ Item {
 
         // The Caelestia Mode toggle is optional: without this the setting hid
         // nothing, because the card was laid out unconditionally.
-        visible: GlobalConfig.ai.showCaelestiaMode
+        visible: true
         height: toggleLayout.implicitHeight + Tokens.padding.large * 2
         radius: Tokens.rounding.large
         color: Colours.tPalette.m3surfaceContainer
@@ -211,14 +211,14 @@ Item {
                 implicitWidth: implicitHeight
                 implicitHeight: icon.implicitHeight + Tokens.padding.large
                 radius: Tokens.rounding.full
-                color: GlobalConfig.general.caelestiaMode ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+                color: IdleInhibitor.enabled ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
                 MaterialIcon {
                     id: icon
 
                     anchors.centerIn: parent
-                    text: "auto_awesome"
-                    color: GlobalConfig.general.caelestiaMode ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                    text: "coffee"
+                    color: IdleInhibitor.enabled ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
                     fontStyle: Tokens.font.icon.large
                 }
             }
@@ -229,14 +229,14 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("Caelestia Mode")
+                    text: qsTr("Keep Awake")
                     font: Tokens.font.body.medium
                     elide: Text.ElideRight
                 }
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: GlobalConfig.general.caelestiaMode ? qsTr("Spinning kurukuru activated") : qsTr("Classic dinosaur character")
+                    text: IdleInhibitor.enabled ? qsTr("Preventing screen sleep") : qsTr("Normal power management")
                     color: Colours.palette.m3onSurfaceVariant
                     font: Tokens.font.body.small
                     elide: Text.ElideRight
@@ -244,9 +244,9 @@ Item {
             }
 
             StyledSwitch {
-                checked: GlobalConfig.general.caelestiaMode
+                checked: IdleInhibitor.enabled
                 onToggled: {
-                    GlobalConfig.general.caelestiaMode = checked;
+                    IdleInhibitor.enabled = checked;
                 }
             }
         }
