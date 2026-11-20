@@ -27,6 +27,13 @@ case \"\$2\" in
     *) exit 1 ;;
 esac"
 
+    # The script picks the greeter from the display-manager.service link, which on
+    # the developer's machine may name SDDM.
+    stub_bin "$stub" readlink "
+case \"\${*: -1}\" in
+    /etc/systemd/system/display-manager.service) printf '%s\n' /usr/lib/systemd/system/plasmalogin.service ;;
+    *) exec $(command -v readlink) \"\$@\" ;;
+esac"
     stub_bin "$stub" systemctl 'exit 0'
     stub_bin "$stub" kwriteconfig6 'exit 0'
     stub_bin "$stub" chown 'exit 0'
