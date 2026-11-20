@@ -31,7 +31,6 @@ Item {
     property bool isHorizontal: root.position === "top" || root.position === "bottom"
     property real magnificationScale: 1.0
     property bool isHovered: false
-    property bool isFirstMagnification: false
     property string sourcePanel: "dockPanel"
     property var popouts: null
     property var listView: null
@@ -102,10 +101,8 @@ Item {
     z: dragArea.held ? 999 : Math.round(root.currentScale * 100)
 
     Behavior on currentScale {
-        enabled: !root.isFirstMagnification
-
         NumberAnimation {
-            duration: 80
+            duration: 120
             easing.type: Easing.OutQuad
         }
     }

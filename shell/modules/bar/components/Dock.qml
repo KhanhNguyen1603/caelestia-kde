@@ -402,7 +402,6 @@ Item {
                     const halfGap = root.spacing / 2;
                     return cursorPos >= (itemStart - halfGap) && cursorPos < (itemStart + itemSpan + halfGap);
                 }
-                isFirstMagnification: false
                 magnificationScale: 1.0
             }
         }

@@ -74,7 +74,6 @@ Item {
     readonly property int visualThickness: !disabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? (contentThickness + islandMargin) : (isIsland ? 0 : Config.border.thickness)
     readonly property bool popoutActiveOnDock: Boolean(popouts && (popouts.hasCurrent || popouts.offsetScale < 0.99) && (popouts.sourcePanel === "dockPanel" || (popouts.sourcePanel === "" && popouts.isDockPanelPopout)))
     readonly property int magReach: 0
-    property bool isFirstMagnification: false
     readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dockPanel || hovered || popoutActiveOnDock)
     property bool pointerInReach: false
     property bool revealActive: false
@@ -531,7 +530,6 @@ Item {
                 const halfGap = root.spacing / 2;
                 return cursorPos >= (itemStart - halfGap) && cursorPos < (itemStart + itemSpan + halfGap);
             }
-            isFirstMagnification: root.isFirstMagnification
             magnificationScale: {
                 if (!Config.dockPanel.magnification || !dockHoverTracker.hovered)
                     return 1.0;
@@ -562,13 +560,6 @@ Item {
     }
 
     Timer {
-        id: firstMagTimer
-
-        interval: 100
-        onTriggered: root.isFirstMagnification = false
-    }
-
-    Timer {
         id: revealDelayTimer
 
         interval: Math.max(0, Config.dockPanel.autoHideDelay)
@@ -595,15 +586,9 @@ Item {
     Connections {
         function onHoveredChanged(): void {
             if (dockHoverTracker.hovered) {
-                root.isFirstMagnification = true;
-                firstMagTimer.restart();
                 unhoverTimer.stop();
-            } else {
-                root.isFirstMagnification = false;
-                firstMagTimer.stop();
-                if (!root.pointerInReach && root.revealActive) {
-                    unhoverTimer.restart();
-                }
+            } else if (!root.pointerInReach && root.revealActive) {
+                unhoverTimer.restart();
             }
         }
 
