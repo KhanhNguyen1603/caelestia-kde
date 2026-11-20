@@ -55,7 +55,8 @@ test_a_checkout_install_is_still_the_installer() {
 
 test_a_checkout_that_is_not_named_is_refused_with_its_installer() {
     stub_steps ""
-    CAELESTIA_DATA_DIR="$REPO_ROOT" "$CLI" install > "$DIR/out.txt" 2>&1
+    # An empty home, or the CLI finds the developer's ~/caelestia-kde and runs its installer.
+    HOME="$DIR/home" CAELESTIA_DATA_DIR="$REPO_ROOT" "$CLI" install > "$DIR/out.txt" 2>&1
     local status=$?
 
     assert_status 1 "$status" "a checkout with no CAELESTIA_DIR should be refused"
