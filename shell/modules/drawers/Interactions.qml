@@ -52,38 +52,37 @@ CustomMouseArea {
         if (!dockPanel || dockPanel.disabled)
             return false;
 
-        const mag = (Config.dockPanel.magnification && dockPanel.magReach) ? dockPanel.magReach : 0;
+        if (requireVisible || dockPanel.visible) {
+            if (!dockPanel.visible)
+                return false;
+            return x >= dockPanel.x && x <= dockPanel.x + dockPanel.width
+                && y >= dockPanel.y && y <= dockPanel.y + dockPanel.height;
+        }
+
         const dockIslandMargin = dockPanel.isIsland ? Config.dockPanel.floatingMargin : 0;
         const barIslandMargin = bar.isIsland ? bar.islandMargin : 0;
         const barOffset = (bar.position === dockPanel.position) ? ((dockPanel.isHorizontal ? bar.implicitHeight : bar.implicitWidth) + barIslandMargin) : 0;
-        const thickness = Math.max(Config.border.thickness, Config.dockPanel.dragThreshold, 20, mag);
+        const thickness = Math.max(Config.border.thickness, Config.dockPanel.dragThreshold, 20);
         const reach = (dockPanel.visible || dockPanel.pointerInReach) ? (dockPanel.contentThickness + dockIslandMargin + thickness) : thickness;
 
-        if (requireVisible) {
-            if (!dockPanel.visible)
-                return false;
-            return x >= dockPanel.x - mag && x <= dockPanel.x + dockPanel.width + mag
-                && y >= dockPanel.y - mag && y <= dockPanel.y + dockPanel.height + mag;
-        }
-
         if (dockPanel.position === "bottom") {
-            const inY = dockPanel.visible ? (y >= dockPanel.y - mag && y <= screen.height) : (y >= screen.height - barOffset - reach && y <= screen.height);
-            const inX = x >= dockPanel.x - mag && x <= dockPanel.x + dockPanel.width + mag;
+            const inY = y >= screen.height - barOffset - reach && y <= screen.height;
+            const inX = x >= dockPanel.x && x <= dockPanel.x + dockPanel.width;
             return inY && inX;
         }
         if (dockPanel.position === "top") {
-            const inY = dockPanel.visible ? (y >= 0 && y <= dockPanel.y + dockPanel.height + mag) : (y >= 0 && y <= barOffset + reach);
-            const inX = x >= dockPanel.x - mag && x <= dockPanel.x + dockPanel.width + mag;
+            const inY = y >= 0 && y <= barOffset + reach;
+            const inX = x >= dockPanel.x && x <= dockPanel.x + dockPanel.width;
             return inY && inX;
         }
         if (dockPanel.position === "left") {
-            const inX = dockPanel.visible ? (x >= 0 && x <= dockPanel.x + dockPanel.width + mag) : (x >= 0 && x <= barOffset + reach);
-            const inY = y >= dockPanel.y - mag && y <= dockPanel.y + dockPanel.height + mag;
+            const inX = x >= 0 && x <= barOffset + reach;
+            const inY = y >= dockPanel.y && y <= dockPanel.y + dockPanel.height;
             return inX && inY;
         }
         if (dockPanel.position === "right") {
-            const inX = dockPanel.visible ? (x >= dockPanel.x - mag && x <= screen.width) : (x >= screen.width - barOffset - reach && x <= screen.width);
-            const inY = y >= dockPanel.y - mag && y <= dockPanel.y + dockPanel.height + mag;
+            const inX = x >= screen.width - barOffset - reach && x <= screen.width;
+            const inY = y >= dockPanel.y && y <= dockPanel.y + dockPanel.height;
             return inX && inY;
         }
         return false;

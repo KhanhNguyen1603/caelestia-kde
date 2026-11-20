@@ -73,7 +73,7 @@ Item {
     readonly property int exclusiveZone: Config.dockPanel.reserveSpace && !disabled && !dodgeEnabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? (contentThickness + islandMargin) : (isIsland ? 0 : Config.border.thickness)
     readonly property int visualThickness: !disabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? (contentThickness + islandMargin) : (isIsland ? 0 : Config.border.thickness)
     readonly property bool popoutActiveOnDock: Boolean(popouts && (popouts.hasCurrent || popouts.offsetScale < 0.99) && (popouts.sourcePanel === "dockPanel" || (popouts.sourcePanel === "" && popouts.isDockPanelPopout)))
-    readonly property int magReach: Math.round(root.itemSize * (Config.dockPanel.maxMagnification - 1) + 24)
+    readonly property int magReach: 0
     property bool isFirstMagnification: false
     readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dockPanel || hovered || popoutActiveOnDock)
     property bool pointerInReach: false
@@ -263,10 +263,6 @@ Item {
 
                 z: 1000
                 anchors.fill: parent
-                anchors.topMargin: root.position === "bottom" ? -root.magReach : -root.padding
-                anchors.bottomMargin: root.position === "top" ? -root.magReach : -root.padding
-                anchors.leftMargin: root.position === "right" ? -root.magReach : -root.padding
-                anchors.rightMargin: root.position === "left" ? -root.magReach : -root.padding
 
                 HoverHandler {
                     id: dockHoverTracker
@@ -524,6 +520,10 @@ Item {
                 if (!dockHoverTracker.hovered)
                     return false;
                 const p = hoverArea.mapToItem(container, dockHoverTracker.point.position.x, dockHoverTracker.point.position.y);
+                const crossPos = root.isHorizontal ? p.y : p.x;
+                const crossMax = root.isHorizontal ? container.height : container.width;
+                if (crossPos < 0 || crossPos > crossMax)
+                    return false;
                 const cursorPos = root.isHorizontal ? p.x : p.y;
                 const origin = itemDelegate.mapToItem(container, 0, 0);
                 const itemStart = root.isHorizontal ? origin.x : origin.y;
@@ -536,6 +536,10 @@ Item {
                 if (!Config.dockPanel.magnification || !dockHoverTracker.hovered)
                     return 1.0;
                 const p = hoverArea.mapToItem(container, dockHoverTracker.point.position.x, dockHoverTracker.point.position.y);
+                const crossPos = root.isHorizontal ? p.y : p.x;
+                const crossMax = root.isHorizontal ? container.height : container.width;
+                if (crossPos < 0 || crossPos > crossMax)
+                    return 1.0;
                 const cursorPos = root.isHorizontal ? p.x : p.y;
                 const origin = itemDelegate.mapToItem(container, 0, 0);
                 const itemStart = root.isHorizontal ? origin.x : origin.y;
