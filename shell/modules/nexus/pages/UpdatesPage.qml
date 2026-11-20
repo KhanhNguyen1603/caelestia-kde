@@ -127,7 +127,7 @@ PageBase {
             return;
         }
         const hold = '"$@"; s=$?; printf "\\n[update exited with status %s] Press Enter to close..." "$s"; read -r _';
-        Launch.exec([...root.terminalCommand, "sh", "-c", hold, "sh", ...args]);
+        Launch.exec(Launch.terminalCommand(["sh", "-c", hold, "sh", ...args], root.terminalCommand));
     }
 
     // The update runs on its own, not in a terminal the user has to watch: it restarts the
