@@ -147,7 +147,7 @@ CustomMouseArea {
     function inBottomPanel(panel: Item, x: real, y: real, isCorner = false, edge = Config.border.thickness, span = 100): bool {
         const panelHeight = panel.height * (1 - (panel.offsetScale ?? 0)); // qmllint disable missing-property
         const bottomMargin = panelHeight > 0 ? panels.bottomMargin : 0;
-        return y > screen.height - Math.max(Config.border.minThickness, edge + panelHeight + bottomMargin) - (isCorner ? Config.border.rounding : 0) && withinPanelWidth(panel, x, y, panelHeight > 0 ? 100 : span);
+        return y > screen.height - Math.max(Config.border.minThickness, edge + panelHeight + bottomMargin) - (isCorner ? Config.border.roundingBottom : 0) && withinPanelWidth(panel, x, y, panelHeight > 0 ? 100 : span);
     }
     function inLauncherAvatar(x: real, y: real): bool {
         if (!panels.launcher.avatarVisible)

@@ -327,7 +327,13 @@ QtObject {
             subPage: "appearance"
         },
         {
-            label: qsTr("Border rounding"),
+            label: qsTr("Top border rounding"),
+            section: qsTr("Theme & Effects"),
+            pageIdx: 0,
+            subPage: "appearance"
+        },
+        {
+            label: qsTr("Bottom border rounding"),
             section: qsTr("Theme & Effects"),
             pageIdx: 0,
             subPage: "appearance"

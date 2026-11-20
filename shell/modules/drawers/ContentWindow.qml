@@ -75,7 +75,9 @@ StyledWindow {
         return grid ? grid.verticalOffset : 0;
     }
     readonly property real borderThickness: dynamicBorderThickness * (1 - fsTransitionProg)
-    readonly property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
+    readonly property real borderRoundingTop: Config.border.roundingTop * (1 - fsTransitionProg)
+    readonly property real borderRoundingBottom: Config.border.roundingBottom * (1 - fsTransitionProg)
+    readonly property real borderRounding: Math.max(borderRoundingTop, borderRoundingBottom)
     readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
     readonly property real borderLayoutThickness: hasFullscreen ? 0 : dynamicBorderThickness
     readonly property real edgeThicknessLeft: Math.max(bar.position === "left" ? bar.implicitWidth : 0, root.borderThickness)
@@ -367,7 +369,8 @@ StyledWindow {
                 anchors.fill: parent
                 anchors.margins: -50
                 group: overviewBlurMask
-                radius: root.borderRounding
+                radiusTop: root.borderRoundingTop
+                radiusBottom: root.borderRoundingBottom
                 borderLeft: root.edgeThicknessLeft - anchors.margins - root.sdfBorderOffset
                 borderRight: root.edgeThicknessRight - anchors.margins - root.sdfBorderOffset
                 borderTop: root.edgeThicknessTop - root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
@@ -420,7 +423,8 @@ StyledWindow {
             anchors.margins: -50
             group: bar.isIsland ? null : blobGroup
             visible: !bar.isIsland
-            radius: root.borderRounding
+            radiusTop: root.borderRoundingTop
+            radiusBottom: root.borderRoundingBottom
             borderLeft: root.edgeThicknessLeft - anchors.margins - root.sdfBorderOffset
             borderRight: root.edgeThicknessRight - anchors.margins - root.sdfBorderOffset
             borderTop: root.edgeThicknessTop - root.overviewVerticalOffset - anchors.margins - root.sdfBorderOffset
@@ -953,29 +957,29 @@ StyledWindow {
         Region {
             x: root.edgeThicknessLeft
             y: root.edgeThicknessTop
-            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
-            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRoundingTop : 0
+            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRoundingTop : 0
             intersection: Intersection.Combine
         }
         Region {
-            x: root.width - root.edgeThicknessRight - root.borderRounding
+            x: root.width - root.edgeThicknessRight - root.borderRoundingTop
             y: root.edgeThicknessTop
-            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
-            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRoundingTop : 0
+            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRoundingTop : 0
             intersection: Intersection.Combine
         }
         Region {
             x: root.edgeThicknessLeft
-            y: root.height - root.edgeThicknessBottom - root.borderRounding
-            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
-            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            y: root.height - root.edgeThicknessBottom - root.borderRoundingBottom
+            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRoundingBottom : 0
+            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRoundingBottom : 0
             intersection: Intersection.Combine
         }
         Region {
-            x: root.width - root.edgeThicknessRight - root.borderRounding
-            y: root.height - root.edgeThicknessBottom - root.borderRounding
-            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
-            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRounding : 0
+            x: root.width - root.edgeThicknessRight - root.borderRoundingBottom
+            y: root.height - root.edgeThicknessBottom - root.borderRoundingBottom
+            width: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRoundingBottom : 0
+            height: (!bar.isIsland && GlobalConfig.appearance.blur && GlobalConfig.appearance.blurMask) ? root.borderRoundingBottom : 0
             intersection: Intersection.Combine
         }
         // Cut 2px into the border at each corner so the arc's anti-aliased edge
@@ -986,14 +990,18 @@ StyledWindow {
             vAnchor: "none"
             hAnchor: "none"
             blurQuality: borderBlurSettings.blurQuality
-            inLeft: root.edgeThicknessLeft + root.borderRounding
-            inRight: root.width - root.edgeThicknessRight - root.borderRounding
-            inTop: root.edgeThicknessTop + root.borderRounding
-            inBottom: root.height - root.edgeThicknessBottom - root.borderRounding
-            rTop: !bar.isIsland ? root.borderRounding + 2 : 0
-            rBottom: !bar.isIsland ? root.borderRounding + 2 : 0
-            rLeft: !bar.isIsland ? root.borderRounding + 2 : 0
-            rRight: !bar.isIsland ? root.borderRounding + 2 : 0
+            inLeft: root.edgeThicknessLeft + root.borderRoundingTop
+            inRight: root.width - root.edgeThicknessRight - root.borderRoundingTop
+            inTop: root.edgeThicknessTop + root.borderRoundingTop
+            inBottom: root.height - root.edgeThicknessBottom - root.borderRoundingBottom
+            inLeftTL: root.edgeThicknessLeft + root.borderRoundingTop
+            inRightTR: root.width - root.edgeThicknessRight - root.borderRoundingTop
+            inLeftBL: root.edgeThicknessLeft + root.borderRoundingBottom
+            inRightBR: root.width - root.edgeThicknessRight - root.borderRoundingBottom
+            rTop: !bar.isIsland && root.borderRoundingTop > 0 ? root.borderRoundingTop + 2 : 0
+            rBottom: !bar.isIsland && root.borderRoundingBottom > 0 ? root.borderRoundingBottom + 2 : 0
+            rLeft: !bar.isIsland && root.borderRounding > 0 ? root.borderRounding + 2 : 0
+            rRight: !bar.isIsland && root.borderRounding > 0 ? root.borderRounding + 2 : 0
         }
         Region {
             x: 0; y: 0
