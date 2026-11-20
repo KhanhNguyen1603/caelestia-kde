@@ -28,7 +28,7 @@ Item {
     readonly property bool avatarVisible: root.visible && (content.item?.showAvatar ?? false)
     readonly property int avatarSize: content.item?.avatarSize ?? 0
 
-    readonly property bool hasBarBottom: Config.bar.position === "bottom" && Config.bar.enabled
+    readonly property bool hasBarBottom: Config.bar.position === "bottom" && (panels?.bar?.visible ?? true)
     readonly property bool hasDockBottom: Config.dockPanel.position === "bottom" && Config.dockPanel.enabled && (panels?.dockPanel?.visible ?? false)
     readonly property bool hasEdgePanelBottom: hasBarBottom || hasDockBottom
 

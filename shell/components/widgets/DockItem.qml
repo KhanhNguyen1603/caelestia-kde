@@ -38,11 +38,11 @@ Item {
     property string launchingStyle: Config.dockPanel.launchingStyle ?? "circle"
     readonly property bool isLaunching: root.modelData ? Boolean(DockManager.launchingApps[root.modelData.appClass || root.modelData.id]) : false
 
-    property string labelMode: Config.dockPanel.labelMode
-    property bool fixedLabelWidth: Config.dockPanel.fixedLabelWidth
-    property int labelWidth: Config.dockPanel.labelWidth
-    property int maxLabelWidth: Config.dockPanel.maxLabelWidth
-    property int labelSize: Config.dockPanel.labelSize
+    property string labelMode: root.sourcePanel === "dockPanel" ? Config.dockPanel.labelMode : "none"
+    property bool fixedLabelWidth: root.sourcePanel === "dockPanel" ? Config.dockPanel.fixedLabelWidth : false
+    property int labelWidth: root.sourcePanel === "dockPanel" ? Config.dockPanel.labelWidth : 0
+    property int maxLabelWidth: root.sourcePanel === "dockPanel" ? Config.dockPanel.maxLabelWidth : 0
+    property int labelSize: root.sourcePanel === "dockPanel" ? Config.dockPanel.labelSize : 12
 
     readonly property string labelText: {
         if (!root.modelData || root.labelMode === "none")
@@ -101,9 +101,8 @@ Item {
     z: dragArea.held ? 999 : Math.round(root.currentScale * 100)
 
     Behavior on currentScale {
-        NumberAnimation {
-            duration: 120
-            easing.type: Easing.OutQuad
+        Anim {
+            type: Anim.FastSpatial
         }
     }
 

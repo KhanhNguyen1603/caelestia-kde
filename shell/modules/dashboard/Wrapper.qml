@@ -34,7 +34,7 @@ Item {
     property real offsetScale: shouldBeActive ? 0 : 1
     property bool keepAlive: false
 
-    readonly property bool hasBarTop: Config.bar.position === "top" && Config.bar.enabled
+    readonly property bool hasBarTop: Config.bar.position === "top" && (panels?.bar?.visible ?? true)
     readonly property bool hasDockTop: Config.dockPanel.position === "top" && Config.dockPanel.enabled && (panels?.dockPanel?.visible ?? false)
     readonly property bool hasEdgePanelTop: hasBarTop || hasDockTop
 

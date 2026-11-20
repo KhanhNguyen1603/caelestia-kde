@@ -378,19 +378,12 @@ Item {
                 iconSize: root.iconSize
                 recolourIcons: Config.bar.dock.recolourIcons
                 showBadges: Config.bar.dock.showBadges
-                activeIndicators: Config.bar.dock.activeIndicators
-                indicatorStyle: Config.bar.dock.indicatorStyle
                 launchingStyle: Config.bar.dock.launchingStyle ?? "circle"
                 position: Config.bar.position
                 isHorizontal: bar.isHorizontal
                 sourcePanel: "bar"
                 popouts: bar.popouts
                 listView: listView
-                labelMode: Config.bar.dock.labelMode
-                fixedLabelWidth: Config.bar.dock.fixedLabelWidth
-                labelWidth: Config.bar.dock.labelWidth
-                maxLabelWidth: Config.bar.dock.maxLabelWidth
-                labelSize: Config.bar.dock.labelSize
                 isHovered: {
                     if (!dockHover.hovered)
                         return false;
