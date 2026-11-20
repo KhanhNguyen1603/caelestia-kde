@@ -26,6 +26,7 @@ Singleton {
     function defaultEntries() {
         return [
             { id: "paste", label: qsTr("Paste"), icon: "content_paste", action: "Paste", enabled: true, type: "default" },
+            { id: "create_new", label: qsTr("Create New..."), icon: "add_circle", action: "CreateNew", enabled: true, type: "default" },
             widgetGroupEntry(defaultWidgetEntries()),
             { id: "arrange_icons", label: qsTr("Arrange Icons"), icon: "sort", action: "ArrangeIcons", enabled: true, type: "default" },
             { id: "toggle_desktop_icons", label: qsTr("Desktop Icons"), icon: "desktop_windows", action: "ToggleDesktopIcons", enabled: true, type: "default" },

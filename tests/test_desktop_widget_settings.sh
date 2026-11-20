@@ -168,7 +168,7 @@ test_the_panel_opens_away_from_the_widget_it_edits() {
 test_the_panel_is_in_the_window_s_input_mask() {
     # A layer window only accepts clicks inside its input region. Every popup the
     # window draws has to say it is open, or its clicks fall through to the desktop.
-    assert_file_contains "$WINDOW" 'readonly property var desktopPopups: [viewOptions, widgetGallery, widgetSettings]' "the panels report being open through one list"
+    assert_file_contains "$WINDOW" 'readonly property var desktopPopups: [createNewPanel, viewOptions, widgetGallery, widgetSettings]' "the panels report being open through one list"
     assert_file_contains "$WINDOW" 'root.desktopPopups.some(popup => popup.open)' "and the window asks all of them at once"
     assert_file_contains "$WINDOW" 'root.desktopMenus.some(menu => menu.expanded)' "the desktop's menus the same way"
 }
