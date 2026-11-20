@@ -121,7 +121,7 @@ ALLOWED_BRANCHES="main dev"
 # One lookup for every channel: asking per branch meant a single failed
 # request looked like the branch was gone, and the tracked channel was
 # silently re-pointed at main (#1327).
-REMOTE_HEADS="$(git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=20 ls-remote --heads https://github.com/caelestia-kde/caelestia.git $ALLOWED_BRANCHES 2>/dev/null)"
+REMOTE_HEADS="$(git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=20 ls-remote --heads https://github.com/KhanhNguyen1603/caelestia-kde.git $ALLOWED_BRANCHES 2>/dev/null)"
 if [ -z "$REMOTE_HEADS" ]; then
     echo "FAIL|GitHub is unreachable"
     exit 1
@@ -165,7 +165,7 @@ if [ "$2" = "1" ] && command -v update_state_set_branch >/dev/null 2>&1; then
 fi
 REPO="$HOME/.cache/caelestia-update-repo"
 if [ ! -d "$REPO" ]; then
-    if ! git clone --bare --filter=blob:none https://github.com/caelestia-kde/caelestia.git "$REPO" >/dev/null 2>&1; then
+    if ! git clone --bare --filter=blob:none https://github.com/KhanhNguyen1603/caelestia-kde.git "$REPO" >/dev/null 2>&1; then
         echo "FAIL|Couldn't clone the update repository"
         exit 1
     fi
@@ -285,7 +285,7 @@ def run_git(*args: str) -> str:
     return subprocess.check_output(cmd, text=True, stderr=subprocess.DEVNULL)
 
 def fetch_releases() -> list:
-    url = "https://api.github.com/repos/caelestia-kde/caelestia/releases?per_page=100"
+    url = "https://api.github.com/repos/KhanhNguyen1603/caelestia-kde/releases?per_page=100"
     req = urllib.request.Request(url, headers={"User-Agent": "caelestia-update-checker"})
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
