@@ -57,7 +57,7 @@ Item {
 
     readonly property bool keptOpen: Config.bar.persistent && !dodging
     readonly property int exclusiveZone: !disabled && !dodgeEnabled && (Config.bar.persistent || visibilities.bar) ? (contentWidth + islandMargin) : (isIsland ? 0 : Config.border.thickness)
-    readonly property int visualThickness: !disabled && (Config.bar.persistent || visibilities.bar) ? (contentWidth + islandMargin) : (isIsland ? 0 : Config.border.thickness)
+    readonly property int visualThickness: !disabled && (Config.bar.persistent || visibilities.bar || shouldBeVisible || root.visible) ? (contentWidth + islandMargin) : (isIsland ? 0 : Config.border.thickness)
     readonly property bool popoutActiveOnBar: popouts.hasCurrent && (popouts.sourcePanel === "bar" || (!popouts.isDockPanelPopout && popouts.sourcePanel !== "dockPanel"))
     readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.bar || hovered || popoutActiveOnBar || visibilities.launcher)
     // Written by Interactions from the pointer position: a collapsed bar is

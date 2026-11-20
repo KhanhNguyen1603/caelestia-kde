@@ -71,10 +71,10 @@ Item {
 
     readonly property bool keptOpen: (Config.dockPanel.persistent || dodgeEnabled) && !dodging
     readonly property int exclusiveZone: Config.dockPanel.reserveSpace && !disabled && !dodgeEnabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? (contentThickness + islandMargin) : (isIsland ? 0 : Config.border.thickness)
-    readonly property int visualThickness: !disabled && (Config.dockPanel.persistent || visibilities.dockPanel) ? (contentThickness + islandMargin) : (isIsland ? 0 : Config.border.thickness)
+    readonly property int visualThickness: !disabled && (Config.dockPanel.persistent || visibilities.dockPanel || shouldBeVisible || root.visible) ? (contentThickness + islandMargin) : (isIsland ? 0 : Config.border.thickness)
     readonly property bool popoutActiveOnDock: Boolean(popouts && (popouts.hasCurrent || popouts.offsetScale < 0.99) && (popouts.sourcePanel === "dockPanel" || (popouts.sourcePanel === "" && popouts.isDockPanelPopout)))
     readonly property int magReach: 0
-    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dockPanel || hovered || popoutActiveOnDock)
+    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.dockPanel || hovered || popoutActiveOnDock || (hasLauncher && visibilities.launcher))
     property bool pointerInReach: false
     property bool revealActive: false
     readonly property bool hovered: revealActive || dockHoverTracker.hovered
