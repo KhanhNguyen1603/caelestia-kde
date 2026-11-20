@@ -399,6 +399,9 @@ Singleton {
     }
 
     function windowHidesDesktopWidgets(screenName: string, hideOnAll: bool): bool {
+        if (root.showingDesktop)
+            return false;
+
         const wins = root.windowList;
 
         const isMaximizedOnWs = (win, outName) => {
