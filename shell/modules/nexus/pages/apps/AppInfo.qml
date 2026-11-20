@@ -16,7 +16,7 @@ PageBase {
     readonly property DesktopEntry app: nState.selectedApp
     readonly property bool favouriteByRegex: app && matchedByRegex(GlobalConfig.launcher.favouriteApps, app.id)
     readonly property bool hiddenByRegex: app && matchedByRegex(GlobalConfig.launcher.hiddenApps, app.id)
-    readonly property bool pinnedToDockByRegex: app && matchedByRegex(GlobalConfig.bar.dock.pinnedApps, app.id)
+    readonly property bool pinnedToDockByRegex: app && matchedByRegex(DockManager.effectivePinnedApps, app.id)
 
     function matchedByRegex(filterList: var, id: string): bool {
         return Array.from(filterList).some(f => Strings.isRegex(f) && Strings.testRegex(f, id));
@@ -81,10 +81,14 @@ PageBase {
             text: qsTr("Pin to dock")
             subtext: root.pinnedToDockByRegex ? qsTr("Matched by a regex in pinnedApps - edit the config file to change") : qsTr("Show on the dock even when not running")
             enabled: !root.pinnedToDockByRegex
-            checked: root.app && Strings.testRegexList(GlobalConfig.bar.dock.pinnedApps, root.app.id)
+            checked: root.app && DockManager.isPinned(root.app.id)
             onToggled: {
-                const apps = GlobalConfig.bar.dock.pinnedApps ? [...GlobalConfig.bar.dock.pinnedApps] : [];
-                GlobalConfig.bar.dock.pinnedApps = checked ? [...apps, root.app.id] : apps.filter(a => a !== root.app.id);
+                if (!root.app?.id)
+                    return;
+                if (checked)
+                    DockManager.pinApp(root.app.id);
+                else
+                    DockManager.unpinApp(root.app.id);
             }
         }
 

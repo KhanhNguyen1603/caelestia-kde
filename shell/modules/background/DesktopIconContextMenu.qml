@@ -27,7 +27,7 @@ Controls.Menu {
     readonly property bool hasFiles: (controller?.entriesFor(keys)?.length ?? 0) > 0
     readonly property var firstWidget: single ? (controller?.widgetOf(firstKey) ?? null) : null
     readonly property bool firstIsBig: single && (controller?.isBigKey(firstKey) ?? false)
-    readonly property bool isPinnedToDock: appEntry ? Strings.testRegexList(GlobalConfig.bar.dock.pinnedApps, appEntry.id) : false
+    readonly property bool isPinnedToDock: appEntry ? DockManager.isPinned(appEntry.id) : false
     readonly property var selectedWidgets: keys.filter(k => controller?.isWidgetKey(k) ?? false)
     readonly property bool widgetsAllLocked: selectedWidgets.length > 0 && selectedWidgets.every(k => DesktopLayout.isWidgetLocked(controller.nameOf(k)))
 
@@ -46,16 +46,10 @@ Controls.Menu {
     function togglePinToDock(): void {
         if (!appEntry?.id)
             return;
-        const current = GlobalConfig.bar.dock.pinnedApps ? [...GlobalConfig.bar.dock.pinnedApps] : [];
-        const id = appEntry.id;
-        if (Strings.testRegexList(current, id)) {
-            const idx = current.indexOf(id);
-            if (idx !== -1)
-                current.splice(idx, 1);
-        } else {
-            current.push(id);
-        }
-        GlobalConfig.bar.dock.pinnedApps = current;
+        if (root.isPinnedToDock)
+            DockManager.unpinApp(appEntry.id);
+        else
+            DockManager.pinApp(appEntry.id);
     }
 
     attachTo: anchor

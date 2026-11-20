@@ -151,6 +151,7 @@ class BarDock : public settings::ObjectNode {
 
     CONFIG_PROPERTY(bool, monitorCenter, true)
     CONFIG_PROPERTY(bool, recolourIcons, false)
+    CONFIG_PROPERTY(QString, launchingStyle, u"circle"_s)
     CONFIG_PROPERTY(bool, showBadges, true)
     CONFIG_PROPERTY(int, iconSize, 32)
     CONFIG_PROPERTY(bool, currentDesktopOnly, false)
@@ -256,6 +257,7 @@ class BarConfig : public settings::ObjectNode {
     CONFIG_SUBOBJECT(BarPreviewScales, previewScales)
     CONFIG_SUBOBJECT(BarPreviewFontScales, previewFontScales)
     CONFIG_PROPERTY(bool, persistent, true)
+    CONFIG_PROPERTY(bool, islands, false)
     CONFIG_PROPERTY(bool, dodgeWindows, false)
     CONFIG_PROPERTY(bool, dodgeFocusedOnly, false)
     CONFIG_PROPERTY(bool, showOnHover, true)

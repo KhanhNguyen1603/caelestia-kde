@@ -6,6 +6,7 @@ QtObject {
 
     property string currentName
     property bool hasCurrent
+    property string sourcePanel: ""
     // Where the open popout is centred along the bar. It lives with the state rather than
     // on the bar's wrapper because the tray's box hands its icons this object, and an icon
     // opens its menu through the same path the bar's own icons use.

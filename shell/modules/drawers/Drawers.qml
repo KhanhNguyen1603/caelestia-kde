@@ -15,6 +15,7 @@ Variants {
         Exclusions {
             screen: scope.modelData
             bar: content.bar
+            dockPanel: content.dockPanel
             visibilities: content.visibilities
         }
 

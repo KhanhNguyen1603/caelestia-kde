@@ -13,6 +13,7 @@ Singleton {
     property var screens: new Map()
     property var bars: new Map()
     property var docks: new Map()
+    property var dockPanels: new Map()
     property var exclusions: new Map()
     property string initialSidebarTab: ""
     property string lastSidebarTab: "notifications"
@@ -101,6 +102,14 @@ Singleton {
     function registerBar(screen: ShellScreen, barWrapper: var): void {
         bars.set(screen.name, barWrapper);
         bars = new Map(bars);
+    }
+    function registerDockPanel(screen: ShellScreen, dockPanelWrapper: var): void {
+        dockPanels.set(screen.name, dockPanelWrapper);
+        dockPanels = new Map(dockPanels);
+    }
+    function unregisterDockPanel(screen: ShellScreen): void {
+        dockPanels.delete(screen.name);
+        dockPanels = new Map(dockPanels);
     }
     function registerDock(screen: ShellScreen, dock: var): void {
         docks.set(screen.name, dock);
