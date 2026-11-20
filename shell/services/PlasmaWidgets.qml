@@ -46,7 +46,7 @@ Singleton {
         }
         return false;
     }
-    readonly property bool windowHidesVisualizer: (Kwin.windowList, Kwin.activeWsId, Kwin.activeByOutput, Kwin.windowHidesDesktopWidgets(root.primaryScreen ? root.primaryScreen.name : "", visualizerHideOnAllMonitors))
+    readonly property bool windowHidesVisualizer: (Kwin.showingDesktop, Kwin.windowList, Kwin.activeWsId, Kwin.activeByOutput, Kwin.windowHidesDesktopWidgets(root.primaryScreen ? root.primaryScreen.name : "", visualizerHideOnAllMonitors))
     readonly property bool gameModeSuppressesVisualizer: GameMode.enabled && GlobalConfig.utilities.gameMode.disableVisualizer
     readonly property bool visualizerBaseConditions: visualizerEnabled && root.hasVisualizer && !Config.background.wallpaperEnabled && !gameModeSuppressesVisualizer && (!visualizerAutoHide || !windowHidesVisualizer)
     readonly property bool visualizerEffectiveEnabled: visualizerBaseConditions && debouncedPlayerPlaying
