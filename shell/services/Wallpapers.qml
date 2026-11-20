@@ -5,6 +5,7 @@ import QtCore
 import Quickshell
 import Quickshell.Io
 import Caelestia
+import Caelestia.Images
 import Caelestia.Config
 import Caelestia.Models
 import qs.services
@@ -23,6 +24,10 @@ Searcher {
     readonly property string current: previewing ? previewPath : actualCurrent
     property string previewPath
     property string actualCurrent
+    // How many variant swaps the scheme has asked for inside the current window. See
+    // applyVariantForCurrentMode: a pair that feeds its own mode back would swap forever.
+    property int variantFlips: 0
+    property real variantFlipWindow: 0
     property var videoThumbs: ({})
     property var videoThumbsPending: ({})
     property var videoThumbsHifi: ({})
@@ -112,7 +117,83 @@ Searcher {
         }
     }
 
+    function getVariantForMode(path: string, lightMode: bool): string {
+        if (!path)
+            return path;
+
+        // 1. Standard KDE Wallpaper Package: contents/images (light) <-> contents/images_dark (dark)
+        if (lightMode && path.includes("/contents/images_dark/")) {
+            const candidate = path.replace("/contents/images_dark/", "/contents/images/");
+            if (IUtils.fileExists(candidate))
+                return candidate;
+        } else if (!lightMode && path.includes("/contents/images/")) {
+            const candidate = path.replace("/contents/images/", "/contents/images_dark/");
+            if (IUtils.fileExists(candidate))
+                return candidate;
+        }
+
+        // 2. Common light/dark filename suffix conventions
+        const pairs = [
+            ["_dark.", "_light."],
+            ["-dark.", "-light."],
+            [".dark.", ".light."],
+            ["_night.", "_day."],
+            ["-night.", "-day."],
+            [".night.", ".day."]
+        ];
+
+        for (let i = 0; i < pairs.length; i++) {
+            const darkPat = pairs[i][0];
+            const lightPat = pairs[i][1];
+            if (lightMode && path.includes(darkPat)) {
+                const candidate = path.replace(darkPat, lightPat);
+                if (IUtils.fileExists(candidate))
+                    return candidate;
+            } else if (!lightMode && path.includes(lightPat)) {
+                const candidate = path.replace(lightPat, darkPat);
+                if (IUtils.fileExists(candidate))
+                    return candidate;
+            }
+        }
+
+        return path;
+    }
+
+    /// Swap the stored wallpaper for the sibling that matches the current mode. Runs only once
+    /// the scheme is on disk: `currentLight` still holds its default until then, and choosing a
+    /// variant on that default applied the dark one on every boot before the light scheme landed.
+    function applyVariantForCurrentMode(): void {
+        if (!Colours.schemeLoaded || !actualCurrent)
+            return;
+
+        const target = getVariantForMode(actualCurrent, Colours.currentLight);
+        if (!target || target === actualCurrent)
+            return;
+
+        // Swapping the image re-derives the scheme, and a pair whose images derive the opposite
+        // mode from their name would then swap back: a ping-pong, not a mode change. Three swaps
+        // in a row is that ping-pong, so stop following the scheme until it settles by itself.
+        const now = Date.now();
+        if (now - variantFlipWindow > 10000) {
+            variantFlipWindow = now;
+            variantFlips = 0;
+        }
+        if (++variantFlips > 3)
+            return;
+
+        root.applyWallpaper(target);
+    }
+
     function setWallpaper(path: string): void {
+        // An explicit choice is not the scheme pushing a sibling at us: let the guard start over.
+        variantFlips = 0;
+        root.applyWallpaper(getVariantForMode(path, Colours.currentLight));
+    }
+
+    /// Apply a wallpaper that already names the right variant for the current mode. Private:
+    /// the mode is resolved in one place, so a caller that resolved it cannot have it resolved
+    /// a second time against a different flag and land on the opposite image.
+    function applyWallpaper(path: string): void {
         if (previewing && path !== actualCurrent)
             previewColoursState.hold();
         actualCurrent = path;
@@ -396,6 +477,9 @@ Searcher {
                         syncPlasmaWallpaper(thumb);
                 }
             }
+            // The stored image is the variant that was right for the mode when it was applied, so
+            // it only needs swapping out if the mode moved while the shell was off.
+            root.applyVariantForCurrentMode();
         }
         onLoadFailed: {
             root.actualCurrent = root.fallback;
@@ -429,6 +513,21 @@ Searcher {
         }
 
         target: Config.background
+    }
+
+    Connections {
+        function onCurrentLightChanged(): void {
+            root.applyVariantForCurrentMode();
+        }
+
+        // A scheme that was not on disk yet when the wallpaper was read leaves the split
+        // untested; this is the call that applies it once the file is there.
+        function onSchemeLoadedChanged(): void {
+            if (Colours.schemeLoaded)
+                root.applyVariantForCurrentMode();
+        }
+
+        target: Colours
     }
 
     Process {
