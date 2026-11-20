@@ -137,6 +137,11 @@ Variants {
                     screen: win.modelData
                 }
             }
+            Visualiser {
+                anchors.fill: parent
+                screen: win.modelData
+                z: 2
+            }
         }
         DesktopIcons {
             id: desktopIcons

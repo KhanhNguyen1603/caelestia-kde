@@ -54,7 +54,7 @@ PageBase {
         }
     ]
 
-    readonly property bool visualizerAvailable: PlasmaWidgets.hasVisualizer && !Config.background.wallpaperEnabled
+    readonly property bool visualizerAvailable: Config.background.wallpaperEnabled || PlasmaWidgets.hasVisualizer
 
     isSubPage: true
     title: qsTr("Desktop Addons")
@@ -152,7 +152,7 @@ PageBase {
                 opacity: enabled ? 1 : 0.5
                 text: qsTr("Enable Visualizer")
                 subtext: Config.background.wallpaperEnabled
-                    ? qsTr("Visualizer is not visible when internal wallpaper is enabled")
+                    ? qsTr("Show built-in Cava visualizer on desktop")
                     : qsTr("Show audio visualizer on desktop")
                 reset: ({ node: GlobalConfig.background.visualiser, setting: "enabled" })
                 checked: Config.background.visualiser.enabled
@@ -162,6 +162,7 @@ PageBase {
             }
 
             SelectRow {
+                visible: !Config.background.wallpaperEnabled
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
                 Layout.fillWidth: true
                 enabled: root.visualizerAvailable && Config.background.visualiser.enabled
@@ -194,6 +195,7 @@ PageBase {
             }
 
             ToggleRow {
+                last: Config.background.wallpaperEnabled
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
                 Layout.fillWidth: true
                 enabled: root.visualizerAvailable && Config.background.visualiser.enabled && Config.background.visualiser.autoHide
@@ -206,6 +208,7 @@ PageBase {
             }
 
             InfoRow {
+                visible: !Config.background.wallpaperEnabled
                 last: true
                 Layout.fillWidth: true
                 Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
