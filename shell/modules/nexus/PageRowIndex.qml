@@ -556,21 +556,20 @@ QtObject {
         },
         {
             label: qsTr("Inverted"),
-            description: qsTr("Only show the greeter while hovering"),
             section: qsTr("Greeter"),
             pageIdx: 2,
             subPage: "barGreeter"
         },
         {
-            label: qsTr("Show on hover"),
-            description: qsTr("Only show the greeter while hovering"),
+            label: qsTr("Enable popout"),
+            description: qsTr("Show a popout panel for the greeter"),
             section: qsTr("Greeter"),
             pageIdx: 2,
             subPage: "barGreeter"
         },
         {
-            label: qsTr("Popout on hover"),
-            description: qsTr("Show a greeter popout when hovering"),
+            label: qsTr("Open on hover"),
+            description: qsTr("Open popout on hover instead of on click"),
             section: qsTr("Greeter"),
             pageIdx: 2,
             subPage: "barGreeter"
