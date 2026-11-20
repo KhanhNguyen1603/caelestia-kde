@@ -2785,24 +2785,24 @@
         <translation>Invertido</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>Show on hover</source>
-        <translation>Mostrar al pasar el cursor</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Only show the greeter while hovering</source>
-        <translation>Mostrar la pantalla de bienvenida solo al pasar el cursor</translation>
-    </message>
-    <message>
         <location line="+11"/>
-        <source>Popout on hover</source>
-        <translation>Ventana emergente al pasar el cursor</translation>
+        <source>Enable popout</source>
+        <translation>Activar ventana emergente</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Show a greeter popout when hovering</source>
-        <translation>Mostrar una ventana emergente de bienvenida al pasar el cursor</translation>
+        <source>Show a popout panel for the greeter</source>
+        <translation>Mostrar un panel emergente para la pantalla de bienvenida</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Open on hover</source>
+        <translation>Abrir al pasar el cursor</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open popout on hover instead of on click</source>
+        <translation>Abrir la ventana emergente al pasar el cursor en vez de al pulsar</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -4639,7 +4639,7 @@
         <location line="+66"/>
         <location line="+12"/>
         <location line="+12"/>
-        <location line="+151"/>
+        <location line="+154"/>
         <location line="+29"/>
         <location line="+12"/>
         <location line="+12"/>
@@ -4652,7 +4652,7 @@
         <translation>Elementos y módulos</translation>
     </message>
     <message>
-        <location line="-302"/>
+        <location line="-305"/>
         <source>Clock settings</source>
         <translation>Configuración del reloj</translation>
     </message>
@@ -4667,7 +4667,7 @@
         <translation>Configuración de los iconos de estado</translation>
     </message>
     <message>
-        <location line="+151"/>
+        <location line="+154"/>
         <source>Workspaces settings</source>
         <translation>Configuración de los espacios de trabajo</translation>
     </message>
@@ -6927,7 +6927,7 @@ Pulsa para continuar</translation>
 <context>
     <name>Greeter</name>
     <message>
-        <location filename="../modules/bar/components/Greeter.qml" line="+26"/>
+        <location filename="../modules/bar/components/Greeter.qml" line="+25"/>
         <source>User</source>
         <translation>Usuario</translation>
     </message>
@@ -11804,12 +11804,11 @@ Pulsa para continuar</translation>
         <location line="+11"/>
         <location line="+11"/>
         <location line="+13"/>
-        <location line="+11"/>
         <source>Services</source>
         <translation>Servicios</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-34"/>
         <source>Broadcast your activity to Discord</source>
         <translation>Transmite tu actividad a Discord</translation>
     </message>
@@ -11869,12 +11868,19 @@ Pulsa para continuar</translation>
         <translation>Configurar, activar o desactivar extensiones y complementos de la shell de Caelestia</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+11"/>
+        <location line="+8"/>
+        <location line="+2"/>
         <source>Updates</source>
         <translation>Actualizaciones</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-8"/>
+        <source>Shell versions and system packages</source>
+        <translation>Versión del shell y paquetes del sistema</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Check for package and system updates</source>
         <translation>Comprobar actualizaciones de paquetes y sistema</translation>
     </message>
@@ -11884,7 +11890,7 @@ Pulsa para continuar</translation>
         <translation>Pacman, flatpak, actualizaciones de firmware, y actualizaciones de la versión de Caelestia</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+92"/>
         <source>Page under construction</source>
         <translation>Página en construcción</translation>
     </message>
@@ -11897,7 +11903,7 @@ Pulsa para continuar</translation>
 <context>
     <name>PageRegistry</name>
     <message>
-        <location filename="../modules/nexus/PageRegistry.qml" line="+36"/>
+        <location filename="../modules/nexus/PageRegistry.qml" line="+37"/>
         <source>Main Page</source>
         <translation>Página principal</translation>
     </message>
@@ -12035,13 +12041,13 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+487"/>
+        <location line="+486"/>
         <location line="+1763"/>
         <source>Mode</source>
         <translation>Modo</translation>
     </message>
     <message>
-        <location line="-2244"/>
+        <location line="-2243"/>
         <source>Color intensity</source>
         <translation>Intensidad del color</translation>
     </message>
@@ -12273,12 +12279,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+2733"/>
+        <location line="+2732"/>
         <source>Transparency</source>
         <translation>Transparencia</translation>
     </message>
     <message>
-        <location line="-2732"/>
+        <location line="-2731"/>
         <source>Enable transparency across the shell</source>
         <translation>Activar la transparencia en todo el shell</translation>
     </message>
@@ -12411,12 +12417,12 @@ Pulsa para continuar</translation>
         <location line="+1"/>
         <location line="+6"/>
         <location line="+7"/>
-        <location line="+1419"/>
+        <location line="+1418"/>
         <source>Apps</source>
         <translation>Aplicaciones</translation>
     </message>
     <message>
-        <location line="-1427"/>
+        <location line="-1426"/>
         <source>All apps</source>
         <translation>Todas las aplicaciones</translation>
     </message>
@@ -12446,12 +12452,12 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <location line="+6"/>
         <location line="+7"/>
-        <location line="+2057"/>
+        <location line="+2056"/>
         <source>Discord Rich Presence</source>
         <translation>Presencia enriquecida de Discord</translation>
     </message>
     <message>
-        <location line="-2079"/>
+        <location line="-2078"/>
         <source>Auto-detect Steam games</source>
         <translation>Detectar automáticamente los juegos de Steam</translation>
     </message>
@@ -12498,12 +12504,12 @@ Pulsa para continuar</translation>
         <location line="+6"/>
         <location line="+6"/>
         <location line="+6"/>
-        <location line="+342"/>
+        <location line="+341"/>
         <source>Audio</source>
         <translation>Audio</translation>
     </message>
     <message>
-        <location line="-373"/>
+        <location line="-372"/>
         <source>Muted</source>
         <translation>Silenciado</translation>
     </message>
@@ -12524,7 +12530,7 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+2137"/>
+        <location line="+2136"/>
         <location line="+7"/>
         <location line="+6"/>
         <location line="+6"/>
@@ -12539,7 +12545,7 @@ Pulsa para continuar</translation>
         <translation>Sonidos</translation>
     </message>
     <message>
-        <location line="-2192"/>
+        <location line="-2191"/>
         <source>Muted notification apps</source>
         <translation>Aplicaciones con notificaciones silenciadas</translation>
     </message>
@@ -12555,24 +12561,24 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+241"/>
+        <location line="+240"/>
         <location line="+203"/>
         <source>Background</source>
         <translation>Fondo</translation>
     </message>
     <message>
-        <location line="-443"/>
+        <location line="-442"/>
         <location line="+6"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
-        <location line="+321"/>
+        <location line="+320"/>
         <location line="+1901"/>
         <source>Clock</source>
         <translation>Reloj</translation>
     </message>
     <message>
-        <location line="-2244"/>
+        <location line="-2243"/>
         <source>Show date</source>
         <translation>Mostrar fecha</translation>
     </message>
@@ -12616,13 +12622,13 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
-        <location line="+279"/>
+        <location line="+278"/>
         <location line="+1901"/>
         <source>Dock</source>
         <translation>Dock</translation>
     </message>
     <message>
-        <location line="-2217"/>
+        <location line="-2216"/>
         <source>Icon size</source>
         <translation>Tamaño de los iconos</translation>
     </message>
@@ -12633,12 +12639,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+404"/>
+        <location line="+403"/>
         <source>Recolor icons</source>
         <translation>Recolorear iconos</translation>
     </message>
     <message>
-        <location line="-403"/>
+        <location line="-402"/>
         <source>Recolor application icons using the system theme</source>
         <translation>Recolorear los iconos de las aplicaciones usando el tema del sistema</translation>
     </message>
@@ -12654,12 +12660,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+2138"/>
+        <location line="+2137"/>
         <source>Filter by current desktop</source>
         <translation>Filtrar por escritorio actual</translation>
     </message>
     <message>
-        <location line="-2137"/>
+        <location line="-2136"/>
         <source>Only show applications and windows belonging to the active virtual desktop</source>
         <translation>Mostrar solo las aplicaciones y ventanas que pertenecen al escritorio virtual activo</translation>
     </message>
@@ -12675,12 +12681,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+2131"/>
+        <location line="+2130"/>
         <source>Preview window on desktop</source>
         <translation>Previsualizar ventana en el escritorio</translation>
     </message>
     <message>
-        <location line="-2130"/>
+        <location line="-2129"/>
         <source>Highlight and show the window itself on the workspace while hovering over dock previews</source>
         <translation>Resaltar y mostrar la ventana en el espacio de trabajo al pasar el cursor sobre las vistas previas del Dock</translation>
     </message>
@@ -12696,14 +12702,14 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+278"/>
+        <location line="+277"/>
         <location line="+1901"/>
         <source>GitHub</source>
         <translation>GitHub</translation>
     </message>
     <message>
-        <location line="-2173"/>
-        <location line="+7"/>
+        <location line="-2172"/>
+        <location line="+6"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
@@ -12731,19 +12737,12 @@ Pulsa para continuar</translation>
         <translation>Pantalla de bienvenida</translation>
     </message>
     <message>
-        <location line="-2138"/>
+        <location line="-2137"/>
         <source>Inverted</source>
         <translation>Invertido</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location line="+7"/>
-        <source>Only show the greeter while hovering</source>
-        <translation>Mostrar la pantalla de bienvenida solo al pasar el cursor</translation>
-    </message>
-    <message>
-        <location line="-1"/>
-        <location line="+506"/>
+        <location line="+512"/>
         <location line="+628"/>
         <location line="+496"/>
         <location line="+28"/>
@@ -12753,19 +12752,13 @@ Pulsa para continuar</translation>
         <translation>Mostrar al pasar el cursor</translation>
     </message>
     <message>
-        <location line="-2450"/>
-        <location line="+329"/>
+        <location line="-2121"/>
         <location line="+26"/>
         <source>Popout on hover</source>
         <translation>Ventana emergente al pasar el cursor</translation>
     </message>
     <message>
-        <location line="-354"/>
-        <source>Show a greeter popout when hovering</source>
-        <translation>Mostrar una ventana emergente de bienvenida al pasar el cursor</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="-347"/>
         <source>Switch media according to time of day or cycle through a slideshow</source>
         <translation>Cambiar el contenido multimedia según el momento del día o recorrer una presentación de diapositivas</translation>
     </message>
@@ -13204,8 +13197,8 @@ Pulsa para continuar</translation>
         <location line="+1"/>
         <location line="+6"/>
         <location line="+1809"/>
-        <location line="+247"/>
-        <location line="+7"/>
+        <location line="+248"/>
+        <location line="+6"/>
         <location line="+6"/>
         <source>Updates</source>
         <translation>Actualizaciones</translation>
@@ -14225,7 +14218,27 @@ Pulsa para continuar</translation>
         <translation>Lanzador</translation>
     </message>
     <message>
-        <location line="-154"/>
+        <location line="-1256"/>
+        <source>Enable popout</source>
+        <translation>Activar ventana emergente</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show a popout panel for the greeter</source>
+        <translation>Mostrar un panel emergente para la pantalla de bienvenida</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Open on hover</source>
+        <translation>Abrir al pasar el cursor</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open popout on hover instead of on click</source>
+        <translation>Abrir la ventana emergente al pasar el cursor en vez de al pulsar</translation>
+    </message>
+    <message>
+        <location line="+1094"/>
         <source>Use alternative logo</source>
         <translation>Usar logotipo alternativo</translation>
     </message>
@@ -15790,23 +15803,23 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
+        <source>Automatic Updates</source>
+        <translation>Actualizaciones automáticas</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Checked every 30 minutes, and once when the shell starts</source>
+        <translation>Comprobadas cada 30 minutos, y una vez cuando se inicia la shell</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Update channel</source>
         <translation>Canal de actualizaciones</translation>
     </message>
     <message>
         <location line="+6"/>
-        <source>Check for updates automatically</source>
-        <translation>Comprobar actualizaciones periódicamente</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Every 30 minutes, and once when the shell starts</source>
-        <translation>Cada 30 minutos, y una vez cuando la shell se inicie</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Open backup folder</source>
-        <translation>Abrir carpeta de respaldos</translation>
+        <source>Backup folder</source>
+        <translation>Carpeta de respaldos</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -19577,7 +19590,7 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
 <context>
     <name>UpdateChecker</name>
     <message>
-        <location filename="../services/UpdateChecker.qml" line="+469"/>
+        <location filename="../services/UpdateChecker.qml" line="+528"/>
         <location line="+23"/>
         <source>The update check failed</source>
         <translation>La comprobación de actualizaciones ha fallado</translation>
@@ -19714,12 +19727,32 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
     </message>
     <message>
         <location line="+1"/>
-        <location line="+68"/>
+        <location line="+121"/>
         <source>Update to %1</source>
         <translation>Actualizar a %1</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-115"/>
+        <source>Log out and back in when it finishes</source>
+        <translation>Cierra sesión y vuelve a iniciarla una vez acabe</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>also upgrades system packages</source>
+        <translation>también actualiza los paquetes del sistema</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>%1 downloaded</source>
+        <translation>%1 descargaa</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 · %2</source>
+        <translation>%1 · %2</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>From %1</source>
         <translation>Desde %1</translation>
     </message>
@@ -19734,55 +19767,102 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>la configuración está respaldada</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-17"/>
         <source>the shell restarts</source>
         <translation>la shell se reinicia</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Couldn&apos;t open a terminal</source>
-        <translation>No se ha podido abrir una terminal</translation>
-    </message>
-    <message>
-        <location line="+0"/>
+        <location line="+39"/>
         <source>Run %1 in a terminal instead</source>
         <translation>Ejecuta %1 en una terminal</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+6"/>
+        <location line="+20"/>
         <location line="+7"/>
         <source>Copy command</source>
         <translation>Copiar comando</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-27"/>
+        <source>Couldn&apos;t start the update</source>
+        <translation>No se ha podido iniciar la actualización</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location line="+11"/>
+        <location line="+9"/>
+        <location line="+7"/>
+        <source>Run in terminal</source>
+        <translation>Ejecutar en terminal</translation>
+    </message>
+    <message>
+        <location line="-17"/>
+        <source>Step %1 of %2</source>
+        <translation>Paso %1 de %2</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Updating in the terminal</source>
         <translation>Actualizando en la terminal</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-64"/>
         <source>The shell restarts when it finishes</source>
         <translation>La shell se reinicia cuando acaba</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+7"/>
-        <source>Open terminal again</source>
-        <translation>Abrir terminal de nuevo</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Opening the terminal…</source>
-        <translation>Abriendo la terminal...</translation>
-    </message>
-    <message>
-        <location line="+0"/>
+        <location line="+71"/>
         <source>Running %1</source>
         <translation>Ejecutando %1</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+0"/>
+        <source>Starting the update…</source>
+        <translation>Iniciando la actualización...</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Dismiss</source>
+        <translation>Ignorar</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The last update did not finish</source>
+        <translation>La última actualización no ha podido acabar</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Run the update again to see why</source>
+        <translation>Ejecuta la actualización de nuevo para ver por qué</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1 did not finish</source>
+        <translation>%1 no ha podido acabar</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Updated to %1</source>
+        <translation>Actualizado a %1</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Update finished</source>
+        <translation>Actualización finalizada</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Log out and back in to load it</source>
+        <translation>Cierra sesión y vuelve a entrar para cargarla</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>The %1 channel was updated</source>
+        <translation>El canal %1 ha sido actualizado</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Clear selection</source>
         <translation>Borrar selección</translation>
     </message>
@@ -19802,14 +19882,14 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Inténtalo de nuevo</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>Version %1 is available</source>
-        <translation>La versión %1 está disponible</translation>
+        <location line="+9"/>
+        <source>An update is available</source>
+        <translation>Hay una actualización disponible</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>An update is available</source>
-        <translation>Hay una actualización disponible</translation>
+        <source>Caelestia %1 is available</source>
+        <translation>Caelestia %1 está disponible</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -19822,14 +19902,24 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Actualizar ahora</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location line="+10"/>
+        <location line="+0"/>
+        <source>Restart &amp; Update</source>
+        <translation>Reiniciar y actualizar</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location line="+11"/>
         <location line="+3"/>
         <source>Check again</source>
         <translation>Comprueba de nuevo</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-14"/>
+        <source>Download first</source>
+        <translation>Descargar primero</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Update checking is off</source>
         <translation>La comprobación de actualizaciones está apagada</translation>
     </message>
@@ -19907,7 +19997,7 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Deshacer</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+16"/>
         <source>Your version</source>
         <translation>Tu versión</translation>
     </message>
@@ -19917,7 +20007,8 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Más reciente</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="-6"/>
+        <location line="+49"/>
         <source>Available</source>
         <translation>Disponible</translation>
     </message>
@@ -19932,7 +20023,7 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Pasada</translation>
     </message>
     <message>
-        <location line="+259"/>
+        <location line="+273"/>
         <source>Clear</source>
         <translation>Limpiar</translation>
     </message>
@@ -19968,32 +20059,22 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
 <context>
     <name>UpdatesPage</name>
     <message>
-        <location filename="../modules/nexus/pages/UpdatesPage.qml" line="+118"/>
+        <location filename="../modules/nexus/pages/UpdatesPage.qml" line="+160"/>
         <source>Updates</source>
         <translation>Actualizaciones</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Help</source>
-        <translation>Ayuda</translation>
-    </message>
-    <message>
-        <location line="+132"/>
+        <location line="+143"/>
         <source>Dismiss</source>
         <translation>Ignorar</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+61"/>
         <source>Release notes</source>
         <translation>Notas de versión</translation>
     </message>
     <message>
-        <location line="+32"/>
-        <source>Full release notes</source>
-        <translation>Notas de versión completas</translation>
-    </message>
-    <message>
-        <location line="+12"/>
+        <location line="+103"/>
         <source>Commit history</source>
         <translation>Historial de commits</translation>
     </message>
@@ -20003,82 +20084,37 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Historial de versiones</translation>
     </message>
     <message>
-        <location line="+37"/>
-        <source>Show all commits (%1)</source>
-        <translation>Mostrar todos los commits (%1)</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>Show less</source>
-        <translation>Mostrar menos</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>Hide internal changes</source>
-        <translation>Ocultar cambios internos</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Show internal changes (%1)</source>
-        <translation>Mostrar cambios internos (%1)</translation>
-    </message>
-    <message>
-        <location line="+12"/>
+        <location line="+59"/>
         <source>Load older commits</source>
         <translation>Cargar commits más antiguos</translation>
     </message>
     <message>
-        <location line="+37"/>
-        <source>No history yet</source>
-        <translation>No hay historial todavía</translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>The first successful check fills this in.</source>
-        <translation>La primera comprobación satisfactoria rellena esto.</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>Update settings</source>
-        <translation>Configuración de actualizaciones</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Development builds — may be unstable</source>
-        <translation>Compilaciones de desarrollo — pueden ser inestables</translation>
-    </message>
-    <message>
-        <location line="+15"/>
-        <source>Check for updates automatically</source>
-        <translation>Comprobar actualizaciones periódicamente</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Every 30 minutes, and once when the shell starts</source>
-        <translation>Cada 30 minutos, y una vez cuando la shell se inicie</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <source>Maintenance</source>
-        <translation>Mantenimiento</translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>Open backup folder</source>
-        <translation>Abrir carpeta de respaldos</translation>
-    </message>
-    <message>
-        <location line="+38"/>
+        <location line="+63"/>
         <source>Couldn&apos;t open the folder — it is at ~/.config/caelestia-update/backups</source>
         <translation>No se ha podido abrir la carpeta — está en ~/.config/caelestia-update/backups</translation>
     </message>
     <message>
-        <location line="-338"/>
+        <location line="-263"/>
         <source>Checking…</source>
         <translation>Comprobando…</translation>
     </message>
     <message>
-        <location line="+264"/>
+        <location line="+53"/>
+        <source>Open on GitHub</source>
+        <translation>Abrir en GitHub</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Automatic Updates</source>
+        <translation>Actualizaciones automáticas</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Checked every 30 minutes, and once when the shell starts</source>
+        <translation>Comprobadas cada 30 minutos, y una vez cuando se inicia la shell</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Update channel</source>
         <translation>Canal de actualizaciones</translation>
     </message>
@@ -20088,17 +20124,52 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Versiones estables</translation>
     </message>
     <message>
-        <location line="+36"/>
-        <source>View your previously backed-up configuration files</source>
-        <translation>Ver los archivos de configuración respaldados anteriormente</translation>
+        <location line="+0"/>
+        <source>Development builds (may be unstable)</source>
+        <translation>Compilaciones de desarollo (pueden ser inestables)</translation>
     </message>
     <message>
-        <location line="-218"/>
-        <source>Switching to %1…</source>
-        <translation>Cambiando a %1…</translation>
+        <location line="+21"/>
+        <source>Backup folder</source>
+        <translation>Carpeta de respaldos</translation>
     </message>
     <message>
-        <location line="+120"/>
+        <location line="+1"/>
+        <source>Your settings are saved here before each update</source>
+        <translation>Tus configuraciones se guardan aquí antes de cada actualización</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>More…</source>
+        <translation>Más...</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Less</source>
+        <translation>Menos</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Hide internal</source>
+        <translation>Esconder interno</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Internal (%1)</source>
+        <translation>Interno (%1)</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>No history yet.</source>
+        <translation>Sin historial todavía.</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Troubleshooting</source>
+        <translation>Solución de problemas</translation>
+    </message>
+    <message>
+        <location line="-23"/>
         <source>Loading…</source>
         <translation>Cargando…</translation>
     </message>
