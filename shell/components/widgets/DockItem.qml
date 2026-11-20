@@ -148,7 +148,7 @@ Item {
             const dummy = LauncherEntry.revision;
             if (!root.modelData || !root.showBadges)
                 return null;
-            return LauncherEntry.forApp(root.modelData.id);
+            return LauncherEntry.forApp(root.modelData.appClass || root.modelData.id);
         }
 
         width: root.isHorizontal ? root.width : Math.round(root.baseWidth * root.currentScale)
