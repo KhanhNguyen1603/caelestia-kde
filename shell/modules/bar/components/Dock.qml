@@ -371,342 +371,39 @@ Item {
         Component {
             id: dockDelegate
 
-            Item {
-                id: delegateContainer
+            DockItem {
+                id: itemDelegate
 
-                required property int index
-                required property string appId
-                property var modelData: DockManager.modelDataMap[appId] || DockManager.modelDataArray[index]
-
-                width: container.itemSize
-                height: container.itemSize
-                implicitWidth: width
-                implicitHeight: height
-
-                DropArea {
-                    anchors.fill: parent
-                    anchors.margins: Tokens.padding.small
-                    onEntered: drag => {
-                        const from = drag.source.delegateIndex;
-                        const to = delegateContainer.index;
-                        if (from !== undefined && to !== undefined && from !== to) {
-                            DockManager.moveItem(from, to);
-                        }
-                    }
-                    onDropped: drag => {
-                        DockManager.saveNewOrder();
-                    }
-                }
-
-                Item {
-                    id: delegateItem
-
-                    property int delegateIndex: delegateContainer.index
-
-                    property bool isActive: {
-                        const dummy = DockManager.modelUpdateTrigger;
-                        if (!modelData) return false;
-                        for (const top of modelData.toplevels) {
-                            if (top.focused || (DockManager.activeTop && DockManager.activeTop.address === top.address)) return true;
-                        }
+                itemSize: container.itemSize
+                iconSize: root.iconSize
+                recolourIcons: Config.bar.dock.recolourIcons
+                showBadges: Config.bar.dock.showBadges
+                activeIndicators: Config.bar.dock.activeIndicators
+                indicatorStyle: Config.bar.dock.indicatorStyle
+                launchingStyle: Config.bar.dock.launchingStyle ?? "circle"
+                position: Config.bar.position
+                isHorizontal: bar.isHorizontal
+                sourcePanel: "bar"
+                popouts: bar.popouts
+                listView: listView
+                labelMode: Config.bar.dock.labelMode
+                fixedLabelWidth: Config.bar.dock.fixedLabelWidth
+                labelWidth: Config.bar.dock.labelWidth
+                maxLabelWidth: Config.bar.dock.maxLabelWidth
+                labelSize: Config.bar.dock.labelSize
+                isHovered: {
+                    if (!dockHover.hovered)
                         return false;
-                    }
-
-                    property bool hasWindows: {
-                        const dummy = DockManager.modelUpdateTrigger;
-                        if (!modelData) return false;
-                        return modelData.toplevels.length > 0;
-                    }
-
-                    readonly property var badge: {
-                        const dummy = LauncherEntry.revision;
-                        if (!modelData || !(Config.bar.dock.showBadges ?? true))
-                            return null;
-                        // Per-window ids carry a "#address" suffix that LauncherEntry does not
-                        // normalise, so the lookup goes by the application class instead.
-                        return LauncherEntry.forApp(modelData.appClass || modelData.id);
-                    }
-
-                    width: delegateContainer.width
-                    height: delegateContainer.height
-
-                    Drag.active: dragArea.held
-                    Drag.source: delegateItem
-                    Drag.hotSpot.x: width / 2
-                    Drag.hotSpot.y: height / 2
-
-                    states: [
-                        State {
-                            when: dragArea.held
-
-                            ParentChange {
-                                target: delegateItem
-                                parent: listView
-                            }
-                            PropertyChanges {
-                                target: delegateItem
-                                opacity: 0.8
-                                z: 999
-                            }
-                        }
-                    ]
-
-                    StyledRect {
-                        anchors.fill: parent
-                        radius: Tokens.rounding.medium
-                        color: Colours.palette.m3onSurface
-                        opacity: delegateItem.isActive ? 0.1 : 0
-
-                        Behavior on opacity {
-                            Anim {
-                                type: Anim.DefaultEffects
-                            }
-                        }
-                    }
-
-                    StyledRect {
-                        anchors.fill: parent
-                        radius: Tokens.rounding.medium
-                        color: Colours.palette.m3error
-                        opacity: (delegateItem.badge?.urgent ?? false) ? 0.35 : 0
-
-                        Behavior on opacity {
-                            Anim {
-                                type: Anim.DefaultEffects
-                            }
-                        }
-                    }
-
-                    StateLayer {
-                        id: stateLayer
-
-                        anchors.fill: parent
-                        radius: Tokens.rounding.medium
-                        acceptedButtons: Qt.NoButton
-
-                        onEntered: {
-                            if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
-                            bar.popouts.sourcePanel = "bar";
-                            bar.popouts.currentName = "dockhover";
-                            bar.popouts.currentCenter = bar.isHorizontal ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
-                            bar.popouts.dockModel = modelData;
-                            bar.popouts.hasCurrent = true;
-                        }
-                    }
-
-                    MouseArea {
-                        id: dragArea
-
-                        property bool held: false
-
-                        anchors.fill: parent
-                        drag.target: held ? delegateItem : null
-                        drag.axis: bar.isHorizontal ? Drag.XAxis : Drag.YAxis
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        cursorShape: Qt.PointingHandCursor
-
-                        onPressed: mouse => {
-                            held = true;
-                            DockManager.isDragging = true;
-                            stateLayer.press(mouse.x, mouse.y);
-                        }
-
-                        onClicked: mouse => {
-                            if (mouse.button === Qt.LeftButton) {
-                                if (modelData.isPinned && Tokens.anim.enabled) {
-                                    bounceAnim.start();
-                                }
-
-                                DockManager.activateEntry(modelData);
-                            } else if (mouse.button === Qt.RightButton) {
-                                bar.popouts.sourcePanel = "bar";
-                                bar.popouts.currentName = "dockcontext";
-                                bar.popouts.currentCenter = bar.isHorizontal ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
-                                bar.popouts.dockModel = modelData;
-                                bar.popouts.hasCurrent = true;
-                            }
-                        }
-
-                        onReleased: {
-                            held = false;
-                            DockManager.isDragging = false;
-                            delegateItem.x = 0;
-                            delegateItem.y = 0;
-                            DockManager.saveNewOrder();
-                        }
-
-                        onCanceled: {
-                            held = false;
-                            DockManager.isDragging = false;
-                            delegateItem.x = 0;
-                            delegateItem.y = 0;
-                        }
-                    }
-
-                    Item {
-                        id: iconContainer
-
-                        anchors.centerIn: parent
-                        width: root.iconSize
-                        height: root.iconSize
-                        transform: [
-                            Translate {
-                                x: launchIndicator.bounceOffsetX
-                                y: launchIndicator.bounceOffsetY
-                            },
-                            Scale {
-                                origin.x: iconContainer.width / 2
-                                origin.y: Config.bar.position === "top" ? 0 : iconContainer.height
-                                xScale: launchIndicator.bounceScaleX
-                                yScale: launchIndicator.bounceScaleY
-                            }
-                        ]
-
-                        CachingIconImage {
-                            id: icon
-
-                            anchors.fill: parent
-                            implicitSize: root.iconSize
-                            source: modelData ? WinIcons.sourceFor(modelData.entry, modelData.appClass, modelData.iconName, modelData.pid ?? 0) : ""
-                            visible: !(Config.bar.dock.recolourIcons ?? false)
-
-                            SequentialAnimation {
-                                id: bounceAnim
-
-                                NumberAnimation { target: delegateItem; property: "scale"; to: 0.96; duration: Tokens.anim.durations.expressiveFastSpatial; easing: Tokens.anim.expressiveFastSpatial }
-                                NumberAnimation { target: delegateItem; property: "scale"; to: 1; duration: Tokens.anim.durations.expressiveFastSpatial; easing: Tokens.anim.expressiveFastSpatial }
-                            }
-                        }
-
-                        ColouredIcon {
-                            anchors.fill: parent
-                            implicitSize: root.iconSize
-                            // hidden unless recolouring: skip the second decode and the colour analysis
-                            source: visible ? icon.source : ""
-                            colour: Colours.palette.m3secondary
-                            layer.enabled: visible
-                            visible: Config.bar.dock.recolourIcons ?? false
-                        }
-                    }
-
-                    DockLaunchIndicator {
-                        id: launchIndicator
-
-                        anchors.centerIn: iconContainer
-                        width: root.iconSize
-                        height: root.iconSize
-                        isLaunching: modelData ? Boolean(DockManager.launchingApps[modelData.appClass || modelData.id]) : false
-                        style: Config.bar.dock.launchingStyle ?? "circle"
-                        position: Config.bar.position
-                        currentScale: 1.0
-                    }
-
-                    StyledRect {
-                        id: countBadge
-
-                        readonly property int badgeHeight: Math.max(12, Math.round(root.iconSize * 0.55))
-                        readonly property int dotSize: Math.max(6, Math.round(badgeHeight * 0.75))
-                        readonly property bool asDot: (delegateItem.badge?.count ?? 0) <= 0
-
-                        visible: delegateItem.badge?.countVisible ?? false
-                        color: Colours.palette.m3error
-                        radius: Tokens.rounding.full
-                        width: asDot ? dotSize : Math.max(badgeHeight, badgeLabel.implicitWidth + Tokens.padding.extraSmall)
-                        height: asDot ? dotSize : badgeHeight
-                        anchors.right: iconContainer.right
-                        anchors.top: iconContainer.top
-                        anchors.rightMargin: -Math.round(height * 0.25)
-                        anchors.topMargin: -Math.round(height * 0.25)
-
-                        Text {
-                            id: badgeLabel
-
-                            anchors.centerIn: parent
-                            visible: !countBadge.asDot
-                            text: {
-                                const count = delegateItem.badge?.count ?? 0;
-                                if (count > 9999)
-                                    return "9k+";
-                                if (count > 999)
-                                    return `${Math.floor(count / 1000)}k`;
-                                return `${count}`;
-                            }
-                            color: Colours.palette.m3onError
-                            font: Tokens.font.label.builders.small.size(Math.max(6, Math.round(countBadge.badgeHeight * 0.62))).weight(Font.DemiBold).build()
-                        }
-                    }
-
-                    StyledRect {
-                        id: progressBar
-
-                        visible: delegateItem.badge?.progressVisible ?? false
-                        anchors.top: iconContainer.bottom
-                        anchors.topMargin: 1
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: root.iconSize
-                        height: 3
-                        radius: Tokens.rounding.full
-                        color: Qt.alpha(Colours.palette.m3onSurface, 0.15)
-
-                        StyledRect {
-                            width: Math.round(parent.width * (delegateItem.badge?.progress ?? 0))
-                            height: parent.height
-                            radius: parent.radius
-                            color: Colours.palette.m3primary
-                        }
-                    }
-
-                    ListView {
-                        anchors.bottom: parent.bottom
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottomMargin: 0
-                        spacing: 2
-                        orientation: ListView.Horizontal
-                        interactive: false
-
-                        height: 2
-                        width: contentWidth
-
-                        add: Transition {
-                            Anim { property: "opacity"; from: 0; to: 1; type: Anim.FastEffects }
-                            Anim { property: "scale"; from: 0.9; to: 1; type: Anim.FastSpatial }
-                        }
-                        remove: Transition {
-                            Anim { property: "opacity"; from: 1; to: 0; type: Anim.FastEffects }
-                            Anim { property: "y"; from: 0; to: -15; type: Anim.FastEffects }
-                        }
-                        addDisplaced: Transition {
-                            Anim { properties: "x,y"; type: Anim.FastSpatial }
-                        }
-                        removeDisplaced: Transition {
-                            Anim { properties: "x,y"; type: Anim.FastSpatial }
-                        }
-
-                        model: {
-                            const dummy = DockManager.modelUpdateTrigger;
-                            if (!modelData) return 0;
-                            return Math.min(2, modelData.toplevels.length);
-                        }
-
-                        delegate: Rectangle {
-                            required property int index
-
-                            width: (index === 0 && delegateItem.isActive) ? 16 : 2
-
-                                height: 2
-
-                                radius: 1
-
-                                color: delegateItem.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurface
-
-                                Behavior on width { Anim { type: Anim.DefaultSpatial } }
-                                Behavior on height { Anim { type: Anim.DefaultSpatial } }
-                                Behavior on color { CAnim {} }
-                                Behavior on scale { Anim { type: Anim.FastSpatial } }
-                                Behavior on y { Anim { type: Anim.FastSpatial } }
-                            }
-                        }
+                    const p = root.mapToItem(container, dockHover.point.position.x, dockHover.point.position.y);
+                    const cursorPos = bar.isHorizontal ? p.x : p.y;
+                    const origin = itemDelegate.mapToItem(container, 0, 0);
+                    const itemStart = bar.isHorizontal ? origin.x : origin.y;
+                    const itemSpan = bar.isHorizontal ? itemDelegate.width : itemDelegate.height;
+                    const halfGap = root.spacing / 2;
+                    return cursorPos >= (itemStart - halfGap) && cursorPos < (itemStart + itemSpan + halfGap);
                 }
+                isFirstMagnification: false
+                magnificationScale: 1.0
             }
         }
     }

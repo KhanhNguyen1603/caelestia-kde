@@ -13,6 +13,7 @@ Singleton {
 
     property string targetScreen: ""
     property var launchingApps: ({})
+    property var _launchTimestamps: ({})
     property bool isDragging: false
     property var modelDataArray: []
     property var modelDataMap: ({})
@@ -161,10 +162,12 @@ Singleton {
             if (app.toplevels.length > 0) {
                 if (newLaunching[app.appClass]) {
                     delete newLaunching[app.appClass];
+                    delete root._launchTimestamps[app.appClass];
                     launchingChanged = true;
                 }
                 if (newLaunching[app.id]) {
                     delete newLaunching[app.id];
+                    delete root._launchTimestamps[app.id];
                     launchingChanged = true;
                 }
             }
@@ -303,12 +306,19 @@ Singleton {
                 Kwin.focusWindow(addr);
             }
         } else if (entry.entry) {
-            let newLaunching = Object.assign({}, root.launchingApps);
-            newLaunching[entry.appClass || entry.id] = true;
-            root.launchingApps = newLaunching;
-
+            root.trackLaunch(entry.appClass || entry.id);
             Launch.launchEntry(entry.entry);
         }
+    }
+
+    function trackLaunch(key: string): void {
+        if (!key) return;
+        const newLaunching = Object.assign({}, root.launchingApps);
+        const newTimestamps = Object.assign({}, root._launchTimestamps);
+        newLaunching[key] = true;
+        newTimestamps[key] = Date.now();
+        root._launchTimestamps = newTimestamps;
+        root.launchingApps = newLaunching;
     }
 
     function activateIndex(idx: int): void {
@@ -324,10 +334,7 @@ Singleton {
         if (!entry)
             return;
         if (entry.entry) {
-            let newLaunching = Object.assign({}, root.launchingApps);
-            newLaunching[entry.appClass || entry.id] = true;
-            root.launchingApps = newLaunching;
-
+            root.trackLaunch(entry.appClass || entry.id);
             Launch.launchEntry(entry.entry);
         } else if (entry.toplevels && entry.toplevels.length > 0) {
             root.activateEntry(entry);
@@ -385,15 +392,21 @@ Singleton {
         root.modelDataMap = map;
     }
 
+    function _matchesApp(pattern: string, id: string): bool {
+        if (!pattern || !id) return false;
+        if (pattern === id) return true;
+        if (Strings.testRegex(pattern, id)) return true;
+        if (id.endsWith(".desktop") && Strings.testRegex(pattern, id.replace(".desktop", ""))) return true;
+        if (pattern.endsWith(".desktop") && Strings.testRegex(id, pattern.replace(".desktop", ""))) return true;
+        return false;
+    }
+
     function isPinned(id: string): bool {
         if (!id) return false;
         const current = root.effectivePinnedApps || [];
         for (let i = 0; i < current.length; i++) {
-            const item = current[i];
-            if (item === id) return true;
-            if (Strings.testRegex(item, id)) return true;
-            if (id.endsWith(".desktop") && Strings.testRegex(item, id.replace(".desktop", ""))) return true;
-            if (item.endsWith(".desktop") && Strings.testRegex(id, item.replace(".desktop", ""))) return true;
+            if (_matchesApp(current[i], id))
+                return true;
         }
         return false;
     }
@@ -409,13 +422,7 @@ Singleton {
 
     function unpinApp(id: string): void {
         const targetNode = root.useDockPanel ? GlobalConfig.dockPanel : GlobalConfig.bar.dock;
-        const current = (targetNode.pinnedApps || []).filter(item => {
-            if (item === id) return false;
-            if (Strings.testRegex(item, id)) return false;
-            if (id.endsWith(".desktop") && Strings.testRegex(item, id.replace(".desktop", ""))) return false;
-            if (item.endsWith(".desktop") && Strings.testRegex(id, item.replace(".desktop", ""))) return false;
-            return true;
-        });
+        const current = (targetNode.pinnedApps || []).filter(item => !_matchesApp(item, id));
         targetNode.pinnedApps = current;
     }
 
@@ -469,6 +476,31 @@ Singleton {
 
     ListModel {
         id: dockModel
+    }
+
+    Timer {
+        id: staleLaunchTimer
+
+        interval: 2000
+        repeat: true
+        running: Object.keys(root.launchingApps).length > 0
+        onTriggered: {
+            const now = Date.now();
+            let changed = false;
+            const newLaunching = Object.assign({}, root.launchingApps);
+            const newTimestamps = Object.assign({}, root._launchTimestamps);
+            for (const key of Object.keys(newLaunching)) {
+                if (newTimestamps[key] && (now - newTimestamps[key] > 15000)) {
+                    delete newLaunching[key];
+                    delete newTimestamps[key];
+                    changed = true;
+                }
+            }
+            if (changed) {
+                root._launchTimestamps = newTimestamps;
+                root.launchingApps = newLaunching;
+            }
+        }
     }
 
     Connections {

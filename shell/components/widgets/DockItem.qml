@@ -139,19 +139,14 @@ Item {
         property int delegateIndex: root.index
 
         property bool isActive: {
-            const dummy = DockManager.modelUpdateTrigger;
-            if (!root.modelData) return false;
+            if (!root.modelData || !root.modelData.toplevels) return false;
             for (const top of root.modelData.toplevels) {
                 if (top.focused || (DockManager.activeTop && DockManager.activeTop.address === top.address)) return true;
             }
             return false;
         }
 
-        property bool hasWindows: {
-            const dummy = DockManager.modelUpdateTrigger;
-            if (!root.modelData) return false;
-            return root.modelData.toplevels.length > 0;
-        }
+        property bool hasWindows: (root.modelData?.toplevels?.length ?? 0) > 0
 
         readonly property var badge: {
             const dummy = LauncherEntry.revision;
@@ -376,6 +371,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             width: Math.round(root.calculatedLabelWidth * root.currentScale)
             text: root.labelText
+            textFormat: Text.PlainText
             elide: Text.ElideRight
             color: delegateItem.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurface
             font: Tokens.font.label.builders.medium.size(Math.max(6, Math.round(root.labelSize * root.currentScale))).build()

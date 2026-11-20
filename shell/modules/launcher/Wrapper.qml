@@ -32,7 +32,7 @@ Item {
     readonly property bool hasDockBottom: Config.dockPanel.position === "bottom" && Config.dockPanel.enabled && (panels?.dockPanel?.visible ?? false)
     readonly property bool hasEdgePanelBottom: hasBarBottom || hasDockBottom
 
-    readonly property var activeEdgePanel: hasDockBottom ? panels.dockPanel : (hasBarBottom ? panels.bar : null)
+    readonly property var activeEdgePanel: hasDockBottom ? panels?.dockPanel : (hasBarBottom ? panels?.bar : null)
     readonly property real edgePanelWidth: activeEdgePanel?.width ?? screen.width
     readonly property real edgePanelCenterX: activeEdgePanel ? (activeEdgePanel.x + activeEdgePanel.width / 2) : (screen.width / 2)
     readonly property real screenCenterX: screen.width / 2
