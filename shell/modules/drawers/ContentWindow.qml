@@ -568,7 +568,7 @@ StyledWindow {
             // The tray's box brings its own surface, so a plate under it is a second
             // panel saying nothing.
             readonly property bool ownsSurface: panels.popouts.currentOwnsSurface
-            property real extraShift: panels.popouts.isDetached ? 0 : 0.2
+            property real extraShift: (panels.popouts.isDetached || activePanel.isIsland) ? 0 : 0.2
             property bool connectedToSidebar: activePanel === bar && (activePanel.position === "top" || activePanel.position === "bottom") && panels.popouts.sidebarOpen && panels.popouts.implicitWidth <= Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) + 1 && !panels.popouts.isDockPopout
 
             // Hiding the plate is not enough to keep it out of the way: it is merged into
@@ -582,35 +582,39 @@ StyledWindow {
             deformAmount: connectedToSidebar ? 0.03 : (panels.popouts.isDetached ? 0.05 : panels.popouts.hasCurrent ? 0.15 : 0.1)
             exclude: connectedToSidebar ? [sidebarBg] : []
             x: {
-                const baseX = panels.popoutsWrapper.x + panels.popouts.x + panels.leftMargin;
+                const shift = activePanel.isIsland ? 0 : extraShift;
+                const baseX = panels.popoutsWrapper.x + panels.leftMargin;
                 if (activePanel.position === "left")
-                    return baseX - panels.popouts.implicitWidth * extraShift;
+                    return baseX - panels.popoutsWrapper.width * shift;
                 return baseX;
             }
             implicitWidth: {
+                const shift = activePanel.isIsland ? 0 : extraShift;
                 if (activePanel.position === "left" || activePanel.position === "right")
-                    return panels.popouts.implicitWidth * (1 + extraShift);
-                return panels.popouts.implicitWidth;
+                    return panels.popoutsWrapper.width * (1 + shift);
+                return panels.popoutsWrapper.width;
             }
             bottomLeftRadius: activePanel.isIsland ? radius : ((activePanel.position === "top" && connectedToSidebar) ? 0 : radius)
             bottomRightRadius: activePanel.isIsland ? radius : ((activePanel.position === "top" && connectedToSidebar) ? 0 : radius)
             topLeftRadius: activePanel.isIsland ? radius : ((activePanel.position === "bottom" && connectedToSidebar) ? 0 : radius)
             topRightRadius: activePanel.isIsland ? radius : ((activePanel.position === "bottom" && connectedToSidebar) ? 0 : radius)
             y: {
-                const baseY = panels.popoutsWrapper.y + panels.popouts.y + panels.topMargin;
+                const shift = activePanel.isIsland ? 0 : extraShift;
+                const baseY = panels.popoutsWrapper.y + panels.topMargin;
                 if (activePanel.position === "top")
-                    return baseY - panels.popouts.implicitHeight * extraShift;
+                    return baseY - panels.popoutsWrapper.height * shift;
                 if (activePanel.position === "bottom" && connectedToSidebar)
                     return baseY - Tokens.spacing.extraLarge - 10;
                 return baseY;
             }
             implicitHeight: {
+                const shift = activePanel.isIsland ? 0 : extraShift;
                 if (activePanel.position === "top" || activePanel.position === "bottom") {
-                    let h = panels.popouts.implicitHeight * (1 + extraShift);
+                    let h = panels.popoutsWrapper.height * (1 + shift);
                     if (connectedToSidebar) h += Tokens.spacing.extraLarge + 10;
                     return h;
                 }
-                return panels.popouts.implicitHeight;
+                return panels.popoutsWrapper.height;
             }
 
             Behavior on extraShift {
