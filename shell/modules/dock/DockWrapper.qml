@@ -31,7 +31,7 @@ Item {
     readonly property int padding: Config.dockPanel.padding
     readonly property int spacing: Config.dockPanel.spacing
     readonly property real iconSize: Math.max(12, Config.dockPanel.iconSize)
-    readonly property real itemSize: Math.max(16, Math.max(Config.dockPanel.size, root.iconSize))
+    readonly property real itemSize: Math.max(8, Math.max(Config.dockPanel.size, root.iconSize))
     readonly property bool hasLauncher: Config.dockPanel.showLauncherIcon
     readonly property int itemCount: DockManager.count + (hasLauncher ? 1 : 0)
     readonly property real computedContentSpan: {
@@ -42,7 +42,7 @@ Item {
             return listSpan + (root.hasLauncher ? (root.itemSize + root.spacing) : 0);
         return itemCount * root.itemSize + (itemCount - 1) * root.spacing;
     }
-    readonly property int contentThickness: Math.max(root.itemSize, Tokens.sizes.bar.innerWidth) + root.padding * 2
+    readonly property int contentThickness: root.itemSize + root.padding * 2
     readonly property int islandMargin: isIsland ? Config.dockPanel.floatingMargin : 0
     readonly property bool dodgeEnabled: Config.dockPanel.dodgeWindows && !Config.dockPanel.persistent && !disabled
     readonly property rect dodgeRect: {

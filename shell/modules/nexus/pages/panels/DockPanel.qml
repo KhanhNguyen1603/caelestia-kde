@@ -339,9 +339,9 @@ PageBase {
             subtext: qsTr("Height or width dimension of the dock container")
             reset: ({ node: GlobalConfig.dockPanel, setting: "size" })
             value: Config.dockPanel.size
-            from: 32
+            from: 8
             to: 96
-            stepSize: 4
+            stepSize: 2
             onMoved: v => GlobalConfig.dockPanel.size = v
         }
 
@@ -350,9 +350,9 @@ PageBase {
             subtext: qsTr("Size of application icons in the dock")
             reset: ({ node: GlobalConfig.dockPanel, setting: "iconSize" })
             value: Config.dockPanel.iconSize
-            from: 24
+            from: 12
             to: 72
-            stepSize: 4
+            stepSize: 2
             onMoved: v => GlobalConfig.dockPanel.iconSize = v
         }
 
@@ -372,7 +372,7 @@ PageBase {
             subtext: qsTr("Padding around icons inside the dock container")
             reset: ({ node: GlobalConfig.dockPanel, setting: "padding" })
             value: Config.dockPanel.padding
-            from: 4
+            from: 0
             to: 32
             stepSize: 2
             onMoved: v => GlobalConfig.dockPanel.padding = v
