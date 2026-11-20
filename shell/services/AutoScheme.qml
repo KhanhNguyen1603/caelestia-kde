@@ -44,6 +44,12 @@ Singleton {
         if (!root.enabled)
             return;
 
+        // The file on disk is the only statement of what mode is in effect, and it is read
+        // asynchronously. Deciding before it lands compares the target against the default
+        // (dark) and asks the engine to re-derive the scheme the session already had.
+        if (!Colours.schemeLoaded)
+            return;
+
         const now = Time.date;
         const bounds = root.boundariesFor(now);
         if (!bounds)
@@ -57,7 +63,7 @@ Singleton {
 
         root.lastApplied = target;
 
-        if ((target === "light") !== Colours.light)
+        if ((target === "light") !== Colours.currentLight)
             Colours.setMode(target);
     }
 
@@ -77,6 +83,15 @@ Singleton {
 
         target: Time
         enabled: root.enabled
+    }
+
+    Connections {
+        function onSchemeLoadedChanged(): void {
+            if (Colours.schemeLoaded)
+                root.apply(true);
+        }
+
+        target: Colours
     }
 
     Connections {
