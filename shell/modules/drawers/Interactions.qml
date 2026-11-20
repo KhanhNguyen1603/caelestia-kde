@@ -31,6 +31,9 @@ CustomMouseArea {
     property bool osdShortcutActive
     property bool utilitiesShortcutActive
     readonly property bool isBarHorizontal: bar.isHorizontal
+    // Something in this window that is not this item already has the focus: a panel's text
+    // field focuses itself as it opens, and the drawer must not take it back.
+    readonly property bool hasFocusedChild: root.Window.activeFocusItem !== null && root.Window.activeFocusItem !== root
     // Uses clampedThickness rather than the raw implicit size so the bar stays
     // reachable when the border thickness is set to 0 (the collapsed bar is 0px wide).
 
@@ -172,6 +175,11 @@ CustomMouseArea {
     anchors.fill: parent
     acceptedButtons: (fullscreen && !capturesDismissClick && !(root.focusGrab && (root.focusGrab.active || popouts.isDetached))) ? Qt.NoButton : Qt.AllButtons
     hoverEnabled: true
+    Keys.onEscapePressed: {
+        if (!root.panels.wantsKeyboard || !root.focusGrab)
+            return;
+        root.focusGrab.clear(true);
+    }
     onPressed: event => {
         dragStart = Qt.point(event.x, event.y);
 
@@ -183,8 +191,11 @@ CustomMouseArea {
         const grabActive = root.focusGrab && (root.focusGrab.active || popouts.isDetached);
         // Any screen's menu can be the one this click dismisses.
         const menuOpen = Visibilities.contextPopoutOpen;
+        // A pinned hidden-icons box is dismissed by clicking away from it, the way a
+        // menu is: the click belongs to the dismiss, not to what is under it.
+        const boxOpen = popouts.staysOpen && popouts.hasCurrent;
 
-        if (grabActive || menuOpen) {
+        if (grabActive || menuOpen || boxOpen) {
             let inside = false;
 
             if (inBarArea(event.x, event.y) || inDockPanelArea(event.x, event.y, true)) inside = true;
@@ -200,6 +211,8 @@ CustomMouseArea {
                     root.focusGrab.clear();
                 if (menuOpen)
                     Visibilities.closeContextPopouts();
+                if (boxOpen)
+                    popouts.hasCurrent = false;
             }
         }
     }
@@ -461,12 +474,27 @@ CustomMouseArea {
         }
     }
 
+    Binding {
+        target: root
+        property: "focus"
+        when: root.panels.wantsKeyboard && !root.hasFocusedChild
+        value: true
+        restoreMode: Binding.RestoreBindingOrValue
+    }
     Timer {
         id: popoutHideTimer
 
         interval: 150
         onTriggered: {
             if (popouts.isContextPopout || panels.popoutsWrapper.hovered)
+                return;
+            // A box the user opened is theirs to dismiss, not the pointer's.
+            if (popouts.staysOpen)
+                return;
+            // A drag out of the bar opens the box under the pointer, which is
+            // outside every panel until the pointer reaches it: taking the panel
+            // away mid-gesture would leave the drag with nothing to land on.
+            if (TrayDrag.active)
                 return;
             const isDockPopout = popouts.sourcePanel === "dockPanel" || popouts.isDockPanelPopout;
             if (isDockPopout && (dockPanel?.hovered || inDockPanelArea(root.mouseX, root.mouseY)))

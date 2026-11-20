@@ -163,6 +163,37 @@ Singleton {
                 sub.id = aliases[sub.id];
     }
 
+    // A bar saved by a version from before the unified tray holds rows for the clock and
+    // the icons but none for the tray, so the tray's own icons have nowhere to be drawn
+    // and every icon lands in the old status-icons group. The row the schema ships goes
+    // back where it belongs; a row that says the tray is off is the user's answer, so
+    // only its absence is taken as an older bar.
+    function migrateBarEntries(): void {
+        const bar = GlobalConfig.bar;
+        if (!bar.isOverride("entries"))
+            return;
+
+        const entries = bar.entries ?? [];
+        if (entries.some(entry => entry.id === "tray"))
+            return;
+
+        // The neighbours the tray is declared with, in the order they are declared, so it
+        // lands where the schema puts it whatever else the list has been arranged around.
+        const after = ["updateIndicator", "github", "media", "clock", "statusIcons", "power"];
+        let at = entries.length;
+        for (const id of after) {
+            const found = entries.findIndex(entry => entry.id === id);
+            if (found >= 0) {
+                at = found;
+                break;
+            }
+        }
+
+        const next = entries.slice();
+        next.splice(at, 0, { id: "tray", enabled: true, zone: "right" });
+        bar.entries = next;
+    }
+
     Component.onCompleted: {
         root.migrateWorkspaceDisplay();
         root.migrateQuickToggles();
@@ -170,6 +201,7 @@ Singleton {
         root.migrateClockFormat();
         root.migratePerMonitor();
         root.migrateDockPinned();
+        root.migrateBarEntries();
         orderReader.running = true;
     }
 

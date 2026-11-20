@@ -10,6 +10,8 @@
 [![KDE Plasma](https://img.shields.io/badge/Plasma_6-1D99F3?logo=kde&logoColor=white&style=for-the-badge&labelColor=101418)](https://kde.org/plasma-desktop)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-9bd0cc?style=for-the-badge&labelColor=101418)](LICENSE)
 
+[![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white&style=for-the-badge&labelColor=101418)](https://discord.gg/qTkpHrHp5H)
+
 </div>
 
 <!-- markdownlint-disable-next-line MD034 -- a bare URL is what GitHub turns into an inline video player -->
@@ -17,8 +19,14 @@ https://github.com/user-attachments/assets/38b24e7f-fdd9-43db-872b-8c0ac23a44fd
 
 > [!NOTE]
 > This repo is the KDE Plasma port of [`caelestia-dots/shell`](https://github.com/caelestia-dots/shell).
-> Upstream runs on Hyprland; the port runs the same shell on KWin and Plasma. For the original
+> For the original
 > Hyprland dotfiles, see [`caelestia-dots/caelestia`](https://github.com/caelestia-dots/caelestia).
+
+> Please do not contact the official Caelestia hyprland developers with questions regarding this KDE port.
+
+
+> [!TIP]
+> Questions, setups, or want to contribute? Join the [Discord](https://discord.gg/qTkpHrHp5H).
 
 ## Installation
 
@@ -45,7 +53,7 @@ You can also choose *Uninstall* from the installer TUI, or run the script from t
 checkout directly:
 
 ```bash
-bash ./uninstall.sh
+bash ./uninstall.sh      # or: bash install.sh --uninstall
 ```
 
 A packaged install has no script to run: the row names the package manager's command

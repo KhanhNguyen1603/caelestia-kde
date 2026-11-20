@@ -18,6 +18,7 @@ import qs.modules.background
 import qs.modules.bar
 import qs.modules.dock
 import qs.modules.overview as Overview
+import qs.modules.bar.components as BarComponents
 import qs.modules.background.desktopicons
 
 StyledWindow {
@@ -137,6 +138,38 @@ StyledWindow {
     FocusReturn {
         active: root.wantsKeyboard
     }
+    // The transient surfaces are exclusive (see Visibilities.closeTransients). Watching the
+    // flags here catches every way they can be opened, including the drag gestures in
+    // Interactions and anything a plugin sets: whichever became true last takes the screen
+    // and the others close instead of being stacked over each other.
+    Connections {
+        function onLauncherChanged(): void {
+            if (root.visibilities.launcher)
+                Visibilities.closeTransients("launcher");
+        }
+
+        function onDashboardChanged(): void {
+            if (root.visibilities.dashboard)
+                Visibilities.closeTransients("dashboard");
+        }
+
+        function onUtilitiesChanged(): void {
+            if (root.visibilities.utilities)
+                Visibilities.closeTransients("utilities");
+        }
+
+        function onSessionChanged(): void {
+            if (root.visibilities.session)
+                Visibilities.closeTransients("session");
+        }
+
+        function onOverviewChanged(): void {
+            if (root.visibilities.overview)
+                Visibilities.closeTransients("overview");
+        }
+
+        target: root.visibilities
+    }
 
     Overview.Anim {
         id: animConfig
@@ -192,10 +225,13 @@ StyledWindow {
 
         property bool active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || (!Config.dashboard.showOnHover && visibilities.dashboard && Config.dashboard.enabled) || (!Config.utilities.showOnHover && visibilities.utilities && Config.utilities.enabled) || (TrayRegistry.isTrayPopout(panels.popouts.currentName) && (panels.popouts.current as StackView)?.depth > 1)
 
-        function clear() {
+        function clear(forceSidebar = false) {
             visibilities.launcher = false;
             visibilities.session = false;
-            if (!Visibilities.sidebarPinned)
+
+            if (forceSidebar)
+                GlobalConfig.sidebar.pinned = false;
+            if (forceSidebar || !Visibilities.sidebarPinned)
                 visibilities.sidebar = false;
             visibilities.dashboard = false;
             visibilities.utilities = false;
@@ -420,13 +456,6 @@ StyledWindow {
             deformAmount: 0.1
         }
         PanelBg {
-            id: launcherAvatarBg
-
-            panel: panels.launcherAvatar
-            deformAmount: 0.1
-            radius: Tokens.rounding.full
-        }
-        PanelBg {
             id: sessionBg
 
             panel: panels.sessionWrapper
@@ -536,8 +565,18 @@ StyledWindow {
             id: popoutBg
 
             readonly property var activePanel: panels.popoutsWrapper.activePanel
+            // The tray's box brings its own surface, so a plate under it is a second
+            // panel saying nothing.
+            readonly property bool ownsSurface: panels.popouts.currentOwnsSurface
             property real extraShift: panels.popouts.isDetached ? 0 : 0.2
             property bool connectedToSidebar: activePanel === bar && (activePanel.position === "top" || activePanel.position === "bottom") && panels.popouts.sidebarOpen && panels.popouts.implicitWidth <= Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) + 1 && !panels.popouts.isDockPopout
+
+            // Hiding the plate is not enough to keep it out of the way: it is merged into
+            // the blob the panels share, and that shape is drawn whatever this item does.
+            readonly property bool shown: panel.visible && !popoutBg.ownsSurface
+
+            visible: popoutBg.shown
+            group: popoutBg.shown ? blobGroup : null
 
             panel: panels.popoutsWrapper
             deformAmount: connectedToSidebar ? 0.03 : (panels.popouts.isDetached ? 0.05 : panels.popouts.hasCurrent ? 0.15 : 0.1)
@@ -1039,18 +1078,6 @@ StyledWindow {
             deformMatrix: launcherBg.deformMatrix
         }
         BlurMask {
-            target: panels.launcherAvatar
-            contentItem: root.contentItem
-            blurOffsetTop: root.blurOffsetTop
-            blurOffsetBottom: root.blurOffsetBottom
-            blurOffsetLeft: root.blurOffsetLeft
-            blurOffsetRight: root.blurOffsetRight
-            vAnchor: "none"
-            hAnchor: "none"
-            offsetScale: 1 - panels.launcher.avatarOpenScale
-            deformMatrix: launcherAvatarBg.deformMatrix
-        }
-        BlurMask {
             target: panels.dashboard
             contentItem: root.contentItem
             blurOffsetTop: root.blurOffsetTop
@@ -1063,7 +1090,10 @@ StyledWindow {
             deformMatrix: dashBg.deformMatrix
         }
         BlurMask {
-            target: panels.popoutsWrapper
+            // Nothing is blurred behind the box: it is drawn on a surface of its own, and
+            // a blur cut to the plate it does not have covers it only in part, which reads
+            // as the box being split across its middle.
+            target: popoutBg.ownsSurface ? null : panels.popoutsWrapper
             contentItem: root.contentItem
             blurOffsetTop: root.blurOffsetTop - (popoutBg.connectedToSidebar ? Tokens.spacing.extraLarge + 10 + Tokens.rounding.extraLarge : 0)
             blurOffsetBottom: root.blurOffsetBottom
@@ -1131,6 +1161,10 @@ StyledWindow {
             offsetScale: panels.floatingOsd.offsetScale
         }
     }
+
+    // Drawn last so the drag ghost passes over the bar and the box it is heading for
+    // instead of disappearing underneath them.
+    BarComponents.TrayDragGhost {}
 
     component PanelBg: BlobRect {
         required property Item panel

@@ -279,6 +279,7 @@ PageBase {
             ToggleRow {
                 reset: ({ node: GlobalConfig.appearance, setting: "blur" })
                 text: qsTr("Background Blur")
+                beta: true
                 subtext: parent.isBbdxEnabled ? qsTr("Disabling has no effect if Better Blur dx is enabled") : qsTr("Enable a frosted glass effect by blurring the background")
                 checked: parent.isBbdxEnabled ? true : GlobalConfig.appearance.blur
                 enabled: GlobalConfig.appearance.transparency.enabled && !parent.isBbdxEnabled

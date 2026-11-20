@@ -8,6 +8,12 @@ REGISTRY="$SERVICES/TrayRegistry.qml"
 MIGRATIONS="$SERVICES/ConfigMigrations.qml"
 ICONS="$REPO_ROOT/shell/utils/Icons.qml"
 BAR="$REPO_ROOT/shell/modules/bar/Bar.qml"
+TRAY="$REPO_ROOT/shell/modules/bar/components/Tray.qml"
+BOX="$REPO_ROOT/shell/modules/bar/popouts/TrayOverflow.qml"
+PLACEMENTS="$REPO_ROOT/shell/modules/bar/BarPlacements.qml"
+ICONS_PANEL="$REPO_ROOT/shell/modules/bar/popouts/TrayIcons.qml"
+WIDGETS="$REPO_ROOT/shell/modules/bar/BarWidgets.qml"
+STATUS_PAGE="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarStatusIcons.qml"
 CONTENT="$REPO_ROOT/shell/modules/bar/popouts/Content.qml"
 PAGE="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarTray.qml"
 LIST_EDITOR="$REPO_ROOT/shell/modules/nexus/common/ListEditor.qml"
@@ -45,6 +51,25 @@ assert.strictEqual(Icons.iconNameOf("proc:kitty-terminal"), "kitty-terminal");
 '
 }
 
+test_a_title_names_the_app_when_it_says_something() {
+    check_tray_icons "an app is called what it calls itself" '
+assert.strictEqual(Icons.readableTitle("Cachy-Update"), "Cachy-Update", "a title that happens to be the id is still the app name");
+assert.strictEqual(Icons.readableTitle("2652-9"), "", "a notifier id is the plumbing, not a name");
+assert.strictEqual(Icons.readableTitle("org.kde.StatusNotifierItem-2652-1"), "", "a bus name says nothing either");
+assert.strictEqual(Icons.readableTitle(""), "");
+'
+}
+
+test_a_list_is_written_only_when_it_changes() {
+    check_tray_icons "writing a list that already says this costs a redraw" '
+assert.strictEqual(Icons.sameList(["a", "b"], ["a", "b"]), true);
+assert.strictEqual(Icons.sameList(["a", "b"], ["b", "a"]), false, "order is part of what a list says");
+assert.strictEqual(Icons.sameList(["a"], ["a", "b"]), false);
+assert.strictEqual(Icons.sameList([], []), true);
+assert.strictEqual(Icons.sameList(null, []), true, "an unset list is an empty one");
+'
+}
+
 test_hidden_wins_over_pinned() {
     check_tray_icons "state precedence is hidden > visible > collapsed" '
 assert.strictEqual(Icons.stateOf("a", ["a"], ["a"]), "hidden");
@@ -65,16 +90,20 @@ assert.deepStrictEqual(Icons.ordered([], ["a"]), [], "no rows need no order");
 
 test_the_bar_and_the_popout_read_one_list() {
     assert_file_contains "$REGISTRY" "readonly property var trayItems" "the registry publishes the bar's icons"
-    assert_file_contains "$CONTENT" "TrayRegistry.trayItems" "the tray popout reads the bar's icons"
+    assert_file_contains "$REGISTRY" "readonly property var barItems" "the registry publishes the list the bar actually draws"
+    assert_file_contains "$REGISTRY" "readonly property var overflowItems" "the registry publishes the overflow list"
+    assert_file_contains "$REPO_ROOT/shell/modules/bar/BarWidgets.qml" "TrayRegistry.barItems" "the bar reads the list it is meant to draw"
+    assert_file_contains "$CONTENT" "TrayRegistry.liveItems" "the tray popout gives every running icon a menu, drawn on the bar or in the box"
+    assert_file_not_contains "$CONTENT" "TrayRegistry.trayItems" "an icon in the box must be able to open its menu too"
     assert_file_not_contains "$CONTENT" "SystemTray.items.values.filter" "the popout must not re-derive which icons exist"
     assert_file_not_contains "$BAR" "tray.layout.childAt" "the bar must not reach into the tray's layout"
-    assert_file_contains "$BAR" "tray.itemAt(pos)" "the tray owns its own hit test"
+    assert_file_not_contains "$BAR" "tray.itemAt(root, pos)" "the bar does not hit-test the tray's icons: hovering one opens nothing, so there is nothing to ask them"
 }
 
 test_popout_names_have_one_definition() {
     assert_file_contains "$REGISTRY" "function popoutName(key: string): string" "the popout name prefix lives in the registry"
     assert_file_not_contains "$BAR" "traymenu" "the bar must not rebuild the popout name"
-    assert_file_contains "$BAR" "trayItem.popoutName" "the bar asks the icon for its popout name"
+    assert_file_not_contains "$BAR" "trayItem.popoutName" "hovering an icon opens nothing, so the bar never asks it for its menu"
     assert_file_contains "$CONTENT" "TrayRegistry.popoutNameOf" "the popout names itself through the registry"
 }
 
@@ -91,6 +120,62 @@ test_a_single_identity_reads_icon_substitutions() {
     assert_file_contains "$MIGRATIONS" "function migrateTrayIcons(aliases: var): void" "the config rewrite maps ids to aliases"
     assert_file_contains "$MIGRATIONS" "sub.id = aliases[sub.id]" "icon substitutions are rewritten with the lists"
     assert_file_contains "$REGISTRY" "ConfigMigrations.migrateTrayIcons(aliases)" "the registry hands its aliases over"
+}
+
+test_a_bar_from_before_the_tray_gets_it_back() {
+    assert_file_contains "$MIGRATIONS" "function migrateBarEntries(): void" \
+        "an installed bar that predates the unified tray is migrated rather than left without one"
+    assert_file_contains "$MIGRATIONS" 'if (!bar.isOverride("entries"))' \
+        "only a list the user actually saved is rewritten"
+    assert_file_contains "$MIGRATIONS" 'entries.some(entry => entry.id === "tray")' \
+        "a row that says the tray is off is the user's answer, so only its absence is taken as an older bar"
+    assert_file_contains "$MIGRATIONS" 'next.splice(at, 0, { id: "tray", enabled: true, zone: "right" })' \
+        "the row goes back among the neighbours the schema declares it with"
+    assert_file_contains "$MIGRATIONS" "root.migrateBarEntries();" \
+        "and the migration runs when the shell starts"
+}
+
+test_an_icon_answers_to_every_name_it_has_had() {
+    assert_file_contains "$REGISTRY" "function keysOf(item: var): var" \
+        "an icon has one name per alias, because the process alias only arrives after ps has said whose icon it is"
+    assert_file_contains "$REGISTRY" 'push(TrayIcons.keyOf(item.id, item.icon, ""));' \
+        "the theme-icon alias is one of them, and it is what a setting written early holds"
+    assert_file_contains "$REGISTRY" "root.keysOf(item).some(key => root.rowedKeys[key])" \
+        "an icon with a row under any of its names is drawn from that row, so it cannot also wait in the box"
+    assert_file_contains "$REGISTRY" "root.liveItems.find(item => root.keysOf(item).includes(key)) ?? null" \
+        "and a stored name resolves to the icon it was written for, whichever alias it used"
+    assert_file_contains "$REGISTRY" "function rowFor(key: string): string" \
+        "a drop reuses the row the icon already holds instead of writing a second one"
+    assert_file_contains "$REGISTRY" "const names = item ? root.keysOf(item) : [key];" \
+        "and setting a state takes every name with it, so the lists cannot disagree about one icon"
+}
+
+test_an_icon_with_a_row_is_drawn_from_it_alone() {
+    assert_file_contains "$REGISTRY" "readonly property var rowedKeys" \
+        "the registry knows which icons the bar's entry list holds a place for"
+    assert_file_contains "$REGISTRY" "root.boxedItems.filter" \
+        "the panel's own list is worked out from the icons no row placed, so one icon cannot be drawn twice"
+    assert_file_contains "$BOX" "BarPlacements.setPlacement(id, BarPlacements.trayZone" \
+        "an icon dropped in the box gives up its row in the bar"
+    assert_file_not_contains "$TRAY" "BarPlacements.trayZone" \
+        "and the tray never hides one: an empty tray still has to take an icon back"
+}
+
+test_every_icon_is_placed_from_one_list() {
+    assert_file_contains "$CONTENT" 'name: "trayicons"' "the bar has one panel for choosing what shows"
+    assert_file_contains "$CONTENT" "sourceComponent: TrayIcons {" "drawn by the panel that holds the switch"
+    assert_file_contains "$TRAY" 'root.popouts.currentName = "trayicons"' \
+        "and the tray's own gesture opens it, rather than a page of settings"
+    assert_file_contains "$PLACEMENTS" "readonly property var rows: {" \
+        "one list names every icon with the place it is in"
+    assert_file_contains "$PLACEMENTS" "function setShown(id: string, shown: bool): void" \
+        "and one switch turns each of them on and off"
+    assert_file_contains "$ICONS_PANEL" "StyledSwitch {" "the list is a switch per icon, not a row of places"
+    assert_file_contains "$ICONS_PANEL" "BarPlacements.setShown(id, shown)" \
+        "a switch writes whether the icon shows and nothing else"
+    assert_file_not_contains "$ICONS_PANEL" 'qsTr("Off")' "there is no per-icon place to choose"
+    assert_file_not_contains "$STATUS_PAGE" "lockStatus: qsTr(" \
+        "the status icons are named once, by the map the panel reads too"
 }
 
 test_config_is_the_only_store() {

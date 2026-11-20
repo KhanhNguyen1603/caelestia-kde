@@ -28,6 +28,11 @@ Singleton {
         return when.toLocaleString(Qt.locale(), Units.twelveHourClock ? "h:mm A" : "HH:mm");
     }
 
+    /// A day and a time of day, for things that end at a moment rather than on a date.
+    function shortDateTime(when: date): string {
+        return Qt.locale().toString(when, "d MMM") + ", " + clockTime(when);
+    }
+
     SystemClock {
         id: clock
 

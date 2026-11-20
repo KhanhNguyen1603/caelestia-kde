@@ -422,7 +422,9 @@ Item {
                         const dummy = LauncherEntry.revision;
                         if (!modelData || !(Config.bar.dock.showBadges ?? true))
                             return null;
-                        return LauncherEntry.forApp(modelData.id);
+                        // Per-window ids carry a "#address" suffix that LauncherEntry does not
+                        // normalise, so the lookup goes by the application class instead.
+                        return LauncherEntry.forApp(modelData.appClass || modelData.id);
                     }
 
                     width: delegateContainer.width

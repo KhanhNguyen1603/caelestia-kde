@@ -171,5 +171,18 @@ test_the_toast_stays_short_enough_to_read() {
     [ -n "$body" ] && assert_eq "1" "$([ "${#body}" -le 90 ] && echo 1 || echo 0)" "the body is $([ -n "$body" ] && echo ${#body}) characters; keep it under 90 so it fits two lines"
 }
 
+test_the_same_failure_is_only_announced_once() {
+    # Every login brings the same mismatch back, and a toast that covers the panels each
+    # time is worse than the missing effect it reports. The reason is remembered instead.
+    local guard="$REPO_ROOT/shell/services/WorkspaceTrackerGuard.qml"
+    assert_file_contains "$guard" 'property string announced: ""' "what was announced has to be kept"
+    assert_file_contains "$guard" 'if (detail === memory.announced)' "and compared before a toast is raised"
+    assert_file_contains "$guard" 'reloadableId: "workspaceTracker"' \
+        "across restarts, through the state the shell already persists for this"
+    assert_file_contains "$guard" 'memory.announced = "";' "while a working tracker forgets it, so a later break is news again"
+    assert_file_contains "$guard" 'console.warn' "the log still says it every time"
+    assert_file_not_contains "$guard" 'FileView' "and none of this is a hand-rolled file format"
+}
+
 run_tests
 

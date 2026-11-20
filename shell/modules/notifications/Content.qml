@@ -7,6 +7,7 @@ import Caelestia
 import Caelestia.Config
 import qs.components
 import qs.components.containers
+import qs.components.effects
 import qs.components.widgets
 import qs.services
 
@@ -21,6 +22,9 @@ Item {
 
     /// Nothing to show: the stack is not there at all, rather than a strip of padding.
     readonly property bool empty: list.count === 0
+    /// The width the screen leaves us. A stack wider than the display is a stack off the
+    /// display, so the cards give way on a narrow screen instead of hanging over the edge.
+    readonly property real availableWidth: (QsWindow.window as QsWindow)?.screen.width ?? 0
 
     /// How tall the notifications themselves want to be.
     readonly property real contentHeight: {
@@ -52,7 +56,7 @@ Item {
         return h === "right" ? parent.right : undefined;
     }
 
-    implicitWidth: Tokens.sizes.notifs.width
+    implicitWidth: root.availableWidth > 0 ? Math.min(Tokens.sizes.notifs.width, root.availableWidth - Tokens.padding.extraLarge * 2) : Tokens.sizes.notifs.width
     /// And how tall it may be: the panels beside it only leave so much, and a stack that
     /// does not fit waits rather than drawing half a notification.
     implicitHeight: root.empty ? 0 : Math.min(root.contentHeight + root.padding + root.clampedPadding, root.room)
@@ -182,12 +186,20 @@ Item {
                 property: "z"
                 value: 1
             }
-            Anim {
-                target: notif
-                property: "x"
-                to: (notif.x >= 0 ? root.implicitWidth : -root.implicitWidth) * 2
-                duration: Tokens.anim.durations.normal
-                easing: Tokens.anim.emphasized
+            ParallelAnimation {
+                Anim {
+                    target: notif
+                    property: "x"
+                    to: (notif.x >= 0 ? root.implicitWidth : -root.implicitWidth) * 2
+                    duration: Tokens.anim.durations.normal
+                    easing: Tokens.anim.emphasized
+                }
+                Anim {
+                    target: notif
+                    property: "opacity"
+                    to: 0
+                    duration: Tokens.anim.durations.normal
+                }
             }
             PropertyAction {
                 target: wrapper
@@ -196,14 +208,19 @@ Item {
             }
         }
 
-        ClippingRectangle {
+        // No cast shadow: the shell's other floating surfaces are flat against the wallpaper, and
+        // a RectangularShadow here read as a black border around the card.
+        // A plain clip, not a ClippingRectangle: the latter renders its child through a shader
+        // to cut a rounded region, and the card already draws its own corners. That extra
+        // surface was resampling the whole card, which is what softened every edge.
+        Item {
+            id: clip
+
             anchors.top: parent.top
             anchors.topMargin: wrapper.idx === 0 ? 0 : Tokens.spacing.medium
-
-            color: "transparent"
-            radius: notif.radius
             implicitWidth: notif.implicitWidth
             implicitHeight: notif.implicitHeight
+            clip: true
 
             Notification {
                 id: notif

@@ -11,5 +11,7 @@ QtObject {
     property string icon: ""
     property string description: ""
     property string defaultPage: ""
+    // A category that is one page: its entry opens that page instead of a list of one.
+    property bool singlePage: false
     default property list<Page> pages
 }

@@ -21,8 +21,12 @@ Item {
     property string confirmText: ""
     property string cancelText: qsTr("Cancel")
     property bool destructive: false
+    /// A dialog whose answer cannot wait - one that undoes something on a timer, for
+    /// instance - swallows Escape and outside clicks instead of being dismissed unanswered.
+    property bool dismissible: true
 
     signal confirmed
+    signal cancelled
 
     function open(): void {
         dialog.open();
@@ -40,7 +44,7 @@ Item {
         height: contentColumn.implicitHeight + Tokens.padding.large * 2
         modal: true
         focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        closePolicy: root.dismissible ? Popup.CloseOnEscape | Popup.CloseOnPressOutside : Popup.NoAutoClose
         parent: Overlay.overlay
 
         x: parent ? Math.round((parent.width - width) / 2) : 0
@@ -101,7 +105,10 @@ Item {
 
                 TextButton {
                     text: root.cancelText
-                    onClicked: dialog.close()
+                    onClicked: {
+                        dialog.close();
+                        root.cancelled();
+                    }
                 }
 
                 TextButton {

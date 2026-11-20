@@ -7,6 +7,7 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.utils
+import qs.modules.bar
 import qs.modules.nexus.common
 
 PageBase {
@@ -133,7 +134,7 @@ PageBase {
                         if (item.value === "forget")
                             TrayRegistry.forget(modelData.key);
                         else
-                            TrayRegistry.setState(modelData.key, item.value);
+                            BarPlacements.setTrayState(modelData.key, item.value);
                     }
                 }
             }

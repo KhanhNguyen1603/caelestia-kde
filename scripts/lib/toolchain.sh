@@ -78,8 +78,10 @@ install_cava_sdk() {
     local archive
     archive="$(mktemp)"
 
-    # Our continuous builds publish no hash, so this is the one artifact whose refusal the
-    # helper reports as this project's own omission rather than a third party's.
+    # The continuous build is republished under the same asset name on every cava commit, so
+    # the digest has to be the one the release reports rather than a constant here. When it
+    # cannot be resolved the refusal is reported as this project's own omission rather than a
+    # third party's, because the release that publishes no checksum is ours.
     if ! fetch_verified_asset "$url" "$archive" "" unpack; then
         rm -f "$archive"
         return 1

@@ -66,6 +66,7 @@ test_every_decision_site_goes_through_the_lookup() {
     done <<'SITES'
 scripts/lib/download.sh|file_sha256|sha256sum
 scripts/lib/download.sh|verify_download|cut
+scripts/lib/download.sh|release_digest_for_url|jq
 scripts/lib/download.sh|archive_entries_are_safe|tar
 installer/distro/debian/packages.sh|darkly_deb_asset_url|jq
 installer/distro/debian/packages.sh|cliphist_asset_url|jq

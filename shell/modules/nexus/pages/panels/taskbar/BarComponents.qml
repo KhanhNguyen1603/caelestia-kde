@@ -24,7 +24,7 @@ PageBase {
             "github": {
                 icon: "commit",
                 name: qsTr("GitHub"),
-                available: BarComponents.GithubStore.available,
+                available: !BarComponents.GithubStore.tokenMissing,
                 unavailableText: qsTr("GitHub token not detected")
             },
             "media": { icon: "graphic_eq", name: qsTr("Now playing") },
@@ -42,7 +42,6 @@ PageBase {
             "perfGpu": { icon: "desktop_windows", name: qsTr("GPU"), available: Gpu.type !== Gpu.None, unavailableText: qsTr("GPU not detected") },
             "perfBattery": { icon: "battery_full", name: qsTr("Battery"), available: UPower.displayDevice.isLaptopBattery, unavailableText: qsTr("Battery not detected") },
             "dock": { icon: "apps", name: qsTr("Dock") },
-            "showDesktop": { icon: "keyboard_double_arrow_down", name: qsTr("Show Desktop") },
             "power": { icon: "power_settings_new", name: qsTr("Power menu") },
             "shortcuts": { icon: "toggle_on", name: qsTr("Shortcuts") },
             "screencapture": { icon: "screenshot_region", name: qsTr("Screen Capture") },
@@ -396,7 +395,10 @@ PageBase {
                 let zone = entry.zone || "left";
                 if (zone === "left") leftModel.append({ "compId": entry.id, "isPlaceholder": false });
                 else if (zone === "middle") middleModel.append({ "compId": entry.id, "isPlaceholder": false });
-                else if (zone === "right") rightModel.append({ "compId": entry.id, "isPlaceholder": false });
+                // A widget in the tray's hidden-icons box is still a right-zone
+                // widget: it is listed here so the editor can bring it back, and
+                // moving it anywhere writes the zone the drop asked for.
+                else if (zone === "right" || zone === BarPlacements.trayZone) rightModel.append({ "compId": entry.id, "isPlaceholder": false });
             } else {
                 libraryModel.append({ "compId": entry.id, "isPlaceholder": false });
             }
@@ -410,12 +412,16 @@ PageBase {
     }
 
     function resetToDefaults(): void {
-        BarWidgets.resetToDefaults(GlobalConfig.bar);
+        BarPlacements.resetToDefaults();
         load();
     }
 
     function save(): void {
         let newEntries = [];
+        const current = BarWidgets.entriesOf(Config.bar);
+        // A widget in the box is listed with the right ones, so saving this page has to
+        // leave it in the box instead of putting it back on the bar.
+        const zoneOf = id => (current.find(entry => entry.id === id)?.zone === BarPlacements.trayZone ? BarPlacements.trayZone : "right");
 
         for (let i = 0; i < leftModel.count; i++) {
             if (!leftModel.get(i).isPlaceholder) {
@@ -429,17 +435,18 @@ PageBase {
         }
         for (let i = 0; i < rightModel.count; i++) {
             if (!rightModel.get(i).isPlaceholder) {
-                newEntries.push({ id: rightModel.get(i).compId, enabled: true, zone: "right" });
+                const id = rightModel.get(i).compId;
+                newEntries.push({ id: id, enabled: true, zone: zoneOf(id) });
             }
         }
         for (let i = 0; i < libraryModel.count; i++) {
             if (!libraryModel.get(i).isPlaceholder) {
                 const id = libraryModel.get(i).compId;
-                newEntries.push({ id: id, enabled: false, zone: BarWidgets.zoneFor(Config.bar, id) });
+                newEntries.push({ id: id, enabled: false, zone: BarPlacements.declaredZone(id) });
             }
         }
 
-        BarWidgets.replaceAll(GlobalConfig.bar, newEntries);
+        BarPlacements.replaceAll(newEntries);
     }
 
     title: qsTr("Toggle & rearrange")
@@ -474,6 +481,14 @@ PageBase {
                 text: qsTr("Drag to rearrange or disable")
                 font: Tokens.font.body.small
                 color: Colours.palette.m3onSurfaceVariant
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: qsTr("Widgets in the right zone share one system tray; the clock stays outside it.")
+                font: Tokens.font.body.small
+                color: Colours.palette.m3onSurfaceVariant
+                wrapMode: Text.WordWrap
             }
 
             StyledRect {
@@ -598,7 +613,7 @@ PageBase {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     anchors.topMargin: Tokens.padding.small
-                    text: qsTr("Right Zone")
+                    text: qsTr("System tray")
                     font: Tokens.font.label.large
                     color: Colours.palette.m3onSurfaceVariant
                     visible: rightModel.count === 0 || (rightModel.count === 1 && rightModel.get(0).isPlaceholder)

@@ -10,7 +10,7 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
-    readonly property bool indicatorEnabled: BarWidgets.isEnabled(GlobalConfig.bar, "updateIndicator")
+    readonly property bool indicatorEnabled: BarPlacements.placementOf("updateIndicator") !== "off"
 
     readonly property bool checkingOff: !GlobalConfig.general.checkUpdates
 
@@ -36,9 +36,9 @@ PageBase {
             reset: ({
                 customGet: () => root.indicatorEnabled,
                 customDef: true,
-                customSet: v => BarWidgets.setEnabled(GlobalConfig.bar, "updateIndicator", v)
+                customSet: v => BarPlacements.setShown("updateIndicator", v)
             })
-            onToggled: BarWidgets.setEnabled(GlobalConfig.bar, "updateIndicator", checked)
+            onToggled: BarPlacements.setShown("updateIndicator", checked)
         }
 
         NavRow {

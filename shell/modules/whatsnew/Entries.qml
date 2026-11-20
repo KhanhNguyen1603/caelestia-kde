@@ -8,43 +8,44 @@ QtObject {
 
     readonly property var list: [
         {
-            "id": "floating_osd_styles",
-            "revision": 85,
-            "icon": "picture_in_picture_alt",
-            "title": qsTr("Floating OSD Styles"),
+            "id": "unified_tray",
+            "revision": 90,
+            "version": "2.7.5",
+            "date": "2026-11-17",
+            "icon": "grid_view",
+            "title": qsTr("One System Tray"),
             "settingsPage": "panels",
-            "settingsSubPage": "osdPanel",
-            "description": qsTr("Pick a volume and brightness OSD: pill, compact, radial, card, or the edge drawer.")
+            "settingsSubPage": "barTray",
+            "description": qsTr("Icons and bar widgets share one tray, with a box for the ones that do not fit and drag and drop between them.")
         },
         {
-            "id": "desktop_widgets",
-            "revision": 86,
-            "icon": "widgets",
-            "title": qsTr("Desktop Widgets"),
-            "description": qsTr("Add clocks, calendars, notes, weather, media and folders to the desktop, then resize or configure each one.")
+            "id": "lockscreen_frost",
+            "revision": 91,
+            "version": "2.7.5",
+            "date": "2026-11-17",
+            "icon": "blur_on",
+            "title": qsTr("Frosted Lock Screen"),
+            "description": qsTr("The lock screen thaws in through a frosted copy of the desktop instead of cutting to black first.")
         },
         {
-            "id": "notification_click",
-            "revision": 87,
-            "icon": "open_in_new",
-            "title": qsTr("Open From a Notification"),
-            "description": qsTr("Click a notification to open the app that sent it.")
+            "id": "launcher_greeting",
+            "revision": 92,
+            "version": "2.7.5",
+            "date": "2026-11-17",
+            "icon": "waving_hand",
+            "title": qsTr("A Greeting in the Launcher"),
+            "description": qsTr("The modern launcher greets you by name, and the avatar floats without a card behind it.")
         },
         {
-            "id": "notification_sounds",
-            "revision": 88,
-            "icon": "volume_up",
-            "title": qsTr("Notification Sounds"),
-            "settingsPage": "audio",
-            "settingsSubPage": "soundEffects",
-            "description": qsTr("Choose the notification sound and volume, and preview it in Sound Effects.")
-        },
-        {
-            "id": "quickshare_pairing_code",
-            "revision": 89,
-            "icon": "verified_user",
-            "title": qsTr("Quick Share Pairing Code"),
-            "description": qsTr("Both devices show a four-digit code. Compare them before a file is sent.")
+            "id": "keepawake_expiry",
+            "revision": 93,
+            "version": "2.7.5",
+            "date": "2026-11-17",
+            "icon": "timer",
+            "title": qsTr("Keep Awake Expiry"),
+            "settingsPage": "panels",
+            "settingsSubPage": "barKeepAwake",
+            "description": qsTr("Choose how long Keep Awake lasts from the widget menu, and see when it runs out.")
         }
     ]
 

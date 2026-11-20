@@ -57,6 +57,15 @@ PageBase {
         }
     ]
 
+    function alarmSoundName(name: string): string {
+        if (!name)
+            return qsTr("Shell chime");
+
+        const parts = String(name).split("/");
+        const file = parts[parts.length - 1].replace(/\.[^/.]+$/, "").replace(/-/g, " ");
+        return parts.length > 1 ? qsTr("%1 · %2").arg(file).arg(parts[0]) : file;
+    }
+
     function gpuKeyToIndex(key: string): int {
         const u = (key ?? "").trim().toUpperCase();
         if (u === "")
@@ -213,6 +222,58 @@ PageBase {
             to: 200
             stepSize: 5
             onMoved: v => GlobalConfig.services.maxVolume = v / 100
+        }
+
+        SectionHeader {
+            text: qsTr("Timers")
+        }
+
+        ToggleRow {
+            first: true
+            text: qsTr("Alarm until dismissed")
+            subtext: qsTr("Repeat the chime until the finished timer is reset")
+            reset: ({ node: GlobalConfig.services, setting: "timerAlarmUntilDismissed" })
+            checked: GlobalConfig.services.timerAlarmUntilDismissed
+            onToggled: GlobalConfig.services.timerAlarmUntilDismissed = checked
+        }
+
+        StepperRow {
+            visible: !GlobalConfig.services.timerAlarmUntilDismissed
+            label: qsTr("Alarm length")
+            subtext: qsTr("Seconds the chime repeats at zero; 0 silences it")
+            reset: ({ node: GlobalConfig.services, setting: "timerAlarmDuration" })
+            value: GlobalConfig.services.timerAlarmDuration
+            from: 0
+            to: 60
+            stepSize: 5
+            onMoved: v => GlobalConfig.services.timerAlarmDuration = v
+        }
+
+        Variants {
+            id: alarmSoundVariants
+
+            model: Audio.systemSounds
+
+            MenuItem {
+                required property string modelData
+
+                text: root.alarmSoundName(modelData)
+                value: modelData
+            }
+        }
+
+        SelectRow {
+            last: true
+            label: qsTr("Alarm sound")
+            subtext: qsTr("Played while a finished timer waits to be dismissed")
+            menuItems: alarmSoundVariants.instances
+            active: menuItems.find(i => i.value === GlobalConfig.services.timerAlarmSound) ?? null
+            fallbackText: root.alarmSoundName(GlobalConfig.services.timerAlarmSound)
+            onSelected: item => {
+                GlobalConfig.services.timerAlarmSound = item.value;
+                if (!Audio.playSystemSound(item.value, GlobalConfig.audio.sounds.notificationVolume))
+                    Audio.playNotification();
+            }
         }
 
         SectionHeader {

@@ -556,21 +556,20 @@ QtObject {
         },
         {
             label: qsTr("Inverted"),
-            description: qsTr("Only show the greeter while hovering"),
             section: qsTr("Greeter"),
             pageIdx: 2,
             subPage: "barGreeter"
         },
         {
-            label: qsTr("Show on hover"),
-            description: qsTr("Only show the greeter while hovering"),
+            label: qsTr("Enable popout"),
+            description: qsTr("Show a popout panel for the greeter"),
             section: qsTr("Greeter"),
             pageIdx: 2,
             subPage: "barGreeter"
         },
         {
-            label: qsTr("Popout on hover"),
-            description: qsTr("Show a greeter popout when hovering"),
+            label: qsTr("Open on hover"),
+            description: qsTr("Open popout on hover instead of on click"),
             section: qsTr("Greeter"),
             pageIdx: 2,
             subPage: "barGreeter"
@@ -693,13 +692,6 @@ QtObject {
             section: qsTr("Greeter"),
             pageIdx: 2,
             subPage: "barGreeter"
-        },
-        {
-            label: qsTr("Show active indicator"),
-            description: qsTr("Show a chip with the activation time when Keep Awake is on"),
-            section: qsTr("Keep Awake"),
-            pageIdx: 2,
-            subPage: "barKeepAwake"
         },
         {
             label: qsTr("Auto-hide when inactive"),
@@ -2633,6 +2625,27 @@ QtObject {
             subPage: "services"
         },
         {
+            label: qsTr("Alarm until dismissed"),
+            description: qsTr("Repeat the chime until the finished timer is reset"),
+            section: qsTr("System Services"),
+            pageIdx: 7,
+            subPage: "services"
+        },
+        {
+            label: qsTr("Alarm length"),
+            description: qsTr("Seconds the chime repeats at zero; 0 silences it"),
+            section: qsTr("System Services"),
+            pageIdx: 7,
+            subPage: "services"
+        },
+        {
+            label: qsTr("Alarm sound"),
+            description: qsTr("Played while a finished timer waits to be dismissed"),
+            section: qsTr("System Services"),
+            pageIdx: 7,
+            subPage: "services"
+        },
+        {
             label: qsTr("Discord Rich Presence"),
             description: qsTr("Number of bars in the audio visualisers"),
             section: qsTr("System Services"),
@@ -3161,22 +3174,22 @@ QtObject {
             subPage: "toastPreferences"
         },
         {
+            label: qsTr("Automatic Updates"),
+            description: qsTr("Checked every 30 minutes, and once when the shell starts"),
+            section: qsTr("Updates"),
+            pageIdx: 8,
+            subPage: "updates"
+        },
+        {
             label: qsTr("Update channel"),
             section: qsTr("Updates"),
-            pageIdx: 7,
+            pageIdx: 8,
             subPage: "updates"
         },
         {
-            label: qsTr("Check for updates automatically"),
-            description: qsTr("Every 30 minutes, and once when the shell starts"),
+            label: qsTr("Backup folder"),
             section: qsTr("Updates"),
-            pageIdx: 7,
-            subPage: "updates"
-        },
-        {
-            label: qsTr("Open backup folder"),
-            section: qsTr("Updates"),
-            pageIdx: 7,
+            pageIdx: 8,
             subPage: "updates"
         },
         {

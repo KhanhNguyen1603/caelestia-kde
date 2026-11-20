@@ -2,26 +2,19 @@ pragma ComponentBehavior: Bound
 
 import QtQuick.Layouts
 import Caelestia.Config
+import qs.services
 import qs.utils
 import qs.modules.nexus.common
 
 PageBase {
     id: root
 
-    readonly property var builtinIcons: ({
-            lockStatus: qsTr("Lock keys"),
-            privacy: qsTr("Privacy"),
-            kbLayout: qsTr("Keyboard layout"),
-            audio: qsTr("Speakers"),
-            microphone: qsTr("Microphone"),
-            network: qsTr("Network"),
-            ethernet: qsTr("Ethernet"),
-            bluetooth: qsTr("Bluetooth"),
-            battery: qsTr("Battery"),
-            peripheralBattery: qsTr("Peripheral battery"),
-            nightlight: qsTr("Night light"),
-            notifications: qsTr("Notifications")
-        })
+    readonly property var builtinIcons: {
+        const names = {};
+        for (const id of Object.keys(BarIconMeta.statusIcons))
+            names[id] = BarIconMeta.statusIcons[id].name;
+        return names;
+    }
     readonly property var addableIcons: {
         const present = Config.bar.statusIcons.values.map(entry => entry.id);
         return Object.keys(root.builtinIcons).filter(id => !present.includes(id)).map(id => ({ id: id, label: root.builtinIcons[id] }));

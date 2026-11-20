@@ -12,7 +12,6 @@ StyledRect {
     required property int activeWsId
     required property var workspaces
     required property Item mask
-    required property bool fullscreen
     property string screenName: ""
 
     readonly property int currentWsIdx: workspaces.findIndex(p => p?.ws === activeWsId)

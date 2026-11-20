@@ -67,18 +67,18 @@ PageBase {
         ToggleRow {
             first: true
             text: qsTr("Enable component")
-            checked: BarWidgets.isEnabled(Config.bar, "greeter")
+            checked: BarPlacements.placementOf("greeter") !== "off"
             // Custom reset: enabled state lives in bar.entries, default is true
             reset: ({
-                customGet: () => BarWidgets.isEnabled(GlobalConfig.bar, "greeter"),
+                customGet: () => BarPlacements.placementOf("greeter") !== "off",
                 customDef: true,
                 customSet: v => {
-                    BarWidgets.setEnabled(GlobalConfig.bar, "greeter", v);
+                    BarPlacements.setShown("greeter", v);
                     GlobalConfig.save();
                 }
             })
             onToggled: {
-                BarWidgets.setEnabled(GlobalConfig.bar, "greeter", checked);
+                BarPlacements.setShown("greeter", checked);
                 GlobalConfig.save();
             }
         }
@@ -94,24 +94,26 @@ PageBase {
         }
 
         ToggleRow {
-            text: qsTr("Show on hover")
-            subtext: qsTr("Only show the greeter while hovering")
-            reset: ({ node: GlobalConfig.bar.greeter, setting: "showOnHover" })
-            checked: Config.bar.greeter?.showOnHover ?? true
+            last: !(Config.bar.popouts?.greeter ?? true)
+            text: qsTr("Enable popout")
+            subtext: qsTr("Show a popout panel for the greeter")
+            reset: ({ node: GlobalConfig.bar.popouts, setting: "greeter" })
+            checked: Config.bar.popouts?.greeter ?? true
             onToggled: {
-                GlobalConfig.bar.greeter.showOnHover = checked;
+                GlobalConfig.bar.popouts.greeter = checked;
                 GlobalConfig.save();
             }
         }
 
         ToggleRow {
+            visible: Config.bar.popouts?.greeter ?? true
             last: true
-            text: qsTr("Popout on hover")
-            subtext: qsTr("Show a greeter popout when hovering")
-            reset: ({ node: GlobalConfig.bar.popouts, setting: "greeter" })
-            checked: Config.bar.popouts?.greeter ?? true
+            text: qsTr("Open on hover")
+            subtext: qsTr("Open popout on hover instead of on click")
+            reset: ({ node: GlobalConfig.bar.greeter, setting: "showOnHover" })
+            checked: Config.bar.greeter?.showOnHover ?? true
             onToggled: {
-                GlobalConfig.bar.popouts.greeter = checked;
+                GlobalConfig.bar.greeter.showOnHover = checked;
                 GlobalConfig.save();
             }
         }
