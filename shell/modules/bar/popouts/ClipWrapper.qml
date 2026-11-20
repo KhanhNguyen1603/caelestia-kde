@@ -35,6 +35,32 @@ Item {
     readonly property bool isHorizontal: activePanel.isHorizontal
     readonly property bool hovered: popoutsHover.hovered
     property real offsetScale: content.isDetached || content.hasCurrent ? 0 : 1
+
+    readonly property real panelLeft: activePanel ? Math.round(activePanel.x - parent.leftMargin) : 0
+    readonly property real panelRight: activePanel ? Math.round(activePanel.x + activePanel.width - parent.leftMargin) : parent.width
+    readonly property real panelWidth: Math.max(1, panelRight - panelLeft)
+    readonly property real panelCenterX: panelLeft + panelWidth / 2
+
+    readonly property real panelTop: activePanel ? Math.round(activePanel.y - parent.topMargin) : 0
+    readonly property real panelBottom: activePanel ? Math.round(activePanel.y + activePanel.height - parent.topMargin) : parent.height
+    readonly property real panelHeight: Math.max(1, panelBottom - panelTop)
+    readonly property real panelCenterY: panelTop + panelHeight / 2
+
+    readonly property real effectivePanelRight: {
+        let r = panelRight;
+        if (activePanel === bar && root.visibilities.sidebar && !content.underSidebar) {
+            const sideR = parent.width - Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) - Tokens.spacing.extraLarge;
+            r = Math.min(r, sideR);
+        }
+        return r;
+    }
+    readonly property real effectivePanelWidth: Math.max(1, effectivePanelRight - panelLeft)
+    readonly property real effectivePanelCenterX: panelLeft + effectivePanelWidth / 2
+
+    readonly property bool isLampActive: !content.isDetached && (isHorizontal ? (effectivePanelWidth < content.nonAnimWidth) : (panelHeight < content.nonAnimHeight))
+    readonly property real lampScaleX: (isLampActive && isHorizontal && content.nonAnimWidth > 0) ? (width / content.nonAnimWidth) : 1
+    readonly property real lampScaleY: (isLampActive && !isHorizontal && content.nonAnimHeight > 0) ? (height / content.nonAnimHeight) : 1
+
     // Where x is heading; x itself animates towards it.
     readonly property real targetX: {
         if (content.isDetached)
@@ -45,26 +71,22 @@ Item {
 
             // An item left of the open sidebar gets its popout kept clear of it, so
             // the sidebar doesn't have to be pushed out of the way.
-            const right = (activePanel === bar && root.visibilities.sidebar && !content.underSidebar) ? parent.width - Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) - Tokens.spacing.extraLarge : parent.width;
-            const off = content.currentCenter - parent.leftMargin - content.nonAnimWidth / 2;
-            const diff = right - Math.floor(off + content.nonAnimWidth);
-            if (diff < 0)
-                return Math.max(off + diff, 0);
-            return Math.max(off, 0);
+            const idealX = content.currentCenter - parent.leftMargin - content.nonAnimWidth / 2;
+            if (effectivePanelWidth >= content.nonAnimWidth) {
+                const minX = Math.max(0, panelLeft);
+                const maxX = Math.min(parent.width - content.nonAnimWidth, effectivePanelRight - content.nonAnimWidth);
+                if (minX <= maxX)
+                    return Math.max(minX, Math.min(idealX, maxX));
+                return minX;
+            }
+            return Math.max(0, Math.min(parent.width - content.nonAnimWidth, effectivePanelCenterX - content.nonAnimWidth / 2));
         }
         if (activePanel.position === "right")
             return parent.width - implicitWidth;
         return 0;
     }
 
-    visible: width > 0 && height > 0
-    clip: true
-
-    implicitWidth: isHorizontal ? content.implicitWidth : content.implicitWidth * (1 - offsetScale)
-    implicitHeight: isHorizontal ? content.implicitHeight * (1 - offsetScale) : content.implicitHeight
-
-    x: targetX
-    y: {
+    readonly property real targetY: {
         if (content.isDetached)
             return (parent.height - content.nonAnimHeight) / 2;
         if (isHorizontal) {
@@ -73,11 +95,45 @@ Item {
             return 0;
         }
 
-        const off = content.currentCenter - parent.topMargin - content.nonAnimHeight / 2;
-        const diff = parent.height - Math.floor(off + content.nonAnimHeight);
-        if (diff < 0)
-            return off + diff;
-        return Math.max(off, 0);
+        const idealY = content.currentCenter - parent.topMargin - content.nonAnimHeight / 2;
+        if (panelHeight >= content.nonAnimHeight) {
+            const minY = Math.max(0, panelTop);
+            const maxY = Math.min(parent.height - content.nonAnimHeight, panelBottom - content.nonAnimHeight);
+            if (minY <= maxY)
+                return Math.max(minY, Math.min(idealY, maxY));
+            return minY;
+        }
+        return Math.max(0, Math.min(parent.height - content.nonAnimHeight, panelCenterY - content.nonAnimHeight / 2));
+    }
+
+    visible: width > 0 && height > 0
+    clip: true
+
+    implicitWidth: {
+        if (isHorizontal) {
+            if (isLampActive)
+                return Math.round(content.nonAnimWidth - (content.nonAnimWidth - effectivePanelWidth) * offsetScale);
+            return content.implicitWidth;
+        }
+        return content.implicitWidth * (1 - offsetScale);
+    }
+    implicitHeight: {
+        if (isHorizontal)
+            return content.implicitHeight * (1 - offsetScale);
+        if (isLampActive)
+            return Math.round(content.nonAnimHeight - (content.nonAnimHeight - panelHeight) * offsetScale);
+        return content.implicitHeight;
+    }
+
+    x: {
+        if (isLampActive && isHorizontal)
+            return Math.round(targetX + (panelLeft - targetX) * offsetScale);
+        return targetX;
+    }
+    y: {
+        if (isLampActive && !isHorizontal)
+            return Math.round(targetY + (panelTop - targetY) * offsetScale);
+        return targetY;
     }
 
     onOffsetScaleChanged: {
@@ -90,7 +146,7 @@ Item {
     }
 
     Behavior on x {
-        enabled: content.isDetached || isHorizontal
+        enabled: (content.isDetached || isHorizontal) && !root.isLampActive
 
         Anim {
             duration: content.animLength
@@ -99,7 +155,7 @@ Item {
     }
 
     Behavior on y {
-        enabled: content.isDetached || (!isHorizontal && root.offsetScale < 1)
+        enabled: (content.isDetached || (!isHorizontal && root.offsetScale < 1)) && !root.isLampActive
 
         Anim {
             duration: content.animLength
@@ -141,6 +197,13 @@ Item {
         anchors.rightMargin: root.activePanel.position === "right" ? (-implicitWidth - 5) * root.offsetScale : 0
         anchors.topMargin: root.activePanel.position === "top" ? (-implicitHeight - 5) * root.offsetScale : 0
         anchors.bottomMargin: root.activePanel.position === "bottom" ? (-implicitHeight - 5) * root.offsetScale : 0
+
+        transform: Scale {
+            xScale: root.lampScaleX
+            yScale: root.lampScaleY
+            origin.x: (content.width || root.implicitWidth) / 2
+            origin.y: (content.height || root.implicitHeight) / 2
+        }
 
         states: [
             State {
