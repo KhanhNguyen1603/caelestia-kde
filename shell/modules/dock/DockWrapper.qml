@@ -79,6 +79,14 @@ Item {
     property bool pointerInReach: false
     property bool revealActive: false
     readonly property bool hovered: revealActive || dockHoverTracker.hovered
+    readonly property bool isLauncherHovered: {
+        if (!root.hasLauncher || !dockHoverTracker.hovered)
+            return false;
+        const p = hoverArea.mapToItem(launcherButton, dockHoverTracker.point.position.x, dockHoverTracker.point.position.y);
+        const margin = root.spacing / 2;
+        return p.x >= -margin && p.x <= launcherButton.width + margin
+            && p.y >= -margin && p.y <= launcherButton.height + margin;
+    }
     readonly property int fullLength: (isHorizontal ? screen.width : screen.height) - (isIsland ? Config.dockPanel.floatingMargin * 2 : 0)
     readonly property int defaultLength: Math.min(fullLength, Math.max(root.itemSize + root.padding * 2, Math.round(computedContentSpan + root.padding * 2)))
     readonly property int fixedLength: Math.round(fullLength * Math.max(5, Math.min(100, Config.dockPanel.length)) / 100)
@@ -174,6 +182,11 @@ Item {
             if (revealActive && !dockHoverTracker.hovered)
                 unhoverTimer.restart();
         }
+    }
+
+    onIsLauncherHoveredChanged: {
+        if (isLauncherHovered && root.popouts && root.popouts.hasCurrent && root.popouts.currentName === "dockhover")
+            root.popouts.hasCurrent = false;
     }
 
     width: clampedWidth
@@ -285,6 +298,11 @@ Item {
                         anchors.fill: parent
                         radius: Tokens.rounding.medium
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+                        onEntered: {
+                            if (root.popouts && root.popouts.hasCurrent && root.popouts.currentName === "dockhover")
+                                root.popouts.hasCurrent = false;
+                        }
 
                         onClicked: mouse => {
                             if (mouse.button === Qt.RightButton) {
