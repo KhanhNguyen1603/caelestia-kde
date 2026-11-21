@@ -123,7 +123,7 @@ Item {
     }
 
     function ensureAuthenticating() {
-        if (root.graceLocked || root.isAuthenticating || root.promptPending || (activeAuthenticator && activeAuthenticator.busy)) return;
+        if (root.graceLocked || root.isAuthenticating || root.promptPending || authRestartTimer.running || (activeAuthenticator && activeAuthenticator.busy)) return;
         root.startConversation();
     }
 
@@ -164,7 +164,9 @@ Item {
         root.pendingPassword = pass;
         root.isAuthenticating = true;
         authTimeoutTimer.restart();
-        root.startConversation();
+        if (!activeAuthenticator || !activeAuthenticator.busy) {
+            root.startConversation();
+        }
     }
 
     function clearAuthMessage() {
@@ -196,11 +198,21 @@ Item {
                 } else if (activeAuthenticator && typeof activeAuthenticator.cancel === "function") {
                     activeAuthenticator.cancel();
                 }
-                root.startConversation();
+                authRestartTimer.restart();
                 if (!root.authMessage) {
                     root.handleMessage(i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:status", "Authentication timed out"));
                 }
             }
+        }
+    }
+
+    Timer {
+        id: authRestartTimer
+
+        interval: 1500
+        repeat: false
+        onTriggered: {
+            root.startConversation();
         }
     }
 
@@ -279,6 +291,7 @@ Item {
             }
 
             authTimeoutTimer.stop();
+            authRestartTimer.stop();
             root.pendingPassword = "";
             root.promptPending = false;
 
@@ -320,6 +333,7 @@ Item {
             root.lockoutSecondsRemaining = 0;
             backendHeartbeatTimer.stop();
             authTimeoutTimer.stop();
+            authRestartTimer.stop();
             graceLockTimer.stop();
             fallbackUnlockTimer.stop();
             lockoutCountdownTimer.stop();

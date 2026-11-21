@@ -29,4 +29,14 @@ test_lockscreen_polls_the_media_snapshot() {
         "the lock screen must not fetch media fields one call at a time"
 }
 
+test_lockscreen_media_action_uses_local_source() {
+    local content
+    content="$(cat "$LOCK_UI")"
+
+    assert_contains "$content" 'if (mediaActionSource.actions.includes(action))' \
+        "media actions must be verified against mediaActionSource.actions"
+    assert_not_contains "$content" 'root.actions.includes' \
+        "media actions must not reference non-existent root.actions"
+}
+
 run_tests

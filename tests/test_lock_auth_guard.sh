@@ -97,4 +97,33 @@ test_login_responds_only_to_a_live_prompt() {
         "startLogin should not read the sticky prompt strings"
 }
 
+test_mouse_movement_does_not_flood_authentication() {
+    local lockscreen_ui="$REPO_ROOT/src/kde/shells/caelestia.desktop/contents/lockscreen/LockScreenUi.qml"
+    local qml
+    qml="$(cat "$lockscreen_ui")"
+
+    assert_not_contains "$qml" 'onPositionChanged: authHandler.ensureAuthenticating()' \
+        "mouse movement over the lock screen must not flood authentication requests"
+}
+
+test_auth_timeout_defers_restart_to_avoid_worker_kill_race() {
+    local qml
+    qml="$(cat "$AUTH_HANDLER")"
+
+    assert_contains "$qml" 'id: authRestartTimer' \
+        "AuthHandler should have a dedicated authRestartTimer"
+    assert_contains "$qml" 'authRestartTimer.restart();' \
+        "authTimeoutTimer should restart via authRestartTimer rather than starting synchronously"
+    assert_contains "$(qml_function "$AUTH_HANDLER" ensureAuthenticating)" 'authRestartTimer.running' \
+        "ensureAuthenticating should refuse to start while a delayed restart is pending"
+}
+
+test_login_does_not_restart_conversation_when_busy() {
+    local login
+    login="$(qml_function "$AUTH_HANDLER" startLogin)"
+
+    assert_contains "$login" '!activeAuthenticator.busy' \
+        "startLogin should avoid calling startConversation if the authenticator is already busy"
+}
+
 run_tests
