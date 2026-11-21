@@ -126,4 +126,30 @@ test_login_does_not_restart_conversation_when_busy() {
         "startLogin should avoid calling startConversation if the authenticator is already busy"
 }
 
+test_lockscreen_does_not_force_view_visible() {
+    local lockscreen_ui="$REPO_ROOT/src/kde/shells/caelestia.desktop/contents/lockscreen/LockScreenUi.qml"
+    local qml
+    qml="$(cat "$lockscreen_ui")"
+
+    assert_not_contains "$qml" 'Binding { target: root; property: "viewVisible"; value: true }' \
+        "LockScreenUi should not overwrite kscreenlocker root viewVisible"
+}
+
+test_lockscreen_ui_does_not_authenticate_on_creation() {
+    local lockscreen_ui="$REPO_ROOT/src/kde/shells/caelestia.desktop/contents/lockscreen/LockScreenUi.qml"
+    local qml
+    qml="$(cat "$lockscreen_ui")"
+
+    assert_not_contains "$qml" 'Component.onCompleted: authHandler.ensureAuthenticating()' \
+        "LockScreenUi should not start authenticating on component creation before ready and visible"
+}
+
+test_auth_handler_checks_visibility_before_authenticating() {
+    local guard
+    guard="$(qml_function "$AUTH_HANDLER" ensureAuthenticating)"
+
+    assert_contains "$guard" 'root.viewVisible' \
+        "ensureAuthenticating should check viewVisible before authenticating"
+}
+
 run_tests

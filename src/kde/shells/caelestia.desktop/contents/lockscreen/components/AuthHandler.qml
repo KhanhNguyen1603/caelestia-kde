@@ -19,6 +19,7 @@ Item {
     readonly property bool graceLocked: localGraceLocked || Boolean(activeAuthenticator && activeAuthenticator.graceLocked)
     property string authMessage: ""
     property string pendingPassword: ""
+    property bool viewVisible: true
     // kscreenlocker holds a prompt open until it is answered. Starting another
     // authentication in that window is refused as a failed login, so the greeter
     // has to know a prompt is already waiting for it.
@@ -123,7 +124,7 @@ Item {
     }
 
     function ensureAuthenticating() {
-        if (root.graceLocked || root.isAuthenticating || root.promptPending || authRestartTimer.running || (activeAuthenticator && activeAuthenticator.busy)) return;
+        if (!root.viewVisible || root.graceLocked || root.isAuthenticating || root.promptPending || authRestartTimer.running || (activeAuthenticator && activeAuthenticator.busy)) return;
         root.startConversation();
     }
 
@@ -198,6 +199,10 @@ Item {
                 } else if (activeAuthenticator && typeof activeAuthenticator.cancel === "function") {
                     activeAuthenticator.cancel();
                 }
+                if (activeAuthenticator && typeof activeAuthenticator.authenticator !== "undefined") {
+                    var currentType = activeAuthenticator.authenticator;
+                    activeAuthenticator.authenticator = currentType;
+                }
                 authRestartTimer.restart();
                 if (!root.authMessage) {
                     root.handleMessage(i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:status", "Authentication timed out"));
@@ -221,7 +226,7 @@ Item {
 
         interval: 1000
         repeat: true
-        running: Boolean(activeAuthenticator) && !root.isAuthenticating && !root.graceLocked && !root.lockoutActive && !(activeAuthenticator && activeAuthenticator.unlocked)
+        running: root.viewVisible && Boolean(activeAuthenticator) && !root.isAuthenticating && !root.graceLocked && !root.lockoutActive && !(activeAuthenticator && activeAuthenticator.unlocked)
         onTriggered: {
             root.ensureAuthenticating();
         }

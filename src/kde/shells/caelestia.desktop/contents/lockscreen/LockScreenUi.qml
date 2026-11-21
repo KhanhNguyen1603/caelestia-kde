@@ -73,8 +73,12 @@ Item {
     readonly property bool isAuthenticating: authHandler.isAuthenticating
     readonly property var activePasswordPill: isPortrait ? portraitPasswordPill : passwordPill
     property string authMessage: ""
+    property bool viewVisible: true
     property bool ready: false
     property int renderedFrames: 0
+
+    onReadyChanged: if (ready && viewVisible) authHandler.ensureAuthenticating()
+    onViewVisibleChanged: if (ready && viewVisible) authHandler.ensureAuthenticating()
 
     readonly property string sysinfoScriptPath: {
         var url = Qt.resolvedUrl("scripts/sysinfo.py").toString();
@@ -318,6 +322,7 @@ Item {
         id: authHandler
 
         authenticatorTarget: (typeof authenticator !== "undefined") ? authenticator : null
+        viewVisible: lockScreenUi.viewVisible && lockScreenUi.ready
         maxFprintTries: lockScreenUi.maxFprintTries
         onShakeRequested: if (activePasswordPill) activePasswordPill.shake()
         onFocusSecretRequested: if (activePasswordPill) activePasswordPill.forceActiveFocus()
@@ -488,8 +493,6 @@ Item {
             authHandler.ensureAuthenticating();
             root.clearPassword();
         }
-
-        Component.onCompleted: authHandler.ensureAuthenticating()
 
         Behavior on opacity {
             NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
@@ -1097,6 +1100,4 @@ Item {
             }
         }
     }
-
-    Binding { target: root; property: "viewVisible"; value: true }
 }
