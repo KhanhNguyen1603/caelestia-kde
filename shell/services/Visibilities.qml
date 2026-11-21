@@ -153,8 +153,9 @@ Singleton {
         // The mode has to be in place first: the launcher applies it to its search
         // field when it opens.
         launcherMode = mode;
-        v.launcher = true;
+        setLauncherOwner(v, true);
         launcherOpened(mode);
+        v.launcher = true;
     }
     function closeLauncher(): void {
         if (launcherScreen)
