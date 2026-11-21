@@ -275,37 +275,44 @@ Item {
         // will fill it reads as something to press, and there is nothing there to press.
     }
 
-    // What the pointer is over, in words, on the icon it is over. It is drawn rather than
-    // floated: see hoveredItem. Clamped inside the box, because the box is a surface and
-    // its content is cut to it.
-    StyledRect {
-        id: nameTag
+    // What the pointer is over, in words. It is drawn on the window's own content item
+    // instead of inside the box: the box cuts its content to its surface, so a name
+    // wider than the icon it belongs to lost its end. Nothing here takes input, so the
+    // icon under the pointer keeps its hover.
+    Item {
+        id: nameOverlay
 
-        readonly property var origin: root.hoveredItem ? root.mapFromItem(root.hoveredItem, 0, 0) : null
+        parent: root.Window.window ? root.Window.contentItem : root
+        z: 10000
+        visible: root.hoveredLabel.length > 0 && root.hoveredItem !== null && root.visible
+        implicitWidth: nameTag.implicitWidth
+        implicitHeight: nameTag.implicitHeight
 
-        z: 10
-        visible: root.hoveredLabel.length > 0 && root.hoveredItem !== null
-        implicitWidth: nameText.implicitWidth + Tokens.padding.medium * 2
-        implicitHeight: nameText.implicitHeight + Tokens.padding.small * 2
-        x: nameTag.origin ? Math.min(Math.max(nameTag.origin.x + (root.hoveredItem.width - nameTag.width) / 2, Tokens.padding.small), Math.max(Tokens.padding.small, root.width - nameTag.width - Tokens.padding.small)) : 0
+        readonly property point origin: root.hoveredItem ? root.hoveredItem.mapToItem(parent, 0, 0) : Qt.point(0, 0)
+
+        x: Math.min(Math.max(Math.round(origin.x + root.hoveredItem.width / 2 - width / 2), 0), Math.max(0, parent.width - width))
         y: {
-            if (!nameTag.origin)
-                return 0;
-            const above = nameTag.origin.y - nameTag.height - Tokens.spacing.extraSmall;
-            const below = nameTag.origin.y + root.hoveredItem.height + Tokens.spacing.extraSmall;
-            const wanted = above >= Tokens.padding.small ? above : below;
-            return Math.min(Math.max(wanted, Tokens.padding.small), Math.max(Tokens.padding.small, root.height - nameTag.height - Tokens.padding.small));
+            const below = origin.y + root.hoveredItem.height + Tokens.spacing.extraSmall;
+            const above = origin.y - height - Tokens.spacing.extraSmall;
+            return Math.min(Math.max(above >= 0 ? above : below, 0), Math.max(0, parent.height - height));
         }
-        radius: Tokens.rounding.medium
-        color: Colours.palette.m3surfaceContainerHighest
 
-        StyledText {
-            id: nameText
+        StyledRect {
+            id: nameTag
 
-            anchors.centerIn: parent
-            text: root.hoveredLabel
-            color: Colours.palette.m3onSurface
-            font: Tokens.font.label.small
+            implicitWidth: nameText.implicitWidth + Tokens.padding.medium * 2
+            implicitHeight: nameText.implicitHeight + Tokens.padding.small * 2
+            radius: Tokens.rounding.medium
+            color: Colours.palette.m3surfaceContainerHighest
+
+            StyledText {
+                id: nameText
+
+                anchors.centerIn: parent
+                text: root.hoveredLabel
+                color: Colours.palette.m3onSurface
+                font: Tokens.font.label.small
+            }
         }
     }
 }
