@@ -40,6 +40,9 @@ Item {
     readonly property int avatarSize: Math.round(Tokens.sizes.launcher.browseTileHeight * 1.3)
     readonly property int headerHeight: root.modernStyle ? Math.round(root.avatarSize / 2 - 6) : 0
     readonly property bool isBrowsing: list.showAppsBrowser
+    // The switcher is driven by the keyboard, so the launcher's search field and
+    // session buttons are hidden while it is open.
+    readonly property bool windowSwitcherMode: list.showWindowSwitcher
     // Classic keeps the launcher as it shipped (session row under the search
     // field); Modern is the profile picture header with the corner actions.
     readonly property bool modernStyle: Style.launcherStyle === "modern"
@@ -84,7 +87,7 @@ Item {
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: root.modernStyle ? searchWrapper.top : sessionFooter.top
-        anchors.bottomMargin: root.footerSpacing
+        anchors.bottomMargin: root.windowSwitcherMode ? root.padding : root.footerSpacing
 
         ContentList {
             id: list
@@ -179,7 +182,7 @@ Item {
     StyledRect {
         id: sessionFooter
 
-        visible: !root.modernStyle && Config.launcher.showPowerMenu
+        visible: !root.modernStyle && Config.launcher.showPowerMenu && !list.showWindowSwitcher
 
         color: Colours.layer(Colours.palette.m3surfaceContainerLow, 2)
         radius: Tokens.rounding.extraLarge
@@ -280,7 +283,7 @@ Item {
         IconButton {
             id: powerBtn
 
-            visible: root.modernStyle && Config.launcher.showPowerMenu
+            visible: root.modernStyle && Config.launcher.showPowerMenu && !list.showWindowSwitcher
             isRound: true
             type: IconButton.Tonal
             icon: "power_settings_new"
@@ -383,9 +386,12 @@ Item {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: root.padding
-        anchors.bottomMargin: CUtils.clamp(root.padding - Config.border.thickness, 0, root.padding)
+        anchors.bottomMargin: root.windowSwitcherMode ? 0 : CUtils.clamp(root.padding - Config.border.thickness, 0, root.padding)
 
-        implicitHeight: Math.max(searchIcon.implicitHeight, search.implicitHeight, clearClipboardIcon.implicitHeight, clearIcon.implicitHeight, commandsBtn.implicitHeight)
+        // Keep the field instantiated and focused for the switcher's keys, but
+        // collapse the row so it takes no space and is not drawn.
+        opacity: root.windowSwitcherMode ? 0 : 1
+        implicitHeight: root.windowSwitcherMode ? 0 : Math.max(searchIcon.implicitHeight, search.implicitHeight, clearClipboardIcon.implicitHeight, clearIcon.implicitHeight, commandsBtn.implicitHeight)
 
         MaterialIcon {
             id: searchIcon
