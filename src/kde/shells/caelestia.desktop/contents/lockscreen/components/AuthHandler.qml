@@ -19,6 +19,7 @@ Item {
     readonly property bool graceLocked: localGraceLocked || Boolean(activeAuthenticator && activeAuthenticator.graceLocked)
     property string authMessage: ""
     property string pendingPassword: ""
+    property bool viewVisible: true
     // kscreenlocker holds a prompt open until it is answered. Starting another
     // authentication in that window is refused as a failed login, so the greeter
     // has to know a prompt is already waiting for it.
@@ -123,7 +124,7 @@ Item {
     }
 
     function ensureAuthenticating() {
-        if (root.graceLocked || root.isAuthenticating || root.promptPending || (activeAuthenticator && activeAuthenticator.busy)) return;
+        if (!root.viewVisible || root.graceLocked || root.isAuthenticating || root.promptPending || authRestartTimer.running || (activeAuthenticator && activeAuthenticator.busy)) return;
         root.startConversation();
     }
 
@@ -164,7 +165,9 @@ Item {
         root.pendingPassword = pass;
         root.isAuthenticating = true;
         authTimeoutTimer.restart();
-        root.startConversation();
+        if (!activeAuthenticator || !activeAuthenticator.busy) {
+            root.startConversation();
+        }
     }
 
     function clearAuthMessage() {
@@ -196,7 +199,11 @@ Item {
                 } else if (activeAuthenticator && typeof activeAuthenticator.cancel === "function") {
                     activeAuthenticator.cancel();
                 }
-                root.startConversation();
+                if (activeAuthenticator && typeof activeAuthenticator.authenticator !== "undefined") {
+                    var currentType = activeAuthenticator.authenticator;
+                    activeAuthenticator.authenticator = currentType;
+                }
+                authRestartTimer.restart();
                 if (!root.authMessage) {
                     root.handleMessage(i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:status", "Authentication timed out"));
                 }
@@ -205,11 +212,21 @@ Item {
     }
 
     Timer {
+        id: authRestartTimer
+
+        interval: 1500
+        repeat: false
+        onTriggered: {
+            root.startConversation();
+        }
+    }
+
+    Timer {
         id: backendHeartbeatTimer
 
         interval: 1000
         repeat: true
-        running: Boolean(activeAuthenticator) && !root.isAuthenticating && !root.graceLocked && !root.lockoutActive && !(activeAuthenticator && activeAuthenticator.unlocked)
+        running: root.viewVisible && Boolean(activeAuthenticator) && !root.isAuthenticating && !root.graceLocked && !root.lockoutActive && !(activeAuthenticator && activeAuthenticator.unlocked)
         onTriggered: {
             root.ensureAuthenticating();
         }
@@ -279,6 +296,7 @@ Item {
             }
 
             authTimeoutTimer.stop();
+            authRestartTimer.stop();
             root.pendingPassword = "";
             root.promptPending = false;
 
@@ -320,6 +338,7 @@ Item {
             root.lockoutSecondsRemaining = 0;
             backendHeartbeatTimer.stop();
             authTimeoutTimer.stop();
+            authRestartTimer.stop();
             graceLockTimer.stop();
             fallbackUnlockTimer.stop();
             lockoutCountdownTimer.stop();

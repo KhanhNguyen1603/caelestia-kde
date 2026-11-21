@@ -27,10 +27,11 @@ Item {
 
     readonly property bool showWallpapers: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}wallpaper `)
     readonly property bool showWindowSwitcher: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}windows `)
+    readonly property bool windowSwitcherGridLayout: Config.tabSwitch.layout === TabSwitchLayout.Grid
     readonly property bool showKeybinds: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}keybinds `)
     readonly property bool showAnimations: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}animations `)
     readonly property bool showAppsBrowser: root.state === "apps" && !search.text && Config.launcher.showBrowseOnEmpty
-    readonly property var currentList: showWallpapers ? wallpaperList.item : (showWindowSwitcher ? windowSwitcherList.item : (showAnimations ? animationsList.item : (showKeybinds ? keybindsList.item : (showAppsBrowser ? browser.item : appList.item))))
+    readonly property var currentList: showWallpapers ? wallpaperList.item : (showWindowSwitcher ? (root.windowSwitcherGridLayout ? windowSwitcherGrid.item : windowSwitcherList.item) : (showAnimations ? animationsList.item : (showKeybinds ? keybindsList.item : (showAppsBrowser ? browser.item : appList.item))))
 
     readonly property var wallpaperTabs: {
         const res = [];
@@ -83,8 +84,8 @@ Item {
 
             PropertyChanges {
                 target: root
-                implicitWidth: Math.max(root.Tokens.sizes.launcher.itemWidth * 1.2, windowSwitcherList.implicitWidth)
-                implicitHeight: root.Tokens.sizes.launcher.windowSwitcherHeight
+                implicitWidth: root.windowSwitcherGridLayout ? Math.min(root.maxWidth, root.Tokens.sizes.launcher.browseWidth * 1.35) : Math.max(root.Tokens.sizes.launcher.itemWidth * 1.2, windowSwitcherList.implicitWidth)
+                implicitHeight: root.windowSwitcherGridLayout ? Math.min(root.maxHeight, root.Tokens.sizes.launcher.browseHeight * 0.85) : root.Tokens.sizes.launcher.windowSwitcherHeight
             }
         },
         State {
@@ -391,13 +392,29 @@ Item {
         id: windowSwitcherList
 
         asynchronous: true
-        active: root.state === "windowSwitcher"
+        active: root.state === "windowSwitcher" && !root.windowSwitcherGridLayout
 
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
 
         sourceComponent: WindowSwitcherList {
+            search: root.search
+            visibilities: root.visibilities
+            panels: root.panels
+            content: root.content
+        }
+    }
+
+    Loader {
+        id: windowSwitcherGrid
+
+        asynchronous: true
+        active: root.state === "windowSwitcher" && root.windowSwitcherGridLayout
+
+        anchors.fill: parent
+
+        sourceComponent: WindowSwitcherGrid {
             search: root.search
             visibilities: root.visibilities
             panels: root.panels
@@ -502,12 +519,16 @@ Item {
         }
 
         Behavior on opacity {
+            enabled: root.visibilities.launcher && !root.visibilities.skipLauncherAnim
+
             Anim {
                 type: Anim.DefaultEffects
             }
         }
 
         Behavior on scale {
+            enabled: root.visibilities.launcher && !root.visibilities.skipLauncherAnim
+
             Anim {}
         }
     }

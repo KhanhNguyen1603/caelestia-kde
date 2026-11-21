@@ -20,6 +20,19 @@ PageBase {
     readonly property bool isSwitcherOverridden: root.switcherKeybind !== "Alt+Tab"
     readonly property bool isSwitcherReverseOverridden: root.switcherReverseKeybind !== "Alt+Shift+Tab"
 
+    readonly property list<MenuItem> layoutItems: [
+        MenuItem {
+            property int value: TabSwitchLayout.Caelestia
+
+            text: qsTr("Carousel")
+        },
+        MenuItem {
+            property int value: TabSwitchLayout.Grid
+
+            text: qsTr("Grid")
+        }
+    ]
+
     function openCaptureDialog(name: string, currentKey: string, targetItem: var): void {
         dialogLoader.active = true;
         dialogLoader.item.shortcutName = name;
@@ -146,8 +159,16 @@ PageBase {
             text: qsTr("Display")
         }
 
-        ToggleRow {
+        SelectRow {
             first: true
+            label: qsTr("Layout")
+            subtext: qsTr("Carousel: a single horizontally scrolling row of previews. Grid: previews arranged like the overview, keeping each window's shape and position")
+            active: root.layoutItems.find(item => item.value === Config.tabSwitch.layout) ?? root.layoutItems[0]
+            menuItems: root.layoutItems
+            onSelected: item => GlobalConfig.tabSwitch.layout = item.value
+        }
+
+        ToggleRow {
             text: qsTr("Show minimized windows")
             subtext: qsTr("Include minimized windows in the window switcher")
             reset: ({ node: GlobalConfig.tabSwitch, setting: "showMinimized" })
@@ -179,4 +200,3 @@ PageBase {
         }
     }
 }
-

@@ -97,4 +97,59 @@ test_login_responds_only_to_a_live_prompt() {
         "startLogin should not read the sticky prompt strings"
 }
 
+test_mouse_movement_does_not_flood_authentication() {
+    local lockscreen_ui="$REPO_ROOT/src/kde/shells/caelestia.desktop/contents/lockscreen/LockScreenUi.qml"
+    local qml
+    qml="$(cat "$lockscreen_ui")"
+
+    assert_not_contains "$qml" 'onPositionChanged: authHandler.ensureAuthenticating()' \
+        "mouse movement over the lock screen must not flood authentication requests"
+}
+
+test_auth_timeout_defers_restart_to_avoid_worker_kill_race() {
+    local qml
+    qml="$(cat "$AUTH_HANDLER")"
+
+    assert_contains "$qml" 'id: authRestartTimer' \
+        "AuthHandler should have a dedicated authRestartTimer"
+    assert_contains "$qml" 'authRestartTimer.restart();' \
+        "authTimeoutTimer should restart via authRestartTimer rather than starting synchronously"
+    assert_contains "$(qml_function "$AUTH_HANDLER" ensureAuthenticating)" 'authRestartTimer.running' \
+        "ensureAuthenticating should refuse to start while a delayed restart is pending"
+}
+
+test_login_does_not_restart_conversation_when_busy() {
+    local login
+    login="$(qml_function "$AUTH_HANDLER" startLogin)"
+
+    assert_contains "$login" '!activeAuthenticator.busy' \
+        "startLogin should avoid calling startConversation if the authenticator is already busy"
+}
+
+test_lockscreen_does_not_force_view_visible() {
+    local lockscreen_ui="$REPO_ROOT/src/kde/shells/caelestia.desktop/contents/lockscreen/LockScreenUi.qml"
+    local qml
+    qml="$(cat "$lockscreen_ui")"
+
+    assert_not_contains "$qml" 'Binding { target: root; property: "viewVisible"; value: true }' \
+        "LockScreenUi should not overwrite kscreenlocker root viewVisible"
+}
+
+test_lockscreen_ui_does_not_authenticate_on_creation() {
+    local lockscreen_ui="$REPO_ROOT/src/kde/shells/caelestia.desktop/contents/lockscreen/LockScreenUi.qml"
+    local qml
+    qml="$(cat "$lockscreen_ui")"
+
+    assert_not_contains "$qml" 'Component.onCompleted: authHandler.ensureAuthenticating()' \
+        "LockScreenUi should not start authenticating on component creation before ready and visible"
+}
+
+test_auth_handler_checks_visibility_before_authenticating() {
+    local guard
+    guard="$(qml_function "$AUTH_HANDLER" ensureAuthenticating)"
+
+    assert_contains "$guard" 'root.viewVisible' \
+        "ensureAuthenticating should check viewVisible before authenticating"
+}
+
 run_tests

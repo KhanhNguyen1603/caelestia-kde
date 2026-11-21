@@ -26,7 +26,7 @@ StyledListView {
     readonly property string searchQuery: root.searchQueryForText(search.text)
 
     function syncDisplayText(): void {
-        if (visibilities.launcher && requestedState === displayState)
+        if (!visibilities.launcher || requestedState === displayState)
             displayText = search.text;
     }
 
@@ -158,24 +158,127 @@ StyledListView {
         Colours.clearPreview();
     }
 
-    Timer {
-        id: previewTimer
+    Component.onCompleted: displayText = search.text
 
-        interval: 100
-        onTriggered: {
-            if (!root.visibilities.launcher) return;
-            if (!root.currentItem || !root.currentItem.modelData) return;
-            if (root.state === "scheme") {
-                const schemeData = root.currentItem.modelData;
-                Colours.loadPreview(JSON.stringify({ name: schemeData.name, flavour: schemeData.flavour, variant: Colours.variant, mode: Colours.light ? "light" : "dark", colours: schemeData.colours }));
-            } else if (root.state === "variant") {
-                const variantData = root.currentItem.modelData;
-                M3Variants.previewVariant(variantData.variant);
+    transitions: Transition {
+        enabled: root.visibilities.launcher && !root.visibilities.skipLauncherAnim
+
+        SequentialAnimation {
+            ParallelAnimation {
+                Anim {
+                    target: root
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: Tokens.anim.durations.small
+                    easing: Tokens.anim.standardAccel
+                }
+                Anim {
+                    target: root
+                    property: "scale"
+                    from: 1
+                    to: 0.9
+                    duration: Tokens.anim.durations.small
+                    easing: Tokens.anim.standardAccel
+                }
+            }
+            PropertyAction {
+                target: root
+                property: "delegate"
+                value: null
+            }
+            ScriptAction {
+                script: root.displayText = root.search.text
+            }
+            PropertyAction {
+                target: root
+                property: "delegate"
+            }
+            ParallelAnimation {
+                Anim {
+                    target: root
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: Tokens.anim.durations.small
+                    easing: Tokens.anim.standardDecel
+                }
+                Anim {
+                    target: root
+                    property: "scale"
+                    from: 0.9
+                    to: 1
+                    duration: Tokens.anim.durations.small
+                    easing: Tokens.anim.standardDecel
+                }
+            }
+            PropertyAction {
+                targets: [root.add, root.remove]
+                property: "enabled"
+                value: true
             }
         }
     }
 
-    Component.onCompleted: displayText = search.text
+    add: Transition {
+        enabled: !root.state
+
+        Anim {
+            type: Anim.DefaultEffects
+            property: "opacity"
+            from: 0
+            to: 1
+        }
+    }
+
+    remove: Transition {
+        enabled: !root.state
+
+        Anim {
+            type: Anim.DefaultEffects
+            property: "opacity"
+            from: 1
+            to: 0
+        }
+    }
+
+    move: Transition {
+        Anim {
+            property: "y"
+        }
+        Anim {
+            type: Anim.DefaultEffects
+            property: "opacity"
+            to: 1
+        }
+    }
+
+    addDisplaced: Transition {
+        Anim {
+            property: "y"
+            type: Anim.StandardSmall
+        }
+        Anim {
+            type: Anim.DefaultEffects
+            property: "opacity"
+            to: 1
+        }
+    }
+
+    displaced: Transition {
+        Anim {
+            property: "y"
+        }
+        Anim {
+            type: Anim.DefaultEffects
+            property: "opacity"
+            to: 1
+        }
+    }
+
+    StyledScrollBar.vertical: StyledScrollBar {
+        flickable: root
+    }
 
     states: [
         State {
@@ -242,124 +345,6 @@ StyledListView {
             }
         }
     ]
-
-    transitions: Transition {
-        SequentialAnimation {
-            ParallelAnimation {
-                Anim {
-                    target: root
-                    property: "opacity"
-                    from: 1
-                    to: 0
-                    duration: Tokens.anim.durations.small
-                    easing: Tokens.anim.standardAccel
-                }
-                Anim {
-                    target: root
-                    property: "scale"
-                    from: 1
-                    to: 0.9
-                    duration: Tokens.anim.durations.small
-                    easing: Tokens.anim.standardAccel
-                }
-            }
-            PropertyAction {
-                target: root
-                property: "delegate"
-                value: null
-            }
-            ScriptAction {
-                script: root.displayText = root.search.text
-            }
-            PropertyAction {
-                target: root
-                property: "delegate"
-            }
-            ParallelAnimation {
-                Anim {
-                    target: root
-                    property: "opacity"
-                    from: 0
-                    to: 1
-                    duration: Tokens.anim.durations.small
-                    easing: Tokens.anim.standardDecel
-                }
-                Anim {
-                    target: root
-                    property: "scale"
-                    from: 0.9
-                    to: 1
-                    duration: Tokens.anim.durations.small
-                    easing: Tokens.anim.standardDecel
-                }
-            }
-            PropertyAction {
-                targets: [root.add, root.remove]
-                property: "enabled"
-                value: true
-            }
-        }
-    }
-
-    StyledScrollBar.vertical: StyledScrollBar {
-        flickable: root
-    }
-
-    add: Transition {
-        enabled: !root.state
-
-        Anim {
-            type: Anim.DefaultEffects
-            property: "opacity"
-            from: 0
-            to: 1
-        }
-    }
-
-    remove: Transition {
-        enabled: !root.state
-
-        Anim {
-            type: Anim.DefaultEffects
-            property: "opacity"
-            from: 1
-            to: 0
-        }
-    }
-
-    move: Transition {
-        Anim {
-            property: "y"
-        }
-        Anim {
-            type: Anim.DefaultEffects
-            property: "opacity"
-            to: 1
-        }
-    }
-
-    addDisplaced: Transition {
-        Anim {
-            property: "y"
-            type: Anim.StandardSmall
-        }
-        Anim {
-            type: Anim.DefaultEffects
-            property: "opacity"
-            to: 1
-        }
-    }
-
-    displaced: Transition {
-        Anim {
-            property: "y"
-        }
-        Anim {
-            type: Anim.DefaultEffects
-            property: "opacity"
-            to: 1
-        }
-    }
 
     Component {
         id: appItem
@@ -431,6 +416,23 @@ StyledListView {
 
         KRunnerItem {
             list: root
+        }
+    }
+
+    Timer {
+        id: previewTimer
+
+        interval: 100
+        onTriggered: {
+            if (!root.visibilities.launcher) return;
+            if (!root.currentItem || !root.currentItem.modelData) return;
+            if (root.state === "scheme") {
+                const schemeData = root.currentItem.modelData;
+                Colours.loadPreview(JSON.stringify({ name: schemeData.name, flavour: schemeData.flavour, variant: Colours.variant, mode: Colours.light ? "light" : "dark", colours: schemeData.colours }));
+            } else if (root.state === "variant") {
+                const variantData = root.currentItem.modelData;
+                M3Variants.previewVariant(variantData.variant);
+            }
         }
     }
 

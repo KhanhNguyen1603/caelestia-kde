@@ -85,6 +85,10 @@ Item {
     /// The column follows the bar: a bar on the right is where the column is not.
     readonly property bool sideColumnOnLeft: sidebar.hAnchor === "left"
 
+    /// The Alt+Tab grid layout is a free-floating card rather than a bottom drawer, so
+    /// it keeps the overview's detached look instead of sitting on the screen edge.
+    readonly property bool launcherDetached: visibilities.launcher && Visibilities.launcherMode === "windows" && Config.tabSwitch.layout === TabSwitchLayout.Grid
+
     /// Whether this window has to take the keyboard: a panel that owns text fields is
     /// open. The OSD is deliberately absent, because it only ever shows things, and so is
     /// the notification stack. Panels say it here, where they are built, so the next panel
@@ -282,12 +286,13 @@ Item {
     Launcher.Wrapper {
         id: launcher
 
-        property string vAnchor: "bottom"
+        property string vAnchor: root.launcherDetached ? "center" : "bottom"
         property string hAnchor: "center"
 
         screen: root.screen
         visibilities: root.visibilities
         panels: root
+        detached: root.launcherDetached
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
     }

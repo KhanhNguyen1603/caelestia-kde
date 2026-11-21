@@ -34,5 +34,6 @@ Item {
         id: lockScreenUi
 
         anchors.fill: parent
+        viewVisible: root.viewVisible
     }
 }
