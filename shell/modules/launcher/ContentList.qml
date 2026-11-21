@@ -519,12 +519,16 @@ Item {
         }
 
         Behavior on opacity {
+            enabled: root.visibilities.launcher && !root.visibilities.skipLauncherAnim
+
             Anim {
                 type: Anim.DefaultEffects
             }
         }
 
         Behavior on scale {
+            enabled: root.visibilities.launcher && !root.visibilities.skipLauncherAnim
+
             Anim {}
         }
     }

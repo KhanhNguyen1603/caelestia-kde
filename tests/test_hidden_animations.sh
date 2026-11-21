@@ -9,6 +9,7 @@ CTRL="$REPO_ROOT/shell/components/controls"
 VIS_FILE="$REPO_ROOT/shell/services/Visibilities.qml"
 CONTENT_LIST_FILE="$REPO_ROOT/shell/modules/launcher/ContentList.qml"
 CONTENT_FILE="$REPO_ROOT/shell/modules/launcher/Content.qml"
+APP_LIST_FILE="$REPO_ROOT/shell/modules/launcher/AppList.qml"
 LOADING_SRC="$(cat "$CTRL/LoadingIndicator.qml")"
 CIRCULAR_SRC="$(cat "$CTRL/CircularProgress.qml")"
 BAR_SRC="$(cat "$CTRL/StyledProgressBar.qml")"
@@ -63,6 +64,23 @@ test_launcher_content_applies_mode_on_open() {
     content_src="$(cat "$CONTENT_FILE")"
     assert_contains "$content_src" 'root.searchTextForMode(Visibilities.launcherMode)' \
         "Content search text must be initialized from Visibilities.launcherMode"
+}
+
+test_launcher_app_list_transition_disabled_while_hidden() {
+    local app_list_src
+    app_list_src="$(cat "$APP_LIST_FILE")"
+    assert_contains "$app_list_src" 'if (!visibilities.launcher || requestedState === displayState)' \
+        "AppList must sync displayText while launcher is hidden"
+    assert_contains "$app_list_src" 'enabled: root.visibilities.launcher && !root.visibilities.skipLauncherAnim' \
+        "AppList state transition must be disabled while hidden"
+}
+
+test_launcher_empty_state_behaviors_disabled_while_hidden() {
+    local empty_block
+    empty_block="$(sed -n '/id: empty/,/Behavior on implicitWidth/p' "$CONTENT_LIST_FILE")"
+    local count
+    count=$(echo "$empty_block" | grep -c 'enabled: root.visibilities.launcher && !root.visibilities.skipLauncherAnim')
+    assert_eq 2 "$count" "both empty state behaviors must be guarded by visibilities.launcher"
 }
 
 run_tests
