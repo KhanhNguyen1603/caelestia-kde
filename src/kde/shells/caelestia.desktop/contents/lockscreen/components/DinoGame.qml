@@ -15,6 +15,7 @@ Item {
 
     readonly property bool isPlaying:  DinoGameBackend.isPlaying
     readonly property bool isGameOver: DinoGameBackend.isGameOver
+    readonly property bool isRunning:  isPlaying && !DinoGameBackend.isPaused
 
     readonly property string assets: Qt.resolvedUrl("../assets/").toString()
     function a(name) { return assets + name; }
@@ -24,6 +25,20 @@ Item {
 
     onWidthChanged: DinoGameBackend.width = width
     Component.onCompleted: DinoGameBackend.width = width
+
+    onVisibleChanged: {
+        if (!visible)
+            DinoGameBackend.pause();
+    }
+
+    Component.onDestruction: {
+        DinoGameBackend.pause();
+    }
+
+    FrameAnimation {
+        running: root.isRunning && root.visible
+        onTriggered: DinoGameBackend.advance(frameTime * 1000)
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -167,7 +182,7 @@ Item {
 
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: qsTr("Click or press Space to play")
+            text: qsTr("Click to play")
             font { pixelSize: LockScreenConfig.sizeVerySmall; family: LockScreenConfig.fontBody }
             color: root.activeColor
             opacity: 0.5
@@ -264,6 +279,14 @@ Item {
                 color: root.activeColor
                 opacity: 0.6
             }
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                visible: DinoGameBackend.isNewHighScore
+                text: qsTr("New high score: %1").arg(Math.floor(DinoGameBackend.highScore))
+                font { pixelSize: LockScreenConfig.sizeVerySmall; family: LockScreenConfig.fontBody }
+                color: root.activeColor
+                opacity: 0.8
+            }
         }
 
         Column {
@@ -286,10 +309,32 @@ Item {
                 opacity: 0.6
             }
         }
+
+        Column {
+            visible: root.isPlaying && DinoGameBackend.isPaused
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: -30
+            spacing: 6
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("P A U S E D")
+                font { pixelSize: LockScreenConfig.sizeSmall; family: LockScreenConfig.fontBody; weight: Font.Medium }
+                color: root.activeColor
+            }
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Click to continue")
+                font { pixelSize: LockScreenConfig.sizeVerySmall; family: LockScreenConfig.fontBody }
+                color: root.activeColor
+                opacity: 0.6
+            }
+        }
     }
 
     MouseArea {
         anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
         onClicked: {
             DinoGameBackend.jump();
         }
