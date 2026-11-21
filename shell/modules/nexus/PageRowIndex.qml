@@ -1369,8 +1369,8 @@ QtObject {
             subPage: "displays"
         },
         {
-            label: qsTr("Enable floating dock"),
-            description: qsTr("Show a standalone floating dock on your screen"),
+            label: qsTr("Enable dock panel"),
+            description: qsTr("Standalone dock panel; different from bar's dock component."),
             section: qsTr("Dock"),
             pageIdx: 2,
             subPage: "dockPanel"
