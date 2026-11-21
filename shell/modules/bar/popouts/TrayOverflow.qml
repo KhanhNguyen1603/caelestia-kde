@@ -282,19 +282,25 @@ Item {
     Item {
         id: nameOverlay
 
+        readonly property point origin: root.hoveredItem ? root.hoveredItem.mapToItem(parent, 0, 0) : Qt.point(0, 0)
+
         parent: root.Window.window ? root.Window.contentItem : root
         z: 10000
         visible: root.hoveredLabel.length > 0 && root.hoveredItem !== null && root.visible
         implicitWidth: nameTag.implicitWidth
         implicitHeight: nameTag.implicitHeight
+        width: implicitWidth
+        height: implicitHeight
 
-        readonly property point origin: root.hoveredItem ? root.hoveredItem.mapToItem(parent, 0, 0) : Qt.point(0, 0)
-
-        x: Math.min(Math.max(Math.round(origin.x + root.hoveredItem.width / 2 - width / 2), 0), Math.max(0, parent.width - width))
+        x: root.hoveredItem ? Math.min(Math.max(Math.round(origin.x + (root.hoveredItem.width - width) / 2), 0), Math.max(0, parent.width - width)) : 0
         y: {
+            if (!root.hoveredItem)
+                return 0;
+            const rootY = root.mapToItem(parent, 0, 0).y;
             const below = origin.y + root.hoveredItem.height + Tokens.spacing.extraSmall;
             const above = origin.y - height - Tokens.spacing.extraSmall;
-            return Math.min(Math.max(above >= 0 ? above : below, 0), Math.max(0, parent.height - height));
+            const wanted = above >= rootY + Tokens.padding.small ? above : below;
+            return Math.min(Math.max(wanted, 0), Math.max(0, parent.height - height));
         }
 
         StyledRect {
@@ -302,6 +308,8 @@ Item {
 
             implicitWidth: nameText.implicitWidth + Tokens.padding.medium * 2
             implicitHeight: nameText.implicitHeight + Tokens.padding.small * 2
+            width: implicitWidth
+            height: implicitHeight
             radius: Tokens.rounding.medium
             color: Colours.palette.m3surfaceContainerHighest
 
