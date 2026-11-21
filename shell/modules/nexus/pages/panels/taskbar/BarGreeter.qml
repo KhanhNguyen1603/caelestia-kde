@@ -94,24 +94,26 @@ PageBase {
         }
 
         ToggleRow {
-            text: qsTr("Show on hover")
-            subtext: qsTr("Only show the greeter while hovering")
-            reset: ({ node: GlobalConfig.bar.greeter, setting: "showOnHover" })
-            checked: Config.bar.greeter?.showOnHover ?? true
+            last: !(Config.bar.popouts?.greeter ?? true)
+            text: qsTr("Enable popout")
+            subtext: qsTr("Show a popout panel for the greeter")
+            reset: ({ node: GlobalConfig.bar.popouts, setting: "greeter" })
+            checked: Config.bar.popouts?.greeter ?? true
             onToggled: {
-                GlobalConfig.bar.greeter.showOnHover = checked;
+                GlobalConfig.bar.popouts.greeter = checked;
                 GlobalConfig.save();
             }
         }
 
         ToggleRow {
+            visible: Config.bar.popouts?.greeter ?? true
             last: true
-            text: qsTr("Popout on hover")
-            subtext: qsTr("Show a greeter popout when hovering")
-            reset: ({ node: GlobalConfig.bar.popouts, setting: "greeter" })
-            checked: Config.bar.popouts?.greeter ?? true
+            text: qsTr("Open on hover")
+            subtext: qsTr("Open popout on hover instead of on click")
+            reset: ({ node: GlobalConfig.bar.greeter, setting: "showOnHover" })
+            checked: Config.bar.greeter?.showOnHover ?? true
             onToggled: {
-                GlobalConfig.bar.popouts.greeter = checked;
+                GlobalConfig.bar.greeter.showOnHover = checked;
                 GlobalConfig.save();
             }
         }

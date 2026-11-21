@@ -67,44 +67,6 @@ Scope {
         { name: "krohnkiteToggleDock", description: QT_TR_NOOP("Toggle dock support"), action: "KrohnkitetoggleDock", key: "" },
     ]
 
-    function activateDockEntry(idx: int): void {
-        let output = "";
-        if (Kwin.cursorOutputName)
-            output = Kwin.cursorOutputName();
-        let screenName = "";
-        const screens = [...Quickshell.screens];
-        for (const s of screens) {
-            if (s.name === output) {
-                screenName = s.name;
-                break;
-            }
-        }
-        if (!screenName && screens.length > 0)
-            screenName = screens[0].name;
-        const dock = Visibilities.docks.get(screenName);
-        if (dock)
-            dock.activateIndex(idx);
-    }
-
-    function activateDockEntryNew(idx: int): void {
-        let output = "";
-        if (Kwin.cursorOutputName)
-            output = Kwin.cursorOutputName();
-        let screenName = "";
-        const screens = [...Quickshell.screens];
-        for (const s of screens) {
-            if (s.name === output) {
-                screenName = s.name;
-                break;
-            }
-        }
-        if (!screenName && screens.length > 0)
-            screenName = screens[0].name;
-        const dock = Visibilities.docks.get(screenName);
-        if (dock)
-            dock.activateNewIndex(idx);
-    }
-
     Component.onCompleted: {
         let _ = KeybindsModel;
         Logger.mark("shortcuts-ready");
@@ -576,7 +538,7 @@ Scope {
         name: "dockActivate1"
         description: qsTr("Open dock entry 1")
         key: ""
-        onPressed: root.activateDockEntry(0)
+        onPressed: DockManager.activateIndex(0)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -584,7 +546,7 @@ Scope {
         name: "dockActivate2"
         description: qsTr("Open dock entry 2")
         key: ""
-        onPressed: root.activateDockEntry(1)
+        onPressed: DockManager.activateIndex(1)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -592,7 +554,7 @@ Scope {
         name: "dockActivate3"
         description: qsTr("Open dock entry 3")
         key: ""
-        onPressed: root.activateDockEntry(2)
+        onPressed: DockManager.activateIndex(2)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -600,7 +562,7 @@ Scope {
         name: "dockActivate4"
         description: qsTr("Open dock entry 4")
         key: ""
-        onPressed: root.activateDockEntry(3)
+        onPressed: DockManager.activateIndex(3)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -608,7 +570,7 @@ Scope {
         name: "dockActivate5"
         description: qsTr("Open dock entry 5")
         key: ""
-        onPressed: root.activateDockEntry(4)
+        onPressed: DockManager.activateIndex(4)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -616,7 +578,7 @@ Scope {
         name: "dockActivate6"
         description: qsTr("Open dock entry 6")
         key: ""
-        onPressed: root.activateDockEntry(5)
+        onPressed: DockManager.activateIndex(5)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -624,7 +586,7 @@ Scope {
         name: "dockActivate7"
         description: qsTr("Open dock entry 7")
         key: ""
-        onPressed: root.activateDockEntry(6)
+        onPressed: DockManager.activateIndex(6)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -632,7 +594,7 @@ Scope {
         name: "dockActivate8"
         description: qsTr("Open dock entry 8")
         key: ""
-        onPressed: root.activateDockEntry(7)
+        onPressed: DockManager.activateIndex(7)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -640,7 +602,7 @@ Scope {
         name: "dockActivate9"
         description: qsTr("Open dock entry 9")
         key: ""
-        onPressed: root.activateDockEntry(8)
+        onPressed: DockManager.activateIndex(8)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -648,7 +610,7 @@ Scope {
         name: "dockNewWindow1"
         description: qsTr("Open new window of dock entry 1")
         key: "Meta+Ctrl+1"
-        onPressed: root.activateDockEntryNew(0)
+        onPressed: DockManager.activateNewIndex(0)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -656,7 +618,7 @@ Scope {
         name: "dockNewWindow2"
         description: qsTr("Open new window of dock entry 2")
         key: "Meta+Ctrl+2"
-        onPressed: root.activateDockEntryNew(1)
+        onPressed: DockManager.activateNewIndex(1)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -664,7 +626,7 @@ Scope {
         name: "dockNewWindow3"
         description: qsTr("Open new window of dock entry 3")
         key: "Meta+Ctrl+3"
-        onPressed: root.activateDockEntryNew(2)
+        onPressed: DockManager.activateNewIndex(2)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -672,7 +634,7 @@ Scope {
         name: "dockNewWindow4"
         description: qsTr("Open new window of dock entry 4")
         key: "Meta+Ctrl+4"
-        onPressed: root.activateDockEntryNew(3)
+        onPressed: DockManager.activateNewIndex(3)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -680,7 +642,7 @@ Scope {
         name: "dockNewWindow5"
         description: qsTr("Open new window of dock entry 5")
         key: "Meta+Ctrl+5"
-        onPressed: root.activateDockEntryNew(4)
+        onPressed: DockManager.activateNewIndex(4)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -688,7 +650,7 @@ Scope {
         name: "dockNewWindow6"
         description: qsTr("Open new window of dock entry 6")
         key: "Meta+Ctrl+6"
-        onPressed: root.activateDockEntryNew(5)
+        onPressed: DockManager.activateNewIndex(5)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -696,7 +658,7 @@ Scope {
         name: "dockNewWindow7"
         description: qsTr("Open new window of dock entry 7")
         key: "Meta+Ctrl+7"
-        onPressed: root.activateDockEntryNew(6)
+        onPressed: DockManager.activateNewIndex(6)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -704,7 +666,7 @@ Scope {
         name: "dockNewWindow8"
         description: qsTr("Open new window of dock entry 8")
         key: "Meta+Ctrl+8"
-        onPressed: root.activateDockEntryNew(7)
+        onPressed: DockManager.activateNewIndex(7)
     }
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -712,6 +674,6 @@ Scope {
         name: "dockNewWindow9"
         description: qsTr("Open new window of dock entry 9")
         key: "Meta+Ctrl+9"
-        onPressed: root.activateDockEntryNew(8)
+        onPressed: DockManager.activateNewIndex(8)
     }
 }

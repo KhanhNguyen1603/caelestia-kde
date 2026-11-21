@@ -85,6 +85,14 @@ PageBase {
         }
 
         ToggleRow {
+            text: qsTr("Island mode")
+            subtext: qsTr("Detach the bar from screen edges into a floating island pill")
+            reset: ({ node: GlobalConfig.bar, setting: "islands" })
+            checked: GlobalConfig.bar.islands
+            onToggled: GlobalConfig.bar.islands = checked
+        }
+
+        ToggleRow {
             text: qsTr("Dodge windows")
             subtext: qsTr("Retract the bar while a window covers it, and let windows sit underneath")
             enabled: GlobalConfig.bar.persistent

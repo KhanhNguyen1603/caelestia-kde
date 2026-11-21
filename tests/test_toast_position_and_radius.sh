@@ -62,6 +62,9 @@ test_the_stack_grows_from_the_corner_it_was_given() {
     assert_file_contains "$TOASTS" 'anchors.left: parent.left' "each toast spans the stack's width, so a right-hand corner cannot push it off the screen"
     assert_file_contains "$TOASTS" 'anchors.right: parent.right' "on both sides, not one"
     assert_file_contains "$TOASTS" 'Behavior on anchors.topMargin' "and the movement is animated either way"
+    assert_file_contains "$TOASTS" 'AnchorChanges' "the stack uses AnchorChanges so undefined clears stale anchors"
+    assert_file_contains "$TOASTS" 'anchors.left: undefined' "switching to right detaches left anchor"
+    assert_file_contains "$TOASTS" 'anchors.right: undefined' "switching to left detaches right anchor"
 }
 
 # A chosen corner is the only owner of the stack's edges, so the bar-position states

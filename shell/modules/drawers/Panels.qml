@@ -25,6 +25,7 @@ Item {
     required property ScreenState screenState
     required property DrawerVisibilities visibilities
     required property Bar.BarWrapper bar
+    required property var dockPanel
     required property real borderThickness
     required property real overviewBorderThickness
     property var overviewAnimConfig
@@ -132,11 +133,22 @@ Item {
         }
     }
 
+    readonly property real defaultBorder: (bar.isIsland || (dockPanel && dockPanel.isIsland)) ? 0 : borderThickness
+    readonly property real barLeftOffset: bar.position === "left" ? (bar.visible ? bar.implicitWidth + (bar.isIsland ? bar.islandMargin : 0) : defaultBorder) : defaultBorder
+    readonly property real dockLeftOffset: (dockPanel && dockPanel.position === "left" && !dockPanel.disabled && (dockPanel.visible || dockPanel.shouldBeVisible)) ? dockPanel.visualThickness : 0
+    readonly property real barRightOffset: bar.position === "right" ? (bar.visible ? bar.implicitWidth + (bar.isIsland ? bar.islandMargin : 0) : defaultBorder) : defaultBorder
+    readonly property real dockRightOffset: (dockPanel && dockPanel.position === "right" && !dockPanel.disabled && (dockPanel.visible || dockPanel.shouldBeVisible)) ? dockPanel.visualThickness : 0
+    readonly property real barTopOffset: bar.position === "top" ? (bar.visible ? bar.implicitHeight + (bar.isIsland ? bar.islandMargin : 0) : defaultBorder) : defaultBorder
+    readonly property real dockTopOffset: (dockPanel && dockPanel.position === "top" && !dockPanel.disabled && (dockPanel.visible || dockPanel.shouldBeVisible)) ? dockPanel.visualThickness : 0
+    readonly property real barBottomOffset: bar.position === "bottom" ? (bar.visible ? bar.implicitHeight + (bar.isIsland ? bar.islandMargin : 0) : defaultBorder) : defaultBorder
+    readonly property real dockBottomOffset: (dockPanel && dockPanel.position === "bottom" && !dockPanel.disabled && (dockPanel.visible || dockPanel.shouldBeVisible)) ? dockPanel.visualThickness : 0
+
     anchors.fill: parent
-    anchors.leftMargin: (bar.position === "left" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
-    anchors.rightMargin: (bar.position === "right" ? bar.implicitWidth + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
-    anchors.topMargin: (bar.position === "top" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
-    anchors.bottomMargin: (bar.position === "bottom" ? bar.implicitHeight + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge * 2 : 0) : borderThickness + (GlobalConfig.appearance.islands ? Tokens.spacing.extraLarge : 0))
+    anchors.leftMargin: barLeftOffset + dockLeftOffset
+    anchors.rightMargin: barRightOffset + dockRightOffset
+    anchors.topMargin: barTopOffset + dockTopOffset
+    anchors.bottomMargin: barBottomOffset + dockBottomOffset
+
     states: [
         State {
             name: "right"
@@ -304,6 +316,8 @@ Item {
         property string vAnchor: "top"
         property string hAnchor: "center"
 
+        screen: root.screen
+        panels: root
         screenState: root.screenState
         visibilities: root.visibilities
         // Centred on the room the side column leaves, not on the whole window: the sidebar
@@ -323,12 +337,13 @@ Item {
     BarPopouts.ClipWrapper {
         id: popoutsWrapper
 
-        property string vAnchor: (bar.position === "top" || bar.position === "bottom") ? bar.position : "none"
-        property string hAnchor: (bar.position === "left" || bar.position === "right") ? bar.position : "none"
+        property string vAnchor: (activePanel.position === "top" || activePanel.position === "bottom") ? activePanel.position : "none"
+        property string hAnchor: (activePanel.position === "left" || activePanel.position === "right") ? activePanel.position : "none"
 
         backed: root.popoutCoversNotifications
         screen: root.screen
         bar: root.bar
+        dockPanel: root.dockPanel
         borderThickness: root.borderThickness
         visibilities: root.visibilities
     }

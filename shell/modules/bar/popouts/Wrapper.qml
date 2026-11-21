@@ -42,12 +42,15 @@ Item {
     readonly property bool isDockPopout: currentName === "dockhover" || currentName === "greeter" || currentName === "activewindow" || currentName === "github" || currentIsContext
     property alias currentName: popoutState.currentName
     property alias hasCurrent: popoutState.hasCurrent
+    property alias sourcePanel: popoutState.sourcePanel
     // Whether the current popout was opened to be picked from, so the bar and the overlay
     // agree that it is not to be closed by the pointer moving away.
     property alias staysOpen: popoutState.staysOpen
     property alias dockModel: popoutState.dockModel
     property alias tasksModel: popoutState.tasksModel
     property alias currentCenter: popoutState.currentCenter
+    property bool isPanelHorizontal: true
+    readonly property bool isDockPanelPopout: sourcePanel === "dockPanel" || (sourcePanel === "" && (currentName === "osiconcontext" || currentName === "dockcontext" || currentName === "dockbgcontext" || currentName === "dockhover"))
     // Set by ClipWrapper: whether the current bar item sits under the sidebar,
     // which can be narrower than the bar's right side now that it is resizable.
     property bool underSidebar: true
@@ -105,7 +108,7 @@ Item {
         // Only attach to the sidebar when the popout would open below it anyway;
         // otherwise it would end up away from the item that opened it.
         sidebarOpen: root.visibilities.sidebar && root.underSidebar
-        isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
+        isHorizontal: root.isPanelHorizontal
         onDetachRequested: mode => root.detach(mode)
     }
     HyprlandFocusGrab {

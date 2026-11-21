@@ -9,7 +9,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VIS="$REPO_ROOT/shell/services/Visibilities.qml"
 GRID="$REPO_ROOT/shell/modules/overview/WindowGrid.qml"
 DOCK="$REPO_ROOT/shell/modules/bar/popouts/DockContext.qml"
-DOCK_MODEL="$REPO_ROOT/shell/modules/bar/components/Dock.qml"
+DOCK_MODEL="$REPO_ROOT/shell/services/DockManager.qml"
 KWIN="$REPO_ROOT/shell/services/Kwin.qml"
 
 test_overview_can_be_limited_to_one_application() {

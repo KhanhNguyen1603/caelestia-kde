@@ -62,7 +62,6 @@ DelegateChooser {
         delegate: WrappedLoader {
             sourceComponent: Greeter {
                 bar: root.bar
-                monitor: root.bar ? Brightness.getMonitorForScreen(root.bar.screen) : null
             }
         }
     }

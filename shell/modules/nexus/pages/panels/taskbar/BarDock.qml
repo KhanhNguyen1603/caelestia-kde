@@ -10,23 +10,9 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
-    readonly property list<MenuItem> windowGroupingItems: [
-        MenuItem {
-            property int value: DockWindowGrouping.Combined
+    readonly property list<MenuItem> launchingStyleItems: DockSharedSettings.launchingStyleItems
 
-            text: qsTr("Group all windows")
-        },
-        MenuItem {
-            property int value: DockWindowGrouping.PinnedFirst
-
-            text: qsTr("Pinned icon holds first window")
-        },
-        MenuItem {
-            property int value: DockWindowGrouping.Ungrouped
-
-            text: qsTr("No grouping")
-        }
-    ]
+    readonly property list<MenuItem> windowGroupingItems: DockSharedSettings.windowGroupingItems
 
     title: qsTr("Dock")
     isSubPage: true
@@ -88,6 +74,22 @@ PageBase {
             reset: ({ node: GlobalConfig.bar.dock, setting: "currentDesktopOnly" })
             checked: Config.bar.dock.currentDesktopOnly
             onToggled: GlobalConfig.bar.dock.currentDesktopOnly = checked
+        }
+
+        SelectRow {
+            Layout.fillWidth: true
+            label: qsTr("Launch animation style")
+            subtext: qsTr("Animation or indicator style when an application is launching")
+            menuItems: root.launchingStyleItems
+            active: {
+                for (let i = 0; i < root.launchingStyleItems.length; i++) {
+                    if (root.launchingStyleItems[i].value === (Config.bar.dock.launchingStyle || "circle"))
+                        return root.launchingStyleItems[i];
+                }
+                return root.launchingStyleItems[0];
+            }
+            fallbackIcon: "motion_photos_on"
+            onSelected: item => GlobalConfig.bar.dock.launchingStyle = item.value
         }
 
         SelectRow {

@@ -8,6 +8,44 @@ info() { echo "[INFO]  $*"; }
 ok()   { echo "[OK]    $*"; }
 warn() { echo "[WARN]  $*"; }
 
+# Where the outcome is recorded for the shell to read. The updater runs in a terminal the
+# shell only spawns, so this file is the one account of what happened that outlives the
+# restart an update causes.
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia"
+record() { # <file> <status> <label> [code] [logout]
+    mkdir -p "$STATE_DIR" 2>/dev/null || return 0
+    printf '%s|%s|%s|%s\n' "$2" "$3" "${4:-0}" "${5:-0}" > "$STATE_DIR/$1" 2>/dev/null || true
+}
+
+# What the run is doing, where the shell can read it. The terminal that starts this may
+# not be watched by anyone, and the shell that started it is restarted by the end, so a
+# file is the only account of progress that both can see.
+stage() { # <index> <total> <text>
+    echo "PROGRESS: ${1}/${2}: ${3}"
+    mkdir -p "$STATE_DIR" 2>/dev/null || return 0
+    printf '%s|%s|%s|%s\n' "$1" "$2" "$3" "$(date +%s)" > "$STATE_DIR/progress" 2>/dev/null || true
+}
+
+clear_progress() {
+    rm -f "$STATE_DIR/progress" 2>/dev/null || true
+}
+
+# Whether a person is watching: a prompt needs a terminal, and a run started by the shell
+# has none, so what a prompt would ask has to be decided instead of asked.
+INTERACTIVE=0
+if (exec </dev/tty >/dev/tty) 2>/dev/null; then
+    INTERACTIVE=1
+fi
+
+STAGE_REQUEST=0
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --stage) STAGE_REQUEST=1; shift ;;
+        --) shift; break ;;
+        *) break ;;
+    esac
+done
+
 run_stage() {
     local timeout_seconds="$1"
     shift
@@ -62,6 +100,18 @@ else
 fi
 echo "---------------------------------------------"
 
+# What this run is for, named the way a reader would: the version when one was asked for,
+# otherwise the channel.
+UPDATE_LABEL="${TARGET_REF:-$BRANCH}"
+
+# A run supersedes the last outcome. Clearing it first means a crash part-way cannot leave
+# an older "updated" on the page once the shell comes back up.
+mkdir -p "$STATE_DIR" 2>/dev/null || true
+rm -f "$STATE_DIR/last-update" 2>/dev/null || true
+if [ "$STAGE_REQUEST" -eq 0 ]; then
+    rm -f "$STATE_DIR/staged-update" 2>/dev/null || true
+fi
+
 # Which half owns this install: /usr/bin is a package, anything else a checkout. Nothing
 # is probed on disk, so it stays right whatever the package is called.
 SELF_DIR="$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)"
@@ -105,6 +155,29 @@ EOF
 chmod +x "$UPD_DIR/bin/sudo"
 export PATH="$UPD_DIR/bin:$PATH"
 
+# A staging run downloads what the update needs and changes nothing else, so the slow half
+# can happen while the user keeps working and applying it stays a separate decision. Only a
+# package install can be staged: a checkout's download is its build, which is the install.
+if [ "$STAGE_REQUEST" -eq 1 ]; then
+    if [ "$PACKAGED" -ne 1 ]; then
+        warn "Staging is for a package install; this checkout builds and installs in one run."
+        exit 1
+    fi
+    info "Downloading the packages this update needs..."
+    if sudo pacman -Syuw --noconfirm; then
+        record staged-update staged "$UPDATE_LABEL"
+        clear_progress
+        ok "Downloaded. Run the update again to install it."
+        stage 1 1 "Downloaded"
+        exit 0
+    else
+        STAGE_STATUS=$?
+        record staged-update failed "$UPDATE_LABEL" "$STAGE_STATUS"
+        warn "The download did not finish; nothing was installed."
+        exit "$STAGE_STATUS"
+    fi
+fi
+
 # Package-managed install.
 #
 # A package owns what it installed, so the update is the package manager, not the clone
@@ -115,17 +188,23 @@ if [ "$PACKAGED" -eq 1 ]; then
     echo "  Caelestia Update (this install came from a package)"
     echo "---------------------------------------------"
     echo
+    stage 1 2 "Updating system packages"
     # $1 is the branch, $2 the version: only the latter means "a version was asked for".
     if [ -n "${TARGET_REF:-}" ]; then
         echo "  A single version cannot be selected from here; choose it where the"
         echo "  package was installed from."
         echo
     fi
+    PACKAGE_STATUS=0
     if command -v pacman &> /dev/null; then
         info "Updating the system packages..."
-        sudo pacman -Syu --noconfirm || warn "The package update failed or was cancelled."
+        sudo pacman -Syu --noconfirm || PACKAGE_STATUS=$?
+        if [ "$PACKAGE_STATUS" -ne 0 ]; then
+            warn "The package update failed or was cancelled."
+        fi
     else
         warn "No pacman found; update this package with the tool that installed it."
+        PACKAGE_STATUS=1
     fi
     info "And the shell itself:"
     echo "    pacman:  sudo pacman -Syu caelestia-kde"
@@ -140,7 +219,12 @@ if [ "$PACKAGED" -eq 1 ]; then
     fi
 
     echo "    then log out and back in."
-    echo "PROGRESS: done: Package update finished"
+    if [ "$PACKAGE_STATUS" -eq 0 ]; then
+        record last-update ok "$UPDATE_LABEL"
+    else
+        record last-update failed "$UPDATE_LABEL" "$PACKAGE_STATUS"
+    fi
+    clear_progress
     exit 0
 fi
 
@@ -187,7 +271,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # 1. Fetch from GitHub
-echo "PROGRESS: 1/5: Fetching updates from GitHub..."
+stage 1 5 "Fetching updates from GitHub"
 info "Checking for local repository cache..."
 
 export BACKUP_DIR="$UPD_DIR/backups/$(date +%Y%m%d_%H%M%S)"
@@ -262,7 +346,7 @@ fi
 [[ -f "$UPD_DIR/repo/src/dots/starship.toml" ]] || die "Missing src/dots content after update"
 
 # 2. System update via Polkit
-echo "PROGRESS: 2/5: Running system update..."
+stage 2 5 "Updating system packages"
 echo
 echo "---------------------------------------------"
 echo "  Step 1 - System Updates"
@@ -291,7 +375,7 @@ if [[ -f "$BUNDLE_DIR/scripts/lib/update-state.sh" ]]; then
 fi
 
 # 4. Deploy Configs
-echo "PROGRESS: 3/5: Deploying configuration files..."
+stage 3 5 "Deploying configuration files"
 echo
 echo "---------------------------------------------"
 echo "  Step 2 - Deploy Configs"
@@ -301,10 +385,10 @@ if [[ "${CAELESTIA_SKIP_DEPLOY:-0}" == "1" ]]; then
 else
     run_stage 900 bash "$UPD_DIR/repo/scripts/03-deploy-configs.sh" || die "Config deployment failed or timed out."
 fi
-echo "PROGRESS: 3/5: Configuration files deployed."
+stage 3 5 "Configuration files deployed"
 
 # 5. Build Shell
-echo "PROGRESS: 4/5: Building the Caelestia shell UI..."
+stage 4 5 "Building the shell"
 echo
 echo "---------------------------------------------"
 echo "  Step 3 - Build Caelestia Shell UI"
@@ -420,15 +504,20 @@ if [[ "${CAELESTIA_SKIP_BUILD:-0}" == "1" ]]; then
     info "Build skipped; the running shell is already what is installed."
 elif [[ "$SHELL_CHANGED" -eq 1 ]]; then
     notify_update "Log out to load the new shell: it was rebuilt and a restart alone leaves it on the old plugin."
+    # A logout closes everything the user has open, so it is never taken on their behalf; it
+    # is reported instead, and the page says so after the restart.
     if ask_yes_no "The shell itself was rebuilt. Restarting it is not enough, so log out to load it. Log out now? [y/N] "; then
         info "Logging out..."
         log_out_now || warn "Could not log out automatically; log out manually to load the new shell."
     else
+        NEEDS_LOGOUT=1
         info "Log out when convenient to load the new shell."
     fi
 else
-    notify_update "Restart the shell to load it."
-    if ask_yes_no "Restart the Caelestia shell to load the update? [y/N] "; then
+    notify_update "Restarting the shell to load it."
+    # Nothing is lost by restarting the shell, and a run the shell started has nobody to
+    # answer a prompt: it restarts, which is what asking for the update meant.
+    if [ "$INTERACTIVE" -eq 0 ] || ask_yes_no "Restart the Caelestia shell to load the update? [y/N] "; then
         info "Restarting the shell..."
         restart_shell_now || warn "Could not restart the shell automatically; restart it manually."
     else
@@ -436,7 +525,9 @@ else
     fi
 fi
 
-echo "PROGRESS: done: Update completed successfully"
+stage 5 5 "Finishing up"
+record last-update ok "$UPDATE_LABEL" 0 "${NEEDS_LOGOUT:-0}"
+clear_progress
 echo
 echo "---------------------------------------------"
 echo "  Update Completed Successfully!"

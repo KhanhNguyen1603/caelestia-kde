@@ -242,6 +242,16 @@ QtObject {
             }
 
             Page {
+                key: "dockPanel"
+                label: qsTr("Dock")
+                icon: "dock_to_bottom"
+                status: Config.dockPanel.enabled ? (Config.dockPanel.persistent ? qsTr("Always visible") : qsTr("Auto-hide")) : qsTr("Disabled")
+                description: qsTr("Independent floating pill dock, magnification, intellihide, and pinned apps")
+                keywords: ["dock", "floating dock", "magnification", "intellihide", "pinned", "pill"]
+                component: Component { DockPanel {} }
+            }
+
+            Page {
                 key: "launcher"
                 label: qsTr("Launcher")
                 icon: "apps"
@@ -674,12 +684,24 @@ QtObject {
                 keywords: ["extensions", "addons", "plugins"]
                 component: Component { PluginsPage {} }
             }
+        },
+
+        // Its own entry at the foot of the list: the one thing in the window that changes
+        // the window, and the one most often wanted, so it is not a page inside a section.
+        Category {
+            categoryIdx: 8
+            key: "updates"
+            label: qsTr("Updates")
+            icon: "system_update"
+            description: qsTr("Shell versions and system packages")
+            defaultPage: "updates"
+            singlePage: true
 
             Page {
                 key: "updates"
                 label: qsTr("Updates")
                 icon: "system_update"
-                section: qsTr("Services")
+                section: qsTr("Updates")
                 status: qsTr("Check for package and system updates")
                 description: qsTr("Pacman, flatpak, firmware updates, and Caelestia shell version upgrades")
                 keywords: ["upgrade", "packages", "pacman", "dnf", "apt", "firmware"]
@@ -696,13 +718,14 @@ QtObject {
         Component { StackPage { pages: root.collectAllPagesForCategory(4) } },
         Component { StackPage { pages: root.collectAllPagesForCategory(5) } },
         Component { StackPage { pages: root.collectAllPagesForCategory(6) } },
-        Component { StackPage { pages: root.collectAllPagesForCategory(7) } }
+        Component { StackPage { pages: root.collectAllPagesForCategory(7) } },
+        Component { StackPage { pages: root.collectAllPagesForCategory(8) } }
     ]
 
     function collectAllPagesForCategory(catIdx: int): var {
         const cat = categories[catIdx];
         if (!cat) return [];
-        const list = [root.hubSubPage];
+        const list = cat.singlePage ? [] : [root.hubSubPage];
         for (let i = 0; i < cat.pages.length; i++) {
             const p = cat.pages[i];
             list.push(p);
@@ -713,6 +736,10 @@ QtObject {
             }
         }
         return list;
+    }
+
+    function isSinglePageCategory(idx: int): bool {
+        return idx >= 0 && idx < categories.length && categories[idx].singlePage;
     }
 
     function defaultPageForCategory(idx: int): string {

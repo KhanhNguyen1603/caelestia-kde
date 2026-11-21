@@ -26,6 +26,17 @@ registry_entries() {
     sed -nE 's/^ *\{ id: "([A-Za-z0-9_]+)", zone: "([a-z]+)" \},?$/\1 \2/p' "$REGISTRY"
 }
 
+test_peripheral_battery_joins_the_sidebar_at_its_live_width() {
+    local popout
+    popout="$(sed -n '/sourceComponent: PeripheralBattery {/,/^            }/p' "$POPOUTS")"
+    assert_contains "$popout" 'width: _isSidebarOpen' "the horizontal sidebar selects the attached width"
+    assert_contains "$popout" 'sidebarWidthFor(Tokens.sizes.sidebar.width) - root.framePadding' \
+        "the battery frame should fit the current sidebar, including its padding"
+    assert_contains "$popout" ': implicitWidth' "the standalone popout should fit its device labels"
+    assert_file_contains "$REPO_ROOT/shell/modules/bar/popouts/PeripheralBattery.qml" 'wrapMode: Text.Wrap' \
+        "a device name that exceeds the attached width should wrap"
+}
+
 registry_ids() {
     registry_entries | awk '{ print $1 }' | sort
 }
@@ -127,6 +138,10 @@ test_the_right_zone_is_one_system_tray_plus_the_clock() {
         "the bar must still be able to route hover and clicks to a nested widget"
     assert_file_contains "$STATUS_ICON" 'readonly property string iconId: BarWidgets.statusIconId(root.entryId)' \
         "one status icon per widget, named by the entry that carries it"
+    assert_file_contains "$STATUS_ICON" 'tooltip: BarIconMeta.nameOf(root.iconId)' \
+        "and its name comes from BarIconMeta, so the tooltip and the settings list cannot disagree"
+    assert_file_not_contains "$STATUS_ICON" 'qsTr(' \
+        "rather than a second copy of the names, which is where the two drifted apart"
     assert_file_contains "$REGISTRY" 'kind: "statusIcon"' \
         "the registry expands the status icons group into one entry per icon"
     assert_file_contains "$REGISTRY" 'const entries = root.zoneEntries(root.viewEntries(node), "right");' \

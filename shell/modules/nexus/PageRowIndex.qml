@@ -234,13 +234,6 @@ QtObject {
             subPage: "appearance"
         },
         {
-            label: qsTr("Islands"),
-            description: qsTr("Everything appears as its own floating widget (Very Experimental)"),
-            section: qsTr("Theme & Effects"),
-            pageIdx: 0,
-            subPage: "appearance"
-        },
-        {
             label: qsTr("Transparency"),
             description: qsTr("Enable transparency across the shell"),
             section: qsTr("Theme & Effects"),
@@ -528,6 +521,13 @@ QtObject {
             subPage: "barDock"
         },
         {
+            label: qsTr("Launch animation style"),
+            description: qsTr("Animation or indicator style when an application is launching"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "barDock"
+        },
+        {
             label: qsTr("Window grouping"),
             description: qsTr("How windows of one app share a dock icon: grouped, pinned icon holds the first window only, or every window on its own icon"),
             section: qsTr("Dock"),
@@ -556,21 +556,20 @@ QtObject {
         },
         {
             label: qsTr("Inverted"),
-            description: qsTr("Only show the greeter while hovering"),
             section: qsTr("Greeter"),
             pageIdx: 2,
             subPage: "barGreeter"
         },
         {
-            label: qsTr("Show on hover"),
-            description: qsTr("Only show the greeter while hovering"),
+            label: qsTr("Enable popout"),
+            description: qsTr("Show a popout panel for the greeter"),
             section: qsTr("Greeter"),
             pageIdx: 2,
             subPage: "barGreeter"
         },
         {
-            label: qsTr("Popout on hover"),
-            description: qsTr("Show a greeter popout when hovering"),
+            label: qsTr("Open on hover"),
+            description: qsTr("Open popout on hover instead of on click"),
             section: qsTr("Greeter"),
             pageIdx: 2,
             subPage: "barGreeter"
@@ -1368,6 +1367,244 @@ QtObject {
             section: qsTr("Displays"),
             pageIdx: 4,
             subPage: "displays"
+        },
+        {
+            label: qsTr("Enable dock panel"),
+            description: qsTr("Standalone dock panel; different from bar's dock component."),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Screen edge"),
+            description: qsTr("Position of the floating dock on the screen"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Alignment"),
+            description: qsTr("Placement along the chosen screen edge"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Always visible"),
+            description: qsTr("Keep the dock visible on screen at all times instead of auto-hiding"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Intelligent auto-hide (Intellihide)"),
+            description: qsTr("Only hide the dock when an open window overlaps its area"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Dodge focused window only"),
+            description: qsTr("Only hide when the active, focused window intersects with the dock"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Reveal on mouse hover"),
+            description: qsTr("Show the auto-hidden dock when hovering over the screen edge"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Hover reveal delay"),
+            description: qsTr("Milliseconds to wait before revealing the hidden dock on mouse hover"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Drag threshold"),
+            description: qsTr("Pixels dragged across the edge before the dock reveals or hides"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Reserve screen space"),
+            description: qsTr("Prevent maximized windows from covering the dock area (exclusive zone)"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Window grouping"),
+            description: qsTr("How multiple windows of the same app share a dock icon"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Filter by current desktop"),
+            description: qsTr("Only show applications and windows belonging to the active virtual workspace"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Preview window on desktop"),
+            description: qsTr("Highlight and show the window itself on the workspace while hovering over dock previews"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Island mode"),
+            description: qsTr("Detach the dock from screen edges into a floating island pill"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Fixed length"),
+            description: qsTr("Set a fixed panel length instead of sizing automatically to content"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Length percentage"),
+            description: qsTr("Length of the dock as a percentage of the screen edge"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Dock size"),
+            description: qsTr("Height or width dimension of the dock container"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Icon size"),
+            description: qsTr("Size of application icons in the dock"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Floating distance"),
+            description: qsTr("Margin separating the dock pill from the screen boundary"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Inner padding"),
+            description: qsTr("Padding around icons inside the dock container"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Item spacing"),
+            description: qsTr("Distance between adjacent icons"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Icon magnification on hover"),
+            description: qsTr("Smoothly magnify icons and their neighbours under the mouse pointer"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Maximum magnification"),
+            description: qsTr("Peak scale multiplier for hovered dock icons"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Launch animation style"),
+            description: qsTr("Animation or indicator style when an application is launching"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Running indicator style"),
+            description: qsTr("Visual shape for active and running application indicators"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Show running indicators"),
+            description: qsTr("Display pips or bars below running applications"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Show unread badges"),
+            description: qsTr("Display notification count, progress, and urgency badges on app icons"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Show app launcher icon"),
+            description: qsTr("Display an application launcher button directly on the dock"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Recolor icons"),
+            description: qsTr("Apply system theme palette colors to monochrome and app icons"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Show labels"),
+            description: qsTr("Display text label next to each dock application icon"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Label size"),
+            description: qsTr("Font size in pixels for application labels"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Fixed label width"),
+            description: qsTr("Use a uniform fixed width instead of adapting to text length"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Label width"),
+            description: qsTr("Fixed width in pixels for application labels"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
+        },
+        {
+            label: qsTr("Maximum label width"),
+            description: qsTr("Maximum width cap in pixels before truncating with ellipsis"),
+            section: qsTr("Dock"),
+            pageIdx: 2,
+            subPage: "dockPanel"
         },
         {
             label: qsTr("Focus sessions"),
@@ -2767,6 +3004,13 @@ QtObject {
             subPage: "taskbar"
         },
         {
+            label: qsTr("Island mode"),
+            description: qsTr("Detach the bar from screen edges into a floating island pill"),
+            section: qsTr("Taskbar"),
+            pageIdx: 2,
+            subPage: "taskbar"
+        },
+        {
             label: qsTr("Dodge windows"),
             description: qsTr("Retract the bar while a window covers it, and let windows sit underneath"),
             section: qsTr("Taskbar"),
@@ -3000,22 +3244,22 @@ QtObject {
             subPage: "toastPreferences"
         },
         {
+            label: qsTr("Automatic Updates"),
+            description: qsTr("Checked every 30 minutes, and once when the shell starts"),
+            section: qsTr("Updates"),
+            pageIdx: 8,
+            subPage: "updates"
+        },
+        {
             label: qsTr("Update channel"),
             section: qsTr("Updates"),
-            pageIdx: 7,
+            pageIdx: 8,
             subPage: "updates"
         },
         {
-            label: qsTr("Check for updates automatically"),
-            description: qsTr("Every 30 minutes, and once when the shell starts"),
+            label: qsTr("Backup folder"),
             section: qsTr("Updates"),
-            pageIdx: 7,
-            subPage: "updates"
-        },
-        {
-            label: qsTr("Open backup folder"),
-            section: qsTr("Updates"),
-            pageIdx: 7,
+            pageIdx: 8,
             subPage: "updates"
         },
         {

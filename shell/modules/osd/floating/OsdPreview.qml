@@ -140,14 +140,14 @@ Item {
 
             StyledRect {
                 anchors.right: parent.right
-                anchors.rightMargin: GlobalConfig.appearance.islands ? Tokens.padding.small : 0
+                anchors.rightMargin: GlobalConfig.bar.islands ? Tokens.padding.small : 0
                 anchors.verticalCenter: parent.verticalCenter
                 width: 46
                 height: 106
                 topLeftRadius: Surface.panelRounding
                 bottomLeftRadius: Surface.panelRounding
-                topRightRadius: GlobalConfig.appearance.islands ? Surface.panelRounding : 0
-                bottomRightRadius: GlobalConfig.appearance.islands ? Surface.panelRounding : 0
+                topRightRadius: GlobalConfig.bar.islands ? Surface.panelRounding : 0
+                bottomRightRadius: GlobalConfig.bar.islands ? Surface.panelRounding : 0
                 color: Colours.layer(Colours.tPalette.m3surfaceContainerHigh, 1)
                 border.width: 1
                 border.color: Colours.palette.m3outlineVariant
