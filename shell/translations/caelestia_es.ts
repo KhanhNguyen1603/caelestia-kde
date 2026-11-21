@@ -184,12 +184,12 @@
     <message>
         <location line="+2"/>
         <source>KDE&apos;s text is %1 pt, so the shell follows at %2%</source>
-        <translation>El tamaño de texto de KDE es %1 pts, así que la shell lo sigue a %2%</translation>
+        <translation>El tamaño de texto de KDE es %1 pts, así que el shell lo sigue a %2%</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>KDE is using its default text size, so the shell stays at 100%</source>
-        <translation>KDe está usando su tamaño de texto por defecto, así que la shell se mantiene a 100%</translation>
+        <translation>KDE está usando su tamaño de texto por defecto, así que el shell se mantiene en 100%</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -219,7 +219,7 @@
     <message>
         <location line="+1"/>
         <source>Multiplier applied to every piece of text the shell draws</source>
-        <translation>Multiplicador aplicado a cada texto que la shell dibuja</translation>
+        <translation>Multiplicador aplicado a cada texto que el shell dibuja</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -5104,7 +5104,7 @@
     <message>
         <location filename="../modules/screenshot/regionSelector/CursorGuide.qml" line="+27"/>
         <source>Copy region (LMB) or annotate (RMB)</source>
-        <translation>Capturar pantalla (Click izquierdo) o Anotar (Click derecho)</translation>
+        <translation>Capturar pantalla (Clic izquierdo) o Anotar (Clic derecho)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -5473,7 +5473,7 @@
     <message>
         <location line="+73"/>
         <source>Right click on desktop -&gt; Edit Plasma Widgets -&gt; Right click visualizer -&gt; Configure</source>
-        <translation>Click derecho en el escritorio -&gt; Editar Widgets de Plasma -&gt; Click derecho en el visualizador -&gt; Configurar</translation>
+        <translation>Clic derecho en el escritorio -&gt; Editar Widgets de Plasma -&gt; Clic derecho en el visualizador -&gt; Configurar</translation>
     </message>
     <message>
         <location line="-64"/>
@@ -5950,7 +5950,7 @@
         <source>G A M E   O V E R
 Click to restart</source>
         <translation>F I N   D E L   J U E G O
-Hacer click para reiniciar</translation>
+Hacer clic para reiniciar</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -5974,7 +5974,7 @@ Pulsa para continuar</translation>
     <message>
         <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/DinoGame.qml" line="+8"/>
         <source>Click or press Space to play</source>
-        <translation>Hacer click o presionar Espacio para jugar</translation>
+        <translation>Hacer clic o presionar Espacio para jugar</translation>
     </message>
     <message>
         <location line="+86"/>
@@ -5984,7 +5984,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+6"/>
         <source>Click to restart</source>
-        <translation>Hacer click para reiniciar</translation>
+        <translation>Hacer clic para reiniciar</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -6075,7 +6075,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+15"/>
         <source>This machine has no kscreen-doctor, so the shell can neither read nor change the screen setup. Install Plasma&apos;s kscreen package to manage displays here.</source>
-        <translation>Esta máquina no tiene kscreen-doctor instalado, así que la shell no puede leer ni cambiar la configuración de pantalla. Instala el paquete kscreen de Plasma para administrar las pantallas aquí.</translation>
+        <translation>Esta máquina no tiene kscreen-doctor instalado, así que el shell no puede leer ni cambiar la configuración de pantalla. Instala el paquete kscreen de Plasma para administrar las pantallas aquí.</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -6145,7 +6145,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <source>Speed, tap to click, natural scrolling</source>
-        <translation>Velocidad, tocar para hacer click, desplazamiento natural</translation>
+        <translation>Velocidad, tocar para hacer clic, desplazamiento natural</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -8121,7 +8121,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+45"/>
         <source>Launcher style</source>
-        <translation>Estilo de lanzador</translation>
+        <translation>Estilo del lanzador</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -11627,7 +11627,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+9"/>
         <source>Applications &amp; Shortcuts</source>
-        <translation>Aplicaciones y atajdos</translation>
+        <translation>Aplicaciones y atajos</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -11682,12 +11682,12 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <source>Configure system hotkeys, window management keys, and custom scripts</source>
-        <translation>Configurar los atajos de teclado del systema, las teclas de administración de ventana, y los scripts personalizados</translation>
+        <translation>Configurar los atajos de teclado del sistema, las teclas de administración de ventana, y los scripts personalizados</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>System &amp; Services</source>
-        <translation>Systema y servicios</translation>
+        <translation>Sistema y servicios</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -11792,7 +11792,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <source>Hardware specs, kernel release, Quickshell shell version, and license details</source>
-        <translation>Hardware, versión del kernel, versión de la shell Quickshell, y detalles de licencia</translation>
+        <translation>Hardware, versión del kernel, versión del shell de Quickshell, y detalles de licencia</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -11865,7 +11865,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <source>Configure, enable, or disable Caelestia shell plugins and extensions</source>
-        <translation>Configurar, activar o desactivar extensiones y complementos de la shell de Caelestia</translation>
+        <translation>Configurar, activar o desactivar extensiones y complementos del shell de Caelestia</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -11971,7 +11971,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="-246"/>
         <source>Multiplier applied to every piece of text the shell draws</source>
-        <translation>Multiplicador aplicado a cada texto que la shell dibuja</translation>
+        <translation>Multiplicador aplicado a cada texto que el shell dibuja</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -14162,7 +14162,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="-1"/>
         <source>Launcher style</source>
-        <translation>Estilo de lanzador</translation>
+        <translation>Estilo del lanzador</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -15815,6 +15815,9 @@ Pulsa para continuar</translation>
         <location line="+6"/>
         <source>Update channel</source>
         <translation>Canal de actualizaciones</translation>
+        <location line="+1"/>
+        <source>Every 30 minutes, and once when the shell starts</source>
+        <translation>Cada 30 minutos, y una vez cuando el shell se inicie</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -16406,7 +16409,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+28"/>
         <source>Stored in kioslaverc, which KDE applications read: Plasma, Dolphin, Konsole and the rest. Programs started from a shell keep whatever their environment says until they are restarted.</source>
-        <translation>Guarado en kioslaverc, que leen las aplicaciones de KDE: Plasma, Dolphin, Konsole y demás. Los programas iniciados desde una shell mantendrán lo que diga su entorno hasta que se reinicien.</translation>
+        <translation>Guardado en kioslaverc, que leen las aplicaciones de KDE: Plasma, Dolphin, Konsole y demás. Los programas iniciados desde una shell mantendrán lo que diga su entorno hasta que se reinicien.</translation>
     </message>
 </context>
 <context>
@@ -18273,7 +18276,7 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
     <message>
         <location filename="../modules/background/desktopicons/widgets/StickerWidget.qml" line="+29"/>
         <source>Double click to choose an image</source>
-        <translation>Doble click para elegir una imagen</translation>
+        <translation>Doble clic para elegir una imagen</translation>
     </message>
     <message>
         <location line="+33"/>
@@ -18866,7 +18869,7 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
     <message>
         <location line="+114"/>
         <source>%1 timers finished while the shell was not running.</source>
-        <translation>%1 temporizadores acabaron mientras la shell no estaba activa.</translation>
+        <translation>%1 temporizadores acabaron mientras el shell no estaba activo.</translation>
     </message>
 </context>
 <context>
@@ -19617,17 +19620,17 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
     <message>
         <location filename="../modules/nexus/common/UpdateConfirmDialog.qml" line="+16"/>
         <source>Restore %1?</source>
-        <translation>Restaurar %1?</translation>
+        <translation>¿Restaurar %1?</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This reinstalls an older version over the one installed now. Your settings are backed up first, and the shell restarts when it finishes.</source>
-        <translation>Esto reinstala una versión más antigua sobre la instalada actualmente. Primero se hará una copia de seguridad de tus configuraciones, y la shell se reiniciará cuando acabe.</translation>
+        <translation>Esto reinstala una versión más antigua sobre la instalada actualmente. Primero se hará una copia de seguridad de tus configuraciones, y el shell se reiniciará al terminar.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This replaces %1 with %2. Your settings are backed up first, and the shell restarts when it finishes.</source>
-        <translation>Esto reemplaza %1 con %2. Primero se hará una copia de seguridad de tus configuraciones, y la shell se reiniciará cuando acabe.</translation>
+        <translation>Esto reemplaza %1 con %2. Primero se hará una copia de seguridad de tus configuraciones, y el shell se reiniciará al terminar.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -19769,7 +19772,7 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
     <message>
         <location line="-17"/>
         <source>the shell restarts</source>
-        <translation>la shell se reinicia</translation>
+        <translation>el shell se reinicia</translation>
     </message>
     <message>
         <location line="+39"/>
@@ -20137,6 +20140,18 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <location line="+1"/>
         <source>Your settings are saved here before each update</source>
         <translation>Tus configuraciones se guardan aquí antes de cada actualización</translation>
+        <source>Every 30 minutes, and once when the shell starts</source>
+        <translation>Cada 30 minutos, y una vez cuando el shell se inicie</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Maintenance</source>
+        <translation>Mantenimiento</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Open backup folder</source>
+        <translation>Abrir carpeta de respaldos</translation>
     </message>
     <message>
         <location line="+41"/>

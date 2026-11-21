@@ -15,6 +15,7 @@ DOCK_ITEM="$REPO_ROOT/shell/components/widgets/DockItem.qml"
 DOCK_MANAGER="$REPO_ROOT/shell/services/DockManager.qml"
 BAR_DOCK="$REPO_ROOT/shell/modules/bar/components/Dock.qml"
 DOCK_HOVER="$REPO_ROOT/shell/modules/bar/popouts/DockHover.qml"
+EXCLUSIONS="$REPO_ROOT/shell/modules/drawers/Exclusions.qml"
 
 test_dock_interaction_area_is_bounded_to_panel_geometry() {
     local interactions
@@ -128,6 +129,36 @@ test_dock_hover_preview_tracks_source_panel() {
 
     assert_contains "$hover" 'root.popouts.sourcePanel' \
         "dock hover preview must track whether summoned by bar or floating dock"
+}
+
+test_exclusions_do_not_double_count_border_on_dock_edge() {
+    local exclusions
+    exclusions="$(cat "$EXCLUSIONS")"
+
+    assert_contains "$exclusions" 'dockPanelPosition === "bottom" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion' \
+        "bottom exclusion must not unconditionally add defaultBorderExclusion to dockPanel exclusive zone"
+    assert_contains "$exclusions" 'dockPanelPosition === "top" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion' \
+        "top exclusion must not unconditionally add defaultBorderExclusion to dockPanel exclusive zone"
+    assert_contains "$exclusions" 'dockPanelPosition === "left" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion' \
+        "left exclusion must not unconditionally add defaultBorderExclusion to dockPanel exclusive zone"
+    assert_contains "$exclusions" 'dockPanelPosition === "right" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion' \
+        "right exclusion must not unconditionally add defaultBorderExclusion to dockPanel exclusive zone"
+    assert_not_contains "$exclusions" '+ (dockPanelPosition === "bottom" ? dockPanelThickness : 0)' \
+        "bottom exclusion must not add dock thickness on top of default border exclusion"
+}
+
+test_dock_item_uses_anchor_changes_to_avoid_stale_anchors() {
+    local item
+    item="$(cat "$DOCK_ITEM")"
+
+    assert_contains "$item" 'AnchorChanges {' \
+        "dock item must use AnchorChanges to cleanly detach stale anchors across position transitions"
+    assert_contains "$item" 'anchors.horizontalCenter: iconContainer.horizontalCenter' \
+        "dock indicators must anchor their horizontal center to iconContainer"
+    assert_not_contains "$item" 'anchors.bottom: (root.isHorizontal && root.position === "bottom") ? root.bottom : undefined' \
+        "delegateItem must not use ternary anchor bindings to undefined"
+    assert_not_contains "$item" 'bottom: (root.position === "bottom" || root.position === "top") ? (root.position === "top" ? undefined : parent.bottom) : undefined' \
+        "indicatorContainer must not use ternary anchor bindings to undefined"
 }
 
 run_tests

@@ -30,17 +30,24 @@ Scope {
     readonly property int dockPanelThickness: root.dockPanel ? root.dockPanel.exclusiveZone : 0
     readonly property string dockPanelPosition: root.dockPanel ? root.dockPanel.position : Config.dockPanel.position
     readonly property int defaultBorderExclusion: root.bar.isIsland ? 0 : Config.border.thickness
+    readonly property int dockPanelAdditionalExclusion: (root.dockPanel && !root.dockPanel.disabled && Config.dockPanel.reserveSpace
+        && !root.dockPanel.dodgeEnabled && (Config.dockPanel.persistent || root.visibilities.dockPanel))
+        ? (root.dockPanel.contentThickness + root.dockPanel.islandMargin) : 0
 
-    readonly property int leftExclusion: (root.bar.position === "left" ? root.bar.exclusiveZone : defaultBorderExclusion)
+    readonly property int leftExclusion: (root.bar.position === "left"
+        ? (root.bar.exclusiveZone + (dockPanelPosition === "left" ? dockPanelAdditionalExclusion : 0))
+        : (dockPanelPosition === "left" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion))
         + (root.reserveSidebar && root.bar.position === "right" ? root.sidebarWidth : 0)
-        + (dockPanelPosition === "left" ? dockPanelThickness : 0)
-    readonly property int topExclusion: (root.bar.position === "top" ? root.bar.exclusiveZone : defaultBorderExclusion)
-        + (dockPanelPosition === "top" ? dockPanelThickness : 0)
-    readonly property int rightExclusion: (root.bar.position === "right" ? root.bar.exclusiveZone : defaultBorderExclusion)
+    readonly property int topExclusion: root.bar.position === "top"
+        ? (root.bar.exclusiveZone + (dockPanelPosition === "top" ? dockPanelAdditionalExclusion : 0))
+        : (dockPanelPosition === "top" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion)
+    readonly property int rightExclusion: (root.bar.position === "right"
+        ? (root.bar.exclusiveZone + (dockPanelPosition === "right" ? dockPanelAdditionalExclusion : 0))
+        : (dockPanelPosition === "right" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion))
         + (root.reserveSidebar && root.bar.position !== "right" ? root.sidebarWidth : 0)
-        + (dockPanelPosition === "right" ? dockPanelThickness : 0)
-    readonly property int bottomExclusion: (root.bar.position === "bottom" ? root.bar.exclusiveZone : defaultBorderExclusion)
-        + (dockPanelPosition === "bottom" ? dockPanelThickness : 0)
+    readonly property int bottomExclusion: root.bar.position === "bottom"
+        ? (root.bar.exclusiveZone + (dockPanelPosition === "bottom" ? dockPanelAdditionalExclusion : 0))
+        : (dockPanelPosition === "bottom" ? (root.dockPanel && !root.dockPanel.disabled ? root.dockPanel.exclusiveZone : defaultBorderExclusion) : defaultBorderExclusion)
 
     readonly property real usableWidth: Math.max(100, root.screen.width - leftExclusion - rightExclusion)
     readonly property real usableHeight: Math.max(100, root.screen.height - topExclusion - bottomExclusion)

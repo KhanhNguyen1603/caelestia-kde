@@ -108,8 +108,8 @@ PageBase {
         ToggleRow {
             first: true
             last: true
-            text: qsTr("Enable floating dock")
-            subtext: qsTr("Show a standalone floating dock on your screen")
+            text: qsTr("Enable dock panel")
+            subtext: qsTr("Standalone dock panel; different from bar's dock component.")
             reset: ({ node: GlobalConfig.dockPanel, setting: "enabled" })
             checked: Config.dockPanel.enabled
             onToggled: GlobalConfig.dockPanel.enabled = checked
