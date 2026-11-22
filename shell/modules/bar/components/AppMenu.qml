@@ -68,6 +68,7 @@ StyledRect {
     readonly property bool showTitle: Config.bar.appmenu.showTitle && !root.isCompact
     readonly property bool showIcon: Config.bar.appmenu.showIcon
     readonly property bool showChevron: Config.bar.appmenu.showChevron && !root.isCompact
+    readonly property bool isPopoutOpen: Boolean(root.popouts?.hasCurrent && (root.popouts?.currentName === "appmenu" || root.popouts?.currentName === "appmenucontext"))
     readonly property string tooltipText: {
         if (!root.hasActiveWindow)
             return qsTr("App menu (Desktop)");
@@ -195,6 +196,30 @@ StyledRect {
             text: "expand_more"
             color: Qt.alpha(root.colour, 0.7)
             fontStyle: Tokens.font.icon.builders.small.size(Math.round(root.iconSize * 0.75)).build()
+            rotation: {
+                let base = 0;
+                switch (Config.bar.position) {
+                case "bottom":
+                    base = 180;
+                    break;
+                case "left":
+                    base = 270;
+                    break;
+                case "right":
+                    base = 90;
+                    break;
+                default:
+                    base = 0;
+                    break;
+                }
+                return base + (root.isPopoutOpen ? 180 : 0);
+            }
+
+            Behavior on rotation {
+                Anim {
+                    type: Anim.DefaultEffects
+                }
+            }
         }
     }
 

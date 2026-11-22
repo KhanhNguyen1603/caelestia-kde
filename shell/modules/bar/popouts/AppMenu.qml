@@ -13,6 +13,7 @@ import qs.components.effects
 import qs.components.images
 import qs.services
 import qs.utils
+import qs.modules.nexus
 
 ColumnLayout {
     id: root
@@ -190,7 +191,7 @@ ColumnLayout {
                         StyledText {
                             Layout.fillWidth: true
                             text: root.appName
-                            font: Tokens.font.title.small
+                            font: Tokens.font.title.builders.small.size(Tokens.font.title.small.pointSize * root.fontScale).build()
                             color: Colours.palette.m3onSurface
                             elide: Text.ElideRight
                         }
@@ -218,8 +219,10 @@ ColumnLayout {
                                     StyledText {
                                         id: wsText
 
+                                        Layout.maximumWidth: 140 * root.scaleOffset
+                                        elide: Text.ElideRight
                                         text: root.workspaceLabel
-                                        font: Tokens.font.label.small
+                                        font: Tokens.font.label.builders.small.size(Tokens.font.label.small.pointSize * root.fontScale).build()
                                         color: root.wsMenuOpen ? Colours.palette.m3onPrimary : Colours.palette.m3primary
                                     }
 
@@ -249,7 +252,7 @@ ColumnLayout {
                     StyledText {
                         Layout.fillWidth: true
                         text: root.hasActiveWindow ? (root.windowTitle.length > 0 ? root.windowTitle : root.appName) : qsTr("Active desktop workspace")
-                        font: Tokens.font.body.small
+                        font: Tokens.font.body.builders.small.size(Tokens.font.body.small.pointSize * root.fontScale).build()
                         color: Colours.palette.m3onSurfaceVariant
                         elide: Text.ElideRight
                     }
@@ -505,7 +508,7 @@ ColumnLayout {
                                             return wsItemPill.modelData.name;
                                         return qsTr("Workspace %1").arg(wsItemPill.wsId);
                                     }
-                                    font: Tokens.font.label.small
+                                    font: Tokens.font.label.builders.small.size(Tokens.font.label.small.pointSize * root.fontScale).build()
                                     color: wsItemPill.isSelected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
                                 }
 
@@ -575,8 +578,9 @@ ColumnLayout {
 
                     StyledText {
                         Layout.fillWidth: true
+                        elide: Text.ElideRight
                         text: qsTr("Open application menu")
-                        font: Tokens.font.body.medium
+                        font: Tokens.font.body.builders.medium.size(Tokens.font.body.medium.pointSize * root.fontScale).build()
                         color: Colours.palette.m3primary
                     }
 
@@ -624,8 +628,9 @@ ColumnLayout {
 
                     StyledText {
                         Layout.fillWidth: true
+                        elide: Text.ElideRight
                         text: qsTr("Open new window")
-                        font: Tokens.font.body.medium
+                        font: Tokens.font.body.builders.medium.size(Tokens.font.body.medium.pointSize * root.fontScale).build()
                         color: Colours.palette.m3onSurface
                     }
                 }
@@ -663,8 +668,9 @@ ColumnLayout {
 
                     StyledText {
                         Layout.fillWidth: true
+                        elide: Text.ElideRight
                         text: qsTr("Show all windows")
-                        font: Tokens.font.body.medium
+                        font: Tokens.font.body.builders.medium.size(Tokens.font.body.medium.pointSize * root.fontScale).build()
                         color: Colours.palette.m3onSurface
                     }
                 }
@@ -691,9 +697,10 @@ ColumnLayout {
             StyledText {
                 Layout.fillWidth: true
                 Layout.leftMargin: Tokens.padding.extraSmall * root.scaleOffset
+                elide: Text.ElideRight
                 text: qsTr("Windows (%1)").arg(root.allAppWindows.length)
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.label.medium
+                font: Tokens.font.label.builders.medium.size(Tokens.font.label.medium.pointSize * root.fontScale).build()
             }
 
             Repeater {
@@ -737,7 +744,7 @@ ColumnLayout {
                         StyledText {
                             Layout.fillWidth: true
                             text: (winRow.modelData?.title && winRow.modelData.title.length > 0) ? winRow.modelData.title : root.appName
-                            font: Tokens.font.body.small
+                            font: Tokens.font.body.builders.small.size(Tokens.font.body.small.pointSize * root.fontScale).build()
                             color: winRow.isCurrent ? Colours.palette.m3primary : Colours.palette.m3onSurface
                             elide: Text.ElideRight
                         }
@@ -745,7 +752,7 @@ ColumnLayout {
                         StyledText {
                             visible: winRow.modelData?.workspace?.id !== undefined && winRow.modelData?.workspace?.id !== -1
                             text: qsTr("W%1").arg(winRow.modelData?.workspace?.id ?? "")
-                            font: Tokens.font.label.small
+                            font: Tokens.font.label.builders.small.size(Tokens.font.label.small.pointSize * root.fontScale).build()
                             color: Colours.palette.m3onSurfaceVariant
                         }
 
@@ -788,9 +795,10 @@ ColumnLayout {
             StyledText {
                 Layout.fillWidth: true
                 Layout.leftMargin: Tokens.padding.extraSmall * root.scaleOffset
+                elide: Text.ElideRight
                 text: qsTr("Recent files")
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.label.medium
+                font: Tokens.font.label.builders.medium.size(Tokens.font.label.medium.pointSize * root.fontScale).build()
             }
 
             Repeater {
@@ -829,7 +837,7 @@ ColumnLayout {
                         StyledText {
                             Layout.fillWidth: true
                             text: recentRow.modelData?.name ?? ""
-                            font: Tokens.font.body.small
+                            font: Tokens.font.body.builders.small.size(Tokens.font.body.small.pointSize * root.fontScale).build()
                             color: Colours.palette.m3onSurface
                             elide: Text.ElideRight
                         }
@@ -858,9 +866,10 @@ ColumnLayout {
             StyledText {
                 Layout.fillWidth: true
                 Layout.leftMargin: Tokens.padding.extraSmall * root.scaleOffset
+                elide: Text.ElideRight
                 text: qsTr("Quick actions")
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.label.medium
+                font: Tokens.font.label.builders.medium.size(Tokens.font.label.medium.pointSize * root.fontScale).build()
             }
 
             StyledRect {
@@ -894,8 +903,9 @@ ColumnLayout {
 
                     StyledText {
                         Layout.fillWidth: true
+                        elide: Text.ElideRight
                         text: qsTr("Open applications launcher")
-                        font: Tokens.font.body.medium
+                        font: Tokens.font.body.builders.medium.size(Tokens.font.body.medium.pointSize * root.fontScale).build()
                         color: Colours.palette.m3onSurface
                     }
                 }
@@ -913,7 +923,7 @@ ColumnLayout {
                     anchors.fill: parent
                     radius: nexusRow.radius
                     onClicked: {
-                        Visibilities.toggleNexus();
+                        WindowFactory.create();
                         root.popouts.hasCurrent = false;
                     }
                 }
@@ -932,8 +942,9 @@ ColumnLayout {
 
                     StyledText {
                         Layout.fillWidth: true
+                        elide: Text.ElideRight
                         text: qsTr("System settings")
-                        font: Tokens.font.body.medium
+                        font: Tokens.font.body.builders.medium.size(Tokens.font.body.medium.pointSize * root.fontScale).build()
                         color: Colours.palette.m3onSurface
                     }
                 }
@@ -970,8 +981,9 @@ ColumnLayout {
 
                     StyledText {
                         Layout.fillWidth: true
+                        elide: Text.ElideRight
                         text: qsTr("Change wallpaper")
-                        font: Tokens.font.body.medium
+                        font: Tokens.font.body.builders.medium.size(Tokens.font.body.medium.pointSize * root.fontScale).build()
                         color: Colours.palette.m3onSurface
                     }
                 }
