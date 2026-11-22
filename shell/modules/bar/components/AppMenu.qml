@@ -98,6 +98,7 @@ StyledRect {
         popouts.currentName = name;
         popouts.currentCenter = root.centerFor();
         popouts.hasCurrent = true;
+        popouts.staysOpen = true;
     }
 
     visible: enabled && (!Config.bar.appmenu.autoHide || root.hasActiveWindow)

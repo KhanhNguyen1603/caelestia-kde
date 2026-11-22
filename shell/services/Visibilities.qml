@@ -20,7 +20,7 @@ Singleton {
     property int openDialogs: 0
     readonly property bool contextPopoutOpen: {
         for (const bar of bars.values())
-            if (bar?.popouts?.isContextPopout)
+            if (bar?.popouts?.isContextPopout || (bar?.popouts?.staysOpen && bar?.popouts?.hasCurrent))
                 return true;
         return false;
     }
@@ -260,7 +260,7 @@ Singleton {
     }
     function closeContextPopouts(): void {
         for (const bar of bars.values())
-            if (bar?.popouts?.isContextPopout)
+            if (bar?.popouts?.isContextPopout || (bar?.popouts?.staysOpen && bar?.popouts?.hasCurrent))
                 bar.popouts.close();
     }
 

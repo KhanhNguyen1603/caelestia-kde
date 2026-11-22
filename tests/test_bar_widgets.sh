@@ -21,6 +21,10 @@ KEEP_AWAKE="$REPO_ROOT/shell/modules/bar/components/KeepAwakeWidget.qml"
 GESTURE="$REPO_ROOT/shell/modules/bar/components/TrayDragGesture.qml"
 CONFIG="$REPO_ROOT/shell/plugin/src/Caelestia/Config/barconfig.hpp"
 EDITOR="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarComponents.qml"
+APPMENU="$REPO_ROOT/shell/modules/bar/components/AppMenu.qml"
+CONTENT_WINDOW="$REPO_ROOT/shell/modules/drawers/ContentWindow.qml"
+INTERACTIONS="$REPO_ROOT/shell/modules/drawers/Interactions.qml"
+VISIBILITIES="$REPO_ROOT/shell/services/Visibilities.qml"
 
 registry_entries() {
     sed -nE 's/^ *\{ id: "([A-Za-z0-9_]+)", zone: "([a-z]+)" \},?$/\1 \2/p' "$REGISTRY"
@@ -538,6 +542,21 @@ test_the_chevron_sits_outside_the_icons_surface() {
         "and the tray is as wide as both"
     assert_file_contains "$TRAY" 'if (TrayDrag.active)' \
         "the box is open for the whole drag, so the icon has somewhere to land"
+}
+
+test_appmenu_and_pinned_popouts_stay_open_until_dismissed() {
+    assert_file_contains "$APPMENU" 'popouts.staysOpen = true;' \
+        "appmenu sets staysOpen so pointer exit does not close it"
+    assert_file_contains "$BAR" 'if (popouts.staysOpen && popouts.hasCurrent)' \
+        "bar hover routing must not swap out a pinned popout"
+    assert_file_contains "$INTERACTIONS" 'if (popouts.staysOpen)' \
+        "the auto-hide timer must not dismiss a pinned popout"
+    assert_file_contains "$CONTENT_WINDOW" '(panels.popouts.staysOpen && panels.popouts.hasCurrent)' \
+        "pinned popouts must be recognized as transient overlays so the input mask covers the screen"
+    assert_file_contains "$VISIBILITIES" 'bar?.popouts?.staysOpen && bar?.popouts?.hasCurrent' \
+        "visibilities must broadcast pinned popout presence across all screens for dismissal"
+    assert_file_contains "$INTERACTIONS" 'const boxOpen = popouts.staysOpen && popouts.hasCurrent;' \
+        "interactions must track pinned popouts as dismissible boxes on outside click"
 }
 
 run_tests
