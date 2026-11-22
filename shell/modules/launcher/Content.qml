@@ -564,11 +564,34 @@ Item {
                 forceActiveFocus();
             }
 
+            Timer {
+                id: keyboardRetry
+
+                interval: 60
+                onTriggered: {
+                    if (root.visibilities.launcher && !search.activeFocus)
+                        search.forceActiveFocus();
+                }
+            }
+
+            Connections {
+                function onActiveChanged(): void {
+                    if (root.Window.window?.active && root.visibilities.launcher)
+                        keyboardRetry.restart();
+                }
+
+                target: root.Window.window
+            }
+
             Connections {
                 function onLauncherChanged(): void {
                     if (root.visibilities.launcher) {
                         search.text = root.searchTextForMode(Visibilities.launcherMode);
                         search.forceActiveFocus();
+                        // The drawers window may still be activating, and the keyboard
+                        // handler holds focus until something in here claims it. Ask
+                        // again once that settles so typing always lands in the field.
+                        keyboardRetry.restart();
                     } else {
                         Windows.isSwitching = false;
                         Kwin.clearHighlight();
