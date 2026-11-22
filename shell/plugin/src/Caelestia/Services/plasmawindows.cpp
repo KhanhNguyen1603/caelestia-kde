@@ -173,6 +173,7 @@ void PlasmaWindowHandle::org_kde_plasma_window_activity_left(const QString& id) 
     if (m_activities.removeOne(id))
         emit activitiesChanged();
 }
+
 void PlasmaWindowHandle::org_kde_plasma_window_unmapped() {
     emit unmapped();
 }
