@@ -32,9 +32,10 @@ Item {
     readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
 
-    // The chevron is the box's handle, so it is on the bar for as long as the tray
-    // is: an empty box still needs somewhere to be opened from.
-    readonly property bool showArrow: root.showTrayIcons
+    readonly property bool hasOverflow: (root.showTrayIcons && TrayRegistry.overflowCount > 0) || BarWidgets.overflowWidgets(GlobalConfig.bar).length > 0
+    // Only show the chevron when the overflow box actually holds icons or widgets;
+    // dragging off the bar opens the box as a drop target on its own.
+    readonly property bool showArrow: root.hasOverflow
 
     readonly property real nonAnimHeight: {
         if (isHorizontal)
@@ -161,6 +162,13 @@ Item {
         root.popouts.hasCurrent = true;
     }
 
+    function closeEmptyOverflow(): void {
+        if (root.popouts && root.popouts.hasCurrent && root.popouts.currentName === "trayOverflow") {
+            root.popouts.staysOpen = false;
+            root.popouts.hasCurrent = false;
+        }
+    }
+
     // The arrow is the box's handle: it opens the box and leaves it open, so the icons
     // can be picked from without the pointer having to stay on them. Clicking it again
     // — or clicking anywhere else — closes it.
@@ -172,6 +180,9 @@ Item {
             root.popouts.hasCurrent = false;
             return;
         }
+
+        if (!root.hasOverflow)
+            return;
 
         root.openOverflow();
         root.popouts.staysOpen = true;
@@ -242,16 +253,27 @@ Item {
     onHeightChanged: root.followBox()
     onXChanged: root.followBox()
     onYChanged: root.followBox()
+    onHasOverflowChanged: {
+        if (!root.hasOverflow && !TrayDrag.active)
+            root.closeEmptyOverflow();
+    }
 
     Component.onCompleted: TrayDrag.register(root)
 
     Component.onDestruction: TrayDrag.unregister(root)
 
-    // The box is where a drag off the bar ends, so it is open for the whole gesture.
+    // The box is where a drag off the bar ends, so it is open for the whole gesture
+    // and closes again once the drag finishes if nothing was placed in it.
     Connections {
         function onActiveChanged(): void {
-            if (TrayDrag.active)
-                Qt.callLater(() => root.openOverflow());
+            if (TrayDrag.active) {
+                Qt.callLater(() => {
+                    if (TrayDrag.active)
+                        root.openOverflow();
+                });
+            } else if (!root.hasOverflow) {
+                root.closeEmptyOverflow();
+            }
         }
 
         target: TrayDrag
