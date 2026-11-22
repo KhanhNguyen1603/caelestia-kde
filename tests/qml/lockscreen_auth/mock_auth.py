@@ -25,6 +25,8 @@ class MockAuthenticator(QObject):
     infoMessageChanged = Signal()
     errorMessageChanged = Signal()
     busyChanged = Signal()
+    stateChanged = Signal()
+    inPasswordDelayChanged = Signal()
     succeeded = Signal()
     failed = Signal(int, object)
     noninteractiveError = Signal(int, object)
@@ -80,6 +82,11 @@ class MockAuthenticator(QObject):
             self._busy = value
             self.busyChanged.emit()
 
+    def _set_state(self, value):
+        if self._state != value:
+            self._state = value
+            self.stateChanged.emit()
+
     busy = Property(bool, lambda self: self._busy, notify=busyChanged)
     prompt = Property(str, lambda self: self._prompt, notify=promptChanged)
     promptForSecret = Property(
@@ -88,9 +95,9 @@ class MockAuthenticator(QObject):
     infoMessage = Property(str, lambda self: self._info_message, notify=infoMessageChanged)
     errorMessage = Property(str, lambda self: self._error_message, notify=errorMessageChanged)
     unlocked = Property(bool, lambda self: self._unlocked, notify=succeeded)
-    state = Property(int, lambda self: self._state)
+    state = Property(int, lambda self: self._state, notify=stateChanged)
     hadPrompt = Property(bool, lambda self: self._had_prompt)
-    inPasswordDelay = Property(bool, lambda self: False)
+    inPasswordDelay = Property(bool, lambda self: False, notify=inPasswordDelayChanged)
     authenticatorTypes = Property(int, lambda self: 0)
 
     @property
@@ -108,6 +115,7 @@ class MockAuthenticator(QObject):
             f"prompt pending: {self._pending})"
         )
         self._try_unlock()
+        self._set_state(self.Authenticating)
 
     @Slot()
     def stopAuthenticating(self):
@@ -118,7 +126,7 @@ class MockAuthenticator(QObject):
         self._error_message = ""
         self._in_authenticate = False
         self._set_busy(False)
-        self._state = self.Idle
+        self._set_state(self.Idle)
         self.promptChanged.emit()
         self.promptForSecretChanged.emit()
 
@@ -174,7 +182,7 @@ class MockAuthenticator(QObject):
         self.bogus_failures += 1
         self._event(f"refused #{self.bogus_failures} (conversation in flight)")
         self._record_failure()
-        self._state = self.Idle
+        self._set_state(self.Idle)
         self.failed.emit(0, self)
 
     def _record_failure(self):
@@ -203,7 +211,7 @@ class MockAuthenticator(QObject):
 
     def _verify(self, password):
         self._in_authenticate = False
-        self._state = self.Idle
+        self._set_state(self.Idle)
         if password == self.password:
             self._unlocked = True
             self._event("verify -> SUCCESS")

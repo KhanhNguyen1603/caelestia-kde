@@ -121,13 +121,18 @@ test_prompt_for_secret_respects_show_prompt() {
 }
 
 test_heartbeat_timer_guards_active_prompts() {
-    local qml
+    local qml helper
     qml="$(cat "$AUTH_HANDLER")"
+    helper="$(qml_function "$AUTH_HANDLER" hasOpenPrompt)"
 
-    assert_contains "$qml" '!activeAuthenticator.promptForSecret' \
-        "backendHeartbeatTimer must not interrupt active secret prompts"
+    assert_contains "$qml" '!root.promptPending' \
+        "backendHeartbeatTimer and ensureAuthenticating must guard active prompts (both secret and echo-on)"
     assert_contains "$qml" '!activeAuthenticator.busy' \
         "backendHeartbeatTimer must not interrupt busy authenticators"
+    assert_contains "$helper" 'ScreenLocker.Authenticators.Authenticating' \
+        "hasOpenPrompt should check that the backend is actively authenticating"
+    assert_contains "$helper" 'auth.promptForSecret || auth.prompt' \
+        "hasOpenPrompt should check both secret and echo-on prompts"
 }
 
 test_unlock_failure_feedback() {

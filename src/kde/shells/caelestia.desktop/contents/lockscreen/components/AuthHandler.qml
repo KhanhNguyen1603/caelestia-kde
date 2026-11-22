@@ -18,9 +18,12 @@ Item {
     property bool viewVisible: true
     property bool showPrompt: false
     property bool expectingPrompt: false
+    // kscreenlocker keeps a prompt open until it is answered and leaves prompt/promptForSecret
+    // set after the conversation ends, so track whether a live prompt is waiting.
+    property bool promptPending: false
 
-    readonly property bool busy: Boolean(activeAuthenticator && (activeAuthenticator.busy || activeAuthenticator.pamTimeout))
-    readonly property bool pamTimeout: Boolean(activeAuthenticator && activeAuthenticator.pamTimeout)
+    readonly property bool busy: Boolean(activeAuthenticator && (activeAuthenticator.busy || activeAuthenticator.pamTimeout || activeAuthenticator.inPasswordDelay))
+    readonly property bool pamTimeout: Boolean(activeAuthenticator && (activeAuthenticator.pamTimeout || activeAuthenticator.inPasswordDelay))
     readonly property bool unlocked: Boolean(activeAuthenticator && activeAuthenticator.unlocked)
     readonly property bool isAuthenticating: pamTimeout
     readonly property bool graceLocked: pamTimeout
@@ -40,6 +43,25 @@ Item {
     signal clearPasswordRequested()
     signal notificationRepeated()
     signal succeeded()
+
+    onActiveAuthenticatorChanged: root.promptPending = root.hasOpenPrompt(activeAuthenticator)
+    Component.onCompleted: root.promptPending = root.hasOpenPrompt(activeAuthenticator)
+
+    function hasOpenPrompt(auth) {
+        if (!auth || auth.unlocked || auth.busy || auth.pamTimeout || auth.inPasswordDelay) return false;
+        if (typeof auth.state !== "undefined" && auth.state !== ScreenLocker.Authenticators.Authenticating) return false;
+        return Boolean(auth.promptForSecret || auth.prompt);
+    }
+
+    function flushPendingPassword() {
+        if (!activeAuthenticator || root.pamTimeout || !root.promptPending || root.pendingPassword.length === 0) return;
+        root.promptPending = false;
+        if (typeof activeAuthenticator.respond === "function") {
+            activeAuthenticator.respond(root.pendingPassword);
+        }
+        root.pendingPassword = "";
+        root.focusSecretRequested();
+    }
 
     function extractTimeInSeconds(text) {
         if (!text || typeof text !== "string") return -1;
@@ -125,9 +147,9 @@ Item {
     function ensureAuthenticating() {
         if (!root.viewVisible || (activeAuthenticator && activeAuthenticator.unlocked)) return;
         if (activeAuthenticator &&
-            !activeAuthenticator.promptForSecret &&
+            !root.promptPending &&
             !activeAuthenticator.busy &&
-            !activeAuthenticator.pamTimeout &&
+            !root.pamTimeout &&
             typeof activeAuthenticator.startAuthenticating === "function") {
             activeAuthenticator.startAuthenticating();
         }
@@ -136,10 +158,19 @@ Item {
     function respond(pass) {
         if (!pass || pass.length === 0) return;
         root.clearAuthMessage();
-        if (activeAuthenticator && activeAuthenticator.pamTimeout) {
+        if (!activeAuthenticator) return;
+        if (activeAuthenticator.pamTimeout || activeAuthenticator.inPasswordDelay) {
             root.pendingPassword = pass;
-        } else if (activeAuthenticator && typeof activeAuthenticator.respond === "function") {
+            return;
+        }
+        if (root.promptPending && typeof activeAuthenticator.respond === "function") {
+            root.promptPending = false;
             activeAuthenticator.respond(pass);
+            return;
+        }
+        root.pendingPassword = pass;
+        if (!activeAuthenticator.busy && typeof activeAuthenticator.startAuthenticating === "function") {
+            activeAuthenticator.startAuthenticating();
         }
     }
 
@@ -156,9 +187,9 @@ Item {
         running: root.viewVisible && Boolean(activeAuthenticator) && !(activeAuthenticator && activeAuthenticator.unlocked)
         onTriggered: {
             if (activeAuthenticator &&
-                !activeAuthenticator.promptForSecret &&
+                !root.promptPending &&
                 !activeAuthenticator.busy &&
-                !activeAuthenticator.pamTimeout &&
+                !root.pamTimeout &&
                 typeof activeAuthenticator.startAuthenticating === "function") {
                 activeAuthenticator.startAuthenticating();
             }
@@ -203,6 +234,7 @@ Item {
             }
 
             root.pendingPassword = "";
+            root.promptPending = false;
             var authErr = (auth && auth.errorMessage) ? auth.errorMessage :
                           (activeAuthenticator && activeAuthenticator.errorMessage ? activeAuthenticator.errorMessage :
                           (activeAuthenticator && activeAuthenticator.infoMessage ? activeAuthenticator.infoMessage : ""));
@@ -233,6 +265,7 @@ Item {
             backendHeartbeatTimer.stop();
             lockoutCountdownTimer.stop();
             root.pendingPassword = "";
+            root.promptPending = false;
             root.lockoutSecondsRemaining = 0;
             root.fprintTries = 0;
 
@@ -244,13 +277,11 @@ Item {
         }
 
         function onPamTimeoutChanged() {
-            if (activeAuthenticator && !activeAuthenticator.pamTimeout && root.pendingPassword.length > 0) {
-                if (typeof activeAuthenticator.respond === "function") {
-                    activeAuthenticator.respond(root.pendingPassword);
-                }
-                root.pendingPassword = "";
-                root.focusSecretRequested();
-            }
+            root.flushPendingPassword();
+        }
+
+        function onInPasswordDelayChanged() {
+            root.flushPendingPassword();
         }
 
         function onInfoMessageChanged() {
@@ -266,17 +297,21 @@ Item {
         }
 
         function onPromptChanged() {
+            root.promptPending = Boolean(activeAuthenticator && activeAuthenticator.prompt);
             if (activeAuthenticator && activeAuthenticator.prompt) {
                 root.handleMessage(activeAuthenticator.prompt);
             }
+            root.flushPendingPassword();
         }
 
         function onPromptForSecretChanged() {
+            root.promptPending = Boolean(activeAuthenticator && activeAuthenticator.promptForSecret);
             root.focusSecretRequested();
             var show = root.showPrompt || Boolean(activeAuthenticator && activeAuthenticator.showPrompt);
             if (show && activeAuthenticator && activeAuthenticator.promptForSecret) {
                 root.handleMessage(activeAuthenticator.promptForSecret);
             }
+            root.flushPendingPassword();
         }
     }
 }
