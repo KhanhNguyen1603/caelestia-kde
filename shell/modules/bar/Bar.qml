@@ -94,6 +94,7 @@ Item {
     // them opens on a click, or on a right-click when it is a menu.
     function isInfoOnlyOnHover(id: string): bool {
         switch (id) {
+        case "appmenu":
         case "keepawake":
         case "shortcuts":
         case "screencapture":

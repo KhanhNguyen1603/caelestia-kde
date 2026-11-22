@@ -10,6 +10,7 @@ QtObject {
     readonly property list<var> widgets: [
         { id: "logo", zone: "left" },
         { id: "workspaces", zone: "left" },
+        { id: "appmenu", zone: "left" },
         { id: "greeter", zone: "left" },
         { id: "dock", zone: "middle" },
         { id: "tray", zone: "right" },

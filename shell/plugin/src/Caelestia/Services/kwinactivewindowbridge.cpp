@@ -36,6 +36,10 @@ QVariantMap KWinActiveWindowBridge::activeWindow() const {
     return m_activeWindow;
 }
 
+QVariantMap KWinActiveWindowBridge::lastActiveWindow() const {
+    return m_lastActiveWindow;
+}
+
 QString KWinActiveWindowBridge::activeOutputName() const {
     return m_activeOutputName;
 }
@@ -135,6 +139,7 @@ void KWinActiveWindowBridge::onWindowAdded(const QString& uuid) {
             onStateChanged(handle);
         });
         connect(handle, &PlasmaWindowHandle::desktopsChanged, this, &KWinActiveWindowBridge::scheduleWindowListUpdate);
+        connect(handle, &PlasmaWindowHandle::appMenuChanged, this, &KWinActiveWindowBridge::scheduleWindowListUpdate);
         scheduleWindowListUpdate();
     }
 }
@@ -142,6 +147,10 @@ void KWinActiveWindowBridge::onWindowAdded(const QString& uuid) {
 void KWinActiveWindowBridge::onWindowLost(const QString& uuid) {
     if (!m_highlightedAddress.isEmpty() && m_highlightedAddress == uuid) {
         clearHighlight();
+    }
+    if (m_lastActiveWindow.value(QStringLiteral("address")).toString() == uuid) {
+        m_lastActiveWindow.clear();
+        emit lastActiveWindowChanged();
     }
     scheduleWindowListUpdate();
 }
@@ -184,6 +193,10 @@ void KWinActiveWindowBridge::onStateChanged(PlasmaWindowHandle* handle) {
                 m_pendingFocusAddress.clear();
                 emit pendingFocusAddressChanged();
             }
+        }
+        if (m_lastActiveWindow != w) {
+            m_lastActiveWindow = w;
+            emit lastActiveWindowChanged();
         }
         return;
     }
@@ -343,6 +356,8 @@ QVariantMap KWinActiveWindowBridge::windowToVariant(PlasmaWindowHandle* w) const
         { QStringLiteral("focused"), w->isActive() },
         { QStringLiteral("floating"), !w->isFullscreen() && !w->isMaximized() },
         { QStringLiteral("output"), getOutputNameForGeometry(w->x(), w->y(), w->width(), w->height()) },
+        { QStringLiteral("menuService"), w->menuServiceName() },
+        { QStringLiteral("menuObject"), w->menuObjectPath() },
         { QStringLiteral("workspace"),
             QVariantMap{ { QStringLiteral("id"), desktopId }, { QStringLiteral("uuid"), desktopUuid } } } };
     return map;
@@ -379,6 +394,10 @@ void KWinActiveWindowBridge::buildWindowList() {
     if (activeWindowFound && m_activeWindow != newActiveWindow) {
         m_activeWindow = newActiveWindow;
         emit activeWindowChanged();
+        if (m_lastActiveWindow != newActiveWindow) {
+            m_lastActiveWindow = newActiveWindow;
+            emit lastActiveWindowChanged();
+        }
 
         const QString newOutput = newActiveWindow.value(QStringLiteral("output")).toString();
         if (!newOutput.isEmpty())
@@ -391,6 +410,21 @@ void KWinActiveWindowBridge::buildWindowList() {
     } else if (!activeWindowFound && !m_activeWindow.isEmpty()) {
         m_activeWindow.clear();
         emit activeWindowChanged();
+    }
+
+    const QString lastAddr = m_lastActiveWindow.value(QStringLiteral("address")).toString();
+    if (!lastAddr.isEmpty()) {
+        const int idx = m_windowIndex.value(lastAddr, -1);
+        if (idx >= 0 && idx < m_windowList.size()) {
+            const QVariantMap updated = m_windowList[idx].toMap();
+            if (m_lastActiveWindow != updated) {
+                m_lastActiveWindow = updated;
+                emit lastActiveWindowChanged();
+            }
+        } else {
+            m_lastActiveWindow.clear();
+            emit lastActiveWindowChanged();
+        }
     }
 }
 
@@ -508,6 +542,32 @@ void KWinActiveWindowBridge::clearHighlight() {
         msg << QStringList();
         QDBusConnection::sessionBus().send(msg);
     }
+}
+
+void KWinActiveWindowBridge::showAppMenu(const QString& service, const QString& objectPath, int x, int y, int actionId) {
+    QString svc = service;
+    QString path = objectPath;
+    if (svc.isEmpty() && path.isEmpty()) {
+        svc = m_activeWindow.value(QStringLiteral("menuService")).toString();
+        path = m_activeWindow.value(QStringLiteral("menuObject")).toString();
+        if (svc.isEmpty()) {
+            svc = m_lastActiveWindow.value(QStringLiteral("menuService")).toString();
+            path = m_lastActiveWindow.value(QStringLiteral("menuObject")).toString();
+        }
+    }
+    if (svc.isEmpty())
+        return;
+    if (path.isEmpty())
+        path = QStringLiteral("/");
+
+    auto msg = QDBusMessage::createMethodCall(
+        QStringLiteral("org.kde.kappmenu"),
+        QStringLiteral("/KAppMenu"),
+        QStringLiteral("org.kde.kappmenu"),
+        QStringLiteral("showMenu")
+    );
+    msg << x << y << svc << QDBusObjectPath(path) << actionId;
+    QDBusConnection::sessionBus().send(msg);
 }
 
 void KWinActiveWindowBridge::refreshWindows() {
