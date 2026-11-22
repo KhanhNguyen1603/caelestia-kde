@@ -34,14 +34,16 @@ ColumnLayout {
     readonly property bool hasActiveWindow: Boolean(activeWindow && activeWindow.address)
     readonly property string appClass: activeWindow?.class || ""
     readonly property string windowTitle: activeWindow?.title || ""
-    readonly property var desktopEntry: DockManager.resolveEntry(root.appClass)
+    readonly property var desktopEntry: DockManager.resolveEntry(root.appClass)?.entry ?? null
     readonly property string appName: {
         if (!root.hasActiveWindow)
             return qsTr("Desktop");
         if (root.desktopEntry?.name)
             return root.desktopEntry.name;
-        if (root.appClass)
-            return root.appClass.charAt(0).toUpperCase() + root.appClass.slice(1);
+        if (root.appClass) {
+            const base = root.appClass.split('.').pop() || root.appClass;
+            return base.charAt(0).toUpperCase() + base.slice(1);
+        }
         return qsTr("App Menu");
     }
 
@@ -376,10 +378,12 @@ ColumnLayout {
                     anchors.fill: parent
                     radius: newWinRow.radius
                     onClicked: {
-                        if (root.desktopEntry)
+                        if (root.desktopEntry) {
                             Launch.launchEntry(root.desktopEntry);
-                        else if (root.appClass)
-                            Launch.exec([root.appClass]);
+                        } else if (root.appClass) {
+                            const bin = root.appClass.split('.').pop() || root.appClass;
+                            Launch.exec([bin]);
+                        }
                         root.popouts.hasCurrent = false;
                     }
                 }
