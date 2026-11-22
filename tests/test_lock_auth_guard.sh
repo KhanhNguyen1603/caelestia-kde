@@ -6,6 +6,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/helpers.sh"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 AUTH_HANDLER="$REPO_ROOT/src/kde/shells/caelestia.desktop/contents/lockscreen/components/AuthHandler.qml"
+PASSWORD_PILL="$REPO_ROOT/src/kde/shells/caelestia.desktop/contents/lockscreen/components/PasswordPill.qml"
 LOCKSCREEN_UI="$REPO_ROOT/src/kde/shells/caelestia.desktop/contents/lockscreen/LockScreenUi.qml"
 
 # Prints one QML function's body.
@@ -127,6 +128,19 @@ test_heartbeat_timer_guards_active_prompts() {
         "backendHeartbeatTimer must not interrupt active secret prompts"
     assert_contains "$qml" '!activeAuthenticator.busy' \
         "backendHeartbeatTimer must not interrupt busy authenticators"
+}
+
+test_unlock_failure_feedback() {
+    local qml_auth qml_pill
+    qml_auth="$(cat "$AUTH_HANDLER")"
+    qml_pill="$(cat "$PASSWORD_PILL")"
+
+    assert_not_contains "$qml_auth" 'isExactFailMsg' \
+        "AuthHandler must not suppress unlocking failed messages"
+    assert_contains "$qml_pill" 'root.isError' \
+        "PasswordPill should track error state on rejection"
+    assert_contains "$qml_pill" 'root.clError' \
+        "PasswordPill border should turn red on error or shake"
 }
 
 run_tests

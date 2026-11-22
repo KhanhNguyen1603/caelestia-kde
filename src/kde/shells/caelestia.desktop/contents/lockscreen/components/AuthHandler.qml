@@ -41,17 +41,6 @@ Item {
     signal notificationRepeated()
     signal succeeded()
 
-    function isExactFailMsg(msg) {
-        if (!msg) return false;
-        var trimmed = (typeof msg === "string") ? msg.trim() : "";
-        var lower = trimmed.toLowerCase();
-        var localized = i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:status", "Unlocking failed").trim();
-        return lower === "unlocking failed" ||
-               lower === "unlocking failed." ||
-               trimmed === localized ||
-               trimmed === (localized + ".");
-    }
-
     function extractTimeInSeconds(text) {
         if (!text || typeof text !== "string") return -1;
         var hrMatch = text.match(/\b(\d+)\s*(?:hours?|hrs?|hr)\b/i);
@@ -78,9 +67,6 @@ Item {
             if (extractTimeInSeconds(line) > 0) {
                 continue;
             }
-            if (isExactFailMsg(line)) {
-                continue;
-            }
             kept.push(line);
         }
         return kept.join("\n");
@@ -96,7 +82,7 @@ Item {
         }
 
         var filteredMsg = stripTimeLines(msg);
-        if (!filteredMsg || filteredMsg.trim().length === 0 || isExactFailMsg(filteredMsg)) return;
+        if (!filteredMsg || filteredMsg.trim().length === 0) return;
 
         var lower = (typeof filteredMsg === "string") ? filteredMsg.trim().toLowerCase() : "";
         if (lower === "password:" || lower === "password" || lower === "passwd:" || lower === "passwd") return;

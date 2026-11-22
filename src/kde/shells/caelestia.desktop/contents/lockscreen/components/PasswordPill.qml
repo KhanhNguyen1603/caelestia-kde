@@ -45,11 +45,24 @@ FocusScope {
             passwordBox.forceActiveFocus();
     }
 
+    property bool isError: false
+
+    Timer {
+        id: errorResetTimer
+        interval: 2000
+        repeat: false
+        onTriggered: root.isError = false
+    }
+
     function shake() {
+        root.isError = true;
+        errorResetTimer.restart();
         rejectAnim.restart();
     }
 
     function clearPassword() {
+        root.isError = false;
+        errorResetTimer.stop();
         root.showPassword = false;
         root.focusInput();
         passwordBox.text = "";
@@ -117,8 +130,8 @@ FocusScope {
         anchors.fill: parent
         radius: height / 2
         color: root.clSurfaceContainer
-        border.color: root.lockoutActive ? root.clError : "transparent"
-        border.width: root.lockoutActive ? Math.max(1, Math.round(1.5 * root.centerScale)) : 0
+        border.color: (root.lockoutActive || root.graceLocked || root.isError || rejectAnim.running) ? root.clError : "transparent"
+        border.width: (root.lockoutActive || root.graceLocked || root.isError || rejectAnim.running) ? Math.max(1, Math.round(1.5 * root.centerScale)) : 0
         Behavior on border.color { ColorAnimation { duration: 250 } }
 
         MouseArea {
@@ -144,7 +157,7 @@ FocusScope {
                     text: root.showPassword ? "visibility" : (root.fprintDisabledDueToTries ? "fingerprint_off" : (root.hasFingerprint ? "fingerprint" : "lock"))
                     font.family: LockScreenConfig.fontIcon
                     font.pixelSize: Math.max(12, Math.round(16 * root.centerScale))
-                    color: (root.graceLocked || root.lockoutActive) ? root.clError : (root.fprintDisabledDueToTries ? root.clError : root.clSurfaceVariantFg)
+                    color: (root.graceLocked || root.lockoutActive || root.isError || rejectAnim.running) ? root.clError : (root.fprintDisabledDueToTries ? root.clError : root.clSurfaceVariantFg)
                     visible: !root.isAuthenticating
                     Behavior on color { ColorAnimation { duration: 250 } }
                 }
@@ -290,6 +303,13 @@ FocusScope {
                         }
                         while (charModel.count > targetLen) {
                             charModel.remove(charModel.count - 1);
+                        }
+                    }
+
+                    onTextEdited: {
+                        if (root.isError) {
+                            root.isError = false;
+                            errorResetTimer.stop();
                         }
                     }
 
