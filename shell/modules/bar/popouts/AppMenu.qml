@@ -951,7 +951,7 @@ ColumnLayout {
                     anchors.fill: parent
                     radius: wallpaperRow.radius
                     onClicked: {
-                        Visibilities.toggleLauncher("wallpapers");
+                        Visibilities.toggleLauncher("wallpaper");
                         root.popouts.hasCurrent = false;
                     }
                 }
