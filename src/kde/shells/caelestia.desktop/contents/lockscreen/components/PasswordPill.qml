@@ -12,8 +12,9 @@ FocusScope {
     property real centerScale: 1.0
     property real centerWidth: 600 * centerScale
     property real pillWidth: 0
-    property bool isAuthenticating: false
-    property bool graceLocked: false
+    property bool pamTimeout: false
+    property bool isAuthenticating: pamTimeout
+    property bool graceLocked: pamTimeout
     property bool hasFingerprint: false
     property bool fprintDisabledDueToTries: false
     property bool lockoutActive: false
@@ -35,7 +36,7 @@ FocusScope {
     // pill normally shows. Cleared whenever the field empties, so an attempt never
     // starts with the previous attempt's password on screen.
     property bool showPassword: false
-    readonly property bool canReveal: !root.graceLocked && !root.isAuthenticating
+    readonly property bool canReveal: !root.pamTimeout
 
     signal loginRequested(string password)
 
@@ -78,7 +79,7 @@ FocusScope {
 
     TextMetrics {
         id: placeholderMetrics
-        text: root.isAuthenticating ? qsTr("Loading...") : (root.graceLocked ? qsTr("Please wait...") : (root.lockoutActive && root.lockoutText.length > 0 ? root.lockoutText : qsTr("Enter your password")))
+        text: root.pamTimeout ? qsTr("Please wait...") : (root.lockoutActive && root.lockoutText.length > 0 ? root.lockoutText : qsTr("Enter your password"))
         font { pixelSize: Math.max(11, Math.round(13 * root.centerScale)); family: LockScreenConfig.fontHeading; weight: Font.Normal }
     }
 
@@ -276,7 +277,7 @@ FocusScope {
                     cursorDelegate: Item {}
                     echoMode: TextInput.NoEcho
                     focus: true
-                    enabled: !root.graceLocked && !root.isAuthenticating
+                    enabled: !root.pamTimeout
                     text: PasswordSync.password
 
                     onTextChanged: {
@@ -292,7 +293,7 @@ FocusScope {
                         }
                     }
 
-                    onAccepted: if (!root.graceLocked && !root.isAuthenticating) root.loginRequested(passwordBox.text)
+                    onAccepted: if (!root.pamTimeout) root.loginRequested(passwordBox.text)
                 }
                 Binding { target: PasswordSync; property: "password"; value: passwordBox.text }
             }
@@ -308,7 +309,7 @@ FocusScope {
                 MaterialShape {
                     id: enterShape
                     anchors.fill: parent
-                    color: passwordBox.text.length > 0 ? ((root.graceLocked || root.lockoutActive) ? root.clError : root.clPrimary) : root.clSurfaceContainerHigh
+                    color: passwordBox.text.length > 0 ? ((root.pamTimeout || root.lockoutActive) ? root.clError : root.clPrimary) : root.clSurfaceContainerHigh
                     shape: passwordBox.text.length > 0 ? MaterialShape.Arrow : MaterialShape.Circle
                     rotation: 90
                     scale: passwordBox.text.length === 0 ? 1.0 : (enterMouse.pressed ? 0.6 : (enterMouse.containsMouse ? 0.8 : 0.7))
@@ -320,10 +321,10 @@ FocusScope {
                         id: enterMouse
                         anchors.fill: parent
                         hoverEnabled: true
-                        cursorShape: (passwordBox.text.length > 0 && !root.graceLocked && !root.isAuthenticating) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        cursorShape: (passwordBox.text.length > 0 && !root.pamTimeout) ? Qt.PointingHandCursor : Qt.ArrowCursor
                         onClicked: {
                             root.focusInput();
-                            if (passwordBox.text.length > 0 && !root.isAuthenticating && !root.graceLocked)
+                            if (passwordBox.text.length > 0 && !root.pamTimeout)
                                 root.loginRequested(passwordBox.text);
                         }
                     }
