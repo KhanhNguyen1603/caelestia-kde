@@ -16,6 +16,8 @@ Item {
     property string authMessage: ""
     property string pendingPassword: ""
     property bool viewVisible: true
+    property bool showPrompt: false
+    property bool expectingPrompt: false
 
     readonly property bool busy: Boolean(activeAuthenticator && (activeAuthenticator.busy || activeAuthenticator.pamTimeout))
     readonly property bool pamTimeout: Boolean(activeAuthenticator && activeAuthenticator.pamTimeout)
@@ -96,6 +98,9 @@ Item {
         var filteredMsg = stripTimeLines(msg);
         if (!filteredMsg || filteredMsg.trim().length === 0 || isExactFailMsg(filteredMsg)) return;
 
+        var lower = (typeof filteredMsg === "string") ? filteredMsg.trim().toLowerCase() : "";
+        if (lower === "password:" || lower === "password" || lower === "passwd:" || lower === "passwd") return;
+
         if (typeof parent !== "undefined" && typeof parent.notification !== "undefined") {
             if (!parent.notification) {
                 parent.notification += filteredMsg;
@@ -133,7 +138,11 @@ Item {
 
     function ensureAuthenticating() {
         if (!root.viewVisible || (activeAuthenticator && activeAuthenticator.unlocked)) return;
-        if (activeAuthenticator && typeof activeAuthenticator.startAuthenticating === "function") {
+        if (activeAuthenticator &&
+            !activeAuthenticator.promptForSecret &&
+            !activeAuthenticator.busy &&
+            !activeAuthenticator.pamTimeout &&
+            typeof activeAuthenticator.startAuthenticating === "function") {
             activeAuthenticator.startAuthenticating();
         }
     }
@@ -160,7 +169,11 @@ Item {
         repeat: true
         running: root.viewVisible && Boolean(activeAuthenticator) && !(activeAuthenticator && activeAuthenticator.unlocked)
         onTriggered: {
-            if (activeAuthenticator && typeof activeAuthenticator.startAuthenticating === "function") {
+            if (activeAuthenticator &&
+                !activeAuthenticator.promptForSecret &&
+                !activeAuthenticator.busy &&
+                !activeAuthenticator.pamTimeout &&
+                typeof activeAuthenticator.startAuthenticating === "function") {
                 activeAuthenticator.startAuthenticating();
             }
         }
@@ -274,7 +287,8 @@ Item {
 
         function onPromptForSecretChanged() {
             root.focusSecretRequested();
-            if (activeAuthenticator && activeAuthenticator.promptForSecret) {
+            var show = root.showPrompt || Boolean(activeAuthenticator && activeAuthenticator.showPrompt);
+            if (show && activeAuthenticator && activeAuthenticator.promptForSecret) {
                 root.handleMessage(activeAuthenticator.promptForSecret);
             }
         }

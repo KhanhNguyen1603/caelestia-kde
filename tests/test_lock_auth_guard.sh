@@ -109,4 +109,24 @@ test_about_to_suspend_only_clears_password() {
         "onAboutToSuspend should only clear password matching upstream"
 }
 
+test_prompt_for_secret_respects_show_prompt() {
+    local qml
+    qml="$(cat "$AUTH_HANDLER")"
+
+    assert_contains "$qml" 'activeAuthenticator.showPrompt' \
+        "onPromptForSecretChanged should check showPrompt matching upstream before handling message"
+    assert_contains "$qml" 'lower === "password:" || lower === "password" || lower === "passwd:" || lower === "passwd"' \
+        "handleMessage should filter out raw secret prompt strings"
+}
+
+test_heartbeat_timer_guards_active_prompts() {
+    local qml
+    qml="$(cat "$AUTH_HANDLER")"
+
+    assert_contains "$qml" '!activeAuthenticator.promptForSecret' \
+        "backendHeartbeatTimer must not interrupt active secret prompts"
+    assert_contains "$qml" '!activeAuthenticator.busy' \
+        "backendHeartbeatTimer must not interrupt busy authenticators"
+}
+
 run_tests
