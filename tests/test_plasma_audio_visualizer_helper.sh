@@ -8,6 +8,10 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/lib/privileges.
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/lib/packages.sh"
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/lib/plasma-audio-visualizer.sh"
 
+# Applying the configuration asks plasmashell for its layout over D-Bus. Without a
+# session bus those calls fail at once, instead of reaching the developer's desktop.
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/nonexistent
+
 test_plasma_audio_visualizer_present_checks_dirs() {
     local tmp
     tmp="$(new_tmpdir)"
