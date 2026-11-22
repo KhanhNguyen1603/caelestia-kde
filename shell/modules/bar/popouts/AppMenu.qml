@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
@@ -21,6 +22,7 @@ ColumnLayout {
     property real scaleOffset: 1.0
     property real fontScale: 1.0
     property bool _isSidebarOpen: false
+    property bool wsMenuOpen: false
 
     readonly property string targetAddress: root.popouts?.selectedClientAddress ?? ""
     readonly property var activeWindow: {
@@ -71,12 +73,19 @@ ColumnLayout {
     }
     readonly property bool hasMultipleWindows: allAppWindows.length > 1
     readonly property bool hasNativeMenu: Boolean(activeWindow?.menuService && activeWindow?.menuObject)
-    readonly property string workspaceLabel: {
-        if (!activeWindow || !activeWindow.workspace)
-            return "";
-        const id = activeWindow.workspace.id;
-        return (id !== undefined && id !== -1) ? qsTr("Workspace %1").arg(id) : "";
+    readonly property int currentWsId: {
+        if (root.activeWindow?.workspace?.id !== undefined && root.activeWindow.workspace.id !== -1)
+            return root.activeWindow.workspace.id;
+        return Kwin.activeWsId;
     }
+    readonly property string workspaceLabel: {
+        const id = root.currentWsId;
+        const wsObj = (Kwin.workspaces || []).find(w => w.index === id || w.id === id);
+        if (wsObj && wsObj.name && isNaN(wsObj.name))
+            return wsObj.name;
+        return (id !== undefined && id > 0) ? qsTr("Workspace %1").arg(id) : qsTr("Workspace 1");
+    }
+    readonly property var workspacesList: (Kwin.workspaces && Kwin.workspaces.length > 0) ? Kwin.workspaces : [{ id: "1", name: "1", index: 1, active: true }]
 
     function requestIcon(): void {
         if (root.activeWindow && root.activeWindow.address)
@@ -100,9 +109,23 @@ ColumnLayout {
         root.popouts.hasCurrent = false;
     }
 
+    function selectWorkspace(wsId: int): void {
+        if (root.hasActiveWindow) {
+            Kwin.setWindowDesktop(root.activeWindow.address, wsId);
+        }
+        Kwin.setDesktop(wsId);
+        root.wsMenuOpen = false;
+        root.popouts.hasCurrent = false;
+    }
+
     onActiveWindowChanged: root.requestIcon()
 
     onAppNamesChanged: root.loadRecents()
+
+    onVisibleChanged: {
+        if (!visible)
+            root.wsMenuOpen = false;
+    }
 
     Component.onCompleted: {
         root.loadRecents();
@@ -113,11 +136,14 @@ ColumnLayout {
     spacing: Tokens.spacing.medium * scaleOffset
 
     StyledRect {
+        id: headerCard
+
         Layout.fillWidth: true
         implicitHeight: headerLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
         radius: Tokens.rounding.medium * root.scaleOffset
         color: Colours.tPalette.m3surfaceContainer
-        clip: true
+        clip: !root.wsMenuOpen
+        z: root.wsMenuOpen ? 200 : 1
 
         ColumnLayout {
             id: headerLayout
@@ -169,20 +195,53 @@ ColumnLayout {
                             elide: Text.ElideRight
                         }
 
-                        StyledRect {
-                            visible: root.workspaceLabel.length > 0
-                            implicitWidth: wsText.implicitWidth + Tokens.padding.small * 2 * root.scaleOffset
-                            implicitHeight: wsText.implicitHeight + Tokens.padding.extraSmall * root.scaleOffset
-                            radius: Tokens.rounding.full
-                            color: Colours.tPalette.m3surfaceContainerHigh
+                        Item {
+                            id: wsSelectorContainer
 
-                            StyledText {
-                                id: wsText
+                            implicitWidth: wsSelectorBtn.implicitWidth
+                            implicitHeight: wsSelectorBtn.implicitHeight
 
-                                anchors.centerIn: parent
-                                text: root.workspaceLabel
-                                font: Tokens.font.label.small
-                                color: Colours.palette.m3primary
+                            StyledRect {
+                                id: wsSelectorBtn
+
+                                implicitWidth: wsTriggerRow.implicitWidth + Tokens.padding.small * 2 * root.scaleOffset
+                                implicitHeight: wsTriggerRow.implicitHeight + Tokens.padding.extraSmall * 2 * root.scaleOffset
+                                radius: Tokens.rounding.full
+                                color: root.wsMenuOpen ? Colours.palette.m3primary : Colours.tPalette.m3surfaceContainerHigh
+
+                                RowLayout {
+                                    id: wsTriggerRow
+
+                                    anchors.centerIn: parent
+                                    spacing: Tokens.spacing.extraSmall * root.scaleOffset
+
+                                    StyledText {
+                                        id: wsText
+
+                                        text: root.workspaceLabel
+                                        font: Tokens.font.label.small
+                                        color: root.wsMenuOpen ? Colours.palette.m3onPrimary : Colours.palette.m3primary
+                                    }
+
+                                    MaterialIcon {
+                                        text: "expand_more"
+                                        fontStyle: Tokens.font.icon.builders.small.size(14 * root.scaleOffset).build()
+                                        color: root.wsMenuOpen ? Colours.palette.m3onPrimary : Colours.palette.m3primary
+                                        rotation: root.wsMenuOpen ? 180 : 0
+
+                                        Behavior on rotation {
+                                            Anim {
+                                                type: Anim.DefaultEffects
+                                            }
+                                        }
+                                    }
+                                }
+
+                                StateLayer {
+                                    anchors.fill: parent
+                                    radius: wsSelectorBtn.radius
+                                    onClicked: root.wsMenuOpen = !root.wsMenuOpen
+                                }
                             }
                         }
                     }
@@ -301,6 +360,170 @@ ColumnLayout {
                         text: "close"
                         color: Colours.palette.m3error
                         fontStyle: Tokens.font.icon.builders.small.size(18 * root.scaleOffset).build()
+                    }
+                }
+            }
+        }
+
+        MouseArea {
+            id: wsMenuDismissArea
+
+            visible: root.wsMenuOpen
+            z: 998
+            width: root.width
+            height: root.height
+            x: -headerCard.x
+            y: -headerCard.y
+            onClicked: root.wsMenuOpen = false
+        }
+
+        TransformWatcher {
+            id: wsWatcher
+
+            a: headerCard
+            b: wsSelectorBtn
+        }
+
+        StyledRect {
+            id: wsMenuDropdown
+
+            readonly property real entryHeight: Math.round(32 * root.scaleOffset)
+            readonly property real entrySpacing: Tokens.spacing.extraSmall * root.scaleOffset
+            readonly property int maxVisibleEntries: 3
+            readonly property int entryCount: root.workspacesList.length
+            readonly property int visibleEntries: Math.min(entryCount, maxVisibleEntries)
+            readonly property real visibleListHeight: entryCount > 0 ? (visibleEntries * entryHeight + (visibleEntries - 1) * entrySpacing) : 0
+
+            visible: root.wsMenuOpen
+            z: 999
+            x: {
+                wsWatcher.transform;
+                const pt = wsSelectorBtn.mapToItem(headerCard, wsSelectorBtn.width, 0);
+                return Math.max(0, (pt ? pt.x : 0) - width);
+            }
+            y: {
+                wsWatcher.transform;
+                const pt = wsSelectorBtn.mapToItem(headerCard, 0, wsSelectorBtn.height);
+                return (pt ? pt.y : 0) + Tokens.spacing.extraSmall * root.scaleOffset;
+            }
+            implicitWidth: Math.max(
+                160 * root.scaleOffset,
+                wsSelectorBtn.implicitWidth + 36 * root.scaleOffset
+            )
+            implicitHeight: visibleListHeight + Tokens.padding.small * 2 * root.scaleOffset
+            radius: Tokens.rounding.medium * root.scaleOffset
+            color: Colours.tPalette.m3surfaceContainerHighest
+            border.color: Colours.palette.m3outlineVariant
+            border.width: 1
+
+            Connections {
+                function onWsMenuOpenChanged(): void {
+                    if (root.wsMenuOpen && wsMenuDropdown.entryCount > wsMenuDropdown.maxVisibleEntries) {
+                        Qt.callLater(() => {
+                            const list = root.workspacesList || [];
+                            const idx = list.findIndex((w, i) => (w.index ?? (i + 1)) === root.currentWsId);
+                            if (idx > 0) {
+                                const targetY = Math.max(0, Math.min(
+                                    wsFlickable.contentHeight - wsFlickable.height,
+                                    idx * (wsMenuDropdown.entryHeight + wsMenuDropdown.entrySpacing)
+                                ));
+                                wsFlickable.contentY = targetY;
+                            } else {
+                                wsFlickable.contentY = 0;
+                            }
+                        });
+                    }
+                }
+
+                target: root
+            }
+
+            Flickable {
+                id: wsFlickable
+
+                anchors.fill: parent
+                anchors.margins: Tokens.padding.small * root.scaleOffset
+                contentWidth: width
+                contentHeight: wsItemsCol.implicitHeight
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                interactive: contentHeight > height
+
+                WheelHandler {
+                    acceptedModifiers: Qt.NoModifier
+                    onWheel: event => {
+                        if (wsFlickable.contentHeight > wsFlickable.height) {
+                            wsFlickable.contentY = Math.max(0, Math.min(wsFlickable.contentHeight - wsFlickable.height, wsFlickable.contentY - event.angleDelta.y));
+                        }
+                    }
+                }
+
+                ScrollBar.vertical: StyledScrollBar {
+                    flickable: wsFlickable
+                }
+
+                Column {
+                    id: wsItemsCol
+
+                    width: wsFlickable.width - (wsMenuDropdown.entryCount > wsMenuDropdown.maxVisibleEntries ? (Tokens.padding.small * root.scaleOffset) : 0)
+                    spacing: wsMenuDropdown.entrySpacing
+
+                    Repeater {
+                        model: root.workspacesList
+
+                        StyledRect {
+                            id: wsItemPill
+
+                            required property var modelData
+                            required property int index
+
+                            readonly property int wsId: modelData.index ?? (index + 1)
+                            readonly property bool isSelected: root.currentWsId === wsId
+
+                            width: parent.width
+                            height: wsMenuDropdown.entryHeight
+                            implicitHeight: wsMenuDropdown.entryHeight
+                            radius: Tokens.rounding.full
+                            color: isSelected ? Colours.palette.m3primary : Colours.tPalette.m3surfaceContainerHigh
+
+                            RowLayout {
+                                id: wsItemContent
+
+                                anchors.fill: parent
+                                anchors.leftMargin: Tokens.padding.medium * root.scaleOffset
+                                anchors.rightMargin: Tokens.padding.medium * root.scaleOffset
+                                spacing: Tokens.spacing.extraSmall * root.scaleOffset
+
+                                StyledText {
+                                    id: wsItemText
+
+                                    Layout.alignment: Qt.AlignVCenter
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    text: {
+                                        if (wsItemPill.modelData.name && isNaN(wsItemPill.modelData.name))
+                                            return wsItemPill.modelData.name;
+                                        return qsTr("Workspace %1").arg(wsItemPill.wsId);
+                                    }
+                                    font: Tokens.font.label.small
+                                    color: wsItemPill.isSelected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                                }
+
+                                MaterialIcon {
+                                    visible: wsItemPill.isSelected
+                                    Layout.alignment: Qt.AlignVCenter
+                                    text: "check"
+                                    fontStyle: Tokens.font.icon.builders.small.size(14 * root.scaleOffset).build()
+                                    color: Colours.palette.m3onPrimary
+                                }
+                            }
+
+                            StateLayer {
+                                anchors.fill: parent
+                                radius: wsItemPill.radius
+                                onClicked: root.selectWorkspace(wsItemPill.wsId)
+                            }
+                        }
                     }
                 }
             }
