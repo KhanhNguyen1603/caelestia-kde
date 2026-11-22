@@ -152,7 +152,8 @@ void PlasmaWindowHandle::org_kde_plasma_window_virtual_desktop_left(const QStrin
     }
 }
 
-void PlasmaWindowHandle::org_kde_plasma_window_application_menu(const QString& service_name, const QString& object_path) {
+void PlasmaWindowHandle::org_kde_plasma_window_application_menu(
+    const QString& service_name, const QString& object_path) {
     if (m_menuServiceName != service_name || m_menuObjectPath != object_path) {
         m_menuServiceName = service_name;
         m_menuObjectPath = object_path;

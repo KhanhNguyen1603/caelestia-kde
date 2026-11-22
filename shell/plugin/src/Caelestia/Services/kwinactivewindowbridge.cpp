@@ -356,8 +356,7 @@ QVariantMap KWinActiveWindowBridge::windowToVariant(PlasmaWindowHandle* w) const
         { QStringLiteral("focused"), w->isActive() },
         { QStringLiteral("floating"), !w->isFullscreen() && !w->isMaximized() },
         { QStringLiteral("output"), getOutputNameForGeometry(w->x(), w->y(), w->width(), w->height()) },
-        { QStringLiteral("menuService"), w->menuServiceName() },
-        { QStringLiteral("menuObject"), w->menuObjectPath() },
+        { QStringLiteral("menuService"), w->menuServiceName() }, { QStringLiteral("menuObject"), w->menuObjectPath() },
         { QStringLiteral("workspace"),
             QVariantMap{ { QStringLiteral("id"), desktopId }, { QStringLiteral("uuid"), desktopUuid } } } };
     return map;
@@ -544,7 +543,8 @@ void KWinActiveWindowBridge::clearHighlight() {
     }
 }
 
-void KWinActiveWindowBridge::showAppMenu(const QString& service, const QString& objectPath, int x, int y, int actionId) {
+void KWinActiveWindowBridge::showAppMenu(
+    const QString& service, const QString& objectPath, int x, int y, int actionId) {
     QString svc = service;
     QString path = objectPath;
     if (svc.isEmpty() && path.isEmpty()) {
@@ -560,12 +560,8 @@ void KWinActiveWindowBridge::showAppMenu(const QString& service, const QString& 
     if (path.isEmpty())
         path = QStringLiteral("/");
 
-    auto msg = QDBusMessage::createMethodCall(
-        QStringLiteral("org.kde.kappmenu"),
-        QStringLiteral("/KAppMenu"),
-        QStringLiteral("org.kde.kappmenu"),
-        QStringLiteral("showMenu")
-    );
+    auto msg = QDBusMessage::createMethodCall(QStringLiteral("org.kde.kappmenu"), QStringLiteral("/KAppMenu"),
+        QStringLiteral("org.kde.kappmenu"), QStringLiteral("showMenu"));
     msg << x << y << svc << QDBusObjectPath(path) << actionId;
     QDBusConnection::sessionBus().send(msg);
 }

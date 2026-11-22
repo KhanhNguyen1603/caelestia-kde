@@ -50,6 +50,7 @@ public:
     QStringList desktops() const { return m_desktops; }
 
     QString menuServiceName() const { return m_menuServiceName; }
+
     QString menuObjectPath() const { return m_menuObjectPath; }
 
     /// Sets or clears one window state flag.

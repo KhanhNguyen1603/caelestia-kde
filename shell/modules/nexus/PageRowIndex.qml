@@ -454,6 +454,62 @@ QtObject {
             subPage: "startup"
         },
         {
+            label: qsTr("Enable component"),
+            description: qsTr("Display the focused application's menu in the bar"),
+            section: qsTr("App menu"),
+            pageIdx: 2,
+            subPage: "barAppMenu"
+        },
+        {
+            label: qsTr("Show application icon"),
+            description: qsTr("Display the active app's icon in the bar component"),
+            section: qsTr("App menu"),
+            pageIdx: 2,
+            subPage: "barAppMenu"
+        },
+        {
+            label: qsTr("Show application name"),
+            description: qsTr("Display the name of the currently focused application"),
+            section: qsTr("App menu"),
+            pageIdx: 2,
+            subPage: "barAppMenu"
+        },
+        {
+            label: qsTr("Show dropdown indicator"),
+            description: qsTr("Show an arrow chevron indicating a menu dropdown"),
+            section: qsTr("App menu"),
+            pageIdx: 2,
+            subPage: "barAppMenu"
+        },
+        {
+            label: qsTr("Compact mode"),
+            description: qsTr("Show only the app icon for a minimal footprint"),
+            section: qsTr("App menu"),
+            pageIdx: 2,
+            subPage: "barAppMenu"
+        },
+        {
+            label: qsTr("Auto-hide"),
+            description: qsTr("Hide the widget when no application window is active"),
+            section: qsTr("App menu"),
+            pageIdx: 2,
+            subPage: "barAppMenu"
+        },
+        {
+            label: qsTr("Enable popout"),
+            description: qsTr("Show the application menu panel on click"),
+            section: qsTr("App menu"),
+            pageIdx: 2,
+            subPage: "barAppMenu"
+        },
+        {
+            label: qsTr("Max title length"),
+            description: qsTr("Maximum characters to display for the application name"),
+            section: qsTr("App menu"),
+            pageIdx: 2,
+            subPage: "barAppMenu"
+        },
+        {
             label: qsTr("Background"),
             section: qsTr("Clock"),
             pageIdx: 2,
@@ -786,6 +842,12 @@ QtObject {
         },
         {
             label: qsTr("Greeter"),
+            section: qsTr("Per Element Scaling Offset"),
+            pageIdx: 2,
+            subPage: "barPreviewScales"
+        },
+        {
+            label: qsTr("App menu"),
             section: qsTr("Per Element Scaling Offset"),
             pageIdx: 2,
             subPage: "barPreviewScales"
@@ -2932,6 +2994,12 @@ QtObject {
         },
         {
             label: qsTr("Workspaces"),
+            section: qsTr("Elements & Modules"),
+            pageIdx: 2,
+            subPage: "taskbarElements"
+        },
+        {
+            label: qsTr("App menu"),
             section: qsTr("Elements & Modules"),
             pageIdx: 2,
             subPage: "taskbarElements"
