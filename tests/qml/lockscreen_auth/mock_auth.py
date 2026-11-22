@@ -8,8 +8,10 @@ Semantics mirrored from kscreenlocker master
 * `tryUnlock()` bails when `busy`, otherwise sets busy and runs `Authenticate()`.
 * The PAM worker answers a second `Authenticate()` with an immediate `Failure` while it
   is already inside `pam_authenticate` (`Worker::authenticate()`).
-* When a prompt arrives, `PamAuthenticator::promptInternal()` sets busy back to false
-  and keeps the D-Bus reply, so `busy` is false while a prompt waits for the password.
+* When a prompt arrives, `PamAuthenticator::promptInternal()` sets busy back to false,
+  emits `promptForSecret`/`prompt` synchronously, and only then records `m_pendingPrompt`,
+  so a synchronous `respond()` inside the signal handler sees no pending prompt and drops
+  the password.
 * `promptForSecret` is sticky: `respond()` clears only the pending reply, never the
   string, so `Boolean(promptForSecret || prompt)` stays true for the rest of the session.
 * `respond()` without a pending prompt drops the password (qCWarning only).
@@ -163,6 +165,15 @@ class MockAuthenticator(QObject):
         self.promptChanged.emit()
         self.promptForSecretChanged.emit()
 
+    def drop_prompt_to_idle(self):
+        """A conversation ends and returns state to Idle while promptForSecret stays
+        sticky, without emitting failed(0) (e.g. backend reset or cancellation)."""
+        self._event("state -> Idle with sticky promptForSecret (no pending prompt)")
+        self._pending = False
+        self._in_authenticate = False
+        self._set_busy(False)
+        self._set_state(self.Idle)
+
     def _event(self, what):
         self.events.append(f"{QDateTime.currentMSecsSinceEpoch() - self._t0:6d} ms  {what}")
 
@@ -197,17 +208,20 @@ class MockAuthenticator(QObject):
 
     def _prompt_for_password(self):
         self._set_busy(False)
-        self._pending = True
         self.prompt_count += 1
         self._had_prompt = True
         if self.prompt_kind == "echo":
             self._prompt = "Password: "
             self._event("prompt('Password: '): echo-on")
             self.promptChanged.emit()
-            return
-        self._prompt_for_secret = "Password: "
-        self._event("promptForSecret('Password: ')")
-        self.promptForSecretChanged.emit()
+        else:
+            self._prompt_for_secret = "Password: "
+            self._event("promptForSecret('Password: ')")
+            self.promptForSecretChanged.emit()
+        # Real PamAuthenticator::promptInternal() stores m_pendingPrompt = message()
+        # only after Q_EMIT promptForSecret/prompt returns; responding synchronously
+        # inside the signal handler hits "no pending prompt was found!" and drops it.
+        self._pending = True
 
     def _verify(self, password):
         self._in_authenticate = False

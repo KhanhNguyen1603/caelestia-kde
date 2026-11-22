@@ -3,8 +3,8 @@
 Runs the real AuthHandler.qml against mock_auth.MockAuthenticator, which mirrors
 kscreenlocker's PAM semantics. The only edits to the component under test are
 mechanical: i18ndc() calls are resolved to their source string (KLocalizedContext
-only exists inside kscreenlocker_greet) and the kscreenlocker enum namespace is
-inlined as its numeric value.
+only exists inside kscreenlocker_greet) and ScreenLocker.Authenticator.Fingerprint
+is inlined as its numeric value.
 
 Every scenario asserts on the user-visible symptom: "I typed the correct password
 and the session did not unlock".
@@ -98,8 +98,6 @@ def build_harness(directory: Path) -> Path:
         lambda match: '"%s"' % re.findall(r'"([^"]*)"', match.group(0))[-1], source
     )
     resolved = resolved.replace("ScreenLocker.Authenticator.Fingerprint", "1")
-    resolved = resolved.replace("ScreenLocker.Authenticators.Authenticating", "1")
-    resolved = resolved.replace("ScreenLocker.Authenticators.Idle", "0")
     resolved = KSCREENLOCKER_IMPORT.sub("", resolved)
     (directory / "AuthHandler.qml").write_text(resolved, encoding="utf-8")
     (directory / "Harness.qml").write_text(HARNESS_QML, encoding="utf-8")
@@ -268,6 +266,21 @@ def view_recreated_after_failure(build_qml):
     return verdict(mock, driver) and mock.prompt_count == 1
 
 
+def state_idle_clears_prompt(build_qml):
+    """If the authenticator returns to Idle while promptForSecret remains sticky,
+    AuthHandler must drop promptPending so the next submit starts a fresh prompt
+    instead of calling respond() with no pending prompt."""
+    mock = MockAuthenticator()
+    driver = load(build_qml, mock)
+    driver.keypress()
+    QTest.qWait(300)
+    mock.drop_prompt_to_idle()
+    driver.attempt("correct")
+    QTest.qWait(1000)
+    report("state returns to Idle with sticky prompt, then correct password", mock, driver)
+    return verdict(mock, driver) and mock.prompt_count == 2
+
+
 def after_idle(build_qml):
     """Sitting on the lock screen must not stop the next attempt from unlocking."""
     mock = MockAuthenticator()
@@ -294,6 +307,7 @@ SCENARIOS = {
     "I": echo_prompt,
     "J": view_recreated_with_open_prompt,
     "K": view_recreated_after_failure,
+    "L": state_idle_clears_prompt,
     "D": after_idle,
 }
 
@@ -309,6 +323,7 @@ def main(argv):
         "I",
         "J",
         "K",
+        "L",
     ]
     unknown = [name for name in selected if name not in SCENARIOS]
     if unknown:

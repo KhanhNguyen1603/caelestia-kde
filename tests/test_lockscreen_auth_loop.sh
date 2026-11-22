@@ -101,4 +101,11 @@ test_recreated_view_ignores_stale_prompt_after_failure() {
     expect_harness "a recreated lock view must start fresh after a failed attempt" K
 }
 
+# If state returns to Idle without a failed(0) signal while promptForSecret stays sticky,
+# promptPending must clear so the next submit does not call respond() with no pending prompt.
+test_idle_state_clears_stale_prompt_guard() {
+    have_harness_runtime || return 0
+    expect_harness "returning to Idle must clear promptPending before the next submit" L
+}
+
 run_tests

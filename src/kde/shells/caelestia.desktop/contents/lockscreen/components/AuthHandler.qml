@@ -21,6 +21,10 @@ Item {
     // kscreenlocker keeps a prompt open until it is answered and leaves prompt/promptForSecret
     // set after the conversation ends, so track whether a live prompt is waiting.
     property bool promptPending: false
+    // PamAuthenticators::AuthenticatorsState values (Idle = 0, Authenticating = 1).
+    // Plasma <= 6.6 does not register PamAuthenticators as a QML type, so avoid its QML enum namespace.
+    readonly property int idleState: 0
+    readonly property int authenticatingState: 1
 
     readonly property bool busy: Boolean(activeAuthenticator && (activeAuthenticator.busy || activeAuthenticator.pamTimeout || activeAuthenticator.inPasswordDelay))
     readonly property bool pamTimeout: Boolean(activeAuthenticator && (activeAuthenticator.pamTimeout || activeAuthenticator.inPasswordDelay))
@@ -47,14 +51,18 @@ Item {
     onActiveAuthenticatorChanged: root.promptPending = root.hasOpenPrompt(activeAuthenticator)
     Component.onCompleted: root.promptPending = root.hasOpenPrompt(activeAuthenticator)
 
+    function isAuthenticatingState(auth) {
+        return Boolean(auth) && (typeof auth.state === "undefined" || auth.state === root.authenticatingState);
+    }
+
     function hasOpenPrompt(auth) {
         if (!auth || auth.unlocked || auth.busy || auth.pamTimeout || auth.inPasswordDelay) return false;
-        if (typeof auth.state !== "undefined" && auth.state !== ScreenLocker.Authenticators.Authenticating) return false;
+        if (!root.isAuthenticatingState(auth)) return false;
         return Boolean(auth.promptForSecret || auth.prompt);
     }
 
     function flushPendingPassword() {
-        if (!activeAuthenticator || root.pamTimeout || !root.promptPending || root.pendingPassword.length === 0) return;
+        if (!activeAuthenticator || root.pamTimeout || !root.promptPending || !root.isAuthenticatingState(activeAuthenticator) || root.pendingPassword.length === 0) return;
         root.promptPending = false;
         if (typeof activeAuthenticator.respond === "function") {
             activeAuthenticator.respond(root.pendingPassword);
@@ -163,8 +171,9 @@ Item {
             root.pendingPassword = pass;
             return;
         }
-        if (root.promptPending && typeof activeAuthenticator.respond === "function") {
+        if (root.promptPending && root.isAuthenticatingState(activeAuthenticator) && typeof activeAuthenticator.respond === "function") {
             root.promptPending = false;
+            root.pendingPassword = "";
             activeAuthenticator.respond(pass);
             return;
         }
@@ -276,6 +285,12 @@ Item {
             Qt.quit();
         }
 
+        function onStateChanged() {
+            if (activeAuthenticator && activeAuthenticator.state === root.idleState) {
+                root.promptPending = false;
+            }
+        }
+
         function onPamTimeoutChanged() {
             root.flushPendingPassword();
         }
@@ -297,21 +312,27 @@ Item {
         }
 
         function onPromptChanged() {
-            root.promptPending = Boolean(activeAuthenticator && activeAuthenticator.prompt);
+            root.promptPending = Boolean(activeAuthenticator && activeAuthenticator.prompt) && root.isAuthenticatingState(activeAuthenticator);
             if (activeAuthenticator && activeAuthenticator.prompt) {
                 root.handleMessage(activeAuthenticator.prompt);
             }
-            root.flushPendingPassword();
+            if (root.promptPending && root.pendingPassword.length > 0) {
+                // Defer past PamAuthenticator::promptInternal(), which records m_pendingPrompt after emitting this signal.
+                Qt.callLater(root.flushPendingPassword);
+            }
         }
 
         function onPromptForSecretChanged() {
-            root.promptPending = Boolean(activeAuthenticator && activeAuthenticator.promptForSecret);
+            root.promptPending = Boolean(activeAuthenticator && activeAuthenticator.promptForSecret) && root.isAuthenticatingState(activeAuthenticator);
             root.focusSecretRequested();
             var show = root.showPrompt || Boolean(activeAuthenticator && activeAuthenticator.showPrompt);
             if (show && activeAuthenticator && activeAuthenticator.promptForSecret) {
                 root.handleMessage(activeAuthenticator.promptForSecret);
             }
-            root.flushPendingPassword();
+            if (root.promptPending && root.pendingPassword.length > 0) {
+                // Defer past PamAuthenticator::promptInternal(), which records m_pendingPrompt after emitting this signal.
+                Qt.callLater(root.flushPendingPassword);
+            }
         }
     }
 }
