@@ -78,6 +78,11 @@ ColumnLayout {
         return (id !== undefined && id !== -1) ? qsTr("Workspace %1").arg(id) : "";
     }
 
+    function requestIcon(): void {
+        if (root.activeWindow && root.activeWindow.address)
+            WinIcons.request(root.appClass, root.windowTitle, root.activeWindow.pid ?? 0, String(root.activeWindow.address));
+    }
+
     function loadRecents(): void {
         Recents.load(root.appNames);
     }
@@ -95,19 +100,13 @@ ColumnLayout {
         root.popouts.hasCurrent = false;
     }
 
-    onActiveWindowChanged: {
-        if (root.activeWindow && root.activeWindow.address) {
-            WinIcons.request(root.appClass, root.windowTitle, root.activeWindow.pid ?? 0, String(root.activeWindow.address));
-        }
-    }
+    onActiveWindowChanged: root.requestIcon()
 
     onAppNamesChanged: root.loadRecents()
 
     Component.onCompleted: {
         root.loadRecents();
-        if (root.activeWindow && root.activeWindow.address) {
-            WinIcons.request(root.appClass, root.windowTitle, root.activeWindow.pid ?? 0, String(root.activeWindow.address));
-        }
+        root.requestIcon();
     }
 
     width: Math.max(300 * scaleOffset, _isSidebarOpen ? (Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) * scaleOffset) - Tokens.padding.extraLargeIncreased : 0)

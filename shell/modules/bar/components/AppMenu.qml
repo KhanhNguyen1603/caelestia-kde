@@ -18,7 +18,7 @@ StyledRect {
     required property var bar
 
     readonly property var popouts: root.bar?.popouts ?? null
-    readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
+    readonly property bool isHorizontal: root.bar?.isHorizontal ?? false
     readonly property real rawScale: !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0
     readonly property real scaleFactor: rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * scaleFactor)
@@ -76,6 +76,11 @@ StyledRect {
             : root.appName;
     }
 
+    function requestIcon(): void {
+        if (root.activeWindow && root.activeWindow.address)
+            WinIcons.request(root.appClass, root.windowTitle, root.activeWindow.pid ?? 0, String(root.activeWindow.address));
+    }
+
     function centerFor(): real {
         return root.isHorizontal
             ? root.mapToItem(null, root.implicitWidth / 2, 0).x
@@ -104,17 +109,9 @@ StyledRect {
         ? root.barThickness
         : Math.max(root.effectiveThickness, (contentLayout.implicitHeight + root.padding * 2))
 
-    onActiveWindowChanged: {
-        if (root.activeWindow && root.activeWindow.address) {
-            WinIcons.request(root.appClass, root.windowTitle, root.activeWindow.pid ?? 0, String(root.activeWindow.address));
-        }
-    }
+    onActiveWindowChanged: root.requestIcon()
 
-    Component.onCompleted: {
-        if (root.activeWindow && root.activeWindow.address) {
-            WinIcons.request(root.appClass, root.windowTitle, root.activeWindow.pid ?? 0, String(root.activeWindow.address));
-        }
-    }
+    Component.onCompleted: root.requestIcon()
 
     StateLayer {
         anchors.fill: parent
