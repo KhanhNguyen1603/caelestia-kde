@@ -65,12 +65,14 @@ Popup {
     }
 
     parent: {
-        let p = target;
-        if (!p)
+        if (!target)
             return null;
+        if (target.Window && target.Window.contentItem)
+            return target.Window.contentItem;
+        let p = target;
         while (p && p.parent) {
             const parentItem = p.parent;
-            if (parentItem && parentItem.anchors && parentItem.anchors.fill !== undefined) {
+            if (parentItem && parentItem.anchors && parentItem.anchors.fill) {
                 return parentItem;
             }
             p = parentItem;

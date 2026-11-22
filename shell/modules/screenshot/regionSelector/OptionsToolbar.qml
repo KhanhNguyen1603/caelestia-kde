@@ -36,6 +36,7 @@ Toolbar {
         }
 
         Tooltip {
+            parent: windowSelectorBtn.Window.contentItem
             target: windowSelectorBtn
             text: qsTr("Window Selector")
         }
