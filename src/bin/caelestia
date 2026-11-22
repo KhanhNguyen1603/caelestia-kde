@@ -8,7 +8,7 @@
 #
 # Environment:
 #   CAELESTIA_BIN_DIR  where the helper commands live (default: beside this file)
-#   CAELESTIA_DIR      the checkout `install` runs from (default: ~/caelestia-kde)
+#   CAELESTIA_DIR      the checkout `install` runs from (default: ~/caelestia or ~/caelestia-kde)
 #   CAELESTIA_INSTALL_KIND  package or source, when it cannot be told from where this is
 
 set -euo pipefail
@@ -29,7 +29,7 @@ SELF_DIR="$(dirname -- "$SELF")"
 VERSION_FILE=""
 # The checkout this command would install from, and the only definition of "there is one"
 # for a package: empty unless the user names one with CAELESTIA_DIR. cmd_install reads it
-# instead of re-deciding, so `install` cannot pick up a stray ~/caelestia-kde on a package.
+# instead of re-deciding, so `install` cannot pick up a stray checkout on a package.
 CHECKOUT="${CAELESTIA_DIR:-}"
 case "${CAELESTIA_INSTALL_KIND:-$( [[ "$BIN_DIR" == /usr/bin ]] && printf 'package' || printf 'source' )}" in
     package)
@@ -41,7 +41,13 @@ case "${CAELESTIA_INSTALL_KIND:-$( [[ "$BIN_DIR" == /usr/bin ]] && printf 'packa
         ;;
     *)
         KIND=source
-        [[ -n "$CHECKOUT" ]] || CHECKOUT="$HOME/caelestia-kde"
+        if [[ -z "$CHECKOUT" ]]; then
+            if [[ -d "$HOME/caelestia" ]]; then
+                CHECKOUT="$HOME/caelestia"
+            else
+                CHECKOUT="$HOME/caelestia-kde"
+            fi
+        fi
         DATA_DIR="${CAELESTIA_DATA_DIR:-$CHECKOUT}"
         QML_IMPORT_DEFAULT="$HOME/.local/lib/qt6/qml:$HOME/.config/quickshell/caelestia"
         LIB_DIR_DEFAULT="$HOME/.local/lib/caelestia"
@@ -311,7 +317,7 @@ KDE settings, the user services, the environment and the autostart state. Run it
 after installing the package, and again after each update.
 
 A checkout is installed through its own installer, which does the machine's half
-as well: set CAELESTIA_DIR to point at one other than ~/caelestia-kde.
+as well: set CAELESTIA_DIR to point at one other than ~/caelestia.
 EOF
             return 0
             ;;
@@ -323,7 +329,7 @@ EOF
 
     # A checkout's installer runs when there is a checkout: this command IS one (KIND
     # above sets it), or the user named one. A package leaves CHECKOUT empty, which is what
-    # stops it from running ~/caelestia-kde's whole installer over a package-owned install
+    # stops it from running ~/caelestia's whole installer over a package-owned install
     # (system packages, ~/.local/lib, a second local C++ build) just because a clone sits
     # in the documented place.
     if [[ -n "$CHECKOUT" && -f "$CHECKOUT/install.sh" ]]; then

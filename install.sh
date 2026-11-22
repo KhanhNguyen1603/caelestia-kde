@@ -34,7 +34,15 @@ fi
 
 REPO="${CAELESTIA_REPO:-https://github.com/caelestia-kde/caelestia.git}"
 BRANCH="${CAELESTIA_BRANCH:-main}"
-DEST="${CAELESTIA_DIR:-$HOME/caelestia-kde}"
+if [ -z "${CAELESTIA_DIR:-}" ]; then
+    if [ -d "$HOME/caelestia/.git" ] || [ ! -d "$HOME/caelestia-kde/.git" ]; then
+        DEST="$HOME/caelestia"
+    else
+        DEST="$HOME/caelestia-kde"
+    fi
+else
+    DEST="$CAELESTIA_DIR"
+fi
 
 if ! command -v git >/dev/null 2>&1; then
     echo "  [ERR]   git is required but not installed." >&2

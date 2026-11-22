@@ -15,8 +15,19 @@ TestCase {
         })
     // SDDM's SessionModel reports lastIndex as a constant that starts at 0 and
     // only ever moves to a matching row, so it is all the saved state there is.
-    property var sessionModel: ListModel {
+    // Its names sit under SessionModel::NameRole (Qt.UserRole + 4), a role a
+    // ListModel cannot have, so this stands in for the calls the picker makes.
+    property var sessionModel: QtObject {
+        property var names: []
+        readonly property int count: names.length
         property int lastIndex: 0
+
+        function index(row, column) {
+            return row;
+        }
+        function data(index, role) {
+            return role === Qt.UserRole + 4 ? names[index] : undefined;
+        }
     }
     Component {
         id: pickerComponent
@@ -24,11 +35,7 @@ TestCase {
     }
 
     function populate(names, savedIndex) {
-        sessionModel.clear();
-        for (const name of names)
-            sessionModel.append({
-                name: name
-            });
+        sessionModel.names = names;
         sessionModel.lastIndex = savedIndex;
     }
 

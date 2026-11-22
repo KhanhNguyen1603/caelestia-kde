@@ -80,4 +80,14 @@ test_the_dock_offers_show_all_windows() {
         "the action needs a label"
 }
 
+test_the_dock_hides_end_task_for_nexus() {
+    local dock
+    dock="$(cat "$DOCK")"
+
+    assert_contains "$dock" 'root.isNexus' \
+        "the dock context menu should check isNexus for the end task button"
+    assert_contains "$dock" 'visible: {' \
+        "the end task button should have a visible binding"
+}
+
 run_tests

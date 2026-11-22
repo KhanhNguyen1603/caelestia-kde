@@ -9,6 +9,7 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.utils
+import qs.modules.nexus
 
 ColumnLayout {
     id: root
@@ -20,6 +21,36 @@ ColumnLayout {
         if (!model)
             return false;
         return DockManager.isPinned(model.id) || (model.entry && DockManager.isPinned(model.entry.id));
+    }
+
+    readonly property bool isNexus: {
+        if (!model)
+            return false;
+
+        const id = String(model.id ?? "").toLowerCase();
+        const appClass = String(model.appClass ?? "").toLowerCase();
+        const entryId = String(model.entry?.id ?? "").toLowerCase();
+        if (id.includes("nexus") || appClass.includes("nexus") || entryId.includes("nexus"))
+            return true;
+        if (id.includes("quickshell") || appClass.includes("quickshell") || entryId.includes("quickshell"))
+            return true;
+
+        const tops = model.toplevels ?? [];
+        return tops.some(t => {
+            if (!t)
+                return false;
+            const cls = String(t.class ?? "").toLowerCase();
+            if (cls.includes("quickshell") || cls.includes("nexus"))
+                return true;
+            const title = String(t.title ?? "");
+            if (title.startsWith("Nexus") || title.toLowerCase().includes("nexus"))
+                return true;
+            if (PageRegistry.pages && PageRegistry.pages.some(p => p.label === title))
+                return true;
+            if (WindowFactory.openWindow && WindowFactory.openWindow.title === title)
+                return true;
+            return false;
+        });
     }
 
     property real scaleOffset: 1.0
@@ -189,7 +220,7 @@ ColumnLayout {
         icon: "close"
         visible: {
             if (!model || !model.toplevels || model.toplevels.length === 0) return false;
-            return !model.toplevels.some(t => t.title && String(t.title).startsWith("Nexus"));
+            return !root.isNexus;
         }
         onClicked: {
             for (const toplevel of model.toplevels) {
