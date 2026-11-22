@@ -32,7 +32,7 @@ test_the_leading_icon_toggles_the_reveal() {
 
     assert_contains "$qml" '"visibility"' "the icon should show the visibility glyph while revealed"
     assert_contains "$qml" 'onClicked: if (root.canReveal) root.showPassword = !root.showPassword' "the icon should toggle the reveal"
-    assert_contains "$qml" 'readonly property bool canReveal: !root.graceLocked && !root.isAuthenticating' "the reveal should be closed while an attempt is in flight"
+    assert_contains "$qml" 'readonly property bool canReveal: !root.pamTimeout' "the reveal should be closed while an attempt is in flight"
 }
 
 test_the_reveal_clears_with_the_password() {
@@ -72,7 +72,7 @@ test_auth_handler_defers_respond_to_avoid_dbus_prompt_race() {
     local qml
     qml="$(cat "$auth_handler")"
 
-    assert_contains "$qml" 'Qt.callLater(() => {' "AuthHandler should defer response via Qt.callLater"
+    assert_contains "$qml" 'activeAuthenticator.pamTimeout' "AuthHandler should check pamTimeout when responding"
     assert_contains "$qml" 'activeAuthenticator.respond(pass)' "AuthHandler should respond with password"
 }
 
@@ -82,9 +82,9 @@ test_auth_handler_maintains_backend_heartbeat_and_clean_cleanup() {
     qml="$(cat "$auth_handler")"
 
     assert_contains "$qml" 'id: backendHeartbeatTimer' "AuthHandler should maintain a backend heartbeat timer"
-    assert_contains "$qml" 'root.ensureAuthenticating()' "heartbeat timer should trigger ensureAuthenticating"
+    assert_contains "$qml" 'activeAuthenticator.startAuthenticating()' "heartbeat timer should trigger startAuthenticating"
     assert_contains "$qml" 'activeAuthenticator.stopAuthenticating()' "AuthHandler should stop pending authenticator processes on success"
-    assert_contains "$qml" '!root.pendingPassword' "onBusyChanged should not cancel while password is queued"
+    assert_contains "$qml" 'onPamTimeoutChanged' "AuthHandler should handle onPamTimeoutChanged to flush queued passwords"
 }
 
 run_tests

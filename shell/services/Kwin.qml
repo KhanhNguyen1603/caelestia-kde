@@ -15,6 +15,7 @@ Singleton {
     id: root
 
     readonly property var activeWindow: KWinActiveWindowBridge.activeWindow
+    readonly property var lastActiveWindow: KWinActiveWindowBridge.lastActiveWindow
     readonly property var windowList: KWinActiveWindowBridge.windowList || []
     readonly property string activeOutputName: KWinActiveWindowBridge.activeOutputName
     readonly property string pendingFocusAddress: KWinActiveWindowBridge.pendingFocusAddress
@@ -108,6 +109,10 @@ Singleton {
         KWinActiveWindowBridge.raiseWindow(address);
     }
 
+    function showAppMenu(service: string, objectPath: string, x: int, y: int, actionId: int): void {
+        KWinActiveWindowBridge.showAppMenu(service ?? "", objectPath ?? "", x ?? 0, y ?? 0, actionId ?? 0);
+    }
+
     function setWindowDesktop(address: string, desktopId: int): void {
         KWinActiveWindowBridge.setWindowDesktop(address, desktopId);
     }
@@ -134,6 +139,44 @@ Singleton {
 
     function windowsForWorkspace(workspace: var, includeAll: bool): var {
         return KWinActiveWindowBridge.windowsForWorkspace(workspace, includeAll ?? true);
+    }
+
+    function openedApp(screenName: string): var {
+        if (root.showingDesktop)
+            return null;
+
+        const screenWsId = root.activeWorkspaceFor(screenName ?? "");
+
+        const active = root.activeWindow;
+        if (active && active.address && !active.minimized) {
+            const onWs = root.isWindowOnWorkspace(active, screenWsId, true);
+            const onScr = !screenName || !active.output || active.output === screenName;
+            if (onWs && onScr)
+                return active;
+        }
+
+        const last = root.lastActiveWindow;
+        if (last && last.address) {
+            const found = (root.windowList || []).find(w => w.address === last.address && !w.minimized);
+            if (found) {
+                const onWs = root.isWindowOnWorkspace(found, screenWsId, true);
+                const onScr = !screenName || !found.output || found.output === screenName;
+                if (onWs && onScr)
+                    return found;
+            }
+        }
+
+        const candidate = (root.windowList || []).find(w => {
+            if (w.minimized)
+                return false;
+            if (!root.isWindowOnWorkspace(w, screenWsId, true))
+                return false;
+            if (screenName && w.output && w.output !== screenName)
+                return false;
+            return true;
+        });
+
+        return candidate ?? null;
     }
 
     function activeWorkspaceFor(screenName: string): int {

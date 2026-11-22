@@ -32,6 +32,13 @@ PageBase {
         }
 
         NavRow {
+            icon: "menu"
+            label: qsTr("App menu")
+            status: qsTr("Icon, title, popout")
+            onClicked: root.nState.openSubPage("barAppMenu")
+        }
+
+        NavRow {
             icon: "waving_hand"
             label: qsTr("Greeter")
             status: qsTr("Greeting display, popout")

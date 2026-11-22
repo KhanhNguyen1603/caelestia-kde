@@ -50,6 +50,14 @@ DelegateChooser {
         }
     }
     DelegateChoice {
+        roleValue: "appmenu"
+        delegate: WrappedLoader {
+            sourceComponent: AppMenu {
+                bar: root.bar
+            }
+        }
+    }
+    DelegateChoice {
         roleValue: "dock"
         delegate: WrappedLoader {
             sourceComponent: Dock {

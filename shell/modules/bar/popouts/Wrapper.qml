@@ -39,7 +39,7 @@ Item {
     // hover previews and context menus are transient, so shoving panels around for
     // them feels jittery. The clock popout is deliberately NOT here — the calendar
     // is a real panel-sized popout and displaces notifications like audio/network do.
-    readonly property bool isDockPopout: currentName === "dockhover" || currentName === "greeter" || currentName === "activewindow" || currentName === "github" || currentIsContext
+    readonly property bool isDockPopout: currentName === "dockhover" || currentName === "greeter" || currentName === "activewindow" || currentName === "appmenu" || currentName === "github" || currentIsContext
     property alias currentName: popoutState.currentName
     property alias hasCurrent: popoutState.hasCurrent
     property alias sourcePanel: popoutState.sourcePanel
@@ -48,6 +48,7 @@ Item {
     property alias staysOpen: popoutState.staysOpen
     property alias dockModel: popoutState.dockModel
     property alias tasksModel: popoutState.tasksModel
+    property alias selectedClientAddress: popoutState.selectedClientAddress
     property alias currentCenter: popoutState.currentCenter
     property bool isPanelHorizontal: true
     readonly property bool isDockPanelPopout: sourcePanel === "dockPanel" || (sourcePanel === "" && (currentName === "osiconcontext" || currentName === "dockcontext" || currentName === "dockbgcontext" || currentName === "dockhover"))

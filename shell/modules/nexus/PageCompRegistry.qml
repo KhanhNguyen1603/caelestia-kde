@@ -225,6 +225,7 @@ QtObject {
 
                 SubPage { key: "barComponents"; label: qsTr("Components"); keywords: ["widgets", "components", "reorder"]; Component { BarComponents {} } }
                 SubPage { key: "barWorkspaces"; label: qsTr("Workspaces"); keywords: ["workspaces", "indicators"]; Component { BarWorkspaces {} } }
+                SubPage { key: "barAppMenu"; label: qsTr("App menu"); keywords: ["app", "menu", "window", "application"]; Component { BarAppMenu {} } }
                 SubPage { key: "barGreeter"; label: qsTr("Greeter"); keywords: ["greeting", "popout", "slideshow"]; Component { BarGreeter {} } }
                 SubPage { key: "barTray"; label: qsTr("Tray"); keywords: ["system tray", "icons", "pin"]; Component { BarTray {} } }
                 SubPage { key: "barStatusIcons"; label: qsTr("Status Icons"); keywords: ["indicators", "bar"]; Component { BarStatusIcons {} } }

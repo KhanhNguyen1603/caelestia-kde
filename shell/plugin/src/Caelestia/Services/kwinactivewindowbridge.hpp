@@ -14,6 +14,7 @@ class PlasmaWindowHandle;
 class KWinActiveWindowBridge : public QObject {
     Q_OBJECT
     Q_PROPERTY(QVariantMap activeWindow READ activeWindow NOTIFY activeWindowChanged)
+    Q_PROPERTY(QVariantMap lastActiveWindow READ lastActiveWindow NOTIFY lastActiveWindowChanged)
     Q_PROPERTY(QString activeOutputName READ activeOutputName WRITE setActiveOutputName NOTIFY activeOutputNameChanged)
     Q_PROPERTY(QVariantList windowList READ windowList NOTIFY windowListChanged)
     Q_PROPERTY(QString pendingFocusAddress READ pendingFocusAddress NOTIFY pendingFocusAddressChanged)
@@ -26,6 +27,7 @@ public:
     ~KWinActiveWindowBridge() override;
 
     QVariantMap activeWindow() const;
+    QVariantMap lastActiveWindow() const;
     QString activeOutputName() const;
     Q_INVOKABLE void setActiveOutputName(const QString& outputName);
 
@@ -48,11 +50,13 @@ public:
     Q_INVOKABLE void setMaximized(const QString& address, bool maximized);
     Q_INVOKABLE void highlightWindow(const QString& address);
     Q_INVOKABLE void clearHighlight();
+    Q_INVOKABLE void showAppMenu(const QString& service, const QString& objectPath, int x, int y, int actionId = 0);
 
     Q_INVOKABLE void refreshWindows();
 
 signals:
     void activeWindowChanged();
+    void lastActiveWindowChanged();
     void activeOutputNameChanged();
     void windowListChanged();
     void pendingFocusAddressChanged();
@@ -73,6 +77,7 @@ private:
     void rebuildIndex();
 
     QVariantMap m_activeWindow;
+    QVariantMap m_lastActiveWindow;
     QVariantList m_windowList;
     QHash<QString, QVariantMap> m_windowCache;
     QHash<QString, int> m_windowIndex; // uuid → index in m_windowList, O(1) lookup
