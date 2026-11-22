@@ -325,7 +325,12 @@ Item {
         viewVisible: lockScreenUi.viewVisible && lockScreenUi.ready
         maxFprintTries: lockScreenUi.maxFprintTries
         onShakeRequested: if (activePasswordPill) activePasswordPill.shake()
-        onFocusSecretRequested: if (activePasswordPill) activePasswordPill.forceActiveFocus()
+        onFocusSecretRequested: {
+            if (activePasswordPill) {
+                activePasswordPill.showPassword = false;
+                activePasswordPill.forceActiveFocus();
+            }
+        }
         onSucceeded: {
             Qt.quit();
         }
@@ -490,7 +495,6 @@ Item {
             event.accepted = false;
         }
         Keys.onEscapePressed: {
-            authHandler.ensureAuthenticating();
             root.clearPassword();
         }
 
