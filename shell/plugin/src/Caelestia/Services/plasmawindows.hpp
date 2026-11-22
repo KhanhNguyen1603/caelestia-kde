@@ -49,6 +49,10 @@ public:
 
     QStringList desktops() const { return m_desktops; }
 
+    QString menuServiceName() const { return m_menuServiceName; }
+
+    QString menuObjectPath() const { return m_menuObjectPath; }
+
     /// Sets or clears one window state flag.
     ///
     /// The protocol request carries a flags bitfield (which states are being
@@ -64,6 +68,7 @@ signals:
     void geometryChanged();
     void stateChanged();
     void desktopsChanged();
+    void appMenuChanged();
 
     void unmapped();
 
@@ -78,6 +83,7 @@ protected:
     void org_kde_plasma_window_pid_changed(uint32_t pid) override;
     void org_kde_plasma_window_virtual_desktop_entered(const QString& id) override;
     void org_kde_plasma_window_virtual_desktop_left(const QString& id) override;
+    void org_kde_plasma_window_application_menu(const QString& service_name, const QString& object_path) override;
     void org_kde_plasma_window_unmapped() override;
 
 private:
@@ -96,6 +102,8 @@ private:
     bool m_demandsAttention = false;
     bool m_skipTaskbar = false;
     QStringList m_desktops;
+    QString m_menuServiceName;
+    QString m_menuObjectPath;
 };
 
 class PlasmaWindowManagement : public QWaylandClientExtensionTemplate<PlasmaWindowManagement>,
