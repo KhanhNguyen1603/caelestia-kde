@@ -121,13 +121,24 @@ test_prompt_for_secret_respects_show_prompt() {
 }
 
 test_heartbeat_timer_guards_active_prompts() {
-    local qml
+    local qml helper
     qml="$(cat "$AUTH_HANDLER")"
+    helper="$(qml_function "$AUTH_HANDLER" hasOpenPrompt)"
 
-    assert_contains "$qml" '!activeAuthenticator.promptForSecret' \
-        "backendHeartbeatTimer must not interrupt active secret prompts"
+    assert_contains "$qml" '!root.promptPending' \
+        "backendHeartbeatTimer and ensureAuthenticating must guard active prompts (both secret and echo-on)"
     assert_contains "$qml" '!activeAuthenticator.busy' \
         "backendHeartbeatTimer must not interrupt busy authenticators"
+    assert_contains "$qml" 'function onStateChanged()' \
+        "AuthHandler should reset promptPending when authenticator state returns to Idle"
+    assert_contains "$qml" 'Qt.callLater(root.flushPendingPassword)' \
+        "prompt handlers should defer flushPendingPassword until PamAuthenticator::promptInternal() records m_pendingPrompt"
+    assert_contains "$helper" 'root.isAuthenticatingState(auth)' \
+        "hasOpenPrompt should check that the backend is actively authenticating"
+    assert_not_contains "$qml" 'ScreenLocker.Authenticators' \
+        "AuthHandler must not reference ScreenLocker.Authenticators (not exposed to QML across Plasma 6 versions)"
+    assert_contains "$helper" 'auth.promptForSecret || auth.prompt' \
+        "hasOpenPrompt should check both secret and echo-on prompts"
 }
 
 test_unlock_failure_feedback() {

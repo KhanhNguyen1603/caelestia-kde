@@ -8,8 +8,10 @@ Semantics mirrored from kscreenlocker master
 * `tryUnlock()` bails when `busy`, otherwise sets busy and runs `Authenticate()`.
 * The PAM worker answers a second `Authenticate()` with an immediate `Failure` while it
   is already inside `pam_authenticate` (`Worker::authenticate()`).
-* When a prompt arrives, `PamAuthenticator::promptInternal()` sets busy back to false
-  and keeps the D-Bus reply, so `busy` is false while a prompt waits for the password.
+* When a prompt arrives, `PamAuthenticator::promptInternal()` sets busy back to false,
+  emits `promptForSecret`/`prompt` synchronously, and only then records `m_pendingPrompt`,
+  so a synchronous `respond()` inside the signal handler sees no pending prompt and drops
+  the password.
 * `promptForSecret` is sticky: `respond()` clears only the pending reply, never the
   string, so `Boolean(promptForSecret || prompt)` stays true for the rest of the session.
 * `respond()` without a pending prompt drops the password (qCWarning only).
@@ -25,6 +27,8 @@ class MockAuthenticator(QObject):
     infoMessageChanged = Signal()
     errorMessageChanged = Signal()
     busyChanged = Signal()
+    stateChanged = Signal()
+    inPasswordDelayChanged = Signal()
     succeeded = Signal()
     failed = Signal(int, object)
     noninteractiveError = Signal(int, object)
@@ -80,6 +84,11 @@ class MockAuthenticator(QObject):
             self._busy = value
             self.busyChanged.emit()
 
+    def _set_state(self, value):
+        if self._state != value:
+            self._state = value
+            self.stateChanged.emit()
+
     busy = Property(bool, lambda self: self._busy, notify=busyChanged)
     prompt = Property(str, lambda self: self._prompt, notify=promptChanged)
     promptForSecret = Property(
@@ -88,9 +97,9 @@ class MockAuthenticator(QObject):
     infoMessage = Property(str, lambda self: self._info_message, notify=infoMessageChanged)
     errorMessage = Property(str, lambda self: self._error_message, notify=errorMessageChanged)
     unlocked = Property(bool, lambda self: self._unlocked, notify=succeeded)
-    state = Property(int, lambda self: self._state)
+    state = Property(int, lambda self: self._state, notify=stateChanged)
     hadPrompt = Property(bool, lambda self: self._had_prompt)
-    inPasswordDelay = Property(bool, lambda self: False)
+    inPasswordDelay = Property(bool, lambda self: False, notify=inPasswordDelayChanged)
     authenticatorTypes = Property(int, lambda self: 0)
 
     @property
@@ -108,6 +117,7 @@ class MockAuthenticator(QObject):
             f"prompt pending: {self._pending})"
         )
         self._try_unlock()
+        self._set_state(self.Authenticating)
 
     @Slot()
     def stopAuthenticating(self):
@@ -118,7 +128,7 @@ class MockAuthenticator(QObject):
         self._error_message = ""
         self._in_authenticate = False
         self._set_busy(False)
-        self._state = self.Idle
+        self._set_state(self.Idle)
         self.promptChanged.emit()
         self.promptForSecretChanged.emit()
 
@@ -155,6 +165,15 @@ class MockAuthenticator(QObject):
         self.promptChanged.emit()
         self.promptForSecretChanged.emit()
 
+    def drop_prompt_to_idle(self):
+        """A conversation ends and returns state to Idle while promptForSecret stays
+        sticky, without emitting failed(0) (e.g. backend reset or cancellation)."""
+        self._event("state -> Idle with sticky promptForSecret (no pending prompt)")
+        self._pending = False
+        self._in_authenticate = False
+        self._set_busy(False)
+        self._set_state(self.Idle)
+
     def _event(self, what):
         self.events.append(f"{QDateTime.currentMSecsSinceEpoch() - self._t0:6d} ms  {what}")
 
@@ -174,7 +193,7 @@ class MockAuthenticator(QObject):
         self.bogus_failures += 1
         self._event(f"refused #{self.bogus_failures} (conversation in flight)")
         self._record_failure()
-        self._state = self.Idle
+        self._set_state(self.Idle)
         self.failed.emit(0, self)
 
     def _record_failure(self):
@@ -189,21 +208,24 @@ class MockAuthenticator(QObject):
 
     def _prompt_for_password(self):
         self._set_busy(False)
-        self._pending = True
         self.prompt_count += 1
         self._had_prompt = True
         if self.prompt_kind == "echo":
             self._prompt = "Password: "
             self._event("prompt('Password: '): echo-on")
             self.promptChanged.emit()
-            return
-        self._prompt_for_secret = "Password: "
-        self._event("promptForSecret('Password: ')")
-        self.promptForSecretChanged.emit()
+        else:
+            self._prompt_for_secret = "Password: "
+            self._event("promptForSecret('Password: ')")
+            self.promptForSecretChanged.emit()
+        # Real PamAuthenticator::promptInternal() stores m_pendingPrompt = message()
+        # only after Q_EMIT promptForSecret/prompt returns; responding synchronously
+        # inside the signal handler hits "no pending prompt was found!" and drops it.
+        self._pending = True
 
     def _verify(self, password):
         self._in_authenticate = False
-        self._state = self.Idle
+        self._set_state(self.Idle)
         if password == self.password:
             self._unlocked = True
             self._event("verify -> SUCCESS")
