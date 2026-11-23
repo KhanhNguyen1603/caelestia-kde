@@ -106,6 +106,9 @@ Item {
     }
 
     function checkPopout(pos: real): void {
+        if (Visibilities.launcherOpen)
+            return;
+
         // A context menu stays open while the pointer moves over the bar, so
         // the hover routing below must not take it over or close it.
         if (popouts.isContextPopout)

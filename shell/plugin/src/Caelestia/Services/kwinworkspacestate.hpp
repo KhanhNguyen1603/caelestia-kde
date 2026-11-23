@@ -30,6 +30,7 @@ class KWinWorkspaceState : public QObject {
     Q_PROPERTY(double swipeOffset READ swipeOffset NOTIFY swipeOffsetChanged)
     Q_PROPERTY(QVariantMap swipeOffsetByOutput READ swipeOffsetByOutput NOTIFY swipeOffsetByOutputChanged)
     Q_PROPERTY(bool showingDesktop READ showingDesktop NOTIFY showingDesktopChanged)
+    Q_PROPERTY(QString currentActivity READ currentActivity NOTIFY currentActivityChanged)
     QML_ELEMENT
     QML_SINGLETON
 
@@ -48,6 +49,7 @@ public:
     double swipeOffset() const;
     QVariantMap swipeOffsetByOutput() const;
     bool showingDesktop() const;
+    QString currentActivity() const;
 
     Q_INVOKABLE void switchTo(const QString& id, const QString& output = QString());
     Q_INVOKABLE void createWorkspace(const QString& name = QString());
@@ -66,6 +68,7 @@ signals:
     void swipeOffsetChanged();
     void swipeOffsetByOutputChanged();
     void showingDesktopChanged();
+    void currentActivityChanged();
 
 private slots:
     void onDesktopCreated(const QString& id, const caelestia::services::KWinDesktopData& desktopData);
@@ -75,6 +78,7 @@ private slots:
     void onCountChanged(uint count);
     void onRowsChanged(uint rows);
     void onShowingDesktopChanged(bool showing);
+    void onCurrentActivityChanged(const QString& activity);
     void onKWinPropertiesChanged(
         const QString& interface, const QVariantMap& changedProps, const QStringList& invalidatedProps);
 
@@ -97,6 +101,7 @@ private:
     double m_swipeOffset = 0.0;
     QVariantMap m_swipeOffsetByOutput;
     bool m_showingDesktop = false;
+    QString m_currentActivity;
     ::QLocalServer* m_trackerServer = nullptr;
 };
 

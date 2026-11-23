@@ -83,6 +83,7 @@ Item {
 
     onIsHoveredChanged: {
         if (root.isHovered && root.popouts) {
+            if (Visibilities.launcherOpen) return;
             if (root.popouts.hasCurrent && root.popouts.currentName === "dockcontext") return;
             root.popouts.sourcePanel = root.sourcePanel;
             root.popouts.currentName = "dockhover";
@@ -325,6 +326,7 @@ Item {
 
             onEntered: {
                 if (!root.popouts) return;
+                if (Visibilities.launcherOpen) return;
                 if (root.popouts.hasCurrent && root.popouts.currentName === "dockcontext") return;
                 root.popouts.sourcePanel = root.sourcePanel;
                 root.popouts.currentName = "dockhover";

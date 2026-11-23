@@ -110,6 +110,7 @@ void PlasmaWindowHandle::org_kde_plasma_window_client_geometry(int32_t x, int32_
 }
 
 void PlasmaWindowHandle::org_kde_plasma_window_initial_state() {
+    m_hasInitialState = true;
     emit stateChanged();
     emit geometryChanged();
     emit desktopsChanged();
@@ -161,6 +162,18 @@ void PlasmaWindowHandle::org_kde_plasma_window_application_menu(
     }
 }
 
+void PlasmaWindowHandle::org_kde_plasma_window_activity_entered(const QString& id) {
+    if (!m_activities.contains(id)) {
+        m_activities.append(id);
+        emit activitiesChanged();
+    }
+}
+
+void PlasmaWindowHandle::org_kde_plasma_window_activity_left(const QString& id) {
+    if (m_activities.removeOne(id))
+        emit activitiesChanged();
+}
+
 void PlasmaWindowHandle::org_kde_plasma_window_unmapped() {
     emit unmapped();
 }
@@ -191,9 +204,7 @@ void PlasmaWindowManagement::requestStackingOrder() {
         auto* stacking_order_obj = get_stacking_order();
         if (stacking_order_obj) {
             auto* wrapper = new PlasmaStackingOrder(stacking_order_obj, this);
-            connect(wrapper, &PlasmaStackingOrder::window, this, [this](const QString& uuid) {
-                emit windowWithUuid(0, uuid);
-            });
+            connect(wrapper, &PlasmaStackingOrder::done, this, &PlasmaWindowManagement::stackingOrderReceived);
             connect(wrapper, &PlasmaStackingOrder::done, wrapper, &QObject::deleteLater);
         }
     }
@@ -206,10 +217,7 @@ void PlasmaWindowManagement::org_kde_plasma_window_management_window_with_uuid(u
 void PlasmaWindowManagement::org_kde_plasma_window_management_window(uint32_t id) {}
 
 void PlasmaWindowManagement::org_kde_plasma_window_management_stacking_order_uuid_changed(const QString& uuids) {
-    const auto list = uuids.split(QLatin1Char(';'), Qt::SkipEmptyParts);
-    for (const auto& uuid : list) {
-        emit windowWithUuid(0, uuid);
-    }
+    emit stackingOrderReceived(uuids.split(QLatin1Char(';'), Qt::SkipEmptyParts));
 }
 
 void PlasmaWindowManagement::org_kde_plasma_window_management_stacking_order_changed(wl_array* ids) {}
@@ -222,14 +230,16 @@ PlasmaStackingOrder::PlasmaStackingOrder(struct ::org_kde_plasma_stacking_order*
     : QObject(parent)
     , QtWayland::org_kde_plasma_stacking_order(object) {}
 
-PlasmaStackingOrder::~PlasmaStackingOrder() = default;
+PlasmaStackingOrder::~PlasmaStackingOrder() {
+    ::org_kde_plasma_stacking_order_destroy(object());
+}
 
 void PlasmaStackingOrder::org_kde_plasma_stacking_order_window(const QString& uuid) {
-    emit window(uuid);
+    m_uuids.append(uuid);
 }
 
 void PlasmaStackingOrder::org_kde_plasma_stacking_order_done() {
-    emit done();
+    emit done(m_uuids);
 }
 
 PlasmaWindows::PlasmaWindows(QObject* parent)
@@ -259,6 +269,20 @@ bool PlasmaWindows::available() {
         m_management = new PlasmaWindowManagement(this);
         connect(m_management, &PlasmaWindowManagement::windowWithUuid, this, &PlasmaWindows::onWindowWithUuid);
         connect(m_management, &PlasmaWindowManagement::windowMapped, this, &PlasmaWindows::onWindowMapped);
+        connect(m_management, &PlasmaWindowManagement::stackingOrderReceived, this, [this](const QStringList& uuids) {
+            QStringList order;
+            order.reserve(uuids.size());
+            for (const auto& uuid : uuids) {
+                const auto key = normaliseUuid(uuid);
+                if (!m_handles.contains(key))
+                    onWindowWithUuid(0, uuid);
+                order.append(key);
+            }
+            if (order != m_stackingOrder) {
+                m_stackingOrder = order;
+                emit stackingOrderChanged();
+            }
+        });
     }
     bool active = m_management->isActive();
     return active;
