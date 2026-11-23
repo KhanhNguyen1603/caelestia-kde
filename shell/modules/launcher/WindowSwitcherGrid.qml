@@ -18,6 +18,9 @@ Item {
     required property var visibilities
     required property var panels
     required property var content
+    required property int columns
+    required property real cellWidth
+    required property real cellHeight
 
     readonly property string searchText: root.search.text.split(" ").slice(1).join(" ")
 
@@ -34,19 +37,9 @@ Item {
 
     readonly property real gap: Tokens.spacing.medium
 
-    // Pick the column count that keeps cells closest to 16:9 for the available
-    // area, then let the rows follow from the item count.
-    readonly property int columns: {
-        const n = root.values.length;
-        if (n <= 1)
-            return 1;
-        const areaWidth = Math.max(1, root.width - Tokens.padding.large * 2);
-        const areaHeight = Math.max(1, root.height - Tokens.padding.large * 2);
-        return Math.max(1, Math.min(n, Math.round(Math.sqrt((n * areaWidth) / (areaHeight * 16 / 9)))));
-    }
     readonly property int rows: root.columns > 0 ? Math.ceil(root.values.length / root.columns) : 0
-    readonly property real cellWidth: root.columns > 0 ? Math.max(1, (root.width - Tokens.padding.large * 2 - (root.columns - 1) * root.gap) / root.columns) : 0
-    readonly property real cellHeight: root.rows > 0 ? Math.max(1, (root.height - Tokens.padding.large * 2 - (root.rows - 1) * root.gap) / root.rows) : 0
+    readonly property real contentWidth: root.columns > 0 ? root.columns * root.cellWidth + (root.columns - 1) * root.gap : 0
+    readonly property real contentHeight: root.rows > 0 ? root.rows * root.cellHeight + (root.rows - 1) * root.gap : 0
 
     function incrementCurrentIndex(): void {
         if (root.searchText.trim() !== "") {
@@ -65,9 +58,6 @@ Item {
             Windows.triggerCyclePrev();
         }
     }
-
-    implicitWidth: Tokens.sizes.launcher.browseWidth * 1.35
-    implicitHeight: Tokens.sizes.launcher.browseHeight * 0.85
 
     onSearchTextChanged: root.currentIndex = 0
     onValuesChanged: {
@@ -92,8 +82,8 @@ Item {
                 readonly property int column: tile.index % root.columns
                 readonly property int row: Math.floor(tile.index / root.columns)
 
-                x: tile.column * (root.cellWidth + root.gap)
-                y: tile.row * (root.cellHeight + root.gap)
+                x: (grid.width - root.contentWidth) / 2 + tile.column * (root.cellWidth + root.gap)
+                y: (grid.height - root.contentHeight) / 2 + tile.row * (root.cellHeight + root.gap)
                 width: root.cellWidth
                 height: root.cellHeight
                 selected: tile.modelData.address === root.selectedAddress
