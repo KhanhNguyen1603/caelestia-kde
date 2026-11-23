@@ -60,8 +60,10 @@ KWinActiveWindowBridge::~KWinActiveWindowBridge() {
 
 KWinActiveWindowBridge* KWinActiveWindowBridge::create(QQmlEngine* engine, QJSEngine*) {
     auto* bridge = new KWinActiveWindowBridge;
-    // Whether a window is visible depends on the desktop its output shows,
-    // which only the workspace state tracks.
+    // Whether a window is visible depends on the desktop its output shows, which
+    // only the workspace state tracks. Asking the engine for it creates it on
+    // demand; KWinWorkspaceState::instance() returns null until something else
+    // has asked for it.
     auto* state = engine->singletonInstance<KWinWorkspaceState*>("Caelestia.Services", "KWinWorkspaceState");
     if (state) {
         bridge->m_workspaceState = state;
@@ -282,11 +284,13 @@ void KWinActiveWindowBridge::scheduleFullscreenUpdate() {
 }
 
 void KWinActiveWindowBridge::updateFullscreenOutputs() {
+    if (!m_workspaceState)
+        return;
     QStringList outputs;
-    if (!m_workspaceState || !m_workspaceState->showingDesktop()) {
-        const QString activity = m_workspaceState ? m_workspaceState->currentActivity() : QString();
-        const QVariantMap desktopByOutput = m_workspaceState ? m_workspaceState->activeByOutput() : QVariantMap();
-        const int currentDesktop = m_workspaceState ? qMax(m_workspaceState->activeId(), 1) : 1;
+    if (!m_workspaceState->showingDesktop()) {
+        const QString activity = m_workspaceState->currentActivity();
+        const QVariantMap desktopByOutput = m_workspaceState->activeByOutput();
+        const int currentDesktop = qMax(m_workspaceState->activeId(), 1);
 
         auto* plasmaWindows = PlasmaWindows::instance();
         // The stack starts at the bottom, so each visible window replaces the one below it on its output.
@@ -301,12 +305,14 @@ void KWinActiveWindowBridge::updateFullscreenOutputs() {
                 getOutputNameForGeometry(window->x(), window->y(), window->width(), window->height());
             if (output.isEmpty())
                 continue;
-            const QStringList desktops = window->desktops();
-            if (!desktops.isEmpty() && m_workspaceState) {
+            // Empty means every desktop. Only filter once we know which desktop the
+            // output shows, so a workspace list that has not arrived hides nothing.
+            const QStringList desktops = desktopUuids(window);
+            if (!desktops.isEmpty()) {
                 const int perOutput = desktopByOutput.value(output).toInt();
                 const int desktop = perOutput > 0 ? perOutput : currentDesktop;
-                if (!desktops.contains(m_workspaceState->uuidForIndex(desktop)) &&
-                    !desktops.contains(QString::number(desktop)))
+                const QString desktopUuid = m_workspaceState->uuidForIndex(desktop);
+                if (!desktopUuid.isEmpty() && !desktops.contains(desktopUuid))
                     continue;
             }
             outputs.removeOne(output);
@@ -320,6 +326,21 @@ void KWinActiveWindowBridge::updateFullscreenOutputs() {
         m_fullscreenOutputs = outputs;
         emit fullscreenOutputsChanged();
     }
+}
+
+QStringList KWinActiveWindowBridge::desktopUuids(const PlasmaWindowHandle* window) const {
+    QStringList uuids;
+    for (const QString& id : window->desktops()) {
+        bool isNumber = false;
+        const int index = id.toInt(&isNumber);
+        if (isNumber && m_workspaceState) {
+            const QString uuid = m_workspaceState->uuidForIndex(index);
+            uuids.append(uuid.isEmpty() ? id : uuid);
+        } else {
+            uuids.append(id);
+        }
+    }
+    return uuids;
 }
 
 void KWinActiveWindowBridge::rebuildIndex() {

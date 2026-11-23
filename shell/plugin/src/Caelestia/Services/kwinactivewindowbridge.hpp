@@ -82,6 +82,9 @@ private:
     explicit KWinActiveWindowBridge(QObject* parent = nullptr);
 
     QVariantMap windowToVariant(PlasmaWindowHandle* w) const;
+    // The desktop ids a window is on, with numeric ids resolved to uuids, so
+    // callers compare one representation.
+    QStringList desktopUuids(const PlasmaWindowHandle* window) const;
     QString getOutputNameForGeometry(int x, int y, int w, int h) const;
     void onStateChanged(PlasmaWindowHandle* handle);
     // Rebuilds m_windowIndex from the current m_windowList. Call after any
