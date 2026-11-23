@@ -230,6 +230,8 @@ test_the_weather_widget_only_shows_the_days_that_fit() {
 test_the_button_runs_its_command_through_a_shell() {
     assert_file_contains "$WIDGETS/ButtonWidget.qml" 'Launch.exec(["sh", "-c", line])' "a command is a shell line, not an argv"
     assert_file_contains "$WIDGETS/ButtonWidget.qml" 'if (line !== "")' "an empty command must not start a shell"
+    assert_file_contains "$WIDGETS/ButtonWidget.qml" 'target: root.frame' "the button must take its click from the card"
+    assert_file_not_contains "$WIDGETS/ButtonWidget.qml" 'StateLayer {' "the button must not swallow card drags with StateLayer"
 }
 
 test_the_volume_widget_fills_and_steers_the_default_device() {
@@ -245,6 +247,8 @@ test_the_sticker_plays_an_animated_image() {
     assert_file_contains "$WIDGETS/StickerWidget.qml" 'FileDialog {' "the image must be pickable on the desktop"
     assert_file_contains "$WIDGETS/StickerWidget.qml" 'filters: Images.validImageExtensions' "the sticker picker must pass canonical extension list"
     assert_file_not_contains "$WIDGETS/StickerWidget.qml" 'filters: ["*.' "glob patterns with *. break FileDialog suffix matching"
+    assert_file_contains "$WIDGETS/StickerWidget.qml" 'target: root.frame' "the sticker must take its double click from the card"
+    assert_file_not_contains "$WIDGETS/StickerWidget.qml" 'MouseArea {' "the sticker must not swallow card drags with MouseArea"
 }
 
 test_the_panel_requests_keyboard_focus_when_open() {

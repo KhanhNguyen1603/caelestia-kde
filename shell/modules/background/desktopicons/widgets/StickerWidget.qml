@@ -49,11 +49,16 @@ DesktopWidget {
         opacity: root.imageOpacity
     }
 
-    MouseArea {
-        anchors.fill: parent
-        acceptedButtons: Qt.LeftButton
+    HoverHandler {
         cursorShape: Qt.PointingHandCursor
-        onDoubleClicked: root.chooseImage()
+    }
+
+    Connections {
+        function onDoubleClicked(): void {
+            root.chooseImage();
+        }
+
+        target: root.frame
     }
 
     FileDialog {
