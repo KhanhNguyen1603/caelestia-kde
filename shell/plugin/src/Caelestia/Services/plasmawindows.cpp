@@ -231,7 +231,10 @@ PlasmaStackingOrder::PlasmaStackingOrder(struct ::org_kde_plasma_stacking_order*
     , QtWayland::org_kde_plasma_stacking_order(object) {}
 
 PlasmaStackingOrder::~PlasmaStackingOrder() {
-    ::org_kde_plasma_stacking_order_destroy(object());
+    // The done event is a protocol destructor, and a shutdown deletes the manager
+    // these wrappers are parented to. Both leave nothing to send.
+    if (!s_connectionGone && isInitialized())
+        ::org_kde_plasma_stacking_order_destroy(object());
 }
 
 void PlasmaStackingOrder::org_kde_plasma_stacking_order_window(const QString& uuid) {
@@ -340,6 +343,11 @@ void PlasmaWindows::forget(const QString& uuid) {
     const auto key = normaliseUuid(uuid);
     if (auto* handle = m_handles.take(key)) {
         handle->deleteLater();
+    }
+    // KWin republishes the stack only when it changes, so a closed window would
+    // otherwise keep its place in the list.
+    if (m_stackingOrder.removeAll(key) > 0) {
+        emit stackingOrderChanged();
     }
     emit handleLost(key);
 }
