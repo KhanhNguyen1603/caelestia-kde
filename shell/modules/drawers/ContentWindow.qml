@@ -93,7 +93,7 @@ StyledWindow {
 
     // The window takes the keyboard while a panel that owns text is open, and that is
     // Panels' answer to give: it is the one place that has them all.
-    readonly property bool wantsKeyboard: panels.wantsKeyboard
+    readonly property bool wantsKeyboard: panels.wantsKeyboard || widgetSettings.open
 
     onHasFullscreenChanged: {
         if (!hasFullscreen)

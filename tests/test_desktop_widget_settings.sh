@@ -243,6 +243,22 @@ test_the_sticker_plays_an_animated_image() {
     assert_file_contains "$WIDGETS/StickerWidget.qml" 'CachingAnimatedImage {' "a GIF must play"
     assert_file_contains "$WIDGETS/StickerWidget.qml" 'CachingImage {' "a still image must be drawn as one"
     assert_file_contains "$WIDGETS/StickerWidget.qml" 'FileDialog {' "the image must be pickable on the desktop"
+    assert_file_contains "$WIDGETS/StickerWidget.qml" 'filters: Images.validImageExtensions' "the sticker picker must pass canonical extension list"
+    assert_file_not_contains "$WIDGETS/StickerWidget.qml" 'filters: ["*.' "glob patterns with *. break FileDialog suffix matching"
+}
+
+test_the_panel_requests_keyboard_focus_when_open() {
+    # The settings form holds text inputs (command, label, glyph). Under Wayland layershell,
+    # a window with keyboardFocus: None receives no key events, so the window must request
+    # keyboard focus while the settings panel is open.
+    assert_file_contains "$WINDOW" 'readonly property bool wantsKeyboard: panels.wantsKeyboard || widgetSettings.open' "the window must request keyboard focus while widget settings are open"
+}
+
+test_image_file_dialog_uses_valid_extensions() {
+    # FileDialog matches against file.suffix (e.g. 'png'). Passing glob patterns like
+    # ['*.png'] breaks selection equality checks and disables the Select action.
+    assert_file_contains "$FORM" 'filters: pathRow.folder ? ["*"] : Images.validImageExtensions' "the settings form image picker must pass canonical extension list"
+    assert_file_not_contains "$FORM" '["*.png"' "glob patterns with *. break FileDialog suffix matching"
 }
 
 test_every_widget_shares_one_frame() {
