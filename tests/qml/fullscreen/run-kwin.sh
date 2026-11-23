@@ -9,7 +9,10 @@ export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 export XDG_RUNTIME_DIR="$test_dir/run" XDG_CONFIG_HOME="$test_dir/config" XDG_DATA_HOME="$test_dir/data"
 export XDG_CACHE_HOME="$test_dir/cache" XDG_STATE_HOME="$test_dir/state"
 export WAYLAND_DISPLAY=fullscreen-test QT_QPA_PLATFORM=wayland QT_QUICK_BACKEND=software
-export QML2_IMPORT_PATH="${QML2_IMPORT_PATH:+$QML2_IMPORT_PATH:}$HOME/.local/lib/qt6/qml"
+# The plugin's QML modules come from a build: ~/.local after a local install, or
+# the installed prefix CI builds.
+qml_import_path=${CAELESTIA_QML_IMPORT_PATH:-$HOME/.local/lib/qt6/qml}
+export QML2_IMPORT_PATH="${QML2_IMPORT_PATH:+$QML2_IMPORT_PATH:}$qml_import_path"
 mkdir -m 700 "$XDG_RUNTIME_DIR"
 mkdir "$test_dir/probe"
 install -Dm644 "$shell_dir/../assets/org.quickshell.desktop" "$XDG_DATA_HOME/applications/org.quickshell.desktop"
