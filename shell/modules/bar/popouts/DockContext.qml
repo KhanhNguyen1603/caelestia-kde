@@ -9,6 +9,7 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.utils
+import qs.modules.nexus
 
 ColumnLayout {
     id: root
@@ -19,13 +20,37 @@ ColumnLayout {
     property bool isPinned: {
         if (!model)
             return false;
-        const current = GlobalConfig.bar.dock.pinnedApps || [];
-        for (let i = 0; i < current.length; i++) {
-            if (model.id === current[i] || (model.entry && model.entry.id === current[i])) {
+        return DockManager.isPinned(model.id) || (model.entry && DockManager.isPinned(model.entry.id));
+    }
+
+    readonly property bool isNexus: {
+        if (!model)
+            return false;
+
+        const id = String(model.id ?? "").toLowerCase();
+        const appClass = String(model.appClass ?? "").toLowerCase();
+        const entryId = String(model.entry?.id ?? "").toLowerCase();
+        if (id.includes("nexus") || appClass.includes("nexus") || entryId.includes("nexus"))
+            return true;
+        if (id.includes("quickshell") || appClass.includes("quickshell") || entryId.includes("quickshell"))
+            return true;
+
+        const tops = model.toplevels ?? [];
+        return tops.some(t => {
+            if (!t)
+                return false;
+            const cls = String(t.class ?? "").toLowerCase();
+            if (cls.includes("quickshell") || cls.includes("nexus"))
                 return true;
-            }
-        }
-        return false;
+            const title = String(t.title ?? "");
+            if (title.startsWith("Nexus") || title.toLowerCase().includes("nexus"))
+                return true;
+            if (PageRegistry.pages && PageRegistry.pages.some(p => p.label === title))
+                return true;
+            if (WindowFactory.openWindow && WindowFactory.openWindow.title === title)
+                return true;
+            return false;
+        });
     }
 
     property real scaleOffset: 1.0
@@ -82,20 +107,14 @@ ColumnLayout {
                 fontScale: root.fontScale
 
                 onActivated: {
-                    const current = GlobalConfig.bar.dock.pinnedApps ? [...GlobalConfig.bar.dock.pinnedApps] : [];
                     const idToPin = model.entry ? model.entry.id : model.id;
 
                     if (root.isPinned) {
-                        let index = current.indexOf(model.id);
-                        if (index === -1)
-                            index = current.indexOf(idToPin);
-                        if (index !== -1) {
-                            current.splice(index, 1);
-                            GlobalConfig.bar.dock.pinnedApps = current;
-                        }
-                    } else if (!current.includes(idToPin)) {
-                        current.push(idToPin);
-                        GlobalConfig.bar.dock.pinnedApps = current;
+                        DockManager.unpinApp(model.id);
+                        if (idToPin !== model.id)
+                            DockManager.unpinApp(idToPin);
+                    } else {
+                        DockManager.pinApp(idToPin);
                     }
 
                     root.popouts.hasCurrent = false;
@@ -201,16 +220,14 @@ ColumnLayout {
         icon: "close"
         visible: {
             if (!model || !model.toplevels || model.toplevels.length === 0) return false;
-            return !model.toplevels.some(t => t.title && String(t.title).startsWith("Nexus"));
+            return !root.isNexus;
         }
         onClicked: {
             for (const toplevel of model.toplevels) {
                 if (toplevel.pid) {
                     Quickshell.execDetached({ command: ["kill", "-15", String(toplevel.pid)] });
-                } else if (Kwin.windowList.length > 0) {
-                    Kwin.closeWindow(toplevel.address);
                 } else {
-                    Kwin.dispatch(Kwin.usingLua ? `hl.dsp.window.close({ window = "address:0x${toplevel.address}" })` : `closewindow address:0x${toplevel.address}`);
+                    Kwin.closeWindow(String(toplevel.address));
                 }
             }
             root.popouts.hasCurrent = false;

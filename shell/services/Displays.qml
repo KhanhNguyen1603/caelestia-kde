@@ -24,6 +24,17 @@ Singleton {
     /// KScreen reports the rotation as a power of two; the CLI takes these names.
     readonly property var rotations: ({ 1: "none", 2: "left", 4: "inverted", 8: "right" })
 
+    /// How long a new layout is given before it is undone by itself.
+    readonly property int revertSeconds: 10
+    property int revertSecondsLeft: 0
+    /// A layout change can make the screen unreadable, taking the controls that would undo
+    /// it out of reach, so what was there before is held on to until the user says they can
+    /// still see well enough to keep the change. The countdown is the whole of that state:
+    /// while it is above zero, there is something to keep.
+    readonly property bool awaitingKeep: root.revertSecondsLeft > 0
+    /// The settings that put the layout back; empty when nothing is provisional.
+    property list<string> previousLayout: []
+
     /// KWin resets a panel to full brightness whenever its colour mode or resolution
     /// changes, so everything that writes the layout announces it and lets brightness be
     /// put back afterwards.
@@ -67,7 +78,51 @@ Singleton {
         if (settings.length === 0)
             return;
 
+        // The layout the change is about to replace is what an unanswered prompt puts back,
+        // so it comes from the layout KScreen last confirmed, and stays put while a prompt is
+        // still open on an earlier change.
+        if (root.previousLayout.length === 0)
+            root.previousLayout = root.layoutSettings();
+
+        root.revertSecondsLeft = root.revertSeconds;
+        revertTimer.restart();
+
         writeProcess.command = ["kscreen-doctor", ...settings];
+        writeProcess.running = true;
+    }
+
+    /// The layout as it stands, in the same one-shot form that changes it.
+    function layoutSettings(): list<string> {
+        const settings = [];
+        for (const output of root.connected) {
+            settings.push(`output.${output.name}.${output.enabled ? "enable" : "disable"}`);
+            if (!output.enabled)
+                continue;
+            settings.push(`output.${output.name}.mode.${output.currentModeId}`);
+            settings.push(`output.${output.name}.scale.${output.scale}`);
+            settings.push(`output.${output.name}.rotation.${root.rotationName(output.rotation)}`);
+            if (root.supportsHdr(output))
+                settings.push(`output.${output.name}.hdr.${output.hdr ? "enable" : "disable"}`, `output.${output.name}.wcg.${output.wcg ? "enable" : "disable"}`);
+        }
+        return settings;
+    }
+
+    function keepLayout(): void {
+        revertTimer.stop();
+        root.revertSecondsLeft = 0;
+        root.previousLayout = [];
+    }
+
+    function revertLayout(): void {
+        revertTimer.stop();
+        root.revertSecondsLeft = 0;
+
+        const previous = root.previousLayout;
+        root.previousLayout = [];
+        if (previous.length === 0)
+            return;
+
+        writeProcess.command = ["kscreen-doctor", ...previous];
         writeProcess.running = true;
     }
 
@@ -153,6 +208,19 @@ Singleton {
         onExited: {
             root.refresh();
             root.layoutApplied();
+        }
+    }
+
+    Timer {
+        id: revertTimer
+
+        interval: 1000
+        repeat: true
+
+        onTriggered: {
+            root.revertSecondsLeft -= 1;
+            if (root.revertSecondsLeft <= 0)
+                root.revertLayout();
         }
     }
 }

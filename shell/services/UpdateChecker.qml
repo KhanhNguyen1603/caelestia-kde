@@ -29,6 +29,32 @@ Singleton {
     property string previousVersion: "unknown"
     property string installedCommitHash: ""
 
+    /// Whether this install came from a package. The updater hands that install to the
+    /// package manager, so its "update" is a system upgrade and does not restart the
+    /// shell - both facts the card has to state rather than assume the other way round.
+    property bool packagedUpdate: false
+
+    /// What the last finished update recorded, and what a staging run downloaded. The
+    /// updater runs in a terminal the shell cannot watch, so a file it writes is the only
+    /// account of the outcome that survives the restart the update causes.
+    property string lastResultStatus: ""
+    property string lastResultLabel: ""
+    property string lastResultCode: ""
+    property bool lastResultLogout: false
+    property string stagedLabel: ""
+
+    /// What the running updater is doing, from the record it writes as it goes. The
+    /// terminal that starts it may not be watched, and the shell that started it is
+    /// restarted by the end, so this file is what the pane can show.
+    property int progressIndex: 0
+    property int progressTotal: 0
+    property string progressText: ""
+    property double progressAtMs: 0
+
+    readonly property real progressFraction: root.progressTotal > 0 ? Math.min(1, root.progressIndex / root.progressTotal) : 0
+
+    readonly property string stateDir: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/caelestia`
+
     property string _localCommit: ""
     property bool loaded: false
     property bool checkingUpdates: false
@@ -63,6 +89,37 @@ Singleton {
         const branch = root.clampBranch(root.currentBranch);
         const ref = version === undefined ? root.handoffVersion : version;
         return ref !== "" ? ["caelestia-update", branch, ref] : ["caelestia-update", branch];
+    }
+
+    /// The same run, stopped after the download. Applying it stays a separate decision.
+    function stageArgs(version): list<string> {
+        const args = root.updaterArgs(version);
+        return [args[0], "--stage", ...args.slice(1)];
+    }
+
+    function markStaged(version): void {
+        root.stagedLabel = version === undefined ? "" : version;
+    }
+
+    function clearResult(): void {
+        root.lastResultStatus = "";
+        root.lastResultLabel = "";
+        root.lastResultCode = "";
+        root.lastResultLogout = false;
+        Quickshell.execDetached(["rm", "-f", `${root.stateDir}/last-update`]);
+    }
+
+    /// A record is `status|label|code|logout`, written by caelestia-update when it finished.
+    function parseRecord(line): var {
+        const parts = line.trim().split("|");
+        if (parts.length < 2 || parts[0] === "")
+            return null;
+        return {
+            status: parts[0],
+            label: parts[1],
+            code: parts.length > 2 ? parts[2] : "",
+            logout: parts.length > 3 && parts[3] === "1"
+        };
     }
 
     // The updater runs in a terminal this shell only spawns, so the lock
@@ -434,9 +491,9 @@ if [ -n "$STATE_HELPER" ]; then
     . "$STATE_HELPER"
 fi
 if command -v update_state_read_commit >/dev/null 2>&1; then
-    printf '%s|%s\\n' "$(update_state_read_commit "$CONFIG")" "$(update_state_read_branch "$CONFIG")"
+    printf '%s|%s|%s\\n' "$(update_state_read_commit "$CONFIG")" "$(update_state_read_branch "$CONFIG")" "$([ -x /usr/bin/caelestia-update ] && echo 1 || echo 0)"
 else
-    printf '|main\\n'
+    printf '|main|%s\\n' "$([ -x /usr/bin/caelestia-update ] && echo 1 || echo 0)"
 fi
 `]
         stdout: StdioCollector {
@@ -446,6 +503,8 @@ fi
                 if (parts.length > 1 && parts[1] !== "") {
                     root.currentBranch = parts[1];
                 }
+                if (parts.length > 2)
+                    root.packagedUpdate = parts[2] === "1";
                 root.loaded = true;
                 root.checkInBackground();
             }
@@ -788,6 +847,65 @@ exit 1
         watchChanges: true
         printErrors: false
         onFileChanged: root.reload()
+    }
+
+    // The account of the last run, written by caelestia-update as its final act. Read on
+    // start because the update restarts the shell, which is the only moment it is news.
+    FileView {
+        id: resultFile
+
+        path: `${root.stateDir}/last-update`
+        printErrors: false
+        // The updater writes this and then restarts the shell, so the record can land either
+        // side of that restart. Watching it means the order does not matter.
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            const record = root.parseRecord(text());
+            root.lastResultStatus = record === null ? "" : record.status;
+            root.lastResultLabel = record === null ? "" : record.label;
+            root.lastResultCode = record === null ? "" : record.code;
+            root.lastResultLogout = record !== null && record.logout;
+        }
+        onLoadFailed: {
+            root.lastResultStatus = "";
+            root.lastResultLabel = "";
+            root.lastResultCode = "";
+            root.lastResultLogout = false;
+        }
+    }
+
+    FileView {
+        id: stagedFile
+
+        path: `${root.stateDir}/staged-update`
+        printErrors: false
+        onLoaded: {
+            const record = root.parseRecord(text());
+            root.stagedLabel = record === null ? "" : record.label;
+        }
+        onLoadFailed: root.stagedLabel = ""
+    }
+
+    FileView {
+        id: progressFile
+
+        path: `${root.stateDir}/progress`
+        printErrors: false
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            const parts = text().trim().split("|");
+            if (parts.length < 4) {
+                root.progressTotal = 0;
+                return;
+            }
+            root.progressIndex = parseInt(parts[0]) || 0;
+            root.progressTotal = parseInt(parts[1]) || 0;
+            root.progressText = parts[2] || "";
+            root.progressAtMs = (parseFloat(parts[3]) || 0) * 1000;
+        }
+        onLoadFailed: root.progressTotal = 0
     }
 
     Timer {

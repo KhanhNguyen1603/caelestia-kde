@@ -157,6 +157,25 @@ Item {
         }
 
         Popout {
+            name: "appmenu"
+            sourceComponent: AppMenu {
+                popouts: root.popouts
+            }
+        }
+
+        Popout {
+            name: "appmenucontext"
+            isContext: true
+            sourceComponent: BarComponentContext {
+                popouts: root.popouts
+                label: qsTr("App menu settings")
+                subPage: "barAppMenu"
+                secondLabel: qsTr("Elements & Modules")
+                secondSubPage: "taskbarElements"
+            }
+        }
+
+        Popout {
             name: "osiconcontext"
             isContext: true
             sourceComponent: BarComponentContext {
@@ -190,6 +209,9 @@ Item {
         Popout {
             name: "peripheralBattery"
             sourceComponent: PeripheralBattery {
+                width: _isSidebarOpen
+                    ? Math.max(0, QsServices.Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) - root.framePadding)
+                    : implicitWidth
             }
         }
 

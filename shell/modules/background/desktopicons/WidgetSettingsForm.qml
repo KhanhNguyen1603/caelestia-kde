@@ -292,7 +292,7 @@ ColumnLayout {
 
                 title: pathRow.folder ? qsTr("Choose a folder") : qsTr("Choose an image")
                 selectFolder: pathRow.folder
-                filters: pathRow.folder ? ["*"] : ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.svg", "*.gif"]
+                filters: pathRow.folder ? ["*"] : Images.validImageExtensions
                 filterLabel: pathRow.folder ? qsTr("All folders") : qsTr("Images")
                 cwd: Paths.cwdSegments(pathRow.current)
                 onAccepted: path => root.write(picker.target, path.replace(/^file:\/\//, "").replace(/\/+$/, ""))

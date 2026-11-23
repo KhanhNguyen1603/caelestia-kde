@@ -24,10 +24,29 @@ DesktopWidget {
             Launch.exec(["sh", "-c", line]);
     }
 
-    StateLayer {
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
+
+    StyledRect {
         anchors.fill: parent
         radius: Tokens.rounding.medium
-        onClicked: root.run()
+        color: Colours.palette.m3onSurface
+        opacity: root.frame?.hovered ? 0.08 : 0
+
+        Behavior on opacity {
+            Anim {
+                type: Anim.DefaultEffects
+            }
+        }
+    }
+
+    Connections {
+        function onClicked(): void {
+            root.run();
+        }
+
+        target: root.frame
     }
 
     ColumnLayout {

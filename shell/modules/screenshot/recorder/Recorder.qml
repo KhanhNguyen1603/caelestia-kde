@@ -186,6 +186,7 @@ Variants {
             icon: bigButton.materialSymbol
 
             Tooltip {
+                parent: bigButton.Window.contentItem
                 target: bigButton
                 text: bigButton.name
             }

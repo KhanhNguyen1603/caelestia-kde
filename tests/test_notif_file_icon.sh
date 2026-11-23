@@ -40,23 +40,35 @@ test_get_notif_app_icon_runtime_resolution() {
         return 0
     fi
 
-    local tmp_qml output body extensions
-    tmp_qml="$(mktemp /tmp/test_get_notif_app_icon_XXXXXX.qml)"
+    local tmp tmp_qml output body extensions
+    tmp="$(new_tmpdir)"
+    tmp_qml="$tmp/test.qml"
     body="$(qml_function "$ICONS_QML" getNotifAppIcon)"
     extensions="$(grep -F 'readonly property list<string> notificationIconExtensions:' "$ICONS_QML" | sed 's/^ *//')"
 
     if [[ -z "$body" || -z "$extensions" ]]; then
         fail "getNotifAppIcon and its extension list have to be readable out of Icons.qml"
-        rm -f "$tmp_qml"
         return 0
     fi
 
+    # QML property names cannot start with a capital, so the Quickshell singleton the
+    # function calls comes from a stub module.
+    mkdir -p "$tmp/Quickshell"
+    printf 'module Quickshell\nsingleton Quickshell 1.0 Quickshell.qml\n' > "$tmp/Quickshell/qmldir"
+    cat > "$tmp/Quickshell/Quickshell.qml" <<'EOF'
+pragma Singleton
+import QtQml
+
+QtObject {
+    function iconPath(icon) {
+        return "THEME_ICON:" + icon;
+    }
+}
+EOF
+
     {
-        printf 'import QtQml\n\nQtObject {\n    id: root\n\n'
+        printf 'import QtQml\nimport Quickshell\n\nQtObject {\n    id: root\n\n'
         printf '    %s\n\n' "$extensions"
-        printf '    readonly property var Quickshell: ({\n'
-        printf '        iconPath: icon => "THEME_ICON:" + icon\n'
-        printf '    })\n\n'
         printf '%s\n\n' "$body"
         cat <<'EOF'
     Component.onCompleted: {
@@ -71,8 +83,7 @@ test_get_notif_app_icon_runtime_resolution() {
 EOF
     } > "$tmp_qml"
 
-    output="$(QT_FORCE_STDERR_LOGGING=1 QT_LOGGING_TO_CONSOLE=1 QT_QPA_PLATFORM=offscreen qml6 -a core "$tmp_qml" 2>&1 || true)"
-    rm -f "$tmp_qml"
+    output="$(QT_FORCE_STDERR_LOGGING=1 QT_LOGGING_TO_CONSOLE=1 QT_QPA_PLATFORM=offscreen qml6 -a core -I "$tmp" "$tmp_qml" 2>&1 || true)"
 
     assert_contains "$output" "TEST_FILE_URI:file:///home/user/app.png" \
         "getNotifAppIcon must preserve file:// URIs without double-prefixing"

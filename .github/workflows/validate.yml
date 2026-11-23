@@ -418,7 +418,7 @@ jobs:
       - name: Install runtime and build dependencies
         uses: ./.github/actions/install-build-deps
         with:
-          extra-packages: dbus quickshell weston
+          extra-packages: dbus quickshell weston kwin
 
       - name: Fetch pinned build dependency
         run: |
@@ -432,6 +432,13 @@ jobs:
           deps-dir: .ci-deps
           install-root: runtime-install
           log-dir: runtime-smoke
+
+      # The only job with a compositor, so the only place these tests can run.
+      - name: Run the fullscreen drawer regression
+        run: |
+          set -euo pipefail
+          CAELESTIA_QML_IMPORT_PATH="$PWD/runtime-install/usr/lib/qt6/qml" \
+            bash tests/run-tests.sh --suite isolated --timeout 300 test_fullscreen_drawers.sh
 
   shell-sanitizers:
     name: Build shell plugins with sanitizers

@@ -225,6 +225,7 @@ QtObject {
 
                 SubPage { key: "barComponents"; label: qsTr("Components"); keywords: ["widgets", "components", "reorder"]; Component { BarComponents {} } }
                 SubPage { key: "barWorkspaces"; label: qsTr("Workspaces"); keywords: ["workspaces", "indicators"]; Component { BarWorkspaces {} } }
+                SubPage { key: "barAppMenu"; label: qsTr("App menu"); keywords: ["app", "menu", "window", "application"]; Component { BarAppMenu {} } }
                 SubPage { key: "barGreeter"; label: qsTr("Greeter"); keywords: ["greeting", "popout", "slideshow"]; Component { BarGreeter {} } }
                 SubPage { key: "barTray"; label: qsTr("Tray"); keywords: ["system tray", "icons", "pin"]; Component { BarTray {} } }
                 SubPage { key: "barStatusIcons"; label: qsTr("Status Icons"); keywords: ["indicators", "bar"]; Component { BarStatusIcons {} } }
@@ -239,6 +240,16 @@ QtObject {
                 SubPage { key: "barPerformance"; label: qsTr("Performance"); keywords: ["cpu", "gpu", "ram", "memory"]; Component { BarPerformance {} } }
                 SubPage { key: "barScreenCapture"; label: qsTr("Screen Capture"); keywords: ["screenshot", "recording"]; Component { BarScreenCapture {} } }
                 SubPage { key: "barKeepAwake"; label: qsTr("Keep Awake"); keywords: ["idle", "sleep", "caffeine"]; Component { BarKeepAwake {} } }
+            }
+
+            Page {
+                key: "dockPanel"
+                label: qsTr("Dock")
+                icon: "dock_to_bottom"
+                status: Config.dockPanel.enabled ? (Config.dockPanel.persistent ? qsTr("Always visible") : qsTr("Auto-hide")) : qsTr("Disabled")
+                description: qsTr("Independent floating pill dock, magnification, intellihide, and pinned apps")
+                keywords: ["dock", "floating dock", "magnification", "intellihide", "pinned", "pill"]
+                component: Component { DockPanel {} }
             }
 
             Page {
@@ -674,12 +685,24 @@ QtObject {
                 keywords: ["extensions", "addons", "plugins"]
                 component: Component { PluginsPage {} }
             }
+        },
+
+        // Its own entry at the foot of the list: the one thing in the window that changes
+        // the window, and the one most often wanted, so it is not a page inside a section.
+        Category {
+            categoryIdx: 8
+            key: "updates"
+            label: qsTr("Updates")
+            icon: "system_update"
+            description: qsTr("Shell versions and system packages")
+            defaultPage: "updates"
+            singlePage: true
 
             Page {
                 key: "updates"
                 label: qsTr("Updates")
                 icon: "system_update"
-                section: qsTr("Services")
+                section: qsTr("Updates")
                 status: qsTr("Check for package and system updates")
                 description: qsTr("Pacman, flatpak, firmware updates, and Caelestia shell version upgrades")
                 keywords: ["upgrade", "packages", "pacman", "dnf", "apt", "firmware"]
@@ -696,13 +719,14 @@ QtObject {
         Component { StackPage { pages: root.collectAllPagesForCategory(4) } },
         Component { StackPage { pages: root.collectAllPagesForCategory(5) } },
         Component { StackPage { pages: root.collectAllPagesForCategory(6) } },
-        Component { StackPage { pages: root.collectAllPagesForCategory(7) } }
+        Component { StackPage { pages: root.collectAllPagesForCategory(7) } },
+        Component { StackPage { pages: root.collectAllPagesForCategory(8) } }
     ]
 
     function collectAllPagesForCategory(catIdx: int): var {
         const cat = categories[catIdx];
         if (!cat) return [];
-        const list = [root.hubSubPage];
+        const list = cat.singlePage ? [] : [root.hubSubPage];
         for (let i = 0; i < cat.pages.length; i++) {
             const p = cat.pages[i];
             list.push(p);
@@ -713,6 +737,10 @@ QtObject {
             }
         }
         return list;
+    }
+
+    function isSinglePageCategory(idx: int): bool {
+        return idx >= 0 && idx < categories.length && categories[idx].singlePage;
     }
 
     function defaultPageForCategory(idx: int): string {

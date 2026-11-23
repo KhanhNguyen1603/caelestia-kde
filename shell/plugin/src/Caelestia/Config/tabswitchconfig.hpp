@@ -2,6 +2,7 @@
 
 #include "../Settings/objectnode.hpp"
 #include "common.hpp"
+#include "enums.hpp"
 
 namespace caelestia::config {
 
@@ -13,7 +14,7 @@ class TabSwitchConfig : public settings::ObjectNode {
     CONFIG_PROPERTY(bool, previewOnDesktop, true)
     CONFIG_PROPERTY(bool, showMinimized, true)
     CONFIG_PROPERTY(bool, allScreens, true)
-    CONFIG_PROPERTY(QString, layout, QStringLiteral("caelestia"))
+    CONFIG_ENUM_PROPERTY(TabSwitchLayout, layout, TabSwitchLayout::Caelestia)
 };
 
 } // namespace caelestia::config

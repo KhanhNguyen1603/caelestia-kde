@@ -15,7 +15,7 @@ DesktopWidget {
     id: root
 
     readonly property string path: cfg.path ?? ""
-    readonly property real imageOpacity: Math.max(0, Math.min(1, cfg.opacity))
+    readonly property real imageOpacity: Math.max(0, Math.min(1, cfg.opacity ?? 1))
     readonly property bool animated: /\.gif$/i.test(root.path)
 
     function chooseImage(): void {
@@ -49,18 +49,23 @@ DesktopWidget {
         opacity: root.imageOpacity
     }
 
-    MouseArea {
-        anchors.fill: parent
-        acceptedButtons: Qt.LeftButton
+    HoverHandler {
         cursorShape: Qt.PointingHandCursor
-        onDoubleClicked: root.chooseImage()
+    }
+
+    Connections {
+        function onDoubleClicked(): void {
+            root.chooseImage();
+        }
+
+        target: root.frame
     }
 
     FileDialog {
         id: dialog
 
         title: qsTr("Choose an image")
-        filters: ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.svg", "*.gif"]
+        filters: Images.validImageExtensions
         filterLabel: qsTr("Images")
         cwd: Paths.cwdSegments(root.path)
         onAccepted: path => root.frame?.setConfig({ path: path.replace(/^file:\/\//, "") })

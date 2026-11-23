@@ -38,7 +38,7 @@ QtObject {
     signal subCategorySelected(target: string)
 
     function defaultPageForCategory(pageIdx: int): string {
-        if (!sidePane)
+        if (!sidePane && !PageCompRegistry.isSinglePageCategory(pageIdx))
             return "hub";
 
         return PageCompRegistry.defaultPageForCategory(pageIdx);
@@ -49,6 +49,8 @@ QtObject {
     }
 
     function rootPageFor(pageIdx: int, target: string): string {
+        if (PageCompRegistry.isSinglePageCategory(pageIdx))
+            return PageCompRegistry.defaultPageForCategory(pageIdx);
         return sidePane ? parentSubCategory(pageIdx, target) : "hub";
     }
 
@@ -96,7 +98,8 @@ QtObject {
                 currentPageIdx = pageIdx;
             } else {
                 goToPage(pageIdx);
-                if (subPageKey !== "" && subPageKey !== "hub")
+                // A single-page category is already showing its only page.
+                if (subPageKey !== "" && subPageKey !== "hub" && subPageKey !== defaultPageForCategory(pageIdx))
                     openSubPage(subPageKey);
             }
             return;

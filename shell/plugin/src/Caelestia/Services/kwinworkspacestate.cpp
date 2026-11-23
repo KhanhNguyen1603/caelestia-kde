@@ -4,6 +4,8 @@
 #include <QDBusInterface>
 #include <QDBusMessage>
 #include <QDBusMetaType>
+#include <QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
 #include <QDBusReply>
 #include <QDebug>
 #include <QLocalServer>
@@ -66,6 +68,10 @@ bool KWinWorkspaceState::showingDesktop() const {
     return m_showingDesktop;
 }
 
+QString KWinWorkspaceState::currentActivity() const {
+    return m_currentActivity;
+}
+
 KWinWorkspaceState::KWinWorkspaceState(QObject* parent)
     : QObject(parent) {
     s_instance = this;
@@ -97,6 +103,10 @@ KWinWorkspaceState::KWinWorkspaceState(QObject* parent)
     bus.connect(QStringLiteral("org.kde.KWin"), QStringLiteral("/KWin"),
         QStringLiteral("org.freedesktop.DBus.Properties"), QStringLiteral("PropertiesChanged"), this,
         SLOT(onKWinPropertiesChanged(QString, QVariantMap, QStringList)));
+
+    bus.connect(QStringLiteral("org.kde.ActivityManager"), QStringLiteral("/ActivityManager/Activities"),
+        QStringLiteral("org.kde.ActivityManager.Activities"), QStringLiteral("CurrentActivityChanged"), this,
+        SLOT(onCurrentActivityChanged(QString)));
 
     fetchInitialState();
     setupTrackerServer();
@@ -252,11 +262,30 @@ void KWinWorkspaceState::fetchInitialState() {
         updateShowingDesktop(showingReply.value().variant().toBool());
     }
 
+    // Asynchronous, because the bus may have to start the activity manager first.
+    const auto activityMsg = QDBusMessage::createMethodCall(QStringLiteral("org.kde.ActivityManager"),
+        QStringLiteral("/ActivityManager/Activities"), QStringLiteral("org.kde.ActivityManager.Activities"),
+        QStringLiteral("CurrentActivity"));
+    auto* activityCall = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(activityMsg), this);
+    connect(activityCall, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher* call) {
+        const QDBusPendingReply<QString> activity = *call;
+        if (activity.isValid())
+            onCurrentActivityChanged(activity.value());
+        call->deleteLater();
+    });
+
     updateActiveId();
 }
 
 void KWinWorkspaceState::onShowingDesktopChanged(bool showing) {
     updateShowingDesktop(showing);
+}
+
+void KWinWorkspaceState::onCurrentActivityChanged(const QString& activity) {
+    if (activity != m_currentActivity) {
+        m_currentActivity = activity;
+        emit currentActivityChanged();
+    }
 }
 
 void KWinWorkspaceState::onKWinPropertiesChanged(

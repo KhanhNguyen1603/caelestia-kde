@@ -18,7 +18,7 @@ Item {
             root.clearPassword();
             return;
         }
-        if (viewVisible && lockScreenUi && typeof lockScreenUi.ensureAuthenticating === "function") {
+        if (viewVisible && lockScreenUi && lockScreenUi.ready && typeof lockScreenUi.ensureAuthenticating === "function") {
             lockScreenUi.ensureAuthenticating();
             if (lockScreenUi.activePasswordPill)
                 lockScreenUi.activePasswordPill.forceActiveFocus();
@@ -34,5 +34,6 @@ Item {
         id: lockScreenUi
 
         anchors.fill: parent
+        viewVisible: root.viewVisible
     }
 }

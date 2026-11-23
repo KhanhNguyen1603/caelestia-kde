@@ -21,9 +21,24 @@ KEEP_AWAKE="$REPO_ROOT/shell/modules/bar/components/KeepAwakeWidget.qml"
 GESTURE="$REPO_ROOT/shell/modules/bar/components/TrayDragGesture.qml"
 CONFIG="$REPO_ROOT/shell/plugin/src/Caelestia/Config/barconfig.hpp"
 EDITOR="$REPO_ROOT/shell/modules/nexus/pages/panels/taskbar/BarComponents.qml"
+APPMENU="$REPO_ROOT/shell/modules/bar/components/AppMenu.qml"
+CONTENT_WINDOW="$REPO_ROOT/shell/modules/drawers/ContentWindow.qml"
+INTERACTIONS="$REPO_ROOT/shell/modules/drawers/Interactions.qml"
+VISIBILITIES="$REPO_ROOT/shell/services/Visibilities.qml"
 
 registry_entries() {
     sed -nE 's/^ *\{ id: "([A-Za-z0-9_]+)", zone: "([a-z]+)" \},?$/\1 \2/p' "$REGISTRY"
+}
+
+test_peripheral_battery_joins_the_sidebar_at_its_live_width() {
+    local popout
+    popout="$(sed -n '/sourceComponent: PeripheralBattery {/,/^            }/p' "$POPOUTS")"
+    assert_contains "$popout" 'width: _isSidebarOpen' "the horizontal sidebar selects the attached width"
+    assert_contains "$popout" 'sidebarWidthFor(Tokens.sizes.sidebar.width) - root.framePadding' \
+        "the battery frame should fit the current sidebar, including its padding"
+    assert_contains "$popout" ': implicitWidth' "the standalone popout should fit its device labels"
+    assert_file_contains "$REPO_ROOT/shell/modules/bar/popouts/PeripheralBattery.qml" 'wrapMode: Text.Wrap' \
+        "a device name that exceeds the attached width should wrap"
 }
 
 registry_ids() {
@@ -127,6 +142,10 @@ test_the_right_zone_is_one_system_tray_plus_the_clock() {
         "the bar must still be able to route hover and clicks to a nested widget"
     assert_file_contains "$STATUS_ICON" 'readonly property string iconId: BarWidgets.statusIconId(root.entryId)' \
         "one status icon per widget, named by the entry that carries it"
+    assert_file_contains "$STATUS_ICON" 'tooltip: BarIconMeta.nameOf(root.iconId)' \
+        "and its name comes from BarIconMeta, so the tooltip and the settings list cannot disagree"
+    assert_file_not_contains "$STATUS_ICON" 'qsTr(' \
+        "rather than a second copy of the names, which is where the two drifted apart"
     assert_file_contains "$REGISTRY" 'kind: "statusIcon"' \
         "the registry expands the status icons group into one entry per icon"
     assert_file_contains "$REGISTRY" 'const entries = root.zoneEntries(root.viewEntries(node), "right");' \
@@ -134,8 +153,12 @@ test_the_right_zone_is_one_system_tray_plus_the_clock() {
 }
 
 test_the_tray_arrow_opens_a_hidden_icons_panel() {
-    assert_file_contains "$TRAY" 'readonly property bool showArrow: root.showTrayIcons' \
-        "the chevron is on the bar for as long as the tray is"
+    assert_file_contains "$TRAY" 'readonly property bool hasOverflow: (root.showTrayIcons && TrayRegistry.overflowCount > 0) || BarWidgets.overflowWidgets(GlobalConfig.bar).length > 0' \
+        "the tray checks both overflow icons and overflow bar widgets"
+    assert_file_contains "$TRAY" 'readonly property bool showArrow: root.hasOverflow' \
+        "the chevron stays hidden when the overflow box is empty"
+    assert_file_contains "$TRAY" 'function closeEmptyOverflow(): void' \
+        "the overflow box closes when a drag ends or its last item leaves and it is empty"
     assert_file_contains "$TRAY" 'popouts.currentName = "trayOverflow"' \
         "clicking the arrow should open the overflow panel"
     assert_file_contains "$POPOUTS" 'name: "trayOverflow"' \
@@ -523,6 +546,21 @@ test_the_chevron_sits_outside_the_icons_surface() {
         "and the tray is as wide as both"
     assert_file_contains "$TRAY" 'if (TrayDrag.active)' \
         "the box is open for the whole drag, so the icon has somewhere to land"
+}
+
+test_appmenu_and_pinned_popouts_stay_open_until_dismissed() {
+    assert_file_contains "$APPMENU" 'popouts.staysOpen = true;' \
+        "appmenu sets staysOpen so pointer exit does not close it"
+    assert_file_contains "$BAR" 'if (popouts.staysOpen && popouts.hasCurrent)' \
+        "bar hover routing must not swap out a pinned popout"
+    assert_file_contains "$INTERACTIONS" 'if (popouts.staysOpen)' \
+        "the auto-hide timer must not dismiss a pinned popout"
+    assert_file_contains "$CONTENT_WINDOW" '(panels.popouts.staysOpen && panels.popouts.hasCurrent)' \
+        "pinned popouts must be recognized as transient overlays so the input mask covers the screen"
+    assert_file_contains "$VISIBILITIES" 'bar?.popouts?.staysOpen && bar?.popouts?.hasCurrent' \
+        "visibilities must broadcast pinned popout presence across all screens for dismissal"
+    assert_file_contains "$INTERACTIONS" 'const boxOpen = popouts.staysOpen && popouts.hasCurrent;' \
+        "interactions must track pinned popouts as dismissible boxes on outside click"
 }
 
 run_tests

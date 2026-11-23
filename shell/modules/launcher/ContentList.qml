@@ -27,10 +27,22 @@ Item {
 
     readonly property bool showWallpapers: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}wallpaper `)
     readonly property bool showWindowSwitcher: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}windows `)
+    readonly property bool windowSwitcherGridLayout: Config.tabSwitch.layout === TabSwitchLayout.Grid
+    // The grid is laid out as 16:9 cells and the card then takes exactly the size
+    // those cells need: a card of fixed size letterboxed the previews inside
+    // their tiles, and left most of the card empty when only a couple of windows
+    // were open. The column count that gives the largest cells wins.
+    readonly property var windowSwitcherLayout: {
+        const _ = Windows.items;
+        if (!root.windowSwitcherGridLayout)
+            return null;
+        return root.switcherLayout(Math.max(1, Windows.items.length), Math.min(root.maxWidth, Tokens.sizes.launcher.browseWidth * 1.35), Math.min(root.maxHeight, Tokens.sizes.launcher.browseHeight * 0.85));
+    }
+
     readonly property bool showKeybinds: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}keybinds `)
     readonly property bool showAnimations: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}animations `)
     readonly property bool showAppsBrowser: root.state === "apps" && !search.text && Config.launcher.showBrowseOnEmpty
-    readonly property var currentList: showWallpapers ? wallpaperList.item : (showWindowSwitcher ? windowSwitcherList.item : (showAnimations ? animationsList.item : (showKeybinds ? keybindsList.item : (showAppsBrowser ? browser.item : appList.item))))
+    readonly property var currentList: showWallpapers ? wallpaperList.item : (showWindowSwitcher ? (root.windowSwitcherGridLayout ? windowSwitcherGrid.item : windowSwitcherList.item) : (showAnimations ? animationsList.item : (showKeybinds ? keybindsList.item : (showAppsBrowser ? browser.item : appList.item))))
 
     readonly property var wallpaperTabs: {
         const res = [];
@@ -38,6 +50,43 @@ Item {
             res.push({ id: dir, text: dir });
         }
         return res;
+    }
+
+    function switcherLayout(count: int, maxWidth: real, maxHeight: real): var {
+        const gap = Tokens.spacing.medium;
+        const margin = Tokens.padding.large;
+        const aspect = 16 / 9;
+        const availW = Math.max(1, maxWidth - margin * 2);
+        const availH = Math.max(1, maxHeight - margin * 2);
+        let best = null;
+        for (let columns = 1; columns <= count; columns++) {
+            const rows = Math.ceil(count / columns);
+            const cellW = (availW - (columns - 1) * gap) / columns;
+            const cellH = (availH - (rows - 1) * gap) / rows;
+            if (cellW <= 0 || cellH <= 0)
+                continue;
+            // Largest 16:9 cell that fits, so the previews fill their tiles.
+            const width = Math.min(cellW, cellH * aspect);
+            if (best === null || width > best.cellWidth)
+                best = {
+                    "columns": columns,
+                    "rows": rows,
+                    "cellWidth": width,
+                    "cellHeight": width / aspect
+                };
+        }
+        if (best === null)
+            return {
+                "columns": 1,
+                "rows": count,
+                "cellWidth": availW,
+                "cellHeight": availW / aspect,
+                "width": maxWidth,
+                "height": maxHeight
+            };
+        best.width = best.columns * best.cellWidth + (best.columns - 1) * gap + margin * 2;
+        best.height = best.rows * best.cellHeight + (best.rows - 1) * gap + margin * 2;
+        return best;
     }
 
     anchors.horizontalCenter: parent.horizontalCenter
@@ -83,8 +132,8 @@ Item {
 
             PropertyChanges {
                 target: root
-                implicitWidth: Math.max(root.Tokens.sizes.launcher.itemWidth * 1.2, windowSwitcherList.implicitWidth)
-                implicitHeight: root.Tokens.sizes.launcher.windowSwitcherHeight
+                implicitWidth: root.windowSwitcherGridLayout ? root.windowSwitcherLayout.width : Math.max(root.Tokens.sizes.launcher.itemWidth * 1.2, windowSwitcherList.implicitWidth)
+                implicitHeight: root.windowSwitcherGridLayout ? root.windowSwitcherLayout.height : root.Tokens.sizes.launcher.windowSwitcherHeight
             }
         },
         State {
@@ -391,7 +440,7 @@ Item {
         id: windowSwitcherList
 
         asynchronous: true
-        active: root.state === "windowSwitcher"
+        active: root.state === "windowSwitcher" && !root.windowSwitcherGridLayout
 
         anchors.top: parent.top
         anchors.bottom: parent.bottom
@@ -402,6 +451,25 @@ Item {
             visibilities: root.visibilities
             panels: root.panels
             content: root.content
+        }
+    }
+
+    Loader {
+        id: windowSwitcherGrid
+
+        asynchronous: true
+        active: root.state === "windowSwitcher" && root.windowSwitcherGridLayout
+
+        anchors.fill: parent
+
+        sourceComponent: WindowSwitcherGrid {
+            search: root.search
+            visibilities: root.visibilities
+            panels: root.panels
+            content: root.content
+            columns: root.windowSwitcherLayout ? root.windowSwitcherLayout.columns : 1
+            cellWidth: root.windowSwitcherLayout ? root.windowSwitcherLayout.cellWidth : 1
+            cellHeight: root.windowSwitcherLayout ? root.windowSwitcherLayout.cellHeight : 1
         }
     }
 
@@ -502,12 +570,16 @@ Item {
         }
 
         Behavior on opacity {
+            enabled: root.visibilities.launcher && !root.visibilities.skipLauncherAnim
+
             Anim {
                 type: Anim.DefaultEffects
             }
         }
 
         Behavior on scale {
+            enabled: root.visibilities.launcher && !root.visibilities.skipLauncherAnim
+
             Anim {}
         }
     }

@@ -637,11 +637,11 @@ class ShellSurfaceTests(unittest.TestCase):
 
     def test_dock_badges_are_read_through_the_service(self) -> None:
         dock = (
-            ROOT / "shell" / "modules" / "bar" / "components" / "Dock.qml"
+            ROOT / "shell" / "components" / "widgets" / "DockItem.qml"
         ).read_text(encoding="utf-8")
 
         self.assertIn(
-            "LauncherEntry.forApp(modelData.appClass || modelData.id)",
+            "LauncherEntry.forApp(root.modelData.appClass || root.modelData.id)",
             dock,
             "a tile has to ask the service for the badge published for its app, and ask by "
             "app class first: a per-window id carries an address suffix the entry does not",

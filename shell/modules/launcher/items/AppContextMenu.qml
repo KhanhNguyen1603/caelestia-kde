@@ -30,7 +30,7 @@ Controls.Menu {
         return mapped.y + _menuH > parent.height;
     }
 
-    readonly property bool isPinnedToDock: app ? Strings.testRegexList(GlobalConfig.bar.dock.pinnedApps, app.id) : false
+    readonly property bool isPinnedToDock: app ? DockManager.isPinned(app.id) : false
     readonly property bool isHidden: app ? Strings.testRegexList(GlobalConfig.launcher.hiddenApps, app.id) : false
     property bool isPinnedToDesktop: false
 
@@ -58,16 +58,10 @@ Controls.Menu {
             onClicked: {
                 if (!root.app?.id)
                     return;
-                const current = GlobalConfig.bar.dock.pinnedApps ? [...GlobalConfig.bar.dock.pinnedApps] : [];
-                const id = root.app.id;
-                if (Strings.testRegexList(current, id)) {
-                    const idx = current.indexOf(id);
-                    if (idx !== -1)
-                        current.splice(idx, 1);
-                } else {
-                    current.push(id);
-                }
-                GlobalConfig.bar.dock.pinnedApps = current;
+                if (root.isPinnedToDock)
+                    DockManager.unpinApp(root.app.id);
+                else
+                    DockManager.pinApp(root.app.id);
             }
         },
         Controls.MenuItem {

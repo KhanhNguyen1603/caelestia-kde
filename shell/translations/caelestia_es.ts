@@ -184,12 +184,12 @@
     <message>
         <location line="+2"/>
         <source>KDE&apos;s text is %1 pt, so the shell follows at %2%</source>
-        <translation>El tamaño de texto de KDE es %1 pts, así que la shell lo sigue a %2%</translation>
+        <translation>El tamaño de texto de KDE es %1 pts, así que el shell lo sigue a %2%</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>KDE is using its default text size, so the shell stays at 100%</source>
-        <translation>KDe está usando su tamaño de texto por defecto, así que la shell se mantiene a 100%</translation>
+        <translation>KDE está usando su tamaño de texto por defecto, así que el shell se mantiene en 100%</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -219,7 +219,7 @@
     <message>
         <location line="+1"/>
         <source>Multiplier applied to every piece of text the shell draws</source>
-        <translation>Multiplicador aplicado a cada texto que la shell dibuja</translation>
+        <translation>Multiplicador aplicado a cada texto que el shell dibuja</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -1352,7 +1352,7 @@
 <context>
     <name>AppBrowserGrid</name>
     <message>
-        <location filename="../modules/launcher/AppBrowserGrid.qml" line="+284"/>
+        <location filename="../modules/launcher/AppBrowserGrid.qml" line="+285"/>
         <source>No apps in this category</source>
         <translation>No hay aplicaciones en esta categoría</translation>
     </message>
@@ -1370,7 +1370,7 @@
         <translation>Fijar en el dock</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+12"/>
         <source>Remove from desktop</source>
         <translation>Quitar del escritorio</translation>
     </message>
@@ -1423,7 +1423,7 @@
         <translation>Mostrar en el Dock incluso cuando no esté en ejecución</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+14"/>
         <source>Launcher</source>
         <translation>Lanzador</translation>
     </message>
@@ -1479,6 +1479,92 @@
         <location filename="../modules/launcher/AppList.qml" line="+64"/>
         <source>Search %1 for &quot;%2&quot;</source>
         <translation>Buscar %1 por &quot;%2&quot;</translation>
+    </message>
+</context>
+<context>
+    <name>AppMenu</name>
+    <message>
+        <location filename="../modules/bar/components/AppMenu.qml" line="+41"/>
+        <location filename="../modules/bar/popouts/AppMenu.qml" line="+43"/>
+        <source>Desktop</source>
+        <translation>Escritorio</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location filename="../modules/bar/popouts/AppMenu.qml" line="+7"/>
+        <source>App Menu</source>
+        <translation>Menú de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>App menu (Desktop)</source>
+        <translation>Menú de aplicaciones (Escritorio)</translation>
+    </message>
+    <message>
+        <location filename="../modules/bar/popouts/AppMenu.qml" line="+37"/>
+        <location line="+422"/>
+        <source>Workspace %1</source>
+        <translation>Espacio de trabajo %1</translation>
+    </message>
+    <message>
+        <location line="-422"/>
+        <source>Workspace 1</source>
+        <translation>Espacio de trabajo 1</translation>
+    </message>
+    <message>
+        <location line="+167"/>
+        <source>Active desktop workspace</source>
+        <translation>Espacio de trabajo activo</translation>
+    </message>
+    <message>
+        <location line="+328"/>
+        <source>Open application menu</source>
+        <translation>Abrir menú de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+50"/>
+        <source>Open new window</source>
+        <translation>Abrir nueva ventana</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Show all windows</source>
+        <translation>Mostar todas las ventanas</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Windows (%1)</source>
+        <translation>Ventanas (%1)</translation>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>W%1</source>
+        <translation>W%1</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Recent files</source>
+        <translation>Archivos recientes</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>Quick actions</source>
+        <translation>Acciones rápidas</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Open applications launcher</source>
+        <translation>Abrir lanzador de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>System settings</source>
+        <translation>Configuración del sistema</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>Change wallpaper</source>
+        <translation>Cambiar fondo de pantalla</translation>
     </message>
 </context>
 <context>
@@ -1600,16 +1686,6 @@
         <translation>Hace que el shell sea completamente negro para integrarse con los biseles de la pantalla</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Islands</source>
-        <translation>Islas</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Everything appears as its own floating widget (Very Experimental)</source>
-        <translation>Todo aparece como un widget flotante independiente (muy experimental)</translation>
-    </message>
-    <message>
         <location line="+246"/>
         <source>Border thickness</source>
         <translation>Grosor del borde</translation>
@@ -1630,17 +1706,17 @@
         <translation>Multiplica el redondeo de las esquinas del shell</translation>
     </message>
     <message>
-        <location line="-273"/>
+        <location line="-274"/>
         <source>Transparency</source>
         <translation>Transparencia</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-27"/>
         <source>Choose a monospace font</source>
         <translation>Elige una fuente monoespaciada</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+28"/>
         <source>Enable transparency across the shell</source>
         <translation>Activar la transparencia en todo el shell</translation>
     </message>
@@ -1665,7 +1741,7 @@
         <translation>Desenfoque del fondo</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Disabling has no effect if Better Blur dx is enabled</source>
         <translation>Desactivarlo no tendrá efecto si Better Blur dx está activado</translation>
     </message>
@@ -1780,7 +1856,7 @@
         <translation>Deformación del desenfoque</translation>
     </message>
     <message>
-        <location line="-365"/>
+        <location line="-357"/>
         <source>Choose a system font</source>
         <translation>Elegir una fuente del sistema</translation>
     </message>
@@ -2091,7 +2167,7 @@
     </message>
     <message>
         <location line="+57"/>
-        <location filename="../services/Audio.qml" line="+122"/>
+        <location filename="../services/Audio.qml" line="+128"/>
         <source>Unknown</source>
         <translation>Desconocido</translation>
     </message>
@@ -2106,7 +2182,7 @@
         <translation>Aplicación desconocida</translation>
     </message>
     <message>
-        <location line="+188"/>
+        <location line="+199"/>
         <source>Audio output changed</source>
         <translation>Salida de audio modificada</translation>
     </message>
@@ -2268,7 +2344,7 @@
 <context>
     <name>AuthHandler</name>
     <message>
-        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/AuthHandler.qml" line="+30"/>
+        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/AuthHandler.qml" line="+31"/>
         <source>%1 min left</source>
         <translation>Quedan %1 min</translation>
     </message>
@@ -2312,6 +2388,104 @@
         <location line="+1"/>
         <source>Pick it from the applications installed here</source>
         <translation>Elígela entre las aplicaciones instaladas aquí</translation>
+    </message>
+</context>
+<context>
+    <name>BarAppMenu</name>
+    <message>
+        <location filename="../modules/nexus/pages/panels/taskbar/BarAppMenu.qml" line="+11"/>
+        <source>App menu</source>
+        <translation>Menú de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>General Settings</source>
+        <translation>Configuración general</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Enable component</source>
+        <translation>Activar componente</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display the focused application&apos;s menu in the bar</source>
+        <translation>Mostrar el menú de la aplicación enfocada en la barra</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Show application icon</source>
+        <translation>Mostrar icono de aplicación</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display the active app&apos;s icon in the bar component</source>
+        <translation>Mostrar el icono de la aplicación activa en el componente de la barra</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Show application name</source>
+        <translation>Mostrar nombre de la aplicación</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display the name of the currently focused application</source>
+        <translation>Mostrar el nombre de la aplicación enfocada</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Show dropdown indicator</source>
+        <translation>Mostrar indicador de menú desplegable</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show an arrow chevron indicating a menu dropdown</source>
+        <translation>Mostrar una flecha indicando un menú desplegable</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Compact mode</source>
+        <translation>Modo compacto</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show only the app icon for a minimal footprint</source>
+        <translation>Mostrar solamente el icono de la aplicación para menor impacto</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Auto-hide</source>
+        <translation>Ocultar automáticamente</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hide the widget when no application window is active</source>
+        <translation>Ocultar el widget cuando no haya una ventana de aplicación activa</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Enable popout</source>
+        <translation>Activar ventana emergente</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the application menu panel on click</source>
+        <translation>Mostrar el panel del menú de la aplicación al pulsar</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Display</source>
+        <translation>Mostrar</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Max title length</source>
+        <translation>Longitud máxima del título</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Maximum characters to display for the application name</source>
+        <translation>Número máximo de caracteres que mostrar para el nombre de la aplicación</translation>
     </message>
 </context>
 <context>
@@ -2370,6 +2544,11 @@
         <translation>Espacios de trabajo</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>App menu</source>
+        <translation>Menú de aplicaciones</translation>
+    </message>
+    <message>
         <location line="+3"/>
         <source>GitHub</source>
         <translation>GitHub</translation>
@@ -2391,11 +2570,12 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+584"/>
         <source>System tray</source>
         <translation>Bandeja del sistema</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-583"/>
         <source>Updates</source>
         <translation>Actualizaciones</translation>
     </message>
@@ -2481,11 +2661,6 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Show Desktop</source>
-        <translation>Mostrar escritorio</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Power menu</source>
         <translation>Menú de apagado</translation>
     </message>
@@ -2535,7 +2710,7 @@
         <translation>Desactivar componente</translation>
     </message>
     <message>
-        <location line="+143"/>
+        <location line="+151"/>
         <source>Toggle &amp; rearrange</source>
         <translation>Activar y reorganizar</translation>
     </message>
@@ -2550,7 +2725,12 @@
         <translation>Arrastra para reorganizar o desactivar</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+7"/>
+        <source>Widgets in the right zone share one system tray; the clock stays outside it.</source>
+        <translation>Los widgets que están en la zona derecha comparten una sola bandeja del sistema; el reloj se mantiene fuera.</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Left Zone</source>
         <translation>Zona izquierda</translation>
     </message>
@@ -2560,12 +2740,7 @@
         <translation>Zona central</translation>
     </message>
     <message>
-        <location line="+56"/>
-        <source>Right Zone</source>
-        <translation>Zona derecha</translation>
-    </message>
-    <message>
-        <location line="+61"/>
+        <location line="+117"/>
         <source>Library</source>
         <translation>Biblioteca</translation>
     </message>
@@ -2594,21 +2769,6 @@
     <name>BarDock</name>
     <message>
         <location filename="../modules/nexus/pages/panels/taskbar/BarDock.qml" line="+17"/>
-        <source>Group all windows</source>
-        <translation>Agrupar todas las ventanas</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Pinned icon holds first window</source>
-        <translation>El icono fijado muestra la primera ventana</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>No grouping</source>
-        <translation>Sin agrupar</translation>
-    </message>
-    <message>
-        <location line="+4"/>
         <source>Dock</source>
         <translation>Dock</translation>
     </message>
@@ -2659,6 +2819,16 @@
     </message>
     <message>
         <location line="+8"/>
+        <source>Launch animation style</source>
+        <translation>Animación de inicio</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Animation or indicator style when an application is launching</source>
+        <translation>Animación o estilo de indicador cuando una aplicación se está iniciando</translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>Window grouping</source>
         <translation>Agrupación de ventanas</translation>
     </message>
@@ -2789,24 +2959,24 @@
         <translation>Invertido</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>Show on hover</source>
-        <translation>Mostrar al pasar el cursor</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Only show the greeter while hovering</source>
-        <translation>Mostrar la pantalla de bienvenida solo al pasar el cursor</translation>
-    </message>
-    <message>
         <location line="+11"/>
-        <source>Popout on hover</source>
-        <translation>Ventana emergente al pasar el cursor</translation>
+        <source>Enable popout</source>
+        <translation>Activar ventana emergente</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Show a greeter popout when hovering</source>
-        <translation>Mostrar una ventana emergente de bienvenida al pasar el cursor</translation>
+        <source>Show a popout panel for the greeter</source>
+        <translation>Mostrar un panel emergente para la pantalla de bienvenida</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Open on hover</source>
+        <translation>Abrir al pasar el cursor</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open popout on hover instead of on click</source>
+        <translation>Abrir la ventana emergente al pasar el cursor en vez de al pulsar</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -3038,6 +3208,79 @@
     </message>
 </context>
 <context>
+    <name>BarIconMeta</name>
+    <message>
+        <location filename="../services/BarIconMeta.qml" line="+12"/>
+        <source>Lock keys</source>
+        <translation>Teclas de bloqueo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Privacy</source>
+        <translation>Privacidad</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Keyboard layout</source>
+        <translation>Distribución del teclado</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Speakers</source>
+        <translation>Altavoces</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Microphone</source>
+        <translation>Micrófono</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Network</source>
+        <translation>Red</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ethernet</source>
+        <translation>Ethernet</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Bluetooth</source>
+        <translation>Bluetooth</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Battery</source>
+        <translation>Batería</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Device battery</source>
+        <translation>Batería del dispositivo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Night light</source>
+        <translation>Luz nocturna</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Notifications</source>
+        <translation>Notificaciones</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Keep awake</source>
+        <translation>Mantener despierto</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Updates</source>
+        <translation>Actualizaciones</translation>
+    </message>
+</context>
+<context>
     <name>BarKeepAwake</name>
     <message>
         <location filename="../modules/nexus/pages/panels/taskbar/BarKeepAwake.qml" line="+10"/>
@@ -3050,17 +3293,7 @@
         <translation>Configuración</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Show active indicator</source>
-        <translation>Mostrar indicador de actividad</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Show a chip with the activation time when Keep Awake is on</source>
-        <translation>Mostrar una píldora con la hora de activación cuando Mantener activo esté encendido</translation>
-    </message>
-    <message>
-        <location line="+10"/>
+        <location line="+4"/>
         <source>Widget</source>
         <translation>Widget</translation>
     </message>
@@ -3323,6 +3556,11 @@
     </message>
     <message>
         <location line="+14"/>
+        <source>App menu</source>
+        <translation>Menú de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Audio</source>
         <translation>Audio</translation>
     </message>
@@ -3433,67 +3671,7 @@
 <context>
     <name>BarStatusIcons</name>
     <message>
-        <location filename="../modules/nexus/pages/panels/taskbar/BarStatusIcons.qml" line="+12"/>
-        <source>Lock keys</source>
-        <translation>Teclas de bloqueo</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Privacy</source>
-        <translation>Privacidad</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Keyboard layout</source>
-        <translation>Distribución del teclado</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Speakers</source>
-        <translation>Altavoces</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Microphone</source>
-        <translation>Micrófono</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Network</source>
-        <translation>Red</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Ethernet</source>
-        <translation>Ethernet</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Bluetooth</source>
-        <translation>Bluetooth</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Battery</source>
-        <translation>Batería</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Peripheral battery</source>
-        <translation>Batería de periféricos</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Night light</source>
-        <translation>Luz nocturna</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Notifications</source>
-        <translation>Notificaciones</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location filename="../modules/nexus/pages/panels/taskbar/BarStatusIcons.qml" line="+23"/>
         <source>Status icons</source>
         <translation>Iconos de estado</translation>
     </message>
@@ -3546,7 +3724,7 @@
 <context>
     <name>BarTray</name>
     <message>
-        <location filename="../modules/nexus/pages/panels/taskbar/BarTray.qml" line="+15"/>
+        <location filename="../modules/nexus/pages/panels/taskbar/BarTray.qml" line="+16"/>
         <source>Tray</source>
         <translation>Bandeja del sistema</translation>
     </message>
@@ -4631,32 +4809,37 @@
 <context>
     <name>Content</name>
     <message>
-        <location filename="../modules/bar/popouts/Content.qml" line="+80"/>
+        <location filename="../modules/bar/popouts/Content.qml" line="+86"/>
         <source>Greeter settings</source>
         <translation>Configuración de la pantalla de bienvenida</translation>
     </message>
     <message>
         <location line="+2"/>
         <location line="+66"/>
+        <location line="+19"/>
         <location line="+12"/>
         <location line="+12"/>
-        <location line="+151"/>
-        <location line="+12"/>
-        <location line="+12"/>
+        <location line="+154"/>
+        <location line="+29"/>
         <location line="+12"/>
         <location line="+12"/>
         <location line="+11"/>
         <location line="+11"/>
-        <location line="+11"/>
+        <location line="+28"/>
         <location line="+12"/>
         <location line="+10"/>
         <source>Elements &amp; Modules</source>
         <translation>Elementos y módulos</translation>
     </message>
     <message>
-        <location line="-280"/>
+        <location line="-324"/>
         <source>Clock settings</source>
         <translation>Configuración del reloj</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>App menu settings</source>
+        <translation>Configuración del menú de aplicaciones</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -4669,17 +4852,12 @@
         <translation>Configuración de los iconos de estado</translation>
     </message>
     <message>
-        <location line="+151"/>
+        <location line="+154"/>
         <source>Workspaces settings</source>
         <translation>Configuración de los espacios de trabajo</translation>
     </message>
     <message>
-        <location line="+12"/>
-        <source>Tray settings</source>
-        <translation>Configuración de la bandeja del sistema</translation>
-    </message>
-    <message>
-        <location line="+12"/>
+        <location line="+29"/>
         <source>GitHub settings</source>
         <translation>Configuración de GitHub</translation>
     </message>
@@ -4704,7 +4882,7 @@
         <translation>Configuración de captura de pantalla</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+28"/>
         <source>Keep Awake settings</source>
         <translation>Configuración de Mantener activo</translation>
     </message>
@@ -4714,7 +4892,7 @@
         <translation>Configuración del dock</translation>
     </message>
     <message>
-        <location filename="../modules/dashboard/Content.qml" line="+25"/>
+        <location filename="../modules/dashboard/Content.qml" line="+26"/>
         <source>Dashboard</source>
         <translation>Panel</translation>
     </message>
@@ -4729,7 +4907,7 @@
         <translation>Rendimiento</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Weather</source>
         <translation>Clima</translation>
     </message>
@@ -4744,7 +4922,12 @@
         <translation>Terminal</translation>
     </message>
     <message>
-        <location filename="../modules/launcher/Content.qml" line="+63"/>
+        <location filename="../modules/launcher/Content.qml" line="+34"/>
+        <source>there</source>
+        <translation>amigo</translation>
+    </message>
+    <message>
+        <location line="+39"/>
         <source>Clipboard history cleared</source>
         <translation>Historial del portapapeles borrado</translation>
     </message>
@@ -4754,47 +4937,52 @@
         <translation>No se pudo borrar el historial del portapapeles</translation>
     </message>
     <message>
-        <location line="+138"/>
-        <location line="+113"/>
+        <location line="+139"/>
+        <location line="+127"/>
         <source>Log Out</source>
         <translation>Cerrar sesión</translation>
     </message>
     <message>
-        <location line="-105"/>
-        <location line="+114"/>
+        <location line="-119"/>
+        <location line="+128"/>
         <source>Sleep</source>
         <translation>Suspender</translation>
     </message>
     <message>
-        <location line="-106"/>
-        <location line="+115"/>
+        <location line="-120"/>
+        <location line="+129"/>
         <location filename="../modules/session/Content.qml" line="+129"/>
         <source>Restart</source>
         <translation>Reiniciar</translation>
     </message>
     <message>
-        <location line="-105"/>
-        <location line="+114"/>
+        <location line="-119"/>
+        <location line="+128"/>
         <source>Shut Down</source>
         <translation>Apagar</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-110"/>
+        <source>Hello, %1</source>
+        <translation>Hola, %1</translation>
+    </message>
+    <message>
+        <location line="+49"/>
         <source>Most used</source>
-        <translation type="unfinished"></translation>
+        <translation>Más usado</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>A-Z</source>
-        <translation type="unfinished"></translation>
+        <translation>A-Z</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+101"/>
         <source>Type &quot;%1&quot; for commands</source>
         <translation>Escribe &quot;%1&quot; para ejecutar comandos</translation>
     </message>
     <message>
-        <location line="+320"/>
+        <location line="+343"/>
         <source>Clear clipboard history?</source>
         <translation>¿Borrar el historial del portapapeles?</translation>
     </message>
@@ -4847,7 +5035,7 @@
 <context>
     <name>ContentList</name>
     <message>
-        <location filename="../modules/launcher/ContentList.qml" line="+217"/>
+        <location filename="../modules/launcher/ContentList.qml" line="+218"/>
         <source>Images</source>
         <translation>Imágenes</translation>
     </message>
@@ -4862,7 +5050,7 @@
         <translation>Vídeos</translation>
     </message>
     <message>
-        <location line="+239"/>
+        <location line="+255"/>
         <source>cliphist not found</source>
         <translation>No se encontró cliphist</translation>
     </message>
@@ -5101,7 +5289,7 @@
     <message>
         <location filename="../modules/screenshot/regionSelector/CursorGuide.qml" line="+27"/>
         <source>Copy region (LMB) or annotate (RMB)</source>
-        <translation>Capturar pantalla (Click izquierdo) o Anotar (Click derecho)</translation>
+        <translation>Capturar pantalla (Clic izquierdo) o Anotar (Clic derecho)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -5470,7 +5658,7 @@
     <message>
         <location line="+73"/>
         <source>Right click on desktop -&gt; Edit Plasma Widgets -&gt; Right click visualizer -&gt; Configure</source>
-        <translation>Click derecho en el escritorio -&gt; Editar Widgets de Plasma -&gt; Click derecho en el visualizador -&gt; Configurar</translation>
+        <translation>Clic derecho en el escritorio -&gt; Editar Widgets de Plasma -&gt; Clic derecho en el visualizador -&gt; Configurar</translation>
     </message>
     <message>
         <location line="-64"/>
@@ -5579,7 +5767,7 @@
 <context>
     <name>DesktopIconContextMenu</name>
     <message>
-        <location filename="../modules/background/DesktopIconContextMenu.qml" line="+71"/>
+        <location filename="../modules/background/DesktopIconContextMenu.qml" line="+65"/>
         <source>Open %1 Items</source>
         <translation>Abrir %1 elementos</translation>
     </message>
@@ -5933,12 +6121,13 @@
     <name>DinoGame</name>
     <message>
         <location filename="../modules/sidebar/DinoGame.qml" line="+268"/>
-        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/DinoGame.qml" line="+162"/>
+        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/DinoGame.qml" line="+177"/>
         <source>All up to date!</source>
         <translation>¡Todo está actualizado!</translation>
     </message>
     <message>
         <location line="+8"/>
+        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/DinoGame.qml" line="+8"/>
         <source>Click to play</source>
         <translation>Pulsa para jugar</translation>
     </message>
@@ -5947,7 +6136,7 @@
         <source>G A M E   O V E R
 Click to restart</source>
         <translation>F I N   D E L   J U E G O
-Hacer click para reiniciar</translation>
+Hacer clic para reiniciar</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -5958,6 +6147,7 @@ Ahora salir a tocar el pasto</translation>
     </message>
     <message>
         <location line="+10"/>
+        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/DinoGame.qml" line="+100"/>
         <source>New high score: %1</source>
         <translation>Nuevo ŕecord: %1</translation>
     </message>
@@ -5969,22 +6159,17 @@ Click to continue</source>
 Pulsa para continuar</translation>
     </message>
     <message>
-        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/DinoGame.qml" line="+8"/>
-        <source>Click or press Space to play</source>
-        <translation>Hacer click o presionar Espacio para jugar</translation>
-    </message>
-    <message>
-        <location line="+86"/>
+        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/DinoGame.qml" line="-14"/>
         <source>G A M E   O V E R</source>
         <translation>F I N   D E L   J U E G O</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Click to restart</source>
-        <translation>Hacer click para reiniciar</translation>
+        <translation>Hacer clic para reiniciar</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+23"/>
         <source>Y O U   W I N !</source>
         <translation>¡G A N A S T E!</translation>
     </message>
@@ -5992,6 +6177,16 @@ Pulsa para continuar</translation>
         <location line="+6"/>
         <source>Now go touch grass</source>
         <translation>Ahora salir a tocar el pasto</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>P A U S E D</source>
+        <translation>P A U S A D O</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Click to continue</source>
+        <translation>Pulsa para continuar</translation>
     </message>
 </context>
 <context>
@@ -6029,7 +6224,7 @@ Pulsa para continuar</translation>
     <message>
         <location filename="../modules/nexus/pages/display/DisplayModesPage.qml" line="+22"/>
         <source>Resolution &amp; refresh rate</source>
-        <translation>Resolución y tasa de refreso</translation>
+        <translation>Resolución y tasa de refresco</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -6060,19 +6255,19 @@ Pulsa para continuar</translation>
         <translation>Derecha</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+30"/>
         <source>Unknown mode</source>
         <translation>Modo desconocido</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+25"/>
         <source>Displays</source>
         <translation>Pantallas</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>This machine has no kscreen-doctor, so the shell can neither read nor change the screen setup. Install Plasma&apos;s kscreen package to manage displays here.</source>
-        <translation>Esta máquina no tiene kscreen-doctor instalado, así que la shell no puede leer ni cambiar la configuración de pantalla. Instala el paquete kscreen de Plasma para administrar las pantallas aquí.</translation>
+        <translation>Esta máquina no tiene kscreen-doctor instalado, así que el shell no puede leer ni cambiar la configuración de pantalla. Instala el paquete kscreen de Plasma para administrar las pantallas aquí.</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -6107,10 +6302,10 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <source>How large everything is drawn</source>
-        <translation></translation>
+        <translation>Cómo de grande se dibuja todo</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Rotation</source>
         <translation>Rotación</translation>
     </message>
@@ -6142,7 +6337,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <source>Speed, tap to click, natural scrolling</source>
-        <translation>Velocidad, tocar para hacer click, desplazamiento natural</translation>
+        <translation>Velocidad, tocar para hacer clic, desplazamiento natural</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -6156,9 +6351,32 @@ Pulsa para continuar</translation>
     </message>
 </context>
 <context>
+    <name>DisplayRevertDialog</name>
+    <message>
+        <location filename="../modules/nexus/common/DisplayRevertDialog.qml" line="+13"/>
+        <source>Keep this display setup?</source>
+        <translation>¿Mantener esta configuración de pantalla?</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Going back to the setup that was there before in %1 seconds unless this one is kept.</source>
+        <translation>Volviendo a la configuración anterior en %1 segundos a no ser que se mantenga esta.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Keep</source>
+        <translation>Mantener</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Revert</source>
+        <translation>Revertir</translation>
+    </message>
+</context>
+<context>
     <name>DockContext</name>
     <message>
-        <location filename="../modules/bar/popouts/DockContext.qml" line="+80"/>
+        <location filename="../modules/bar/popouts/DockContext.qml" line="+105"/>
         <source>Unpin from dock</source>
         <translation>Quitar del dock</translation>
     </message>
@@ -6168,7 +6386,7 @@ Pulsa para continuar</translation>
         <translation>Fijar en el dock</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+21"/>
         <source>Show all windows</source>
         <translation>Mostar todas las ventanas</translation>
     </message>
@@ -6186,6 +6404,497 @@ Pulsa para continuar</translation>
         <location line="+46"/>
         <source>End task</source>
         <translation>Finalizar tarea</translation>
+    </message>
+</context>
+<context>
+    <name>DockPanel</name>
+    <message>
+        <location filename="../modules/nexus/pages/panels/DockPanel.qml" line="+17"/>
+        <source>Bottom</source>
+        <translation>Abajo</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Top</source>
+        <translation>Arriba</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Left</source>
+        <translation>Izquierda</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Right</source>
+        <translation>Derecha</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Center</source>
+        <translation>Centro</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Start</source>
+        <translation>Inicio</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>End</source>
+        <translation>Fin</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Pill / Dash</source>
+        <translation>Píldora / Segmento</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Dot</source>
+        <translation>Punto</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Line / Bar</source>
+        <translation>Línea / Barra</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>None</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Application name</source>
+        <translation>Nombre de la aplicación</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Window title</source>
+        <translation>Título de la ventana</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Dock</source>
+        <translation>Dock</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>General</source>
+        <translation>General</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Enable dock panel</source>
+        <translation>Activar panel del dock</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Standalone dock panel; different from bar&apos;s dock component.</source>
+        <translation>Panel del dock independiente; differente del componente dock de la barra de tareas.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Position &amp; Alignment</source>
+        <translation>Posición y alineado</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Screen edge</source>
+        <translation>Borde de la pantalla</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Position of the floating dock on the screen</source>
+        <translation>Posición del dock flotante en pantalla</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Alignment</source>
+        <translation>Alineación</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Placement along the chosen screen edge</source>
+        <translation>Posición en el borde de pantalla elegido</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Behavior &amp; Visibility</source>
+        <translation>Comportamiento y visibilidad</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Always visible</source>
+        <translation>Siempre visible</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Keep the dock visible on screen at all times instead of auto-hiding</source>
+        <translation>Mantener el dock visible en pantalla todo el rato en vez de ocultarlo automáticamente</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Intelligent auto-hide (Intellihide)</source>
+        <translation>Esconder automáticamente inteligente (Intellihide)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Only hide the dock when an open window overlaps its area</source>
+        <translation>Solamente esconder el dock cuando una ventana abierta se ponga por encima de su área</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Dodge focused window only</source>
+        <translation>Evitar solo la ventana enfocada</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Only hide when the active, focused window intersects with the dock</source>
+        <translation>Solamente esconder cuando una ventana activa y con foco intersecte con el dock</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Reveal on mouse hover</source>
+        <translation>Revelar al pasar el ratón</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the auto-hidden dock when hovering over the screen edge</source>
+        <translation>Mostrar el dock automáticamente escondido cuando se pase el cursor por el borde de la pantalla</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Hover reveal delay</source>
+        <translation>Retraso de mostrar al pasar el cursor</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Milliseconds to wait before revealing the hidden dock on mouse hover</source>
+        <translation>Milisegundos a esperar antes de mostrar el dock escondido al pasar el cursor</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Drag threshold</source>
+        <translation>Umbral de arrastre</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pixels dragged across the edge before the dock reveals or hides</source>
+        <translation>Píxeles del borde a arrastrar antes de que el dock se muestre o se oculte</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Reserve screen space</source>
+        <translation>Reservar espacio de pantalla</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Prevent maximized windows from covering the dock area (exclusive zone)</source>
+        <translation>Prevenir que las ventanas maximizadas cubran el área del dock (zona exclusiva)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Window Management</source>
+        <translation>Administración de ventanas</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Window grouping</source>
+        <translation>Agrupación de ventanas</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How multiple windows of the same app share a dock icon</source>
+        <translation>Forma en la que varias ventanas de la misma aplicación comparten un icono del dock</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Filter by current desktop</source>
+        <translation>Filtrar por escritorio actual</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Only show applications and windows belonging to the active virtual workspace</source>
+        <translation>Únicamente mostrar aplicaciones y ventanas pertenecientes al escritorio virtual activo</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Preview window on desktop</source>
+        <translation>Previsualizar ventana en el escritorio</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Highlight and show the window itself on the workspace while hovering over dock previews</source>
+        <translation>Resaltar y mostrar la ventana en el espacio de trabajo al pasar el cursor sobre las vistas previas del dock</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Dimensions &amp; Sizing</source>
+        <translation>Dimensiones y tamaños</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Island mode</source>
+        <translation>Modo isla</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Detach the dock from screen edges into a floating island pill</source>
+        <translation>Separar el dock de los bordes de la pantalla creando una isla de píldora flotante</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Fixed length</source>
+        <translation>Longitud fija</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set a fixed panel length instead of sizing automatically to content</source>
+        <translation>Establece una longitud fija en vez de redimensionarse automáticamente al contenido</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Length percentage</source>
+        <translation>Porcentaje de longitud</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Length of the dock as a percentage of the screen edge</source>
+        <translation>Longitud del dock como un porcentaje del borde de la pantalla</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Dock size</source>
+        <translation>Tamaño del dock</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Height or width dimension of the dock container</source>
+        <translation>Altura y ancho del contenedor del dock</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Icon size</source>
+        <translation>Tamaño de los iconos</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Size of application icons in the dock</source>
+        <translation>Tamaño de los iconos de aplicación en el dock</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Floating distance</source>
+        <translation>Distancia de flotado</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Margin separating the dock pill from the screen boundary</source>
+        <translation>Margen que separa la píldora del dock del borde de la pantalla</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Inner padding</source>
+        <translation>Relleno interior</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Padding around icons inside the dock container</source>
+        <translation>Relleno alrededor de los iconos dentro del contenedor del dock</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Item spacing</source>
+        <translation>Espaciado entre elementos</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Distance between adjacent icons</source>
+        <translation>Distancia entre iconos adyacentes</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Appearance &amp; Magnification</source>
+        <translation>Apariencia y aumentado</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Icon magnification on hover</source>
+        <translation>Aumentado de icono al pasar el cursor</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Smoothly magnify icons and their neighbours under the mouse pointer</source>
+        <translation>Aumenntar iconos y sus vecinos suavemente debajo del cursor</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Maximum magnification</source>
+        <translation>Aumentado máximo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Peak scale multiplier for hovered dock icons</source>
+        <translation>Máximo multiplicador de escala para los iconos del dock</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Launch animation style</source>
+        <translation>Animación de inicio</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Animation or indicator style when an application is launching</source>
+        <translation>Animación o estilo de indicador cuando una aplicación se está iniciando</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Running indicator style</source>
+        <translation>Estilo del indicador de aplicación activa</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Visual shape for active and running application indicators</source>
+        <translation>Forma visual para los indicadores de aplicaciones activas y en ejecución</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Show running indicators</source>
+        <translation>Mostrar indicadores de actividad</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display pips or bars below running applications</source>
+        <translation>Mostrar puntos o barras debajo de las aplicaciones activas</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Show unread badges</source>
+        <translation>Mostrar indicadores de no leído</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display notification count, progress, and urgency badges on app icons</source>
+        <translation>Mostrar indicadores de cantidad de notificaciones, progreso y urgencia en iconos de aplicación</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Show app launcher icon</source>
+        <translation>Mostrar icono del lanzador de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display an application launcher button directly on the dock</source>
+        <translation>Mostrar un botón de lanzador de aplicaciones directamente en el dock</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Recolor icons</source>
+        <translation>Recolorear iconos</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Apply system theme palette colors to monochrome and app icons</source>
+        <translation>Aplicar la paleta de colores del tema del sistema a los iconos monocromáticos de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Labels</source>
+        <translation>Etiquetas</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Show labels</source>
+        <translation>Mostrar etiquetas</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display text label next to each dock application icon</source>
+        <translation>Mostrar etiqueta de texto al lado de cada icono de aplicación del dock</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Label size</source>
+        <translation>Tamaño de etiqueta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Font size in pixels for application labels</source>
+        <translation>Tamaño de fuente en píxeles para las etiquetas de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Fixed label width</source>
+        <translation>Anchura de etiqueta fija</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Use a uniform fixed width instead of adapting to text length</source>
+        <translation>Usar una anchura uniforme fija en vez de adaptarse a la longitud del texto</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Label width</source>
+        <translation>Anchura de la etiqueta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Fixed width in pixels for application labels</source>
+        <translation>Anchura fija en píxeles para las etiquetas de aplicación</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Maximum label width</source>
+        <translation>Anchura de etiquetas máxima</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Maximum width cap in pixels before truncating with ellipsis</source>
+        <translation>Límite de anchura en píxeles antes de truncar con tres puntos</translation>
+    </message>
+</context>
+<context>
+    <name>DockSharedSettings</name>
+    <message>
+        <location filename="../modules/nexus/common/DockSharedSettings.qml" line="+16"/>
+        <source>Circular Spinner</source>
+        <translation>Indicador de carga circular</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Elastic Bounce</source>
+        <translation>Rebote elástico</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Breathing Glow / Aura</source>
+        <translation>Brillo / Aura</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Orbiting Satellite</source>
+        <translation>Satélite en órbita</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Pulsing Wave Dots</source>
+        <translation>Puntos de onda pulsantes</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Group all windows</source>
+        <translation>Agrupar todas las ventanas</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Pinned icon holds first window</source>
+        <translation>El icono fijado muestra la primera ventana</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>No grouping</source>
+        <translation>Sin agrupar</translation>
     </message>
 </context>
 <context>
@@ -6263,54 +6972,44 @@ Pulsa para continuar</translation>
 <context>
     <name>Entries</name>
     <message>
-        <location filename="../modules/whatsnew/Entries.qml" line="+14"/>
-        <source>Floating OSD Styles</source>
-        <translation>Estilos de OSD flotante</translation>
+        <location filename="../modules/whatsnew/Entries.qml" line="+16"/>
+        <source>One System Tray</source>
+        <translation>Bandeja del sistema unificada</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Pick a volume and brightness OSD: pill, compact, radial, card, or the edge drawer.</source>
-        <translation>Elige un OSD de volumen y brillo: píldora, compacto, radial, tarjeta, o e cajón de borde.</translation>
+        <source>Icons and bar widgets share one tray, with a box for the ones that do not fit and drag and drop between them.</source>
+        <translation>Los iconos y los widgets de la barra comparten una bandeja, con una caja para los que no caben y para arrastrar y soltar entre ellos.</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Desktop Widgets</source>
-        <translation>Widgets de escritorio</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Add clocks, calendars, notes, weather, media and folders to the desktop, then resize or configure each one.</source>
-        <translation>Añade relojes, calendarios, notas, tiempo, medios y carpetas al escritorio, y luego redimensiona o configura cada uno.</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Open From a Notification</source>
-        <translation>Abrir desde una notificación</translation>
+        <location line="+8"/>
+        <source>Frosted Lock Screen</source>
+        <translation>Pantalla de bloqueo esmerilada</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Click a notification to open the app that sent it.</source>
-        <translation>Pulsa una notifiación para abrir la app que la envió.</translation>
+        <source>The lock screen thaws in through a frosted copy of the desktop instead of cutting to black first.</source>
+        <translation>La pantalla de bloqueo se muestra sobre una copia esmerilada del escritorio en vez de cortar a negro primero.</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Notification Sounds</source>
-        <translation>Sonidos de notificación</translation>
+        <location line="+8"/>
+        <source>A Greeting in the Launcher</source>
+        <translation>Un saludo en el lanzador</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The modern launcher greets you by name, and the avatar floats without a card behind it.</source>
+        <translation>El lanzador moderno te saluda con tu nombre, y el avatar flota sin una tarjeta detrás del mismo.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Keep Awake Expiry</source>
+        <translation>Expiración de mantener despierto</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Choose the notification sound and volume, and preview it in Sound Effects.</source>
-        <translation>Elige el sonido y volumen de las notificaciones, y previsualízalo en Efectos de Sonido.</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Quick Share Pairing Code</source>
-        <translation>Código de emparejamiento de Quick Share</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Both devices show a four-digit code. Compare them before a file is sent.</source>
-        <translation>Ambos dispositivos muestran un código de cuatro dígitos. Compáralos antes de enviar ningún archivo.</translation>
+        <source>Choose how long Keep Awake lasts from the widget menu, and see when it runs out.</source>
+        <translation>Elige cuánto dura mantener despierto desde el menú del widget, y ver cuándo termina.</translation>
     </message>
 </context>
 <context>
@@ -6606,7 +7305,7 @@ Pulsa para continuar</translation>
     <message>
         <location filename="../modules/background/desktopicons/widgets/FolderWidget.qml" line="+44"/>
         <source>Choose a folder to show</source>
-        <translation type="unfinished">Elige una carpeta para mostrar</translation>
+        <translation>Elige una carpeta para mostrar</translation>
     </message>
     <message>
         <location line="+171"/>
@@ -6911,7 +7610,7 @@ Pulsa para continuar</translation>
 <context>
     <name>Greeter</name>
     <message>
-        <location filename="../modules/bar/components/Greeter.qml" line="+26"/>
+        <location filename="../modules/bar/components/Greeter.qml" line="+25"/>
         <source>User</source>
         <translation>Usuario</translation>
     </message>
@@ -7220,20 +7919,33 @@ Pulsa para continuar</translation>
         <source>Keep Awake</source>
         <translation>Mantener activo</translation>
     </message>
+</context>
+<context>
+    <name>IdleInhibitor</name>
     <message>
-        <location line="+7"/>
-        <source>Preventing sleep mode</source>
-        <translation>Impedir el modo de suspensión</translation>
+        <location filename="../services/IdleInhibitor.qml" line="+45"/>
+        <source>Until %1</source>
+        <translation>Hasta %1</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
+        <source>Active since %1</source>
+        <translation>Activo desde %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Normal power management</source>
         <translation>Gestión de energía normal</translation>
     </message>
     <message>
-        <location line="+39"/>
-        <source>Active since %1</source>
-        <translation>Activo desde %1</translation>
+        <location line="+2"/>
+        <source>Preventing sleep until %1</source>
+        <translation>Impidiendo la suspensión hasta %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Preventing sleep mode</source>
+        <translation>Impidiendo el modo de suspensión</translation>
     </message>
 </context>
 <context>
@@ -7356,16 +8068,93 @@ Pulsa para continuar</translation>
     </message>
 </context>
 <context>
-    <name>KeepAwakeWidget</name>
+    <name>KeepAwakeExpiry</name>
     <message>
-        <location filename="../modules/bar/components/KeepAwakeWidget.qml" line="+109"/>
-        <source>Active since %1</source>
-        <translation>Activo desde %1</translation>
+        <location filename="../modules/bar/popouts/KeepAwakeExpiry.qml" line="+84"/>
+        <source>Keep awake until</source>
+        <translation>Mantener despierto hasta</translation>
     </message>
     <message>
+        <location line="+27"/>
+        <source>Time</source>
+        <translation>Hora</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>That moment has already passed</source>
+        <translation>Ese momento ya ha pasado</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Set</source>
+        <translation>Establecer</translation>
+    </message>
+</context>
+<context>
+    <name>KeepAwakeMenu</name>
+    <message>
+        <location filename="../modules/bar/popouts/KeepAwakeMenu.qml" line="+23"/>
+        <source>30 minutes</source>
+        <translation>30 minutos</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>1 hour</source>
+        <translation>1 hora</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>2 hours</source>
+        <translation>2 horas</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Keep awake on interval</source>
+        <translation>Mantener despierto con intervalo</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Keep awake until expiration date and time</source>
+        <translation>Mantener despierto hasta fecha y hora de expiración</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Keep awake indefinitely</source>
+        <translation>Mantener despierto indefinidamente</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Off (keep using the selected power plan)</source>
+        <translation>Apagado (seguir usando el plan de energía seleccionado)</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Keep screen on</source>
+        <translation>Mantener la pantalla encendida</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Included</source>
+        <translation>Incluido</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Settings</source>
+        <translation>Configuración</translation>
+    </message>
+</context>
+<context>
+    <name>KeepAwakeWidget</name>
+    <message>
+        <location filename="../modules/bar/components/KeepAwakeWidget.qml" line="+24"/>
         <location line="+0"/>
-        <source>Inactive</source>
-        <translation>Inactivo</translation>
+        <source>Keep awake</source>
+        <translation>Mantener despierto</translation>
     </message>
 </context>
 <context>
@@ -7699,7 +8488,7 @@ Pulsa para continuar</translation>
 <context>
     <name>Kwin</name>
     <message>
-        <location filename="../services/Kwin.qml" line="+511"/>
+        <location filename="../services/Kwin.qml" line="+554"/>
         <source>Caps lock enabled</source>
         <translation>Bloq Mayús activado</translation>
     </message>
@@ -8005,52 +8794,52 @@ Pulsa para continuar</translation>
     <message>
         <location line="-119"/>
         <source>Classic</source>
-        <translation type="unfinished"></translation>
+        <translation>Clásico</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Modern</source>
-        <translation type="unfinished"></translation>
+        <translation>Moderno</translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Launcher style</source>
-        <translation type="unfinished"></translation>
+        <translation>Estilo del lanzador</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Classic: the session buttons under the search field. Modern: your profile picture on top of the launcher, with the session menu in the top right corner</source>
-        <translation type="unfinished"></translation>
+        <translation>Clásico: los botones de sesión debajo del campo de búsqueda. Moderno: tu imagen de perfil encima del lanzador, con el menú de sesión en la esquina superior derecha</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Custom avatar</source>
-        <translation type="unfinished"></translation>
+        <translation>Avatar personalizado</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Using your profile picture</source>
-        <translation type="unfinished"></translation>
+        <translation>Usando tu imagen de perfil</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Only used by the modern launcher style</source>
-        <translation type="unfinished"></translation>
+        <translation>Solamente usado por el estilo de lanzador moderno</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Select a custom avatar</source>
-        <translation type="unfinished"></translation>
+        <translation>Elige un avatar personalizado</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Reset custom avatar</source>
-        <translation type="unfinished"></translation>
+        <translation>Restablecer avatar personalizado</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Go back to your profile picture</source>
-        <translation type="unfinished"></translation>
+        <translation>Volver a tu imagen de perfil</translation>
     </message>
     <message>
         <location line="+47"/>
@@ -8130,7 +8919,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <source>Show the quick session controls (shutdown, sleep, logout): under the search field in the classic style, in the top right menu in the modern one</source>
-        <translation type="unfinished"></translation>
+        <translation>Mostrar los controles rápidos de sesión (apagar, suspender, cerrar sesión): debajo del campo de búsqueda en el estilo clásico, en la esquina superior derecha en el moderno</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -8608,7 +9397,7 @@ Pulsa para continuar</translation>
 <context>
     <name>LockScreenUi</name>
     <message>
-        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/LockScreenUi.qml" line="+109"/>
+        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/LockScreenUi.qml" line="+114"/>
         <source>Good morning</source>
         <translation>Buenos días</translation>
     </message>
@@ -8878,6 +9667,14 @@ Pulsa para continuar</translation>
     </message>
 </context>
 <context>
+    <name>Menu</name>
+    <message>
+        <location filename="../components/controls/Menu.qml" line="+136"/>
+        <source>(Recommended)</source>
+        <translation>(Recomendado)</translation>
+    </message>
+</context>
+<context>
     <name>NavPane</name>
     <message>
         <location filename="../modules/nexus/NavPane.qml" line="+106"/>
@@ -8888,7 +9685,7 @@ Pulsa para continuar</translation>
 <context>
     <name>Network</name>
     <message>
-        <location filename="../modules/bar/popouts/Network.qml" line="+32"/>
+        <location filename="../modules/bar/popouts/Network.qml" line="+35"/>
         <source>IP address</source>
         <translation>Dirección IP</translation>
     </message>
@@ -8913,59 +9710,34 @@ Pulsa para continuar</translation>
         <translation>Dirección MAC</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+34"/>
         <source>Network</source>
         <translation>Red</translation>
     </message>
     <message>
-        <location line="+37"/>
-        <source>Wireless</source>
-        <translation>Red inalámbrica</translation>
-    </message>
-    <message>
         <location line="+9"/>
-        <source>%1 networks available</source>
-        <translation>%1 redes disponibles</translation>
+        <source>%1 networks</source>
+        <translation>%1 redes</translation>
     </message>
     <message>
-        <location line="+143"/>
+        <location line="+7"/>
+        <source>%1 devices</source>
+        <translation>%1 dispositivos</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Show VPN profiles</source>
+        <translation>Mostrar perfiles VPN</translation>
+    </message>
+    <message>
+        <location line="+25"/>
         <source>Rescan networks</source>
         <translation>Volver a buscar redes</translation>
     </message>
     <message>
-        <location line="+26"/>
-        <source>VPN</source>
-        <translation>VPN</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>%1 profiles available</source>
-        <translation>%1 perfiles disponibles</translation>
-    </message>
-    <message>
-        <location line="+130"/>
-        <source>No VPN profiles found</source>
-        <translation>No se encontraron perfiles VPN</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <source>Ethernet</source>
-        <translation>Ethernet</translation>
-    </message>
-    <message>
-        <location line="+9"/>
-        <source>%1 devices available</source>
-        <translation>%1 dispositivos disponibles</translation>
-    </message>
-    <message>
-        <location line="+48"/>
+        <location line="+422"/>
         <source>Unknown</source>
         <translation>Desconocido</translation>
-    </message>
-    <message>
-        <location line="+46"/>
-        <source>Connection details</source>
-        <translation>Detalles de la conexión</translation>
     </message>
 </context>
 <context>
@@ -9620,7 +10392,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+46"/>
         <source>Select a note or create one</source>
-        <translation type="unfinished">Elige una nota o crea una</translation>
+        <translation>Elige una nota o crea una</translation>
     </message>
 </context>
 <context>
@@ -9635,6 +10407,7 @@ Pulsa para continuar</translation>
     <name>NotifData</name>
     <message>
         <location filename="../services/NotifData.qml" line="+20"/>
+        <location line="+3"/>
         <location line="+200"/>
         <source>now</source>
         <translation>ahora</translation>
@@ -9721,9 +10494,39 @@ Pulsa para continuar</translation>
 <context>
     <name>Notification</name>
     <message>
-        <location filename="../modules/notifications/Notification.qml" line="+503"/>
+        <location filename="../modules/notifications/Notification.qml" line="+55"/>
+        <source>Notifications off</source>
+        <translation>Notificaciones desactivadas</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1 will stay quiet until you turn it back on</source>
+        <translation>%1 se mantendrá en silencio hasta que lo actives de nuevo</translation>
+    </message>
+    <message>
+        <location line="+340"/>
         <source>Turn off notifications from %1</source>
         <translation>Desactivar notificaciones de %1</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Copy the notification text</source>
+        <translation>Copiar el texto de notificación</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Dismiss notification</source>
+        <translation>Descartar notificación</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Show less</source>
+        <translation>Mostrar menos</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show more</source>
+        <translation>Mostrar más</translation>
     </message>
 </context>
 <context>
@@ -10142,7 +10945,7 @@ Pulsa para continuar</translation>
 <context>
     <name>OptionsToolbar</name>
     <message>
-        <location filename="../modules/screenshot/regionSelector/OptionsToolbar.qml" line="+40"/>
+        <location filename="../modules/screenshot/regionSelector/OptionsToolbar.qml" line="+41"/>
         <source>Window Selector</source>
         <translation>Selector de ventanas</translation>
     </message>
@@ -10354,6 +11157,16 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+5"/>
+        <source>Show on hover</source>
+        <translation>Mostrar al pasar el cursor</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Reveal the edge drawer when the cursor reaches the screen edge</source>
+        <translation>Mostrar el cajón de borde cuando el cursor alcanza el borde de la pantalla</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Depth</source>
         <translation>Profundidad</translation>
     </message>
@@ -10363,7 +11176,7 @@ Pulsa para continuar</translation>
         <translation>Distancia desde el borde de la pantalla para activar el cajón</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+13"/>
         <source>Height</source>
         <translation>Altura</translation>
     </message>
@@ -10844,7 +11657,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <source>Plasma desktop integration, desktop icons, and widget layout</source>
-        <translation></translation>
+        <translation>Integración con el escritorio de Plasma, iconos del escritorio y disposición de los widgets</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -10889,7 +11702,8 @@ Pulsa para continuar</translation>
     <message>
         <location line="+0"/>
         <location line="+19"/>
-        <location line="+37"/>
+        <location line="+38"/>
+        <location line="+10"/>
         <location line="+10"/>
         <location line="+10"/>
         <location line="+10"/>
@@ -10901,7 +11715,7 @@ Pulsa para continuar</translation>
         <translation>Desactivado</translation>
     </message>
     <message>
-        <location line="-195"/>
+        <location line="-206"/>
         <source>Automatic window tiling, Krohnkite layout rules, and floating exceptions</source>
         <translation>Moscaico de ventanas automático, reglas de disposición de Krohnkite, y excepciones flotantes</translation>
     </message>
@@ -10922,7 +11736,7 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+37"/>
+        <location line="+48"/>
         <location line="+10"/>
         <location line="+10"/>
         <location line="+10"/>
@@ -10931,7 +11745,7 @@ Pulsa para continuar</translation>
         <translation>Activado</translation>
     </message>
     <message>
-        <location line="-176"/>
+        <location line="-187"/>
         <source>Performance monitor, media visualizer, and dashboard clock widgets</source>
         <translation>Monitor de rendimiento, visualizador de medios, y widgets de reloj del panel</translation>
     </message>
@@ -10942,11 +11756,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+2"/>
+        <location line="+28"/>
         <source>Always visible</source>
         <translation>Siempre visible</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-28"/>
         <source>Reveal on hover</source>
         <translation>Mostrar al pasar el cursor</translation>
     </message>
@@ -10972,6 +11787,11 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+1"/>
+        <source>App menu</source>
+        <translation>Menú de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Greeter</source>
         <translation>Pantalla de bienvenida</translation>
     </message>
@@ -10992,11 +11812,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+14"/>
         <source>Dock</source>
         <translation>Dock</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-13"/>
         <source>GitHub</source>
         <translation>GitHub</translation>
     </message>
@@ -11027,12 +11848,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+246"/>
+        <location line="+256"/>
         <source>Performance</source>
         <translation>Rendimiento</translation>
     </message>
     <message>
-        <location line="-245"/>
+        <location line="-255"/>
         <source>Screen Capture</source>
         <translation>Captura de pantalla</translation>
     </message>
@@ -11042,7 +11863,17 @@ Pulsa para continuar</translation>
         <translation>Mantener despierto</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
+        <source>Auto-hide</source>
+        <translation>Ocultar automáticamente</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Independent floating pill dock, magnification, intellihide, and pinned apps</source>
+        <translation>Dock de píldora flotante independiente, ampliación, intellihide, y aplicaciones fijadas</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Launcher</source>
         <translation>Lanzador</translation>
     </message>
@@ -11497,7 +12328,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+9"/>
         <source>Applications &amp; Shortcuts</source>
-        <translation>Aplicaciones y atajdos</translation>
+        <translation>Aplicaciones y atajos</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -11552,12 +12383,12 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <source>Configure system hotkeys, window management keys, and custom scripts</source>
-        <translation>Configurar los atajos de teclado del systema, las teclas de administración de ventana, y los scripts personalizados</translation>
+        <translation>Configurar los atajos de teclado del sistema, las teclas de administración de ventana, y los scripts personalizados</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>System &amp; Services</source>
-        <translation>Systema y servicios</translation>
+        <translation>Sistema y servicios</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -11662,7 +12493,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <source>Hardware specs, kernel release, Quickshell shell version, and license details</source>
-        <translation>Hardware, versión del kernel, versión de la shell Quickshell, y detalles de licencia</translation>
+        <translation>Hardware, versión del kernel, versión del shell de Quickshell, y detalles de licencia</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -11674,12 +12505,11 @@ Pulsa para continuar</translation>
         <location line="+11"/>
         <location line="+11"/>
         <location line="+13"/>
-        <location line="+11"/>
         <source>Services</source>
         <translation>Servicios</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-34"/>
         <source>Broadcast your activity to Discord</source>
         <translation>Transmite tu actividad a Discord</translation>
     </message>
@@ -11736,15 +12566,22 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <source>Configure, enable, or disable Caelestia shell plugins and extensions</source>
-        <translation>Configurar, activar o desactivar extensiones y complementos de la shell de Caelestia</translation>
+        <translation>Configurar, activar o desactivar extensiones y complementos del shell de Caelestia</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+11"/>
+        <location line="+8"/>
+        <location line="+2"/>
         <source>Updates</source>
         <translation>Actualizaciones</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-8"/>
+        <source>Shell versions and system packages</source>
+        <translation>Versión del shell y paquetes del sistema</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Check for package and system updates</source>
         <translation>Comprobar actualizaciones de paquetes y sistema</translation>
     </message>
@@ -11754,7 +12591,7 @@ Pulsa para continuar</translation>
         <translation>Pacman, flatpak, actualizaciones de firmware, y actualizaciones de la versión de Caelestia</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+92"/>
         <source>Page under construction</source>
         <translation>Página en construcción</translation>
     </message>
@@ -11767,7 +12604,7 @@ Pulsa para continuar</translation>
 <context>
     <name>PageRegistry</name>
     <message>
-        <location filename="../modules/nexus/PageRegistry.qml" line="+36"/>
+        <location filename="../modules/nexus/PageRegistry.qml" line="+37"/>
         <source>Main Page</source>
         <translation>Página principal</translation>
     </message>
@@ -11809,18 +12646,18 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+247"/>
+        <location line="+240"/>
         <source>Follow system text size</source>
         <translation>Seguir el tamaño de texto del sistema</translation>
     </message>
     <message>
-        <location line="-246"/>
-        <location line="+247"/>
+        <location line="-239"/>
+        <location line="+240"/>
         <source>Match the text size set in KDE&apos;s settings</source>
         <translation>Igualar el tamaño de texto establecido en la configuración de KDE</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-239"/>
         <location line="+7"/>
         <location line="+7"/>
         <source>Accessibility</source>
@@ -11828,14 +12665,14 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="-9"/>
-        <location line="+247"/>
+        <location line="+240"/>
         <source>Font scale</source>
         <translation>Escala de fuente</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-239"/>
         <source>Multiplier applied to every piece of text the shell draws</source>
-        <translation>Multiplicador aplicado a cada texto que la shell dibuja</translation>
+        <translation>Multiplicador aplicado a cada texto que el shell dibuja</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -11905,13 +12742,13 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+487"/>
-        <location line="+1763"/>
+        <location line="+542"/>
+        <location line="+2007"/>
         <source>Mode</source>
         <translation>Modo</translation>
     </message>
     <message>
-        <location line="-2244"/>
+        <location line="-2543"/>
         <source>Color intensity</source>
         <translation>Intensidad del color</translation>
     </message>
@@ -12090,7 +12927,6 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
-        <location line="+7"/>
         <location line="+6"/>
         <location line="+7"/>
         <location line="+6"/>
@@ -12112,7 +12948,7 @@ Pulsa para continuar</translation>
         <translation>Tema y efectos</translation>
     </message>
     <message>
-        <location line="-134"/>
+        <location line="-127"/>
         <source>Monospace font</source>
         <translation>Fuente monoespaciada</translation>
     </message>
@@ -12133,22 +12969,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <source>Islands</source>
-        <translation>Islas</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Everything appears as its own floating widget (Very Experimental)</source>
-        <translation>Todo aparece como un widget flotante independiente (Muy experimental)</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <location line="+2712"/>
+        <location line="+3059"/>
         <source>Transparency</source>
         <translation>Transparencia</translation>
     </message>
     <message>
-        <location line="-2711"/>
+        <location line="-3058"/>
         <source>Enable transparency across the shell</source>
         <translation>Activar la transparencia en todo el shell</translation>
     </message>
@@ -12281,12 +13107,12 @@ Pulsa para continuar</translation>
         <location line="+1"/>
         <location line="+6"/>
         <location line="+7"/>
-        <location line="+1426"/>
+        <location line="+1725"/>
         <source>Apps</source>
         <translation>Aplicaciones</translation>
     </message>
     <message>
-        <location line="-1434"/>
+        <location line="-1733"/>
         <source>All apps</source>
         <translation>Todas las aplicaciones</translation>
     </message>
@@ -12316,12 +13142,12 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <location line="+6"/>
         <location line="+7"/>
-        <location line="+2036"/>
+        <location line="+2363"/>
         <source>Discord Rich Presence</source>
         <translation>Presencia enriquecida de Discord</translation>
     </message>
     <message>
-        <location line="-2058"/>
+        <location line="-2385"/>
         <source>Auto-detect Steam games</source>
         <translation>Detectar automáticamente los juegos de Steam</translation>
     </message>
@@ -12368,12 +13194,12 @@ Pulsa para continuar</translation>
         <location line="+6"/>
         <location line="+6"/>
         <location line="+6"/>
-        <location line="+349"/>
+        <location line="+410"/>
         <source>Audio</source>
         <translation>Audio</translation>
     </message>
     <message>
-        <location line="-380"/>
+        <location line="-441"/>
         <source>Muted</source>
         <translation>Silenciado</translation>
     </message>
@@ -12394,7 +13220,7 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+2116"/>
+        <location line="+2443"/>
         <location line="+7"/>
         <location line="+6"/>
         <location line="+6"/>
@@ -12409,7 +13235,7 @@ Pulsa para continuar</translation>
         <translation>Sonidos</translation>
     </message>
     <message>
-        <location line="-2171"/>
+        <location line="-2498"/>
         <source>Muted notification apps</source>
         <translation>Aplicaciones con notificaciones silenciadas</translation>
     </message>
@@ -12424,25 +13250,25 @@ Pulsa para continuar</translation>
         <translation>Aplicaciones de autoinicio</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <location line="+248"/>
-        <location line="+203"/>
+        <location line="+61"/>
+        <location line="+247"/>
+        <location line="+209"/>
         <source>Background</source>
         <translation>Fondo</translation>
     </message>
     <message>
-        <location line="-450"/>
+        <location line="-455"/>
         <location line="+6"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
-        <location line="+328"/>
-        <location line="+1873"/>
+        <location line="+333"/>
+        <location line="+2152"/>
         <source>Clock</source>
         <translation>Reloj</translation>
     </message>
     <message>
-        <location line="-2223"/>
+        <location line="-2507"/>
         <source>Show date</source>
         <translation>Mostrar fecha</translation>
     </message>
@@ -12473,42 +13299,80 @@ Pulsa para continuar</translation>
         <translation>Mostrar un minicalendario al pasar el cursor sobre el reloj</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+55"/>
+        <location line="-83"/>
+        <location line="+89"/>
+        <location line="+62"/>
         <source>Enable component</source>
         <translation>Activar componente</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-61"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
-        <location line="+286"/>
-        <location line="+1873"/>
+        <location line="+7"/>
+        <location line="+284"/>
+        <location line="+556"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+1365"/>
         <source>Dock</source>
         <translation>Dock</translation>
     </message>
     <message>
-        <location line="-2196"/>
+        <location line="-2480"/>
+        <location line="+1001"/>
         <source>Icon size</source>
         <translation>Tamaño de los iconos</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-1000"/>
         <source>Size of app icons in the dock</source>
         <translation>Tamaño de los iconos de las aplicaciones en el dock</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+411"/>
+        <location line="+416"/>
+        <location line="+655"/>
         <source>Recolor icons</source>
         <translation>Recolorear iconos</translation>
     </message>
     <message>
-        <location line="-410"/>
+        <location line="-1070"/>
         <source>Recolor application icons using the system theme</source>
         <translation>Recolorear los iconos de las aplicaciones usando el tema del sistema</translation>
     </message>
@@ -12524,38 +13388,42 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+2117"/>
+        <location line="+938"/>
+        <location line="+1450"/>
         <source>Filter by current desktop</source>
         <translation>Filtrar por escritorio actual</translation>
     </message>
     <message>
-        <location line="-2116"/>
+        <location line="-2387"/>
         <source>Only show applications and windows belonging to the active virtual desktop</source>
         <translation>Mostrar solo las aplicaciones y ventanas que pertenecen al escritorio virtual activo</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+13"/>
+        <location line="+917"/>
         <source>Window grouping</source>
         <translation>Agrupación de ventanas</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-916"/>
         <source>How windows of one app share a dock icon: grouped, pinned icon holds the first window only, or every window on its own icon</source>
         <translation>Cómo comparten las ventanas de una aplicación el icono del dock: agrupadas, el icono fijado muestra solo la primera ventana, o cada ventana en su propio icono</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+2110"/>
+        <location line="+924"/>
+        <location line="+1450"/>
         <source>Preview window on desktop</source>
         <translation>Previsualizar ventana en el escritorio</translation>
     </message>
     <message>
-        <location line="-2109"/>
+        <location line="-2373"/>
+        <location line="+924"/>
         <source>Highlight and show the window itself on the workspace while hovering over dock previews</source>
         <translation>Resaltar y mostrar la ventana en el espacio de trabajo al pasar el cursor sobre las vistas previas del Dock</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-918"/>
         <source>Component background</source>
         <translation>Fondo del componente</translation>
     </message>
@@ -12566,75 +13434,63 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+285"/>
-        <location line="+1873"/>
+        <location line="+283"/>
+        <location line="+2152"/>
         <source>GitHub</source>
         <translation>GitHub</translation>
     </message>
     <message>
-        <location line="-2152"/>
+        <location line="-2429"/>
+        <location line="+6"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+6"/>
+        <location line="+6"/>
+        <location line="+6"/>
+        <location line="+6"/>
+        <location line="+6"/>
+        <location line="+6"/>
+        <location line="+6"/>
+        <location line="+6"/>
+        <location line="+6"/>
+        <location line="+6"/>
+        <location line="+6"/>
+        <location line="+6"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+6"/>
         <location line="+6"/>
-        <location line="+6"/>
-        <location line="+6"/>
-        <location line="+6"/>
-        <location line="+6"/>
-        <location line="+6"/>
-        <location line="+6"/>
-        <location line="+6"/>
-        <location line="+6"/>
-        <location line="+6"/>
-        <location line="+6"/>
-        <location line="+7"/>
-        <location line="+7"/>
-        <location line="+7"/>
-        <location line="+7"/>
-        <location line="+6"/>
-        <location line="+6"/>
-        <location line="+103"/>
-        <location line="+1879"/>
+        <location line="+96"/>
+        <location line="+2164"/>
         <source>Greeter</source>
         <translation>Pantalla de bienvenida</translation>
     </message>
     <message>
-        <location line="-2117"/>
+        <location line="-2394"/>
         <source>Inverted</source>
         <translation>Invertido</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location line="+7"/>
-        <source>Only show the greeter while hovering</source>
-        <translation>Mostrar la pantalla de bienvenida solo al pasar el cursor</translation>
-    </message>
-    <message>
-        <location line="-1"/>
-        <location line="+513"/>
-        <location line="+628"/>
-        <location line="+517"/>
-        <location line="+540"/>
+        <location line="+518"/>
+        <location line="+866"/>
+        <location line="+496"/>
+        <location line="+28"/>
+        <location line="+581"/>
         <location line="+238"/>
         <source>Show on hover</source>
         <translation>Mostrar al pasar el cursor</translation>
     </message>
     <message>
-        <location line="-2429"/>
-        <location line="+336"/>
+        <location line="-2379"/>
         <location line="+26"/>
         <source>Popout on hover</source>
         <translation>Ventana emergente al pasar el cursor</translation>
     </message>
     <message>
-        <location line="-361"/>
-        <source>Show a greeter popout when hovering</source>
-        <translation>Mostrar una ventana emergente de bienvenida al pasar el cursor</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="-353"/>
         <source>Switch media according to time of day or cycle through a slideshow</source>
         <translation>Cambiar el contenido multimedia según el momento del día o recorrer una presentación de diapositivas</translation>
     </message>
@@ -12749,18 +13605,7 @@ Pulsa para continuar</translation>
         <translation>Añadir archivo multimedia</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Show active indicator</source>
-        <translation>Mostrar indicador de actividad</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Show a chip with the activation time when Keep Awake is on</source>
-        <translation>Mostrar una píldora con la hora de activación cuando Mantener activo esté encendido</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Keep Awake</source>
         <translation>Mantener despierto</translation>
     </message>
@@ -12787,12 +13632,12 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
-        <location line="+349"/>
+        <location line="+355"/>
         <source>Media</source>
         <translation>Multimedia</translation>
     </message>
     <message>
-        <location line="-386"/>
+        <location line="-392"/>
         <source>Show visualiser</source>
         <translation>Mostrar el visualizador</translation>
     </message>
@@ -12812,7 +13657,8 @@ Pulsa para continuar</translation>
         <translation>Girar el título al revés cuando la barra es vertical</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-283"/>
+        <location line="+289"/>
         <source>Auto-hide</source>
         <translation>Ocultar automáticamente</translation>
     </message>
@@ -12832,7 +13678,8 @@ Pulsa para continuar</translation>
         <translation>Mostrar el título de la pista en la barra; si no, un icono</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-283"/>
+        <location line="+289"/>
         <source>Max title length</source>
         <translation>Longitud máxima del título</translation>
     </message>
@@ -12866,13 +13713,13 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
-        <location line="+327"/>
-        <location line="+1612"/>
+        <location line="+333"/>
+        <location line="+1891"/>
         <source>Performance</source>
         <translation>Rendimiento</translation>
     </message>
     <message>
-        <location line="-1955"/>
+        <location line="-2240"/>
         <source>Show values</source>
         <translation>Mostrar valores</translation>
     </message>
@@ -12927,6 +13774,7 @@ Pulsa para continuar</translation>
         <location line="+6"/>
         <location line="+6"/>
         <location line="+6"/>
+        <location line="+6"/>
         <source>Per Element Scaling Offset</source>
         <translation>Ajuste de escala por elemento</translation>
     </message>
@@ -12953,7 +13801,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+6"/>
         <location line="+355"/>
-        <location line="+776"/>
+        <location line="+1014"/>
         <location line="+6"/>
         <location line="+6"/>
         <location line="+6"/>
@@ -12964,8 +13812,8 @@ Pulsa para continuar</translation>
         <translation>Red</translation>
     </message>
     <message>
-        <location line="-1162"/>
-        <location line="+1273"/>
+        <location line="-1400"/>
+        <location line="+1511"/>
         <location line="+6"/>
         <location line="+6"/>
         <location line="+6"/>
@@ -12973,7 +13821,7 @@ Pulsa para continuar</translation>
         <translation>Notificaciones</translation>
     </message>
     <message>
-        <location line="-1285"/>
+        <location line="-1523"/>
         <source>Peripheral battery</source>
         <translation>Batería de periféricos</translation>
     </message>
@@ -12989,13 +13837,13 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+1837"/>
-        <location line="+176"/>
+        <location line="+2116"/>
+        <location line="+183"/>
         <source>Now playing</source>
         <translation>Reproduciendo ahora</translation>
     </message>
     <message>
-        <location line="-2007"/>
+        <location line="-2293"/>
         <source>Show screenshot buttons</source>
         <translation>Mostrar botones de captura</translation>
     </message>
@@ -13008,12 +13856,12 @@ Pulsa para continuar</translation>
         <location line="+1"/>
         <location line="+7"/>
         <location line="+7"/>
-        <location line="+2140"/>
+        <location line="+2426"/>
         <source>Screen Capture</source>
         <translation>Captura de pantalla</translation>
     </message>
     <message>
-        <location line="-2149"/>
+        <location line="-2435"/>
         <source>Show recording buttons</source>
         <translation>Mostrar botones de grabación</translation>
     </message>
@@ -13034,24 +13882,24 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+1073"/>
+        <location line="+1311"/>
         <source>Wi-Fi</source>
         <translation>Wi-Fi</translation>
     </message>
     <message>
-        <location line="-1072"/>
+        <location line="-1310"/>
         <source>Show the Wi-Fi icon alongside the network icon</source>
         <translation>Mostrar el icono de Wi-Fi junto al icono de red</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+7"/>
-        <location line="+1777"/>
+        <location line="+2056"/>
         <source>Status icons</source>
         <translation>Iconos de estado</translation>
     </message>
     <message>
-        <location line="-1778"/>
+        <location line="-2057"/>
         <source>Show a details popout when hovering the status icons</source>
         <translation>Mostrar una ventana emergente con detalles al pasar el cursor sobre los iconos de estado</translation>
     </message>
@@ -13060,12 +13908,12 @@ Pulsa para continuar</translation>
         <location line="+6"/>
         <location line="+7"/>
         <location line="+7"/>
-        <location line="+1745"/>
+        <location line="+2024"/>
         <source>Tray</source>
         <translation>Bandeja del sistema</translation>
     </message>
     <message>
-        <location line="-1754"/>
+        <location line="-2033"/>
         <source>Compact</source>
         <translation>Compacto</translation>
     </message>
@@ -13083,40 +13931,40 @@ Pulsa para continuar</translation>
     <message>
         <location line="+1"/>
         <location line="+6"/>
-        <location line="+1781"/>
-        <location line="+247"/>
-        <location line="+7"/>
+        <location line="+2060"/>
+        <location line="+255"/>
+        <location line="+6"/>
         <location line="+6"/>
         <source>Updates</source>
         <translation>Actualizaciones</translation>
     </message>
     <message>
-        <location line="-2042"/>
+        <location line="-2328"/>
         <source>Turn on update checking</source>
         <translation>Activar la comprobación de actualizaciones</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+666"/>
+        <location line="+904"/>
         <source>Temperature</source>
         <translation>Temperatura</translation>
     </message>
     <message>
-        <location line="-665"/>
-        <location line="+666"/>
+        <location line="-903"/>
+        <location line="+904"/>
         <source>Units for weather temperatures</source>
         <translation>Unidades para la temperatura del clima</translation>
     </message>
     <message>
-        <location line="-665"/>
+        <location line="-903"/>
         <location line="+6"/>
         <location line="+156"/>
-        <location line="+1600"/>
+        <location line="+1879"/>
         <source>Weather</source>
         <translation>Tiempo</translation>
     </message>
     <message>
-        <location line="-1757"/>
+        <location line="-2036"/>
         <source>Location</source>
         <translation>Localización</translation>
     </message>
@@ -13141,13 +13989,13 @@ Pulsa para continuar</translation>
         <location line="+6"/>
         <location line="+6"/>
         <location line="+7"/>
-        <location line="+1642"/>
-        <location line="+161"/>
+        <location line="+1915"/>
+        <location line="+174"/>
         <source>Workspaces</source>
         <translation>Espacios de trabajo</translation>
     </message>
     <message>
-        <location line="-1857"/>
+        <location line="-2143"/>
         <source>Active indicator</source>
         <translation>Indicador activo</translation>
     </message>
@@ -13214,12 +14062,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+12"/>
-        <location line="+1318"/>
+        <location line="+1563"/>
         <source>Discoverable</source>
         <translation>Visible para otros dispositivos</translation>
     </message>
     <message>
-        <location line="-1317"/>
+        <location line="-1562"/>
         <source>Allow nearby devices to find this one</source>
         <translation>Permitir que los dispositivos cercanos encuentren este dispositivo</translation>
     </message>
@@ -13235,12 +14083,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+342"/>
+        <location line="+580"/>
         <source>Name</source>
         <translation>Nombre</translation>
     </message>
     <message>
-        <location line="-341"/>
+        <location line="-579"/>
         <location line="+6"/>
         <location line="+7"/>
         <source>Calendar</source>
@@ -13264,25 +14112,25 @@ Pulsa para continuar</translation>
     <message>
         <location line="+6"/>
         <location line="+263"/>
-        <location line="+313"/>
+        <location line="+551"/>
         <location line="+513"/>
-        <location line="+338"/>
+        <location line="+366"/>
         <location line="+21"/>
-        <location line="+475"/>
+        <location line="+495"/>
         <source>Enabled</source>
         <translation>Activado</translation>
     </message>
     <message>
-        <location line="-1922"/>
+        <location line="-2208"/>
         <location line="+7"/>
-        <location line="+628"/>
-        <location line="+1288"/>
+        <location line="+866"/>
+        <location line="+1336"/>
         <location line="+7"/>
         <source>Reveal when the cursor reaches the screen edge</source>
         <translation>Mostrar cuando el cursor llegue al borde de la pantalla</translation>
     </message>
     <message>
-        <location line="-1929"/>
+        <location line="-2215"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
@@ -13363,18 +14211,18 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+1139"/>
+        <location line="+1384"/>
         <source>Ambient color mode</source>
         <translation>Modo de color ambiente</translation>
     </message>
     <message>
-        <location line="-1133"/>
-        <location line="+1139"/>
+        <location line="-1378"/>
+        <location line="+1384"/>
         <source>Ambient glow opacity</source>
         <translation>Opacidad del brillo ambiente</translation>
     </message>
     <message>
-        <location line="-1133"/>
+        <location line="-1378"/>
         <source>Welcome splash</source>
         <translation>Pantalla de bienvenida</translation>
     </message>
@@ -13385,12 +14233,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+12"/>
-        <location line="+1293"/>
+        <location line="+1559"/>
         <source>GPU</source>
         <translation>GPU</translation>
     </message>
     <message>
-        <location line="-1287"/>
+        <location line="-1553"/>
         <source>CPU</source>
         <translation>CPU</translation>
     </message>
@@ -13401,47 +14249,48 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+1436"/>
+        <location line="+1702"/>
         <source>Storage</source>
         <translation>Almacenamiento</translation>
     </message>
     <message>
-        <location line="-1424"/>
-        <location line="+549"/>
-        <location line="+1254"/>
+        <location line="-1690"/>
+        <location line="+787"/>
+        <location line="+1302"/>
         <source>Hover trigger depth</source>
         <translation>Profundidad del activador al pasar el cursor</translation>
     </message>
     <message>
-        <location line="-1802"/>
+        <location line="-2088"/>
         <source>Distance in from the screen edge that opens the dashboard</source>
         <translation>Distancia desde el borde de la pantalla que abre el panel</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+549"/>
-        <location line="+1254"/>
+        <location line="+787"/>
+        <location line="+1302"/>
         <source>Hover trigger width</source>
         <translation>Ancho del activador al pasar el cursor</translation>
     </message>
     <message>
-        <location line="-1802"/>
+        <location line="-2088"/>
         <source>How much of the top edge opens the dashboard, as a percentage of its width</source>
         <translation>Porcentaje del borde superior que abre el panel, según su ancho</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+549"/>
-        <location line="+469"/>
-        <location line="+275"/>
+        <location line="+217"/>
+        <location line="+570"/>
+        <location line="+476"/>
+        <location line="+296"/>
         <location line="+14"/>
-        <location line="+244"/>
+        <location line="+264"/>
         <location line="+252"/>
         <source>Drag threshold</source>
         <translation>Umbral de arrastre</translation>
     </message>
     <message>
-        <location line="-1802"/>
+        <location line="-2088"/>
         <source>Pixels dragged before the dashboard opens</source>
         <translation>Píxeles que se deben arrastrar antes de abrir el panel</translation>
     </message>
@@ -13465,11 +14314,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="-48"/>
+        <location line="+162"/>
         <source>Alignment</source>
         <translation>Alineación</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-156"/>
         <source>Auto-hide lyrics</source>
         <translation>Ocultar automáticamente las letras</translation>
     </message>
@@ -13667,7 +14517,7 @@ Pulsa para continuar</translation>
         <translation>Teclado</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+244"/>
         <source>Focus sessions</source>
         <translation>Sesiones de concentración</translation>
     </message>
@@ -14044,22 +14894,22 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <location line="+7"/>
         <source>Classic: the session buttons under the search field. Modern: your profile picture on top of the launcher, with the session menu in the top right corner</source>
-        <translation type="unfinished"></translation>
+        <translation>Clásico: los botones de sesión debajo del campo de búsqueda. Moderno: tu imagen de perfil encima del lanzador, con el menú de sesión en la esquina superior derecha</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>Launcher style</source>
-        <translation type="unfinished"></translation>
+        <translation>Estilo del lanzador</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Custom avatar</source>
-        <translation type="unfinished"></translation>
+        <translation>Avatar personalizado</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Reset custom avatar</source>
-        <translation type="unfinished"></translation>
+        <translation>Restablecer avatar personalizado</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -14070,7 +14920,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+60"/>
         <source>Show the quick session controls (shutdown, sleep, logout): under the search field in the classic style, in the top right menu in the modern one</source>
-        <translation type="unfinished"></translation>
+        <translation>Mostrar los controles rápidos de sesión (apagar, suspender, cerrar sesión): debajo del campo de búsqueda en el estilo clásico, en la esquina superior derecha en el moderno</translation>
     </message>
     <message>
         <location line="-86"/>
@@ -14105,7 +14955,400 @@ Pulsa para continuar</translation>
         <translation>Lanzador</translation>
     </message>
     <message>
-        <location line="-154"/>
+        <location line="-1540"/>
+        <location line="+1015"/>
+        <source>Launch animation style</source>
+        <translation>Animación de inicio</translation>
+    </message>
+    <message>
+        <location line="-1014"/>
+        <location line="+1015"/>
+        <source>Animation or indicator style when an application is launching</source>
+        <translation>Animación o estilo de indicador cuando una aplicación se está iniciando</translation>
+    </message>
+    <message>
+        <location line="-1097"/>
+        <location line="+121"/>
+        <source>Enable popout</source>
+        <translation>Activar ventana emergente</translation>
+    </message>
+    <message>
+        <location line="-162"/>
+        <source>Display the focused application&apos;s menu in the bar</source>
+        <translation>Mostrar el menú de la aplicación enfocada en la barra</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+342"/>
+        <location line="+2152"/>
+        <source>App menu</source>
+        <translation>Menú de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="-2538"/>
+        <source>Show application icon</source>
+        <translation>Mostrar icono de aplicación</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display the active app&apos;s icon in the bar component</source>
+        <translation>Mostrar el icono de la aplicación activa en el componente de la barra</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Show application name</source>
+        <translation>Mostrar nombre de la aplicación</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display the name of the currently focused application</source>
+        <translation>Mostrar el nombre de la aplicación enfocada</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Show dropdown indicator</source>
+        <translation>Mostrar indicador de menú desplegable</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show an arrow chevron indicating a menu dropdown</source>
+        <translation>Mostrar una flecha indicando un menú desplegable</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Compact mode</source>
+        <translation>Modo compacto</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show only the app icon for a minimal footprint</source>
+        <translation>Mostrar solamente el icono de la aplicación para menor impacto</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Hide the widget when no application window is active</source>
+        <translation>Ocultar el widget cuando no haya una ventana de aplicación activa</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Show the application menu panel on click</source>
+        <translation>Mostrar el panel del menú de la aplicación al pulsar</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Maximum characters to display for the application name</source>
+        <translation>Número máximo de caracteres que mostrar para el nombre de la aplicación</translation>
+    </message>
+    <message>
+        <location line="+114"/>
+        <source>Show a popout panel for the greeter</source>
+        <translation>Mostrar un panel emergente para la pantalla de bienvenida</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Open on hover</source>
+        <translation>Abrir al pasar el cursor</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open popout on hover instead of on click</source>
+        <translation>Abrir la ventana emergente al pasar el cursor en vez de al pulsar</translation>
+    </message>
+    <message>
+        <location line="+806"/>
+        <source>Enable dock panel</source>
+        <translation>Activar panel del dock</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Standalone dock panel; different from bar&apos;s dock component.</source>
+        <translation>Panel del dock independiente; differente del componente dock de la barra de tareas.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Screen edge</source>
+        <translation>Borde de la pantalla</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Position of the floating dock on the screen</source>
+        <translation>Posición del dock flotante en pantalla</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Placement along the chosen screen edge</source>
+        <translation>Posición en el borde de pantalla elegido</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Always visible</source>
+        <translation>Siempre visible</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Keep the dock visible on screen at all times instead of auto-hiding</source>
+        <translation>Mantener el dock visible en pantalla todo el rato en vez de ocultarlo automáticamente</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Intelligent auto-hide (Intellihide)</source>
+        <translation>Esconder automáticamente inteligente (Intellihide)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Only hide the dock when an open window overlaps its area</source>
+        <translation>Solamente esconder el dock cuando una ventana abierta se ponga por encima de su área</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Only hide when the active, focused window intersects with the dock</source>
+        <translation>Solamente esconder cuando una ventana activa y con foco intersecte con el dock</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Reveal on mouse hover</source>
+        <translation>Revelar al pasar el ratón</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the auto-hidden dock when hovering over the screen edge</source>
+        <translation>Mostrar el dock automáticamente escondido cuando se pase el cursor por el borde de la pantalla</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Hover reveal delay</source>
+        <translation>Retraso de mostrar al pasar el cursor</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Milliseconds to wait before revealing the hidden dock on mouse hover</source>
+        <translation>Milisegundos a esperar antes de mostrar el dock escondido al pasar el cursor</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Pixels dragged across the edge before the dock reveals or hides</source>
+        <translation>Píxeles del borde a arrastrar antes de que el dock se muestre o se oculte</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Reserve screen space</source>
+        <translation>Reservar espacio de pantalla</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Prevent maximized windows from covering the dock area (exclusive zone)</source>
+        <translation>Prevenir que las ventanas maximizadas cubran el área del dock (zona exclusiva)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>How multiple windows of the same app share a dock icon</source>
+        <translation>Forma en la que varias ventanas de la misma aplicación comparten un icono del dock</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Only show applications and windows belonging to the active virtual workspace</source>
+        <translation>Únicamente mostrar aplicaciones y ventanas pertenecientes al escritorio virtual activo</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+1550"/>
+        <source>Island mode</source>
+        <translation>Modo isla</translation>
+    </message>
+    <message>
+        <location line="-1549"/>
+        <source>Detach the dock from screen edges into a floating island pill</source>
+        <translation>Separar el dock de los bordes de la pantalla creando una isla de píldora flotante</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Fixed length</source>
+        <translation>Longitud fija</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set a fixed panel length instead of sizing automatically to content</source>
+        <translation>Establece una longitud fija en vez de redimensionarse automáticamente al contenido</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Length percentage</source>
+        <translation>Porcentaje de longitud</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Length of the dock as a percentage of the screen edge</source>
+        <translation>Longitud del dock como un porcentaje del borde de la pantalla</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Dock size</source>
+        <translation>Tamaño del dock</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Height or width dimension of the dock container</source>
+        <translation>Altura y ancho del contenedor del dock</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Size of application icons in the dock</source>
+        <translation>Tamaño de los iconos de aplicación en el dock</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Floating distance</source>
+        <translation>Distancia de flotado</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Margin separating the dock pill from the screen boundary</source>
+        <translation>Margen que separa la píldora del dock del borde de la pantalla</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Inner padding</source>
+        <translation>Relleno interior</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Padding around icons inside the dock container</source>
+        <translation>Relleno alrededor de los iconos dentro del contenedor del dock</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Item spacing</source>
+        <translation>Espaciado entre elementos</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Distance between adjacent icons</source>
+        <translation>Distancia entre iconos adyacentes</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Icon magnification on hover</source>
+        <translation>Aumentado de icono al pasar el cursor</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Smoothly magnify icons and their neighbours under the mouse pointer</source>
+        <translation>Aumenntar iconos y sus vecinos suavemente debajo del cursor</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Maximum magnification</source>
+        <translation>Aumentado máximo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Peak scale multiplier for hovered dock icons</source>
+        <translation>Máximo multiplicador de escala para los iconos del dock</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Running indicator style</source>
+        <translation>Estilo del indicador de aplicación activa</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Visual shape for active and running application indicators</source>
+        <translation>Forma visual para los indicadores de aplicaciones activas y en ejecución</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Show running indicators</source>
+        <translation>Mostrar indicadores de actividad</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display pips or bars below running applications</source>
+        <translation>Mostrar puntos o barras debajo de las aplicaciones activas</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Show unread badges</source>
+        <translation>Mostrar indicadores de no leído</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display notification count, progress, and urgency badges on app icons</source>
+        <translation>Mostrar indicadores de cantidad de notificaciones, progreso y urgencia en iconos de aplicación</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Show app launcher icon</source>
+        <translation>Mostrar icono del lanzador de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display an application launcher button directly on the dock</source>
+        <translation>Mostrar un botón de lanzador de aplicaciones directamente en el dock</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Apply system theme palette colors to monochrome and app icons</source>
+        <translation>Aplicar la paleta de colores del tema del sistema a los iconos monocromáticos de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Show labels</source>
+        <translation>Mostrar etiquetas</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Display text label next to each dock application icon</source>
+        <translation>Mostrar etiqueta de texto al lado de cada icono de aplicación del dock</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Label size</source>
+        <translation>Tamaño de etiqueta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Font size in pixels for application labels</source>
+        <translation>Tamaño de fuente en píxeles para las etiquetas de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Fixed label width</source>
+        <translation>Anchura de etiqueta fija</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Use a uniform fixed width instead of adapting to text length</source>
+        <translation>Usar una anchura uniforme fija en vez de adaptarse a la longitud del texto</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Label width</source>
+        <translation>Anchura de la etiqueta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Fixed width in pixels for application labels</source>
+        <translation>Anchura fija en píxeles para las etiquetas de aplicación</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Maximum label width</source>
+        <translation>Anchura de etiquetas máxima</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Maximum width cap in pixels before truncating with ellipsis</source>
+        <translation>Límite de anchura en píxeles antes de truncar con tres puntos</translation>
+    </message>
+    <message>
+        <location line="+300"/>
         <source>Use alternative logo</source>
         <translation>Usar logotipo alternativo</translation>
     </message>
@@ -14217,12 +15460,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+716"/>
+        <location line="+744"/>
         <source>Vim keybinds</source>
         <translation>Atajos de Vim</translation>
     </message>
     <message>
-        <location line="-715"/>
+        <location line="-743"/>
         <source>Navigate results with Ctrl+hjkl</source>
         <translation>Navegar por los resultados con Ctrl+hjkl</translation>
     </message>
@@ -14492,12 +15735,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+333"/>
+        <location line="+340"/>
         <source>Proxy</source>
         <translation>Proxy</translation>
     </message>
     <message>
-        <location line="-327"/>
+        <location line="-334"/>
         <source>Subcategory side pane</source>
         <translation>Panel lateral de subcategorías</translation>
     </message>
@@ -14514,12 +15757,12 @@ Pulsa para continuar</translation>
     <message>
         <location line="+5"/>
         <location line="+164"/>
-        <location line="+747"/>
+        <location line="+795"/>
         <source>Show in fullscreen</source>
         <translation>Mostrar en pantalla completa</translation>
     </message>
     <message>
-        <location line="-910"/>
+        <location line="-958"/>
         <source>Allow notifications over fullscreen apps</source>
         <translation>Permitir notificaciones sobre aplicaciones en pantalla completa</translation>
     </message>
@@ -14555,12 +15798,12 @@ Pulsa para continuar</translation>
     <message>
         <location line="+6"/>
         <location line="+115"/>
-        <location line="+603"/>
+        <location line="+651"/>
         <source>Position</source>
         <translation>Posición</translation>
     </message>
     <message>
-        <location line="-717"/>
+        <location line="-765"/>
         <source>Where notification popups appear</source>
         <translation>Dónde aparecen las notificaciones emergentes</translation>
     </message>
@@ -14676,7 +15919,7 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+12"/>
-        <location line="+809"/>
+        <location line="+857"/>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
@@ -14686,8 +15929,8 @@ Pulsa para continuar</translation>
         <translation>Notificaciones emergentes</translation>
     </message>
     <message>
-        <location line="-836"/>
-        <location line="+718"/>
+        <location line="-884"/>
+        <location line="+766"/>
         <location line="+6"/>
         <location line="+6"/>
         <location line="+6"/>
@@ -14705,7 +15948,7 @@ Pulsa para continuar</translation>
         <translation>Eventos emergentes</translation>
     </message>
     <message>
-        <location line="-784"/>
+        <location line="-832"/>
         <source>Design</source>
         <translation>Diseño</translation>
     </message>
@@ -14725,11 +15968,12 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
+        <location line="+7"/>
         <source>OSD</source>
         <translation>OSD</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-64"/>
         <source>Screen placement for the floating indicator</source>
         <translation>Posición en pantalla para el indicador flotante</translation>
     </message>
@@ -14740,12 +15984,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+670"/>
+        <location line="+718"/>
         <source>Volume</source>
         <translation>Volumen</translation>
     </message>
     <message>
-        <location line="-669"/>
+        <location line="-717"/>
         <source>Show indicator on speaker volume changes</source>
         <translation>Mostar indicador al cambiar el volumen del altavoz</translation>
     </message>
@@ -14761,12 +16005,12 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+663"/>
+        <location line="+711"/>
         <source>Brightness</source>
         <translation>Brillo</translation>
     </message>
     <message>
-        <location line="-662"/>
+        <location line="-710"/>
         <source>Show indicator on display brightness changes</source>
         <translation>Mostrar indicador al cambiar el brillo de la pantalla</translation>
     </message>
@@ -14784,6 +16028,11 @@ Pulsa para continuar</translation>
         <location line="+1"/>
         <source>Seconds before the indicator hides</source>
         <translation>Segundos antes de esconderse el indicador</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Reveal the edge drawer when the cursor reaches the screen edge</source>
+        <translation>Mostrar el cajón de borde cuando el cursor alcanza el borde de la pantalla</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -14983,12 +16232,12 @@ Pulsa para continuar</translation>
         <location line="-6"/>
         <location line="+7"/>
         <location line="+7"/>
-        <location line="+685"/>
+        <location line="+726"/>
         <source>Quick Share</source>
         <translation>Quick Share</translation>
     </message>
     <message>
-        <location line="-687"/>
+        <location line="-728"/>
         <source>Start automatically</source>
         <translation>Iniciar automáticamente</translation>
     </message>
@@ -15046,6 +16295,9 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
+        <location line="+7"/>
         <location line="+6"/>
         <location line="+6"/>
         <location line="+6"/>
@@ -15055,7 +16307,7 @@ Pulsa para continuar</translation>
         <translation>Servicios del sistema</translation>
     </message>
     <message>
-        <location line="-102"/>
+        <location line="-123"/>
         <source>System stats refresh</source>
         <translation>Actualización de estadísticas del sistema</translation>
     </message>
@@ -15133,6 +16385,36 @@ Pulsa para continuar</translation>
         <location line="+1"/>
         <source>Upper limit for output volume (%)</source>
         <translation>Límite máximo del volumen de salida (%)</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Alarm until dismissed</source>
+        <translation>Alarma hasta que se descarte</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Repeat the chime until the finished timer is reset</source>
+        <translation>Repite el sonido hasta que el temporizador finalizado sea restablecido</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Alarm length</source>
+        <translation>Duración de la alarma</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Seconds the chime repeats at zero; 0 silences it</source>
+        <translation>Segundos durante los que el sonido se repite; 0 lo silencia</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Alarm sound</source>
+        <translation>Sonido de alarma</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Played while a finished timer waits to be dismissed</source>
+        <translation>Reproducido cuando un temporizador finalizado espera a ser descartado</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -15334,11 +16616,12 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
+        <location line="+7"/>
         <source>Window Switcher</source>
         <translation>Selector de ventanas</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-29"/>
         <source>Only show windows belonging to the active virtual desktop</source>
         <translation>Mostrar solo las ventanas del escritorio virtual activo</translation>
     </message>
@@ -15346,6 +16629,16 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <source>Highlight and show the window itself on the workspace while cycling Alt+Tab</source>
         <translation>Resaltar y mostrar la ventana en el espacio de trabajo al recorrerlas con Alt+Tab</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Layout</source>
+        <translation>Disposición</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Carousel: a single horizontally scrolling row of previews. Grid: previews arranged like the overview, keeping each window&apos;s shape and position</source>
+        <translation>Carrusel: una fila de previsualizaciones deslizándose en horizontal. Cuadrícula: previsualizaciones organizadas como en la vista general, manteniendo la forma y posición de cada ventana</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -15379,12 +16672,13 @@ Pulsa para continuar</translation>
         <location line="+6"/>
         <location line="+6"/>
         <location line="+6"/>
-        <location line="+94"/>
+        <location line="+6"/>
+        <location line="+101"/>
         <source>Elements &amp; Modules</source>
         <translation>Elementos y módulos</translation>
     </message>
     <message>
-        <location line="-89"/>
+        <location line="-96"/>
         <source>Persistent</source>
         <translation>Persistente</translation>
     </message>
@@ -15405,6 +16699,7 @@ Pulsa para continuar</translation>
         <location line="+7"/>
         <location line="+7"/>
         <location line="+7"/>
+        <location line="+7"/>
         <location line="+6"/>
         <location line="+6"/>
         <location line="+6"/>
@@ -15415,7 +16710,12 @@ Pulsa para continuar</translation>
         <translation>Barra de tareas</translation>
     </message>
     <message>
-        <location line="-104"/>
+        <location line="-110"/>
+        <source>Detach the bar from screen edges into a floating island pill</source>
+        <translation>Separar la barra de los bordes de la pantalla creando una isla de píldora flotante</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Dodge windows</source>
         <translation>Evitar ventanas</translation>
     </message>
@@ -15425,7 +16725,13 @@ Pulsa para continuar</translation>
         <translation>Ocultar la barra cuando una ventana la cubra y permitir que las ventanas se sitúen debajo</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+239"/>
+        <source>Update channel</source>
+        <translation>Canal de actualizaciones</translation>
+    </message>
+    <message>
+        <location line="-1853"/>
+        <location line="+1620"/>
         <source>Dodge focused window only</source>
         <translation>Evitar solo la ventana enfocada</translation>
     </message>
@@ -15631,23 +16937,18 @@ Pulsa para continuar</translation>
     </message>
     <message>
         <location line="+6"/>
-        <source>Update channel</source>
-        <translation>Canal de actualizaciones</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Check for updates automatically</source>
-        <translation>Comprobar actualizaciones periódicamente</translation>
+        <source>Automatic Updates</source>
+        <translation>Actualizaciones automáticas</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Every 30 minutes, and once when the shell starts</source>
-        <translation>Cada 30 minutos, y una vez cuando la shell se inicie</translation>
+        <source>Checked every 30 minutes, and once when the shell starts</source>
+        <translation>Comprobadas cada 30 minutos, y una vez cuando se inicia la shell</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Open backup folder</source>
-        <translation>Abrir carpeta de respaldos</translation>
+        <location line="+12"/>
+        <source>Backup folder</source>
+        <translation>Carpeta de respaldos</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -15848,12 +17149,7 @@ Pulsa para continuar</translation>
 <context>
     <name>PasswordPill</name>
     <message>
-        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/PasswordPill.qml" line="+81"/>
-        <source>Loading...</source>
-        <translation>Cargando...</translation>
-    </message>
-    <message>
-        <location line="+0"/>
+        <location filename="../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/PasswordPill.qml" line="+95"/>
         <source>Please wait...</source>
         <translation>Un momento...</translation>
     </message>
@@ -16234,7 +17530,7 @@ Pulsa para continuar</translation>
     <message>
         <location line="+28"/>
         <source>Stored in kioslaverc, which KDE applications read: Plasma, Dolphin, Konsole and the rest. Programs started from a shell keep whatever their environment says until they are restarted.</source>
-        <translation>Guarado en kioslaverc, que leen las aplicaciones de KDE: Plasma, Dolphin, Konsole y demás. Los programas iniciados desde una shell mantendrán lo que diga su entorno hasta que se reinicien.</translation>
+        <translation>Guardado en kioslaverc, que leen las aplicaciones de KDE: Plasma, Dolphin, Konsole y demás. Los programas iniciados desde una shell mantendrán lo que diga su entorno hasta que se reinicien.</translation>
     </message>
 </context>
 <context>
@@ -16800,17 +18096,17 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
 <context>
     <name>RegionSelection</name>
     <message>
-        <location filename="../modules/screenshot/regionSelector/RegionSelection.qml" line="+548"/>
+        <location filename="../modules/screenshot/regionSelector/RegionSelection.qml" line="+549"/>
         <source>Full Screen Screenshot</source>
         <translation>Captura de pantalla completa</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
         <source>Snip selected region (Enter)</source>
         <translation>Capturar región seleccionada (Enter)</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+21"/>
         <source>Clear selection</source>
         <translation>Borrar selección</translation>
     </message>
@@ -16932,12 +18228,12 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
     <message>
         <location filename="../modules/nexus/pages/ServicesPage.qml" line="+18"/>
         <location line="+15"/>
-        <location line="+142"/>
+        <location line="+151"/>
         <source>Auto</source>
         <translation>Automático</translation>
     </message>
     <message>
-        <location line="-154"/>
+        <location line="-163"/>
         <source>Local</source>
         <translation>Local</translation>
     </message>
@@ -16962,7 +18258,17 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
         <translation>Entrada</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+7"/>
+        <source>Shell chime</source>
+        <translation>Campanilla del shell</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>%1 · %2</source>
+        <translation>%1 · %2</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>System Services</source>
         <translation>Servicios del sistema</translation>
     </message>
@@ -17088,6 +18394,41 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
     </message>
     <message>
         <location line="+10"/>
+        <source>Timers</source>
+        <translation>Temporizadores</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Alarm until dismissed</source>
+        <translation>Alarma hasta que se descarte</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Repeat the chime until the finished timer is reset</source>
+        <translation>Repite el sonido hasta que el temporizador finalizado sea restablecido</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Alarm length</source>
+        <translation>Duración de la alarma</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Seconds the chime repeats at zero; 0 silences it</source>
+        <translation>Segundos durante los que el sonido se repite; 0 lo silencia</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Alarm sound</source>
+        <translation>Sonido de alarma</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Played while a finished timer waits to be dismissed</source>
+        <translation>Reproducido cuando un temporizador finalizado espera a ser descartado</translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Service tuning</source>
         <translation>Ajustes de servicios</translation>
     </message>
@@ -17554,7 +18895,7 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
         <translation>Alternar compatibilidad con el Dock</translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+13"/>
         <source>Open nexus</source>
         <translation>Abrir Nexus</translation>
     </message>
@@ -17842,13 +19183,13 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
 <context>
     <name>ShowDesktop</name>
     <message>
-        <location filename="../modules/bar/components/ShowDesktop.qml" line="+23"/>
+        <location filename="../modules/bar/components/ShowDesktop.qml" line="+61"/>
         <source>Show desktop</source>
         <translation>Mostrar escritorio</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Minimize all windows to show the desktop</source>
+        <location line="+1"/>
+        <source>Minimize every window to show the desktop</source>
         <translation>Minimizar todas las ventanas para mostrar el escritorio</translation>
     </message>
 </context>
@@ -18056,7 +19397,7 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
     <message>
         <location filename="../modules/background/desktopicons/widgets/StickerWidget.qml" line="+29"/>
         <source>Double click to choose an image</source>
-        <translation>Doble click para elegir una imagen</translation>
+        <translation>Doble clic para elegir una imagen</translation>
     </message>
     <message>
         <location line="+33"/>
@@ -18188,7 +19529,17 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
 <context>
     <name>TabSwitcherPanel</name>
     <message>
-        <location filename="../modules/nexus/pages/panels/TabSwitcherPanel.qml" line="+31"/>
+        <location filename="../modules/nexus/pages/panels/TabSwitcherPanel.qml" line="+27"/>
+        <source>Carousel</source>
+        <translation>Carrusel</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Grid</source>
+        <translation>Cuadrícula</translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Window Switcher</source>
         <translation>Selector de ventanas</translation>
     </message>
@@ -18249,6 +19600,16 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
     </message>
     <message>
         <location line="+5"/>
+        <source>Layout</source>
+        <translation>Disposición</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Carousel: a single horizontally scrolling row of previews. Grid: previews arranged like the overview, keeping each window&apos;s shape and position</source>
+        <translation>Carrusel: una fila de previsualizaciones deslizándose en horizontal. Cuadrícula: previsualizaciones organizadas como en la vista general, manteniendo la forma y posición de cada ventana</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Show minimized windows</source>
         <translation>Mostrar ventanas minimizadas</translation>
     </message>
@@ -18289,6 +19650,16 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
         <location line="+1"/>
         <source>Indicators, window icons</source>
         <translation>Indicadores e iconos de ventanas</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>App menu</source>
+        <translation>Menú de aplicaciones</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Icon, title, popout</source>
+        <translation>Icono, título, ventana emergente</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -18437,6 +19808,16 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
         <location line="+1"/>
         <source>Keep the bar visible at all times</source>
         <translation>Mantener la barra visible en todo momento</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Island mode</source>
+        <translation>Modo isla</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Detach the bar from screen edges into a floating island pill</source>
+        <translation>Separar la barra de los bordes de la pantalla creando una isla de píldora flotante</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -18632,12 +20013,12 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
 <context>
     <name>Timers</name>
     <message>
-        <location filename="../services/Timers.qml" line="+35"/>
+        <location filename="../services/Timers.qml" line="+40"/>
         <source>Timers</source>
         <translation>Temporizadores</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+100"/>
         <source>Timer finished</source>
         <translation>Temporizador finalizado</translation>
     </message>
@@ -18647,35 +20028,85 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
         <translation>Se acabó el tiempo.</translation>
     </message>
     <message>
-        <location line="+102"/>
+        <location line="+114"/>
         <source>%1 timers finished while the shell was not running.</source>
-        <translation>%1 temporizadores acabaron mientras la shell no estaba activa.</translation>
+        <translation>%1 temporizadores acabaron mientras el shell no estaba activo.</translation>
     </message>
 </context>
 <context>
     <name>TimersCard</name>
     <message>
-        <location filename="../modules/utilities/cards/TimersCard.qml" line="+100"/>
+        <location filename="../modules/utilities/cards/TimersCard.qml" line="+135"/>
         <source>Timers</source>
         <translation>Temporizadores</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-103"/>
         <source>Nothing running</source>
         <translation>Nada ejecutándose</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>%1 running</source>
-        <translation>%1 ejecutándose</translation>
+        <location line="-6"/>
+        <source>Time is up</source>
+        <translation>Se acabó el tiempo</translation>
     </message>
     <message>
-        <location line="+64"/>
+        <location line="+2"/>
+        <source>Paused</source>
+        <translation>Pausado</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Counting down</source>
+        <translation>En cuenta atrás</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Resume</source>
+        <translation>Reanudar</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Pause</source>
+        <translation>Pausar</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Start</source>
+        <translation>Iniciar</translation>
+    </message>
+    <message>
+        <location line="+116"/>
+        <source>--:--</source>
+        <translation>--:--</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>300 = 3:00</source>
+        <translation>300 = 3:00</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Reset</source>
+        <translation>Restablecer</translation>
+    </message>
+    <message>
+        <location line="+61"/>
         <source>Timer</source>
         <translation>Temporizador</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+9"/>
+        <source>Resume this timer</source>
+        <translation>Reanudar este temporizador</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Pause this timer</source>
+        <translation>Pausar este temporizador</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Unpin this timer</source>
         <translation>No fijar este temporizador</translation>
     </message>
@@ -18690,24 +20121,9 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
         <translation>Cancelar este temporizador</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>25m</source>
-        <translation>25m</translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="-99"/>
         <source>What is it for?</source>
         <translation>¿Para qué sirve?</translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>Start the timer</source>
-        <translation>Iniciar el temporizador</translation>
-    </message>
-    <message>
-        <location line="+14"/>
-        <source>%1m</source>
-        <translation>%1 min</translation>
     </message>
 </context>
 <context>
@@ -18922,6 +20338,14 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
     </message>
 </context>
 <context>
+    <name>ToggleRow</name>
+    <message>
+        <location filename="../modules/nexus/common/ToggleRow.qml" line="+94"/>
+        <source>Beta</source>
+        <translation>Beta</translation>
+    </message>
+</context>
+<context>
     <name>Toggles</name>
     <message>
         <location filename="../modules/utilities/cards/Toggles.qml" line="+140"/>
@@ -19038,9 +20462,27 @@ Comprueba que %1 muestra este código antes de aceptar: %2</translation>
     </message>
 </context>
 <context>
+    <name>TrayIcons</name>
+    <message>
+        <location filename="../modules/bar/popouts/TrayIcons.qml" line="+126"/>
+        <source>Show icons</source>
+        <translation>Mostrar iconos</translation>
+    </message>
+    <message>
+        <location line="+91"/>
+        <source>Nothing to place yet</source>
+        <translation>Nada que colocar todavía</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Tray settings</source>
+        <translation>Configuración de la bandeja del sistema</translation>
+    </message>
+</context>
+<context>
     <name>TrayItem</name>
     <message>
-        <location filename="../modules/bar/components/TrayItem.qml" line="+35"/>
+        <location filename="../modules/bar/components/TrayItem.qml" line="+28"/>
         <source>Left-click activates, right-click opens the menu, middle-click runs the secondary action.</source>
         <translation>El clic izquierdo activa; el clic derecho abre el menú y el clic central ejecuta la acción secundaria.</translation>
     </message>
@@ -19312,7 +20754,7 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
 <context>
     <name>UpdateChecker</name>
     <message>
-        <location filename="../services/UpdateChecker.qml" line="+463"/>
+        <location filename="../services/UpdateChecker.qml" line="+528"/>
         <location line="+23"/>
         <source>The update check failed</source>
         <translation>La comprobación de actualizaciones ha fallado</translation>
@@ -19339,17 +20781,17 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
     <message>
         <location filename="../modules/nexus/common/UpdateConfirmDialog.qml" line="+16"/>
         <source>Restore %1?</source>
-        <translation>Restaurar %1?</translation>
+        <translation>¿Restaurar %1?</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This reinstalls an older version over the one installed now. Your settings are backed up first, and the shell restarts when it finishes.</source>
-        <translation>Esto reinstala una versión más antigua sobre la instalada actualmente. Primero se hará una copia de seguridad de tus configuraciones, y la shell se reiniciará cuando acabe.</translation>
+        <translation>Esto reinstala una versión más antigua sobre la instalada actualmente. Primero se hará una copia de seguridad de tus configuraciones, y el shell se reiniciará al terminar.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This replaces %1 with %2. Your settings are backed up first, and the shell restarts when it finishes.</source>
-        <translation>Esto reemplaza %1 con %2. Primero se hará una copia de seguridad de tus configuraciones, y la shell se reiniciará cuando acabe.</translation>
+        <translation>Esto reemplaza %1 con %2. Primero se hará una copia de seguridad de tus configuraciones, y el shell se reiniciará al terminar.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -19360,14 +20802,14 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
 <context>
     <name>UpdateIndicator</name>
     <message>
-        <location filename="../modules/bar/components/UpdateIndicator.qml" line="+38"/>
+        <location filename="../modules/bar/components/UpdateIndicator.qml" line="+21"/>
         <source>Caelestia updates: %1</source>
         <translation>Actualizaciones de Caelestia: %1</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Left-click to open the Updates page. Right-click to check for updates</source>
-        <translation>Clic izquierdo para abrir la página de actualizaciones. Clic derecho para buscar actualizaciones</translation>
+        <location line="+1"/>
+        <source>Left-click to open the Updates page. Right-click for the icon&apos;s menu, where updates can be checked now</source>
+        <translation>Clic izquierdo para abrir la página de Actualizaciones. Clic derecho para el menú del icono, desde donde se pueden comprobar las actualizaciones ahora</translation>
     </message>
 </context>
 <context>
@@ -19449,12 +20891,32 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
     </message>
     <message>
         <location line="+1"/>
-        <location line="+68"/>
+        <location line="+121"/>
         <source>Update to %1</source>
         <translation>Actualizar a %1</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-115"/>
+        <source>Log out and back in when it finishes</source>
+        <translation>Cierra sesión y vuelve a iniciarla una vez acabe</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>also upgrades system packages</source>
+        <translation>también actualiza los paquetes del sistema</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>%1 downloaded</source>
+        <translation>%1 descargaa</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 · %2</source>
+        <translation>%1 · %2</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>From %1</source>
         <translation>Desde %1</translation>
     </message>
@@ -19469,55 +20931,102 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>la configuración está respaldada</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-17"/>
         <source>the shell restarts</source>
-        <translation>la shell se reinicia</translation>
+        <translation>el shell se reinicia</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Couldn&apos;t open a terminal</source>
-        <translation>No se ha podido abrir una terminal</translation>
-    </message>
-    <message>
-        <location line="+0"/>
+        <location line="+39"/>
         <source>Run %1 in a terminal instead</source>
         <translation>Ejecuta %1 en una terminal</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+6"/>
+        <location line="+20"/>
         <location line="+7"/>
         <source>Copy command</source>
         <translation>Copiar comando</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-27"/>
+        <source>Couldn&apos;t start the update</source>
+        <translation>No se ha podido iniciar la actualización</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location line="+11"/>
+        <location line="+9"/>
+        <location line="+7"/>
+        <source>Run in terminal</source>
+        <translation>Ejecutar en terminal</translation>
+    </message>
+    <message>
+        <location line="-17"/>
+        <source>Step %1 of %2</source>
+        <translation>Paso %1 de %2</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Updating in the terminal</source>
         <translation>Actualizando en la terminal</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-64"/>
         <source>The shell restarts when it finishes</source>
         <translation>La shell se reinicia cuando acaba</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+7"/>
-        <source>Open terminal again</source>
-        <translation>Abrir terminal de nuevo</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Opening the terminal…</source>
-        <translation>Abriendo la terminal...</translation>
-    </message>
-    <message>
-        <location line="+0"/>
+        <location line="+71"/>
         <source>Running %1</source>
         <translation>Ejecutando %1</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+0"/>
+        <source>Starting the update…</source>
+        <translation>Iniciando la actualización...</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Dismiss</source>
+        <translation>Ignorar</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The last update did not finish</source>
+        <translation>La última actualización no ha podido acabar</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Run the update again to see why</source>
+        <translation>Ejecuta la actualización de nuevo para ver por qué</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1 did not finish</source>
+        <translation>%1 no ha podido acabar</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Updated to %1</source>
+        <translation>Actualizado a %1</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Update finished</source>
+        <translation>Actualización finalizada</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Log out and back in to load it</source>
+        <translation>Cierra sesión y vuelve a entrar para cargarla</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>The %1 channel was updated</source>
+        <translation>El canal %1 ha sido actualizado</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Clear selection</source>
         <translation>Borrar selección</translation>
     </message>
@@ -19537,14 +21046,14 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Inténtalo de nuevo</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>Version %1 is available</source>
-        <translation>La versión %1 está disponible</translation>
+        <location line="+9"/>
+        <source>An update is available</source>
+        <translation>Hay una actualización disponible</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>An update is available</source>
-        <translation>Hay una actualización disponible</translation>
+        <source>Caelestia %1 is available</source>
+        <translation>Caelestia %1 está disponible</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -19557,14 +21066,24 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Actualizar ahora</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location line="+10"/>
+        <location line="+0"/>
+        <source>Restart &amp; Update</source>
+        <translation>Reiniciar y actualizar</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location line="+11"/>
         <location line="+3"/>
         <source>Check again</source>
         <translation>Comprueba de nuevo</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-14"/>
+        <source>Download first</source>
+        <translation>Descargar primero</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Update checking is off</source>
         <translation>La comprobación de actualizaciones está apagada</translation>
     </message>
@@ -19642,7 +21161,7 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Deshacer</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+16"/>
         <source>Your version</source>
         <translation>Tu versión</translation>
     </message>
@@ -19652,7 +21171,8 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Más reciente</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="-6"/>
+        <location line="+49"/>
         <source>Available</source>
         <translation>Disponible</translation>
     </message>
@@ -19667,7 +21187,7 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Pasada</translation>
     </message>
     <message>
-        <location line="+259"/>
+        <location line="+273"/>
         <source>Clear</source>
         <translation>Limpiar</translation>
     </message>
@@ -19703,32 +21223,27 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
 <context>
     <name>UpdatesPage</name>
     <message>
-        <location filename="../modules/nexus/pages/UpdatesPage.qml" line="+118"/>
+        <location filename="../modules/nexus/pages/UpdatesPage.qml" line="+160"/>
         <source>Updates</source>
         <translation>Actualizaciones</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Help</source>
-        <translation>Ayuda</translation>
-    </message>
-    <message>
-        <location line="+132"/>
+        <location line="+143"/>
         <source>Dismiss</source>
         <translation>Ignorar</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+61"/>
         <source>Release notes</source>
         <translation>Notas de versión</translation>
     </message>
     <message>
-        <location line="+32"/>
-        <source>Full release notes</source>
-        <translation>Notas de versión completas</translation>
+        <location line="+69"/>
+        <source>Your settings are saved here before each update</source>
+        <translation>Tus configuraciones se guardan aquí antes de cada actualización</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+34"/>
         <source>Commit history</source>
         <translation>Historial de commits</translation>
     </message>
@@ -19738,82 +21253,37 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Historial de versiones</translation>
     </message>
     <message>
-        <location line="+37"/>
-        <source>Show all commits (%1)</source>
-        <translation>Mostrar todos los commits (%1)</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>Show less</source>
-        <translation>Mostrar menos</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>Hide internal changes</source>
-        <translation>Ocultar cambios internos</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Show internal changes (%1)</source>
-        <translation>Mostrar cambios internos (%1)</translation>
-    </message>
-    <message>
-        <location line="+12"/>
+        <location line="+59"/>
         <source>Load older commits</source>
-        <translation>Cargar commits más viejos</translation>
+        <translation>Cargar commits más antiguos</translation>
     </message>
     <message>
-        <location line="+37"/>
-        <source>No history yet</source>
-        <translation>No hay historial todavía</translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>The first successful check fills this in.</source>
-        <translation>La primera comprobación satisfactoria rellena esto.</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>Update settings</source>
-        <translation>Configuración de actualizaciones</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Development builds — may be unstable</source>
-        <translation>Compilaciones de desarrollo — pueden ser inestables</translation>
-    </message>
-    <message>
-        <location line="+15"/>
-        <source>Check for updates automatically</source>
-        <translation>Comprobar actualizaciones periódicamente</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Every 30 minutes, and once when the shell starts</source>
-        <translation>Cada 30 minutos, y una vez cuando la shell se inicie</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <source>Maintenance</source>
-        <translation>Mantenimiento</translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>Open backup folder</source>
-        <translation>Abrir carpeta de respaldos</translation>
-    </message>
-    <message>
-        <location line="+38"/>
+        <location line="+63"/>
         <source>Couldn&apos;t open the folder — it is at ~/.config/caelestia-update/backups</source>
         <translation>No se ha podido abrir la carpeta — está en ~/.config/caelestia-update/backups</translation>
     </message>
     <message>
-        <location line="-338"/>
+        <location line="-263"/>
         <source>Checking…</source>
         <translation>Comprobando…</translation>
     </message>
     <message>
-        <location line="+264"/>
+        <location line="+53"/>
+        <source>Open on GitHub</source>
+        <translation>Abrir en GitHub</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Automatic Updates</source>
+        <translation>Actualizaciones automáticas</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Checked every 30 minutes, and once when the shell starts</source>
+        <translation>Comprobadas cada 30 minutos, y una vez cuando se inicia la shell</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Update channel</source>
         <translation>Canal de actualizaciones</translation>
     </message>
@@ -19823,17 +21293,47 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
         <translation>Versiones estables</translation>
     </message>
     <message>
-        <location line="+36"/>
-        <source>View your previously backed-up configuration files</source>
-        <translation>Ver los archivos de configuración respaldados anteriormente</translation>
+        <location line="+0"/>
+        <source>Development builds (may be unstable)</source>
+        <translation>Compilaciones de desarollo (pueden ser inestables)</translation>
     </message>
     <message>
-        <location line="-218"/>
-        <source>Switching to %1…</source>
-        <translation>Cambiando a %1…</translation>
+        <location line="+21"/>
+        <source>Backup folder</source>
+        <translation>Carpeta de respaldos</translation>
     </message>
     <message>
-        <location line="+120"/>
+        <location line="+42"/>
+        <source>More…</source>
+        <translation>Más...</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Less</source>
+        <translation>Menos</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Hide internal</source>
+        <translation>Esconder interno</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Internal (%1)</source>
+        <translation>Interno (%1)</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>No history yet.</source>
+        <translation>Sin historial todavía.</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Troubleshooting</source>
+        <translation>Solución de problemas</translation>
+    </message>
+    <message>
+        <location line="-23"/>
         <source>Loading…</source>
         <translation>Cargando…</translation>
     </message>
@@ -20746,18 +22246,39 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
 <context>
     <name>WhatsNewWindow</name>
     <message>
-        <location filename="../modules/whatsnew/WhatsNewWindow.qml" line="+110"/>
-        <location line="+148"/>
+        <location filename="../modules/whatsnew/WhatsNewWindow.qml" line="+155"/>
+        <location line="+143"/>
         <source>What&apos;s New in Caelestia</source>
         <translation>Novedades de Caelestia</translation>
     </message>
     <message>
-        <location line="-97"/>
+        <location line="-89"/>
         <source>What&apos;s New</source>
         <translation>Novedades</translation>
     </message>
     <message>
-        <location line="+421"/>
+        <location line="+156"/>
+        <source>Skip</source>
+        <translation>Saltar</translation>
+    </message>
+    <message>
+        <location line="+70"/>
+        <location line="+8"/>
+        <source>Show after updates</source>
+        <translation>Mostrar después de las actualizaciones</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Got it</source>
+        <translation>Lo tengo</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>%1 changes</source>
+        <translation>%1 cambios</translation>
+    </message>
+    <message>
+        <location line="+170"/>
         <source>Open in Settings</source>
         <translation>Abrir en Configuración</translation>
     </message>
@@ -21108,12 +22629,12 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
 <context>
     <name>WorkspaceTrackerGuard</name>
     <message>
-        <location filename="../services/WorkspaceTrackerGuard.qml" line="+42"/>
+        <location filename="../services/WorkspaceTrackerGuard.qml" line="+65"/>
         <source>no reason given</source>
         <translation>no se ha dado una razón</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-41"/>
         <source>Desktop tracking is off</source>
         <translation>El seguimiento de escritorio está apagado</translation>
     </message>
@@ -21126,7 +22647,7 @@ La barra desaparece mientras se ejecuta: El propio escritorio y panel de Plasma 
 <context>
     <name>Wrapper</name>
     <message>
-        <location filename="../modules/dashboard/Wrapper.qml" line="+20"/>
+        <location filename="../modules/dashboard/Wrapper.qml" line="+22"/>
         <source>Select a profile picture</source>
         <translation>Seleccionar una foto de perfil</translation>
     </message>

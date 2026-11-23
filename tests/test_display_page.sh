@@ -11,6 +11,9 @@ PAGE="$REPO_ROOT/shell/modules/nexus/pages/DisplayPage.qml"
 MODES="$REPO_ROOT/shell/modules/nexus/pages/display/DisplayModesPage.qml"
 REGISTRY="$REPO_ROOT/shell/modules/nexus/PageCompRegistry.qml"
 STATE="$REPO_ROOT/shell/modules/nexus/NexusState.qml"
+MENU="$REPO_ROOT/shell/components/controls/Menu.qml"
+NEXUS="$REPO_ROOT/shell/modules/nexus/Nexus.qml"
+REVERT="$REPO_ROOT/shell/modules/nexus/common/DisplayRevertDialog.qml"
 
 test_kscreen_is_the_only_owner_of_the_layout() {
     local service
@@ -72,6 +75,49 @@ test_the_page_is_driven_by_the_service() {
     assert_contains "$page" 'Launch.kcm("kcm_touchpad")' \
         "input settings stay with the KCM that owns them"
     assert_contains "$page" 'Launch.kcm("kcm_keyboard")' "and so does the keyboard"
+}
+
+test_the_best_scale_for_the_screen_is_named() {
+    local page menu
+
+    page="$(cat "$PAGE")"
+    menu="$(cat "$MENU")"
+
+    assert_contains "$page" 'function targetDpi(diagonalInches: real): real' \
+        "the density aimed for follows how far a screen of that size sits from the eye"
+    assert_contains "$page" 'const ideal = pixels / inches / root.targetDpi(inches);' \
+        "which turns the panel's own density into the scale that suits it"
+    assert_contains "$page" 'const sizeMm = output?.sizeMM;' \
+        "reading the size the compositor already reports for the screen"
+    assert_contains "$page" 'if (pixels === 0 || millimetres === 0)' \
+        "and leaving a panel that reports no size without a recommendation rather than a guess"
+    assert_contains "$page" 'recommended: root.recommendedScaleItem(outputSection.output)' \
+        "the scale menu is pointed at that preset"
+    assert_contains "$menu" 'qsTr("(Recommended)")' "which the menu says next to it"
+    assert_contains "$menu" 'property MenuItem recommended: null' \
+        "and only for a menu that was pointed at one"
+}
+
+test_a_layout_that_cannot_be_read_is_taken_back() {
+    local service nexus revert
+
+    service="$(cat "$SERVICE")"
+    nexus="$(cat "$NEXUS")"
+    revert="$(cat "$REVERT")"
+
+    assert_contains "$service" 'readonly property int revertSeconds: 10' \
+        "a new layout is given ten seconds before it is undone"
+    assert_contains "$service" 'readonly property bool awaitingKeep: root.revertSecondsLeft > 0' \
+        "the countdown is the whole of the state a prompt waits on"
+    assert_contains "$service" 'root.previousLayout = root.layoutSettings();' \
+        "the layout that was there is kept before the new one replaces it"
+    assert_contains "$service" 'writeProcess.command = ["kscreen-doctor", ...previous];' \
+        "and is put back through the same CLI it was read from"
+    assert_contains "$revert" 'onConfirmed: Displays.keepLayout()' "Keep ends the countdown"
+    assert_contains "$revert" 'onCancelled: Displays.revertLayout()' "Revert undoes it at once"
+    assert_contains "$revert" 'dismissible: false' "and it cannot be dismissed without answering"
+    assert_contains "$nexus" 'function onAwaitingKeepChanged(): void' \
+        "the prompt is shown over whatever page made the change"
 }
 
 test_the_mode_list_marks_and_applies() {

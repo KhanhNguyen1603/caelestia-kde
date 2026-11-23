@@ -9,6 +9,9 @@ BUILD_SHELL="$REPO_ROOT/scripts/08-build-shell.sh"
 
 # The guard decides from the checkout's own git state, so the test drives the
 # real functions against throwaway repositories rather than stubbing git.
+# Without the developer's git config, tag.gpgSign cannot turn a lightweight tag
+# into a signed one that needs a message.
+export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 GUARD_SOURCE="$(extract_function "$BUILD_SHELL" shell_release_tag; extract_function "$BUILD_SHELL" checkout_may_use_prebuilt)"
 
 if [[ -z "$GUARD_SOURCE" ]]; then

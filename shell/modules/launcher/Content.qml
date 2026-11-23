@@ -38,13 +38,18 @@ Item {
     // half takes room inside the panel. The drawers window paints the circle
     // above the launcher and joins it to the card through the blob group.
     readonly property int avatarSize: Math.round(Tokens.sizes.launcher.browseTileHeight * 1.3)
-    readonly property int headerHeight: root.modernStyle ? Math.round(root.avatarSize / 2 - 6) : 0
+    readonly property int headerHeight: root.modernStyle && !root.windowSwitcherMode ? Math.round(root.avatarSize / 2 - 6) : 0
     readonly property bool isBrowsing: list.showAppsBrowser
+    // The switcher is driven by the keyboard, so the launcher's search field and
+    // session buttons are hidden while it is open.
+    readonly property bool windowSwitcherMode: list.showWindowSwitcher
     // Classic keeps the launcher as it shipped (session row under the search
     // field); Modern is the profile picture header with the corner actions.
     readonly property bool modernStyle: Style.launcherStyle === "modern"
-    // The drawers window reads this to draw the circle behind the avatar.
-    readonly property bool showAvatar: root.modernStyle
+    // The drawers window reads this to draw the circle behind the avatar. The
+    // greeting and the profile picture are part of modern Launcher style, so they stay out of the
+    // window switcher.
+    readonly property bool showAvatar: root.modernStyle && !root.windowSwitcherMode
 
     function clearClipboardHistory(): void {
         Clipboard.clearHistory();
@@ -84,7 +89,7 @@ Item {
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: root.modernStyle ? searchWrapper.top : sessionFooter.top
-        anchors.bottomMargin: root.footerSpacing
+        anchors.bottomMargin: root.windowSwitcherMode ? root.padding : root.footerSpacing
 
         ContentList {
             id: list
@@ -109,7 +114,7 @@ Item {
         // No card sits behind the avatar, so the picture fills the circle.
         property int ring: 2
 
-        visible: root.modernStyle
+        visible: root.modernStyle && !root.windowSwitcherMode
         anchors.horizontalCenter: parent.horizontalCenter
         y: 4 - (root.avatarSize / 2 + 4) * (panels.launcher?.avatarOpenScale ?? (root.modernStyle ? 1 : 0))
         opacity: panels.launcher?.avatarOpenScale ?? (root.modernStyle ? 1 : 0)
@@ -179,7 +184,7 @@ Item {
     StyledRect {
         id: sessionFooter
 
-        visible: !root.modernStyle && Config.launcher.showPowerMenu
+        visible: !root.modernStyle && Config.launcher.showPowerMenu && !list.showWindowSwitcher
 
         color: Colours.layer(Colours.palette.m3surfaceContainerLow, 2)
         radius: Tokens.rounding.extraLarge
@@ -246,7 +251,7 @@ Item {
     StyledText {
         id: greeting
 
-        visible: root.modernStyle
+        visible: root.modernStyle && !root.windowSwitcherMode
         anchors.left: parent.left
         // Line the greeting up with the category labels: the browser adds its
         // own padding and each button insets its content by the medium padding.
@@ -280,7 +285,7 @@ Item {
         IconButton {
             id: powerBtn
 
-            visible: root.modernStyle && Config.launcher.showPowerMenu
+            visible: root.modernStyle && Config.launcher.showPowerMenu && !list.showWindowSwitcher
             isRound: true
             type: IconButton.Tonal
             icon: "power_settings_new"
@@ -383,9 +388,12 @@ Item {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: root.padding
-        anchors.bottomMargin: CUtils.clamp(root.padding - Config.border.thickness, 0, root.padding)
+        anchors.bottomMargin: root.windowSwitcherMode ? 0 : CUtils.clamp(root.padding - Config.border.thickness, 0, root.padding)
 
-        implicitHeight: Math.max(searchIcon.implicitHeight, search.implicitHeight, clearClipboardIcon.implicitHeight, clearIcon.implicitHeight, commandsBtn.implicitHeight)
+        // Keep the field instantiated and focused for the switcher's keys, but
+        // collapse the row so it takes no space and is not drawn.
+        opacity: root.windowSwitcherMode ? 0 : 1
+        implicitHeight: root.windowSwitcherMode ? 0 : Math.max(searchIcon.implicitHeight, search.implicitHeight, clearClipboardIcon.implicitHeight, clearIcon.implicitHeight, commandsBtn.implicitHeight)
 
         MaterialIcon {
             id: searchIcon
@@ -558,11 +566,34 @@ Item {
                 forceActiveFocus();
             }
 
+            Timer {
+                id: keyboardRetry
+
+                interval: 60
+                onTriggered: {
+                    if (root.visibilities.launcher && !search.activeFocus)
+                        search.forceActiveFocus();
+                }
+            }
+
+            Connections {
+                function onActiveChanged(): void {
+                    if (root.Window.window?.active && root.visibilities.launcher)
+                        keyboardRetry.restart();
+                }
+
+                target: root.Window.window
+            }
+
             Connections {
                 function onLauncherChanged(): void {
                     if (root.visibilities.launcher) {
                         search.text = root.searchTextForMode(Visibilities.launcherMode);
                         search.forceActiveFocus();
+                        // The drawers window may still be activating, and the keyboard
+                        // handler holds focus until something in here claims it. Ask
+                        // again once that settles so typing always lands in the field.
+                        keyboardRetry.restart();
                     } else {
                         Windows.isSwitching = false;
                         Kwin.clearHighlight();

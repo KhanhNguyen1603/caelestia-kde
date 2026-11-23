@@ -10,6 +10,7 @@ import qs.components.controls
 import qs.components.effects
 import qs.services
 import qs.modules.nexus
+import qs.modules.nexus.common
 
 Item {
     id: root
@@ -316,6 +317,21 @@ Item {
         anchors.rightMargin: navPane.anchors.margins
 
         nState: nState
+    }
+
+    DisplayRevertDialog {
+        id: displayRevertDialog
+    }
+
+    Connections {
+        target: Displays
+
+        function onAwaitingKeepChanged(): void {
+            if (Displays.awaitingKeep)
+                displayRevertDialog.open();
+            else
+                displayRevertDialog.close();
+        }
     }
 
     // The page margins around the content are outside the page flickable, so

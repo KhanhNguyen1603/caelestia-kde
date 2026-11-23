@@ -44,6 +44,7 @@ Item {
 
     visible: !visibilities.overview
     implicitWidth: Tokens.sizes.utilities.toastWidth - Tokens.padding.medium * 2
+    width: implicitWidth
     implicitHeight: {
         let h = -spacing;
         for (let i = 0; i < repeater.count; i++) {
@@ -53,6 +54,56 @@ Item {
         }
         return h;
     }
+    states: [
+        State {
+            name: "bottom-left"
+            when: !root.fromTop && root.fromLeft
+
+            AnchorChanges {
+                target: root
+                anchors.top: undefined
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: undefined
+            }
+        },
+        State {
+            name: "bottom-right"
+            when: !root.fromTop && !root.fromLeft
+
+            AnchorChanges {
+                target: root
+                anchors.top: undefined
+                anchors.bottom: parent.bottom
+                anchors.left: undefined
+                anchors.right: parent.right
+            }
+        },
+        State {
+            name: "top-left"
+            when: root.fromTop && root.fromLeft
+
+            AnchorChanges {
+                target: root
+                anchors.top: parent.top
+                anchors.bottom: undefined
+                anchors.left: parent.left
+                anchors.right: undefined
+            }
+        },
+        State {
+            name: "top-right"
+            when: root.fromTop && !root.fromLeft
+
+            AnchorChanges {
+                target: root
+                anchors.top: parent.top
+                anchors.bottom: undefined
+                anchors.left: undefined
+                anchors.right: parent.right
+            }
+        }
+    ]
 
     Repeater {
         id: repeater

@@ -30,6 +30,7 @@ class BarPopouts : public settings::ObjectNode {
     // On by default: the popout is the only way to reach the calendar, and the month
     // grid with its agenda is the whole point of the clock being clickable.
     CONFIG_PROPERTY(bool, clock, true)
+    CONFIG_PROPERTY(bool, appmenu, true)
 };
 
 class BarWorkspaces : public settings::ObjectNode {
@@ -151,6 +152,7 @@ class BarDock : public settings::ObjectNode {
 
     CONFIG_PROPERTY(bool, monitorCenter, true)
     CONFIG_PROPERTY(bool, recolourIcons, false)
+    CONFIG_PROPERTY(QString, launchingStyle, u"circle"_s)
     CONFIG_PROPERTY(bool, showBadges, true)
     CONFIG_PROPERTY(int, iconSize, 32)
     CONFIG_PROPERTY(bool, currentDesktopOnly, false)
@@ -203,9 +205,21 @@ class BarKeepAwake : public settings::ObjectNode {
     CONFIG_PROPERTY(bool, autoHide, false)
 };
 
+class BarAppMenu : public settings::ObjectNode {
+    CONFIG_NODE(BarAppMenu, settings::ObjectNode)
+
+    CONFIG_PROPERTY(bool, showIcon, true)
+    CONFIG_PROPERTY(bool, showTitle, true)
+    CONFIG_PROPERTY(bool, showChevron, true)
+    CONFIG_PROPERTY(bool, compact, false)
+    CONFIG_PROPERTY(bool, autoHide, false)
+    CONFIG_PROPERTY(int, maxTitleLength, 30)
+};
+
 class BarPreviewScales : public settings::ObjectNode {
     CONFIG_NODE(BarPreviewScales, settings::ObjectNode)
 
+    CONFIG_PROPERTY(qreal, appmenu, 0.0)
     CONFIG_PROPERTY(qreal, greeter, 0.0)
     CONFIG_PROPERTY(qreal, audio, 0.0)
     CONFIG_PROPERTY(qreal, battery, 0.0)
@@ -226,6 +240,7 @@ class BarPreviewScales : public settings::ObjectNode {
 class BarPreviewFontScales : public settings::ObjectNode {
     CONFIG_NODE(BarPreviewFontScales, settings::ObjectNode)
 
+    CONFIG_PROPERTY(qreal, appmenu, 0.0)
     CONFIG_PROPERTY(qreal, greeter, 0.0)
     CONFIG_PROPERTY(qreal, audio, 0.0)
     CONFIG_PROPERTY(qreal, battery, 0.0)
@@ -256,6 +271,7 @@ class BarConfig : public settings::ObjectNode {
     CONFIG_SUBOBJECT(BarPreviewScales, previewScales)
     CONFIG_SUBOBJECT(BarPreviewFontScales, previewFontScales)
     CONFIG_PROPERTY(bool, persistent, true)
+    CONFIG_PROPERTY(bool, islands, false)
     CONFIG_PROPERTY(bool, dodgeWindows, false)
     CONFIG_PROPERTY(bool, dodgeFocusedOnly, false)
     CONFIG_PROPERTY(bool, showOnHover, true)
@@ -264,6 +280,7 @@ class BarConfig : public settings::ObjectNode {
     CONFIG_SUBOBJECT(BarScrollActions, scrollActions)
     CONFIG_SUBOBJECT(BarPopouts, popouts)
     CONFIG_SUBOBJECT(BarWorkspaces, workspaces)
+    CONFIG_SUBOBJECT(BarAppMenu, appmenu)
     CONFIG_SUBOBJECT(BarGreeter, greeter)
     CONFIG_SUBOBJECT(BarTray, tray)
     CONFIG_SUBOBJECT(BarStatus, status)
@@ -296,6 +313,7 @@ class BarConfig : public settings::ObjectNode {
         DEFAULT_ARG({
             vmap({ { u"id"_s, u"logo"_s }, { u"enabled"_s, true }, { u"zone"_s, u"left"_s } }),
             vmap({ { u"id"_s, u"workspaces"_s }, { u"enabled"_s, true }, { u"zone"_s, u"left"_s } }),
+            vmap({ { u"id"_s, u"appmenu"_s }, { u"enabled"_s, false }, { u"zone"_s, u"left"_s } }),
             vmap({ { u"id"_s, u"greeter"_s }, { u"enabled"_s, true }, { u"zone"_s, u"left"_s } }),
             vmap({ { u"id"_s, u"dock"_s }, { u"enabled"_s, true }, { u"zone"_s, u"middle"_s } }),
             vmap({ { u"id"_s, u"tray"_s }, { u"enabled"_s, true }, { u"zone"_s, u"right"_s } }),

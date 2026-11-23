@@ -12,8 +12,13 @@ Singleton {
 
     function getRegex(pattern: string): var {
         let re = _regexCache[pattern];
-        if (!re) {
-            re = new RegExp(pattern);
+        if (re === undefined) {
+            try {
+                re = new RegExp(pattern);
+            } catch (e) {
+                console.warn("Strings.getRegex: Invalid regular expression pattern:", pattern, e);
+                re = null;
+            }
             _regexCache[pattern] = re;
         }
         return re;
@@ -22,8 +27,10 @@ Singleton {
     function testRegex(pattern: string, target: string): bool {
         if (!pattern || !target)
             return false;
-        if (isRegex(pattern))
-            return getRegex(pattern).test(target);
+        if (isRegex(pattern)) {
+            const re = getRegex(pattern);
+            return re ? re.test(target) : pattern === target;
+        }
         return pattern === target;
     }
 
@@ -34,7 +41,8 @@ Singleton {
         for (let i = 0; i < arr.length; i++) {
             const filter = arr[i];
             if (isRegex(filter)) {
-                if (getRegex(filter).test(target))
+                const re = getRegex(filter);
+                if (re && re.test(target))
                     return true;
             } else if (filter === target) {
                 return true;
@@ -50,7 +58,8 @@ Singleton {
         for (let i = 0; i < arr.length; i++) {
             const filter = arr[i];
             if (isRegex(filter)) {
-                if (getRegex(filter).test(target))
+                const re = getRegex(filter);
+                if (re && re.test(target))
                     return i;
             } else if (filter === target) {
                 return i;

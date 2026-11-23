@@ -13,13 +13,14 @@ Singleton {
     property var screens: new Map()
     property var bars: new Map()
     property var docks: new Map()
+    property var dockPanels: new Map()
     property var exclusions: new Map()
     property string initialSidebarTab: ""
     property string lastSidebarTab: "notifications"
     property int openDialogs: 0
     readonly property bool contextPopoutOpen: {
         for (const bar of bars.values())
-            if (bar?.popouts?.isContextPopout)
+            if (bar?.popouts?.isContextPopout || (bar?.popouts?.staysOpen && bar?.popouts?.hasCurrent))
                 return true;
         return false;
     }
@@ -102,6 +103,14 @@ Singleton {
         bars.set(screen.name, barWrapper);
         bars = new Map(bars);
     }
+    function registerDockPanel(screen: ShellScreen, dockPanelWrapper: var): void {
+        dockPanels.set(screen.name, dockPanelWrapper);
+        dockPanels = new Map(dockPanels);
+    }
+    function unregisterDockPanel(screen: ShellScreen): void {
+        dockPanels.delete(screen.name);
+        dockPanels = new Map(dockPanels);
+    }
     function registerDock(screen: ShellScreen, dock: var): void {
         docks.set(screen.name, dock);
         docks = new Map(docks);
@@ -144,8 +153,9 @@ Singleton {
         // The mode has to be in place first: the launcher applies it to its search
         // field when it opens.
         launcherMode = mode;
-        v.launcher = true;
+        setLauncherOwner(v, true);
         launcherOpened(mode);
+        v.launcher = true;
     }
     function closeLauncher(): void {
         if (launcherScreen)
@@ -250,7 +260,7 @@ Singleton {
     }
     function closeContextPopouts(): void {
         for (const bar of bars.values())
-            if (bar?.popouts?.isContextPopout)
+            if (bar?.popouts?.isContextPopout || (bar?.popouts?.staysOpen && bar?.popouts?.hasCurrent))
                 bar.popouts.close();
     }
 

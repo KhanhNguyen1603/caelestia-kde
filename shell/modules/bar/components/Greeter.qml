@@ -11,7 +11,6 @@ Item {
     id: root
 
     required property var bar
-    required property Brightness.Monitor monitor
     property color colour: Colours.palette.m3primary
 
     readonly property real rawScale: !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0
@@ -58,21 +57,15 @@ Item {
         return `${msg}, ${formattedUser}!`;
     }
 
-    readonly property int maxSize: {
-        const otherModules = bar.children.filter(c => c.id && c.item && c.item !== this && c.id !== "spacer");
-        if (bar.isHorizontal) {
-            const otherWidth = otherModules.reduce((acc, curr) => acc + (curr.item.nonAnimWidth ?? curr.width), 0);
-            return bar.width - otherWidth - bar.spacing * (bar.children.length - 1) - bar.vPadding * 2;
-        } else {
-            const otherHeight = otherModules.reduce((acc, curr) => acc + (curr.item.nonAnimHeight ?? curr.height), 0);
-            return bar.height - otherHeight - bar.spacing * (bar.children.length - 1) - bar.vPadding * 2;
-        }
-    }
     property Title current: text1
 
     clip: true
-    implicitWidth: bar.isHorizontal ? Math.max(0, Math.min(icon.implicitWidth + current.width + current.anchors.leftMargin, maxSize)) : Math.max(icon.implicitWidth, current.width)
-    implicitHeight: bar.isHorizontal ? Math.max(icon.implicitHeight, current.height) : Math.max(0, Math.min(icon.implicitHeight + current.height + current.anchors.topMargin, maxSize))
+    implicitWidth: bar.isHorizontal
+        ? (icon.implicitWidth + current.width + current.anchors.leftMargin)
+        : Math.max(icon.implicitWidth, current.width)
+    implicitHeight: bar.isHorizontal
+        ? Math.max(icon.implicitHeight, current.height)
+        : (icon.implicitHeight + current.height + current.anchors.topMargin)
 
     MouseArea {
         anchors.fill: parent
@@ -81,7 +74,7 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
 
         onPositionChanged: {
-            if (root.bar.popouts.hasCurrent && root.bar.popouts.currentName === "greetercontext") return;
+            if (root.bar.popouts.hasCurrent && (root.bar.popouts.currentName === "greetercontext" || root.bar.popouts.staysOpen)) return;
             const popouts = root.bar.popouts;
             if (popouts.hasCurrent && popouts.currentName !== "greeter" && popouts.currentName !== "activewindow")
                 popouts.hasCurrent = false;
@@ -93,14 +86,13 @@ Item {
                 popouts.currentCenter = bar.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
                 popouts.hasCurrent = true;
             } else if (mouse.button === Qt.LeftButton) {
-                if (!Config.bar.greeter.showOnHover) {
-                    if (popouts.hasCurrent && (popouts.currentName === "greeter" || popouts.currentName === "activewindow")) {
-                        popouts.hasCurrent = false;
-                    } else {
-                        popouts.currentName = "greeter";
-                        popouts.currentCenter = bar.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
-                        popouts.hasCurrent = true;
-                    }
+                if (popouts.hasCurrent && (popouts.currentName === "greeter" || popouts.currentName === "activewindow")) {
+                    popouts.hasCurrent = false;
+                } else if (Config.bar.popouts.greeter && !Config.bar.greeter.showOnHover) {
+                    popouts.currentName = "greeter";
+                    popouts.currentCenter = bar.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
+                    popouts.hasCurrent = true;
+                    popouts.staysOpen = true;
                 } else if (popouts.hasCurrent && popouts.currentName === "greetercontext") {
                     popouts.hasCurrent = false;
                 }
@@ -124,6 +116,8 @@ Item {
 
     Title {
         id: text1
+
+        text: root.windowTitle
     }
 
     Title {

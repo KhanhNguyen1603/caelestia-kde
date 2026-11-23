@@ -544,6 +544,7 @@ root.snapshotWorkspaceUuid = Kwin.workspaces[snapIdx]
                 }
 
                 Tooltip {
+                    parent: fullscreenBtn.Window.contentItem
                     target: fullscreenBtn
                     text: qsTr("Full Screen Screenshot")
                 }
@@ -557,6 +558,7 @@ root.snapshotWorkspaceUuid = Kwin.workspaces[snapIdx]
                 onClicked: root.snip();
 
                 Tooltip {
+                    parent: confirmBtn.Window.contentItem
                     target: confirmBtn
                     text: qsTr("Snip selected region (Enter)")
                 }
@@ -577,6 +579,7 @@ root.snapshotWorkspaceUuid = Kwin.workspaces[snapIdx]
                 }
 
                 Tooltip {
+                    parent: closeBtn.Window.contentItem
                     target: closeBtn
                     text: root.regionConfirmPending ? qsTr("Clear selection") : qsTr("Close")
                 }

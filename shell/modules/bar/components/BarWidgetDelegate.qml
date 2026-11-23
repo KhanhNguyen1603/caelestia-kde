@@ -50,6 +50,14 @@ DelegateChooser {
         }
     }
     DelegateChoice {
+        roleValue: "appmenu"
+        delegate: WrappedLoader {
+            sourceComponent: AppMenu {
+                bar: root.bar
+            }
+        }
+    }
+    DelegateChoice {
         roleValue: "dock"
         delegate: WrappedLoader {
             sourceComponent: Dock {
@@ -62,7 +70,6 @@ DelegateChooser {
         delegate: WrappedLoader {
             sourceComponent: Greeter {
                 bar: root.bar
-                monitor: root.bar ? Brightness.getMonitorForScreen(root.bar.screen) : null
             }
         }
     }

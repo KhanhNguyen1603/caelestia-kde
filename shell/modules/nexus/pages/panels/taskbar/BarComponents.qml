@@ -21,6 +21,7 @@ PageBase {
         const meta = {
             "logo": { icon: "rocket_launch", name: qsTr("Logo") },
             "workspaces": { icon: "workspaces", name: qsTr("Workspaces") },
+            "appmenu": { icon: "menu", name: qsTr("App menu") },
             "github": {
                 icon: "commit",
                 name: qsTr("GitHub"),

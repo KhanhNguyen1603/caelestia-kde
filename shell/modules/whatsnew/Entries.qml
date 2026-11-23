@@ -8,44 +8,47 @@ QtObject {
 
     readonly property var list: [
         {
-            "id": "unified_tray",
-            "revision": 90,
-            "version": "2.7.5",
-            "date": "2026-11-17",
+            "id": "floating_dock",
+            "revision": 94,
+            "version": "2.7.6",
+            "date": "2026-11-23",
+            "icon": "dock",
+            "title": qsTr("A Dock You Can Shape"),
+            "settingsPage": "panels",
+            "settingsSubPage": "barDock",
+            "description": qsTr("Pin apps to a dock that floats clear of the screen edge, with its own length, icon size, labels and launch indicator.")
+        },
+        {
+            "id": "app_menu",
+            "revision": 95,
+            "version": "2.7.6",
+            "date": "2026-11-23",
+            "icon": "menu",
+            "title": qsTr("App Menu in the Bar"),
+            "settingsPage": "panels",
+            "settingsSubPage": "barAppMenu",
+            "description": qsTr("Show the focused app's menu and icon in the bar, and open a workspace picker from its popout.")
+        },
+        {
+            "id": "window_switcher_grid",
+            "revision": 96,
+            "version": "2.7.6",
+            "date": "2026-11-23",
             "icon": "grid_view",
-            "title": qsTr("One System Tray"),
+            "title": qsTr("Alt+Tab as a Grid"),
             "settingsPage": "panels",
-            "settingsSubPage": "barTray",
-            "description": qsTr("Icons and bar widgets share one tray, with a box for the ones that do not fit and drag and drop between them.")
+            "settingsSubPage": "tabSwitcher",
+            "description": qsTr("Switch the window switcher to a grid, keeping each preview's shape and place from the overview.")
         },
         {
-            "id": "lockscreen_frost",
-            "revision": 91,
-            "version": "2.7.5",
-            "date": "2026-11-17",
-            "icon": "blur_on",
-            "title": qsTr("Frosted Lock Screen"),
-            "description": qsTr("The lock screen thaws in through a frosted copy of the desktop instead of cutting to black first.")
-        },
-        {
-            "id": "launcher_greeting",
-            "revision": 92,
-            "version": "2.7.5",
-            "date": "2026-11-17",
-            "icon": "waving_hand",
-            "title": qsTr("A Greeting in the Launcher"),
-            "description": qsTr("The modern launcher greets you by name, and the avatar floats without a card behind it.")
-        },
-        {
-            "id": "keepawake_expiry",
-            "revision": 93,
-            "version": "2.7.5",
-            "date": "2026-11-17",
-            "icon": "timer",
-            "title": qsTr("Keep Awake Expiry"),
-            "settingsPage": "panels",
-            "settingsSubPage": "barKeepAwake",
-            "description": qsTr("Choose how long Keep Awake lasts from the widget menu, and see when it runs out.")
+            "id": "updates_page",
+            "revision": 97,
+            "version": "2.7.6",
+            "date": "2026-11-23",
+            "icon": "system_update",
+            "title": qsTr("Updates in One Place"),
+            "settingsPage": "updates",
+            "description": qsTr("Run an update in place and follow its stages, with the status card and history on the same page.")
         }
     ]
 
