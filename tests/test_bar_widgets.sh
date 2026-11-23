@@ -153,8 +153,12 @@ test_the_right_zone_is_one_system_tray_plus_the_clock() {
 }
 
 test_the_tray_arrow_opens_a_hidden_icons_panel() {
-    assert_file_contains "$TRAY" 'readonly property bool showArrow: root.showTrayIcons' \
-        "the chevron is on the bar for as long as the tray is"
+    assert_file_contains "$TRAY" 'readonly property bool hasOverflow: (root.showTrayIcons && TrayRegistry.overflowCount > 0) || BarWidgets.overflowWidgets(GlobalConfig.bar).length > 0' \
+        "the tray checks both overflow icons and overflow bar widgets"
+    assert_file_contains "$TRAY" 'readonly property bool showArrow: root.hasOverflow' \
+        "the chevron stays hidden when the overflow box is empty"
+    assert_file_contains "$TRAY" 'function closeEmptyOverflow(): void' \
+        "the overflow box closes when a drag ends or its last item leaves and it is empty"
     assert_file_contains "$TRAY" 'popouts.currentName = "trayOverflow"' \
         "clicking the arrow should open the overflow panel"
     assert_file_contains "$POPOUTS" 'name: "trayOverflow"' \
