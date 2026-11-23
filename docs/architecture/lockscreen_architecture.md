@@ -16,7 +16,7 @@ The greeter renders in QtQuick inside KWin's compositor, so the lock screen is a
 
 The backend keeps one prompt open until the password answers it. Since the kscreenlocker 6.8 PAM rework, a second `startAuthenticating()` while that prompt is live is treated as a failed login. [`AuthHandler.qml`](../../src/kde/shells/caelestia.desktop/contents/lockscreen/components/AuthHandler.qml) tracks `promptPending` and never restarts authentication while a prompt (echo-off or echo-on) waits. The heartbeat and key-press paths only start a conversation when none is live, and a scan that did not match runs beside the password prompt instead of ending it.
 
-Neither `busy` nor the prompt strings can stand in for `promptPending`: `busy` is false while a prompt waits, `prompt` and `promptForSecret` keep their last value after the conversation ends, and they also change once with no prompt behind them when the backend resets its authenticator.
+Neither `busy` nor the prompt strings can stand in for `promptPending`: `busy` is false while a prompt waits, `prompt` and `promptForSecret` keep their last value after the conversation ends, and they also change once with no prompt behind them when the backend resets its authenticator. When `kscreenlocker_greet` destroys and recreates a view (for example after a monitor disconnects and reconnects), the shared `PamAuthenticators` may already have a prompt waiting, so `AuthHandler` checks `state === 1` (`Authenticating`, compared numerically because Plasma 6.6 and earlier do not register `ScreenLocker.Authenticators` in QML), `!busy`, `!pamTimeout`, `!inPasswordDelay`, `!unlocked`, and `Boolean(promptForSecret || prompt)` on attach, and clears `promptPending` if `state` returns to `Idle` (`0`). Queued early passwords are flushed via `Qt.callLater()` rather than synchronously inside `onPromptChanged` / `onPromptForSecretChanged`, because `PamAuthenticator::promptInternal()` emits those signals before assigning `m_pendingPrompt = message()`. `stopAuthenticating()` is reserved for a successful unlock because in kscreenlocker 6.8 cancelling terminates the PAM worker permanently and nothing respawns it.
 
 ## Component structure
 
@@ -109,7 +109,7 @@ QML2_IMPORT_PATH="$HOME/.local/lib/qt6/qml" \
 
 ```bash
 tests/run-tests.sh --suite isolated test_lockscreen_auth_loop
-python3 tests/qml/lockscreen_auth/run.py A B C F G H I D   # A idle, B first attempt, C retry, F typing, G failed scan, H authenticator reset, I echo-on prompt, D after 15 s idle
+python3 tests/qml/lockscreen_auth/run.py A B C F G H I J K L D
 ```
 
 ## Uninstalling

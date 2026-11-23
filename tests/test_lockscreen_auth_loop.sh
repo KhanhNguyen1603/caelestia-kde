@@ -86,4 +86,26 @@ test_an_echo_on_prompt_holds_the_guard() {
     expect_harness "an echo-on prompt must not be restarted either" I
 }
 
+# Power-cycling a monitor destroys the old QQuickView and creates a new one on the same
+# shared PamAuthenticators while the password prompt is still open. The new AuthHandler
+# must adopt the open prompt instead of starting a second conversation.
+test_recreated_view_answers_an_already_open_prompt() {
+    have_harness_runtime || return 0
+    expect_harness "a recreated lock view must answer an already-open prompt" J
+}
+
+# After a failed attempt, promptForSecret stays sticky while state returns to Idle. A
+# recreated view must not mistake that sticky string for an open prompt.
+test_recreated_view_ignores_stale_prompt_after_failure() {
+    have_harness_runtime || return 0
+    expect_harness "a recreated lock view must start fresh after a failed attempt" K
+}
+
+# If state returns to Idle without a failed(0) signal while promptForSecret stays sticky,
+# promptPending must clear so the next submit does not call respond() with no pending prompt.
+test_idle_state_clears_stale_prompt_guard() {
+    have_harness_runtime || return 0
+    expect_harness "returning to Idle must clear promptPending before the next submit" L
+}
+
 run_tests
