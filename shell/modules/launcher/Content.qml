@@ -38,7 +38,7 @@ Item {
     // half takes room inside the panel. The drawers window paints the circle
     // above the launcher and joins it to the card through the blob group.
     readonly property int avatarSize: Math.round(Tokens.sizes.launcher.browseTileHeight * 1.3)
-    readonly property int headerHeight: root.modernStyle ? Math.round(root.avatarSize / 2 - 6) : 0
+    readonly property int headerHeight: root.modernStyle && !root.windowSwitcherMode ? Math.round(root.avatarSize / 2 - 6) : 0
     readonly property bool isBrowsing: list.showAppsBrowser
     // The switcher is driven by the keyboard, so the launcher's search field and
     // session buttons are hidden while it is open.
@@ -46,8 +46,10 @@ Item {
     // Classic keeps the launcher as it shipped (session row under the search
     // field); Modern is the profile picture header with the corner actions.
     readonly property bool modernStyle: Style.launcherStyle === "modern"
-    // The drawers window reads this to draw the circle behind the avatar.
-    readonly property bool showAvatar: root.modernStyle
+    // The drawers window reads this to draw the circle behind the avatar. The
+    // greeting and the profile picture are part of modern Launcher style, so they stay out of the
+    // window switcher.
+    readonly property bool showAvatar: root.modernStyle && !root.windowSwitcherMode
 
     function clearClipboardHistory(): void {
         Clipboard.clearHistory();
@@ -112,7 +114,7 @@ Item {
         // No card sits behind the avatar, so the picture fills the circle.
         property int ring: 2
 
-        visible: root.modernStyle
+        visible: root.modernStyle && !root.windowSwitcherMode
         anchors.horizontalCenter: parent.horizontalCenter
         y: 4 - (root.avatarSize / 2 + 4) * (panels.launcher?.avatarOpenScale ?? (root.modernStyle ? 1 : 0))
         opacity: panels.launcher?.avatarOpenScale ?? (root.modernStyle ? 1 : 0)
@@ -249,7 +251,7 @@ Item {
     StyledText {
         id: greeting
 
-        visible: root.modernStyle
+        visible: root.modernStyle && !root.windowSwitcherMode
         anchors.left: parent.left
         // Line the greeting up with the category labels: the browser adds its
         // own padding and each button insets its content by the medium padding.
