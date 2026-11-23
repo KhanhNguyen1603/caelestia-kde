@@ -15,6 +15,10 @@ QtObject {
     // than closing the moment the pointer leaves it. It says so here instead of being
     // pinned by name, so any popout opened that way is kept open by the same rule.
     property bool staysOpen: false
+    // The launcher owns hover while it is open: the pointer crossing the bar on
+    // its way to a tray icon must not open a preview under it, and the bar must
+    // not close what the launcher's own dismissal owns.
+    readonly property bool hoverSuppressed: Visibilities.launcherOpen
     property var dockModel: null
     property var tasksModel: null
     property string selectedClientAddress: ""

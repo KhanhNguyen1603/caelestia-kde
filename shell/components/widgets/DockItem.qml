@@ -81,18 +81,25 @@ Item {
 
     signal activateRequested()
 
+    // Both the item's own hover state and the state layer's enter report the
+    // pointer arriving, so the decision to open the preview lives in one place.
+    function openDockHover(): void {
+        if (!root.popouts || root.popouts.hoverSuppressed)
+            return;
+        if (root.popouts.hasCurrent && root.popouts.currentName === "dockcontext")
+            return;
+        root.popouts.sourcePanel = root.sourcePanel;
+        root.popouts.currentName = "dockhover";
+        root.popouts.currentCenter = root.isHorizontal
+            ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x
+            : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
+        root.popouts.dockModel = root.modelData;
+        root.popouts.hasCurrent = true;
+    }
+
     onIsHoveredChanged: {
-        if (root.isHovered && root.popouts) {
-            if (Visibilities.launcherOpen) return;
-            if (root.popouts.hasCurrent && root.popouts.currentName === "dockcontext") return;
-            root.popouts.sourcePanel = root.sourcePanel;
-            root.popouts.currentName = "dockhover";
-            root.popouts.currentCenter = root.isHorizontal
-                ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x
-                : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
-            root.popouts.dockModel = root.modelData;
-            root.popouts.hasCurrent = true;
-        }
+        if (root.isHovered)
+            root.openDockHover();
     }
 
     width: root.isHorizontal ? Math.round(root.baseWidth * root.currentScale) : root.baseWidth
@@ -324,18 +331,7 @@ Item {
             acceptedButtons: Qt.NoButton
             showHoverBackground: false
 
-            onEntered: {
-                if (!root.popouts) return;
-                if (Visibilities.launcherOpen) return;
-                if (root.popouts.hasCurrent && root.popouts.currentName === "dockcontext") return;
-                root.popouts.sourcePanel = root.sourcePanel;
-                root.popouts.currentName = "dockhover";
-                root.popouts.currentCenter = root.isHorizontal
-                    ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x
-                    : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
-                root.popouts.dockModel = root.modelData;
-                root.popouts.hasCurrent = true;
-            }
+            onEntered: root.openDockHover()
         }
 
         MouseArea {

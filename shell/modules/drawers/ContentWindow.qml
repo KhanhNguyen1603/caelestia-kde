@@ -38,19 +38,21 @@ StyledWindow {
     // them, so both survive the dashboard closing and a shell reload.
     readonly property ScreenState screenState: ShellState.forScreen(screen)
     readonly property var monitor: Kwin.monitorFor(screen)
-    // Reference Kwin.activeWsId so QML re-evaluates this binding whenever the
-    // active workspace changes — hasFullscreenOn() filters by workspace, but
-    // a plain function call only re-runs when its direct property deps change.
-    readonly property bool actualFullscreen: (Kwin.activeWsId, Kwin.hasFullscreenOn(screen?.name ?? ""))
+    // hasFullscreenOn() reads the bridge's fullscreenOutputs, so this binding
+    // follows the compositor's reports on its own.
+    readonly property bool actualFullscreen: Kwin.hasFullscreenOn(screen?.name ?? "")
     // The popups the desktop opens over itself, grouped by how they report being open.
     // A new one joins a list instead of extending the expression below.
     readonly property var desktopMenus: [desktopContextMenu, desktopIconContextMenu, dropMenu]
     readonly property var desktopPopups: [viewOptions, widgetGallery, widgetSettings]
     readonly property bool transientOverlayOpen: panels.popouts.isDetached || panels.popouts.isContextPopout || (panels.popouts.staysOpen && panels.popouts.hasCurrent) || root.desktopMenus.some(menu => menu.expanded) || root.desktopPopups.some(popup => popup.open) || visibilities.overview || (Visibilities.launcherOpen && Config.launcher.enabled) || (Config.dashboard.enabled && visibilities.dashboard) || (Config.session.enabled && visibilities.session) || (Config.utilities.enabled && visibilities.utilities)
     readonly property bool hasOpenOverlay: focusGrabState.active || transientOverlayOpen || (Config.sidebar.enabled && visibilities.sidebar)
-    // A tray popout takes over from the launcher before the game regains focus.
-    readonly property bool hasFullscreen: actualFullscreen && !hasOpenOverlay
-        && !(panels.popouts.hasCurrent && root.contentItem.Window.active)
+    // A popout the user opened holds the screen: the shell has the focus, so the
+    // game behind it is no longer in the foreground. This stays out of
+    // hasOpenOverlay, which also decides whether the whole screen takes the
+    // pointer, and a popout does not need that.
+    readonly property bool shellOwnsInput: panels.popouts.hasCurrent && root.active
+    readonly property bool hasFullscreen: actualFullscreen && !hasOpenOverlay && !shellOwnsInput
     // The launcher is one panel across outputs: a screen that does not show it
     // still takes input, so that a press there dismisses it.
     readonly property bool foreignLauncherOpen: Visibilities.launcherOpen && !visibilities.launcher

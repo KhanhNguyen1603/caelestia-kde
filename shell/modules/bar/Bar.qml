@@ -106,7 +106,9 @@ Item {
     }
 
     function checkPopout(pos: real): void {
-        if (Visibilities.launcherOpen)
+        // The launcher owns hover while it is open. Nothing on the bar takes it
+        // over, and nothing here closes what the launcher's dismissal owns.
+        if (popouts.hoverSuppressed)
             return;
 
         // A context menu stays open while the pointer moves over the bar, so
